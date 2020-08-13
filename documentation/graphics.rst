@@ -92,6 +92,9 @@ The following example plots the network along with node population (:numref:`fig
    :alt: Network
 
    Interactive network graphic.
+
+
+
    
 Interactive Leaflet networks
 ------------------------------------------
@@ -130,6 +133,23 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
     <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
         <iframe src="_static/comp_leaflet_map.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
+
+
+If desired, the network can be plotted with a blank background as well (:numref:'fig-leaflet-blank').
+
+.. doctest::
+
+    >>> nodes, edges = wntr.graphics.plot_leaflet_network(wn,
+    ...    blank_background=True) # doctest: +SKIP
+
+.. _fig-leaflet-blank:
+.. figure:: figures/interactive_network_blank.png
+   :width: 1268
+   :alt: Network-blank-background
+
+   Interactive leaflet network graphic with blank background.
+
+
 
 Network animation
 ----------------------
