@@ -9,7 +9,7 @@ To start using WNTR, open a Python console and import the package::
 
 	import wntr	
 
-WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/master/examples/getting_started.py>`_, shown below.
+WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/master/examples/getting_started.py>`_, shown below that uses EPANET Example Network 3 (Net3).
 This example demonstrates how to:
 
 * Import WNTR
@@ -19,7 +19,9 @@ This example demonstrates how to:
 
 .. literalinclude:: ../examples/getting_started.py
 
-Additional examples are included throughout the WNTR documentation.
+Additional examples are included throughout the WNTR documentation. The examples provided in the documentation assume
+that a user has experience using EPANET (https://www.epa.gov/water-research/epanet) and Python (https://www.python.org/), including the ability to install and use additional Python packages, such as those listed in :ref:`requirements` and :ref:`optional_dependencies`.
+
 
 Several EPANET INP files and example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/master/examples>`_.
 Example networks range from a simple 9 node network to a 3,000 node network.

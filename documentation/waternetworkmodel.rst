@@ -257,7 +257,7 @@ Build a model from scratch
 ---------------------------------
 
 A water network model can also be created from scratch by adding elements to an empty model.  Elements 
-must be added before used.  For example, demand patterns are added to the model before they are 
+must be added before they are used in a simulation.  For example, demand patterns are added to the model before they are 
 used within a junction. The section below includes additional information on adding elements to a 
 water network model.
  

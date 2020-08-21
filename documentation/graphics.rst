@@ -105,8 +105,8 @@ As with basic network graphics, a wide range of plotting options can be supplied
 .. note:: 
    This function requires the Python package **folium**, which is an optional dependency of WNTR.
    
-The following example converts node coordinates to longitude/latitude and plots the network along 
-with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`).
+The following example using EPANET Example Network 3 (Net3) converts node coordinates to longitude/latitude and plots the network along 
+with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'.  
 
 .. doctest::
 
