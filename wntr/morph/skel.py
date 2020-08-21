@@ -308,7 +308,7 @@ class _Skeletonize(object):
             if junc_name in self.junc_with_controls:
                 continue
             neighbors = nx.neighbors(self.G,junc_name)
-            for neighbor in neighbors:
+            for neighbor in [n for n in neighbors]:
                 parallel_pipe_names = list(self.G.adj[junc_name][neighbor].keys())
                 if len(parallel_pipe_names) == 1:
                     continue
