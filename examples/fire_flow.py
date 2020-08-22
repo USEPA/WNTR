@@ -1,8 +1,6 @@
 """
-The following example uses WNTR to perform a hydraulic simulation of the 
-network both with and without fire fighting flow demands.
-Shown here are both add_fire_fighting_demand and remove_fire_fighting_demand
-methods.
+The following example runs hydraulic simulations with and without fire 
+fighting flow demand added to a single junction.
 """
 import wntr
 

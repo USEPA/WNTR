@@ -162,8 +162,8 @@ The following examples illustrate the creation of rules, using conditions and ac
 
 Since rules operate on a different timestep than controls, these rules might behave differently than the equivalent controls defined above. 
 Controls (or simple controls in EPANET) operate on the hydraulic timestep while Rules (or rule-based controls in EPANET) operate at a smaller timestep. 
-By default, the rule time step is 1/10th of the hydraulic timestep. It is important to remember that significant differences 
-may occur when timesteps are smaller; this applies not only to rule timesteps, but also to changing hydraulic or quality step sizes.
+By default, the rule timestep is 1/10th of the hydraulic timestep. It is important to remember that significant differences 
+might occur when timesteps are smaller; this applies not only to rule timesteps, but also to hydraulic or quality timesteps.
 
 More complex rules can be written using one of the Boolean logic condition classes.
 The following example creates a new rule that will open pipe 330 if both conditions are true, 

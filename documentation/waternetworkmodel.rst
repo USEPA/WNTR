@@ -262,7 +262,7 @@ Write a model to an INP file
 ---------------------------------
 
 The water network model can be written to a file in EPANET INP format.
-By default, files are written in the LPS EPANET unit convention.
+By default, files are written in the LPS (liter per second) EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., pressure dependent demand simulation options, custom element attributes).
 
 .. note:: 

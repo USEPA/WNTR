@@ -41,6 +41,10 @@ Additional examples
 WNTR comes with additional examples that illustrate advanced use cases, including:
 
 * `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_: 
-  This example runs multiple realizations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+  This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/master/examples/pipe_criticality.py>`_: 
+  This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
+* `Fire flow example <https://github.com/USEPA/WNTR/blob/master/examples/fire_flow.py>`_: 
+  This example runs hydraulic simulations with and without fire fighting flow demand.
 * `Sensor placement example <https://github.com/USEPA/WNTR/blob/master/examples/sensor_placement.py>`_: 
   This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 

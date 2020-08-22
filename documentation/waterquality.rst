@@ -125,7 +125,7 @@ For example, the following code can be used to add a source, and associated patt
 In the above example, the pattern is given a value of 1 between 2 and 15 hours, and 0 otherwise.
 The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be used to remove sources from the water network model.
 
-Once a source has been added, it can be examined or modified.
+In the example below, the strength of the source is changed from 1000 to 1500.
 
 .. doctest::
 

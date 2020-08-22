@@ -241,16 +241,21 @@ The following example sets nominal and minimum pressure for each junction.  Note
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi
-    ...     node.minimum_pressure = 3.516 # 5 psi
+    ...     node.nominal_pressure = 21.097 # 30 psi = 21.097 psi
+    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 psi
     
 .. _leak_model:
 
 Leak model
 -------------------------
 
-The WNTRSimulator includes the ability to add leaks to the network.
-The leak is modeled with a general form of the equation proposed by Crowl and Louvar
+The WNTRSimulator includes the ability to add leaks to the network using a leak model. 
+As such, emitter coefficients defined in the water network model options are not used by the WNTRSimulator. 
+Users interested in using the EpanetSimulator to model leaks can still do so by defining 
+emitter coefficients. Note, that the emitter coefficient cannot be modified using 
+the WNTR API, and can only be modified within the EPANET INP file.
+
+When using the WNTRSimulator, leaks are modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::

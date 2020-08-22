@@ -46,11 +46,6 @@ for pipe_name in pipes:
     
     # Reset the water network model
     wn.reset_initial_values()
-    
-    #wn = wntr.network.WaterNetworkModel(inp_file)
-    #wn.options.time.duration = analysis_end_time
-    #for name, node in wn.nodes():
-    #    node.nominal_pressure = nominal_pressure
 
     # Add a control to close the pipe
     pipe = wn.get_link(pipe_name)        
