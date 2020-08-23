@@ -9,16 +9,24 @@ sudo: false # if false, use TravisCI's container based build
 matrix:
     include:
     - python: 3.6
+      dist: xenial
       env: CONDA_ENV=py36
       services:
       - xvfb
+      sudo: true
     - python: 3.7
       dist: xenial
       services:
       - xvfb
       sudo: true
       env: CONDA_ENV=py37
-
+    - python: 3.8
+      dist: xenial
+      env: CONDA_ENV=py38
+      services:
+      - xvfb
+      sudo: true
+	  
 addons:
     apt:
         packages:
