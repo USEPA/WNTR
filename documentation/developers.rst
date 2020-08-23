@@ -23,7 +23,8 @@ WNTR is hosted on US EPA GitHub organization at https://github.com/USEPA/WNTR.
 
 Software tests
 --------------------
-WNTR includes continuous integration software tests that are run using GitHub Actions and Travis CI.  
+WNTR includes continuous integration software tests that are run using GitHub Actions.
+Travis CI and AppVeyor are used by the core development team as secondary testing services.
 The tests are run each time changes are made to the repository.  
 The tests cover a wide range of unit and 
 integration tests designed to ensure that the code is performing as expected.  
@@ -38,7 +39,7 @@ Tests can be run in the WNTR directory using the following command in a command 
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
-In addition to the publicly available software tests run using GitHub Actions and Travis CI,
+In addition to the publicly available software tests run using GitHub Actions,
 WNTR is also tested on private servers using several large water utility network models.
 	
 Documentation
