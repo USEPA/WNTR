@@ -84,7 +84,7 @@ The following example plots the network along with node population (:numref:`fig
 
     >>> pop = wntr.metrics.population(wn)
     >>> wntr.graphics.plot_interactive_network(wn, node_attribute=pop, 
-    ...    node_range=[0,500], auto_open=False) # doctest: +SKIP
+    ...    node_range=[0,500], filename='population.html', auto_open=False)
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
@@ -114,7 +114,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
     >>> wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
     >>> length = wn2.query_link_attribute('length')
     >>> wntr.graphics.plot_leaflet_network(wn2, link_attribute=length, link_width=3, 
-    ...                                    link_range=[0,1000])
+    ...                                    link_range=[0,1000], filename='length.html')
 
 .. _fig-leaflet:
 .. figure:: figures/interactive_network.png
@@ -193,10 +193,16 @@ The following example uses simulation results from above, and converts the graph
     >>> tankH = tankH * 3.28084 # Convert tank height to ft
     >>> tankH.index /= 3600 # convert time to hours
     >>> fig = px.line(tankH)
-    >>> fig.update_layout(xaxis_title='Time (hr)', yaxis_title='Head (ft)')
-    >>> plotly.offline.plot(fig, filename='tankhead_timeseries.html', auto_open=False) # doctest: +SKIP
+    >>> fig = fig.update_layout(xaxis_title='Time (hr)', yaxis_title='Head (ft)', 
+    ...                   template='simple_white', width=650, height=400) 
+    >>> fig.write_html('tank_head.html')
 
-    
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_pump_curve.png', dpi=300)
+	
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
    :width: 640
@@ -208,8 +214,8 @@ The following example uses simulation results from above, and converts the graph
     
     The interactive time series graphic is included below.
     
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-        <iframe src="_static/tanklevel_timeseries.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    <div style="position: relative; padding-bottom: 60%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="_static/tank_head.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
 Fragility curves
