@@ -83,7 +83,7 @@ The following example plots the network along with node population (:numref:`fig
 .. doctest::
 
     >>> pop = wntr.metrics.population(wn)
-    >>> nodes, edges = wntr.graphics.plot_interactive_network(wn, node_attribute=pop, 
+    >>> wntr.graphics.plot_interactive_network(wn, node_attribute=pop, 
     ...    node_range=[0,500], auto_open=False) # doctest: +SKIP
 
 .. _fig-plotly:
@@ -138,14 +138,15 @@ Network animation can be generated using the
 function :class:`~wntr.graphics.network.network_animation`. Node and link attributes can be specified using pandas DataFrames, where the 
 index is time and columns are the node or link name.  
 
-The following example creates a network animation of node quality over time.
+The following example creates a network animation of water age over time.
 
 .. doctest::
 
+    >>> wn.options.quality.mode = 'AGE'
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-    >>> quality = results.node['quality']
-    >>> wntr.graphics.network_animation(wn, node_attribute=quality) # doctest: +SKIP
+    >>> water_age = results.node['quality']/3600 # convert seconds to hours
+    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, node_range=[0,24]) # doctest: +SKIP
    
 Time series
 ------------------
@@ -177,7 +178,7 @@ Interactive time series
 --------------------------------
 
 Interactive time series graphics are useful when visualizing large datasets.  
-Basic time series graphics can be converted to interactive time series graphics using the ``plot_mpl`` function from plotly.
+Basic time series graphics can be converted to interactive time series graphics using the ``plotly.express`` module.
 
 .. note:: 
    This functionality requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
@@ -186,15 +187,15 @@ The following example uses simulation results from above, and converts the graph
 
 .. doctest::
 
-    >>> import plotly
+    >>> import plotly.express as px
 	
     >>> tankH = results.node['pressure'].loc[:,wn.tank_name_list]
     >>> tankH = tankH * 3.28084 # Convert tank height to ft
     >>> tankH.index /= 3600 # convert time to hours
-    >>> ax = tankH.plot(legend=True)
-    >>> text = ax.set_xlabel('Time (hr)')
-    >>> text = ax.set_ylabel('Head (ft)') 
-    >>> plotly.offline.plot_mpl(fig, filename='tankhead_timeseries.html', auto_open=False) # doctest: +SKIP
+    >>> fig = px.line(tankH)
+    >>> fig.update_layout(xaxis_title='Time (hr)', yaxis_title='Head (ft)')
+    >>> plotly.offline.plot(fig, filename='tankhead_timeseries.html', auto_open=False) # doctest: +SKIP
+
     
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
