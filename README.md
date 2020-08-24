@@ -1,7 +1,7 @@
 ![WNTR](documentation/figures/logo.png)
 =======================================
 
-[![TravisCI](https://travis-ci.org/sandialabs/WNTR.svg?branch=master)](https://travis-ci.org/sandialabs/WNTR)
+![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/WNTR/badge.svg?branch=master)](https://coveralls.io/github/sandialabs/WNTR?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=latest)](http://wntr.readthedocs.io/en/latest/?badge=latest)
 
