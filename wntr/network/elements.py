@@ -195,6 +195,51 @@ class Junction(Node):
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
+        
+    def add_fire_fighting_demand(self, wn, fire_flow_demand, fire_start, fire_end, pattern_name=None):
+        """Add a new fire flow demand entry to the Junction
+        
+        Parameters
+        ----------
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
+           Water network model
+        fire_flow_demand : float
+            Fire flow demand
+        fire_start : int
+            Start time of the fire flow in seconds. 
+        fire_end : int
+            End time of the fire flow in seconds. 
+        pattern_name : str or None
+            Pattern name.  If pattern name is None, the pattern name is assigned to junction name + '_fire'
+        """
+        if 'Fire_Flow' in self.demand_timeseries_list.category_list():
+            raise ValueError('A single junction can not have multiple fire flow demands')
+
+        if pattern_name is None:
+            pattern_name = self._name+'_fire'
+            
+        fire_flow_pattern = Pattern(pattern_name).binary_pattern(pattern_name, 
+                                          step_size=wn.options.time.pattern_timestep,
+                                          start_time=fire_start,
+                                          end_time=fire_end,
+                                          duration=wn.options.time.duration)
+        wn.add_pattern(pattern_name, fire_flow_pattern)
+        self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
+        self.demand_timeseries_list.append((fire_flow_demand, fire_flow_pattern, 'Fire_Flow'))
+
+    def remove_fire_fighting_demand(self, wn):
+        """Removes a fire flow demand entry to the Junction
+        
+        Parameters
+        ----------
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
+           Water network model
+        """
+        if 'Fire_Flow' in self.demand_timeseries_list.category_list():
+            pattern_name = self.demand_timeseries_list.pattern_list('Fire_Flow')[0].name
+            self._pattern_reg.remove_usage(pattern_name, (self.name, 'Junction'))
+            self.demand_timeseries_list.remove_category('Fire_Flow')
+            wn.remove_pattern(pattern_name)
 
 
 class Tank(Node):
@@ -344,6 +389,7 @@ class Tank(Node):
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
+
 
 class Reservoir(Node):
     """
@@ -1594,7 +1640,7 @@ class Source(object):
 
     def __repr__(self):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
-        return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
+        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name)
 
     @property
     def strength_timeseries(self): 

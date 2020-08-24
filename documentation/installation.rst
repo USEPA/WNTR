@@ -14,13 +14,26 @@ WNTR can be installed as a Python package as briefly described below.
 
 Users can install the latest release of WNTR from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
 
-* PyPI |pypi version|_ |pypi downloads|_ ::
+.. only:: html
 
-    pip install wntr
+   * PyPI |pypi version|_ |pypi downloads|_ ::
 
-* Anaconda |anaconda version|_ |anaconda downloads|_ ::
+       pip install wntr
 
-    conda install -c conda-forge wntr
+   * Anaconda |anaconda version|_ |anaconda downloads|_ ::
+
+       conda install -c conda-forge wntr
+
+.. only:: latex
+
+   * PyPI::
+
+       pip install wntr
+
+   * Anaconda::
+
+       conda install -c conda-forge wntr
+
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/wntr.svg?maxAge=3600
 .. _pypi version: https://pypi.org/project/wntr/

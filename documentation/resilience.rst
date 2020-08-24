@@ -10,7 +10,7 @@ design, maintenance, and operations of that system.
 All these aspects must work together to limit the effects of disasters and 
 enable rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA14]_.  
-These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
+These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic [USEPA14]_.
 When quantifying resilience, 
 it is important to understand which metric best defines resilience for 
 a particular scenario.  WNTR includes many metrics to help 
@@ -43,7 +43,7 @@ For metrics that vary with respect to time and space, network animation can be u
    :width: 962
    :alt: Resilience metrics
 
-   Example state transition plot and network graphic used to visualize resilience.
+   Example state transition plot (left) and network graphic (right) used to visualize resilience.
 
 .. _topographic_metrics:
 
@@ -54,7 +54,7 @@ Topographic metrics, based on graph theory, can be used to assess the connectivi
 of water distribution networks.
 These metrics rely on the physical layout of the network components and can be used to
 understand how the underlying structure and connectivity constrains resilience. For
-example, a regular lattice, where each node has the same number of edges, is considered to be
+example, a regular lattice, where each node has the same number of edges (except at the border), is considered to be
 the most reliable graph structure. On the other hand, a random lattice has nodes and edges
 that are placed according to a random process. A real world water distribution system probably lies somewhere in
 between a regular lattice and a random lattice in terms of structure and reliability.
@@ -62,8 +62,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 Many of these metrics can be computed using NetworkX directly 
 (see https://networkx.github.io/ for more information).
-WNTR includes additional topographic metrics to help compute resilience 
-(see :class:`~wntr.metrics.topographic` for more information).
+WNTR includes additional topographic metrics to help compute resilience.
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
@@ -127,8 +126,6 @@ WNTR includes additional topographic metrics to help compute resilience
     :hide:
 
     >>> import wntr
-    >>> import networkx as nx
-    >>> import numpy as np
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -141,6 +138,9 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
@@ -233,7 +233,7 @@ use NetworkX directly, while others use metrics included in WNTR.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network. NPR is computed using ...
-	Connectivity will change at each time step, depending on the flow direction.  
+	Connectivity will change at each timestep, depending on the flow direction.  
 	The method :class:`~wntr.network.WaterNetworkModel.get_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
@@ -280,7 +280,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           flow in the pipes and entropy can be used to measure alternate flow paths
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
-                                          Connectivity will change at each time step, depending on the flow direction.  
+                                          Connectivity will change at each timestep, depending on the flow direction.  
                                           The :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
@@ -294,7 +294,10 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
     
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
-                                          impacted by pressure below a specified threshold.
+                                          impacted by pressure below a specified threshold.  Population per node is computed using the method  
+                                          :class:`~wntr.metrics.misc.population`, which divides the average expected demand by the average volume of water 
+                                          consumed per capita per day. The default value for average volume of water consumed per capita per day is 200 gallons/day and can be 
+                                          modified by the user.
    =====================================  ================================================================================================================================================
 
 The following examples compute hydraulic metrics, including:
@@ -303,6 +306,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
+      >>> import numpy as np
+	  
       >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
       >>> results = sim.run_sim()
     
@@ -311,7 +316,7 @@ The following examples compute hydraulic metrics, including:
       >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
       ...     threshold)
     
-* Water service availability
+* Water service availability (Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0)
 	
   .. doctest::
 

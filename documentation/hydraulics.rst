@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _hydraulic_simulation:
+
 Hydraulic simulation
 ==============================
 
@@ -27,8 +29,11 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	
 .. doctest::
 
-	>>> sim = wntr.sim.EpanetSimulator(wn)
-	>>> results = sim.run_sim()
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
 
 The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
@@ -44,6 +49,8 @@ A hydraulic simulation using the WNTRSimulator is run using the following code:
 More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
+The simulators use different solvers for the system of hydraulic equations; as such, small differences in the results
+are expected.
 
 Options
 ----------
@@ -134,7 +141,7 @@ either direction. However, the derivative with respect to :math:`q` at :math:`q 
 is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
-splits the domain of :math:`q` into six segments to
+splits the domain of :math:`q` into segments to
 create a piecewise smooth function.
 
 .. as presented below.
@@ -234,14 +241,21 @@ The following example sets nominal and minimum pressure for each junction.  Note
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi
-    ...     node.minimum_pressure = 3.516 # 5 psi
+    ...     node.nominal_pressure = 21.097 # 30 psi = 21.097 psi
+    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 psi
     
+.. _leak_model:
+
 Leak model
 -------------------------
 
-The WNTRSimulator includes the ability to add leaks to the network.
-The leak is modeled with a general form of the equation proposed by Crowl and Louvar
+The WNTRSimulator includes the ability to add leaks to the network using a leak model. 
+As such, emitter coefficients defined in the water network model options are not used by the WNTRSimulator. 
+Users interested in using the EpanetSimulator to model leaks can still do so by defining 
+emitter coefficients. Note, that the emitter coefficient cannot be modified using 
+the WNTR API, and can only be modified within the EPANET INP file.
+
+When using the WNTRSimulator, leaks are modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
@@ -319,6 +333,7 @@ To restart the simulation from time zero, the user has several options.
 2. Save the water network model to a file and reload that file each time a simulation is run.  
    A pickle file is generally used for this purpose.  
    A pickle file is a binary file used to serialize and de-serialize a Python object.
+   More information on the use of pickle files can be found at https://docs.python.org/3/library/pickle.html.
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
    
@@ -327,6 +342,7 @@ To restart the simulation from time zero, the user has several options.
    .. doctest::
 
        >>> import pickle
+	   
        >>> f=open('wn.pickle','wb')
        >>> pickle.dump(wn,f)
        >>> f.close()
@@ -372,6 +388,7 @@ To create this model using WNTR's AML, the following can be used:
 .. doctest::
 
    >>> from wntr.sim import aml
+   
    >>> m = aml.Model()
    >>> m.x = aml.Var(1.0)
    >>> m.y = aml.Var(1.0)
@@ -401,6 +418,7 @@ step (without a line search) would look something like
 .. doctest::
 
    >>> from scipy.sparse.linalg import spsolve
+   
    >>> x = m.get_x()
    >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
    >>> x += d
@@ -414,6 +432,7 @@ which can solve one of these models.
 .. doctest::
 
    >>> from wntr.sim.solvers import NewtonSolver
+   
    >>> opt = NewtonSolver()
    >>> res = opt.solve(m)
    >>> m.x.value # doctest: +SKIP

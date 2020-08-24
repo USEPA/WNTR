@@ -16,7 +16,6 @@ Simulation results are stored in a results object which contains:
 .. doctest::
     :hide:
 
-    >>> from __future__ import print_function, division
     >>> import pandas as pd
     >>> import matplotlib.pylab as plt
 	>>> import wntr
@@ -25,9 +24,26 @@ Simulation results are stored in a results object which contains:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+
+As shown in the :ref:`hydraulic_simulation` and :ref:`water_quality_simulation` sections, simulations results can be generated using the EpanetSimulator as follows (similar methods are used to generate results using the WNTRSimulator):
+
+.. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+	
+.. doctest::
+
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-
+	
 The node and link results are dictionaries of pandas DataFrames.  Each dictionary is a key:value pair, where
 the key is a result attribute (e.g., node demand, link flowrate) and the value is a DataFrame. 
 DataFrames are indexed by timestep (in seconds from the start of the simulation) with columns that are
@@ -71,6 +87,7 @@ Link results include DataFrames for each of the following attributes:
 * Reaction rate (only when the EpanetSimulator is used)
 * Link quality (only when the EpanetSimulator is used)
 
+The link results that are only accessible from the EpanetSimulator could be included in the WNTRSimulator in a future release.
 For example, link results generated with the EpanetSimulator have the following keys:
 
 .. doctest::
@@ -182,4 +199,4 @@ For example, DataFrames can be saved to Excel files using:
    >>> pressure.to_excel('pressure.xlsx')
 
 .. note:: 
-   The Pandas method ``to_excel`` requires the Python package **openpyxl**, which is an optional dependency of WNTR.
+   The Pandas method ``to_excel`` requires the Python package **openpyxl** [GaCl18]_, which is an optional dependency of WNTR.
