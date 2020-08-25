@@ -55,7 +55,7 @@ Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as sho
  
 .. _fig-dataframe:
 .. figure:: figures/dataframes.png
-   :width: 526
+   :width: 500
    :alt: Pandas DataFrames
    
    Conceptual representation of DataFrames used to store simulation results.
@@ -179,7 +179,7 @@ plotted in a similar manner.
     
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
-   :width: 659
+   :width: 640
    :alt: Network graphic
 
    Network graphic showing pressure at 1 hour.

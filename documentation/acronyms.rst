@@ -1,11 +1,14 @@
 .. raw:: latex
 
     \clearpage
+	\phantomsection
 	\listoftables
 	\clearpage
+	\phantomsection
 	\listoffigures
 	\clearpage
 
+	
 Abbreviations
 ======================================
 
