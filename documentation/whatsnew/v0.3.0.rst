@@ -1,6 +1,6 @@
-.. _whatsnew_0223:
+.. _whatsnew_0330:
 
-v0.2.3 (dev branch)
+v0.3.0 (dev branch)
 ---------------------------------------------------
 The following features are under development in the dev branch and will be part of the next release.
 
