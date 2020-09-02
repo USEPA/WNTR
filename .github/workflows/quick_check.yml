@@ -28,4 +28,4 @@ jobs:
         python setup.py develop
     - name: Run tests
       run: |
-        nosetests -v --nologcapture --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
+        nosetests -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
