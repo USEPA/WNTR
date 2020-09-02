@@ -1,6 +1,6 @@
 """
 The following example uses WNTR with Chama (https://chama.readthedocs.io) to 
-optize the placement of sensors that minimizes detection time. 
+optimize the placement of sensors that minimizes detection time. 
 In this example, simulation data is extracted from trace simulations.  
 This data could also be extracted from contaminant injection simulations 
 and could be translated into other metrics (e.g. extent of 

@@ -209,7 +209,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
                                              width=0.5, ax=ax)
     
-    nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
+    nodes = nx.draw_networkx_nodes(G, pos, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
             alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
             linewidths=0, ax=ax)

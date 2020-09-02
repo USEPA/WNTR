@@ -25,14 +25,10 @@ A water network model can be created directly from EPANET INP files using EPANET
 The following example builds a water network model.
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> import numpy as np
 	
-.. doctest::
-
-    >>> wn = wntr.network.WaterNetworkModel('Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
 
 .. doctest::
     :hide:
@@ -130,6 +126,26 @@ The following example changes junction elevation, pipe diameter, and size for a 
     >>> tank = wn.get_node('1')
     >>> tank.diameter = tank.diameter*1.1
 
+The following shows how to add an additional demand to the junction 121.
+
+.. doctest::
+
+    >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]> 
+    
+    >>> junction.add_demand(base=1.0, pattern_name='1')
+    >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>, <TimeSeries: base=1.0, pattern='1', category='None'>]>
+
+To remove the demand, use the Python ``del`` as with an array element.
+
+.. doctest::
+
+    >>> del junction.demand_timeseries_list[1]
+    >>> print(junction.demand_timeseries_list)
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]>
+
+
 Modify time series
 -------------------------------
 
@@ -217,6 +233,8 @@ NumPy operator).
 
 .. doctest::
 
+    >>> import numpy as np
+    
     >>> node_elevation = wn.query_node_attribute('elevation')
     >>> junction_elevation = wn.query_node_attribute('elevation', 
     ...     node_type=wntr.network.model.Junction)
@@ -234,6 +252,7 @@ Reset initial conditions
 
 When using the same water network model to run multiple simulations using the WNTRSimulator, initial conditions need to be reset between simulations.  
 Initial conditions include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
+When using the EpanetSimualtor, this step is not needed since EPANET starts at the initial conditions each time it is run.
 
 .. doctest::
 
@@ -243,10 +262,11 @@ Write a model to an INP file
 ---------------------------------
 
 The water network model can be written to a file in EPANET INP format.
-By default, files are written in the LPS EPANET unit convention.
+
+By default, files are written in the LPS (liter per second) EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., custom element attributes).
 EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
-  
+
 .. doctest::
 
     >>> wn.write_inpfile('filename.inp', version=2.2)
@@ -255,7 +275,7 @@ Build a model from scratch
 ---------------------------------
 
 A water network model can also be created from scratch by adding elements to an empty model.  Elements 
-must be added before used.  For example, demand patterns are added to the model before they are 
+must be added before they are used in a simulation.  For example, demand patterns are added to the model before they are 
 used within a junction. The section below includes additional information on adding elements to a 
 water network model.
  
