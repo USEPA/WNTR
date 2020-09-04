@@ -46,11 +46,10 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	
 .. doctest::
 
-    >>> import wntr # doctest: +SKIP
+	>>> sim = wntr.sim.EpanetSimulator(wn)
+	>>> results = sim.run_sim() # by default, this runs EPANET 2.2.0
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
+The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:
 
 .. doctest::
 
