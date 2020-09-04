@@ -28,7 +28,7 @@ References
 
 .. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
 
-.. [HaSS08] Hagberg, A.A., Schult, D.A., and Swart P.J. (2008). Exploring network structure, dynamics, and function using NetworkX. In Proceedings of the 7th Python in Science Conference (SciPy2008), August 19-24, Pasadena, CA, USA.
+.. [HaSS08] Hagberg, A.A., Schult, D.A., and Swart, P.J. (2008). Exploring network structure, dynamics, and function using NetworkX. In Proceedings of the 7th Python in Science Conference (SciPy2008), August 19-24, Pasadena, CA, USA.
 
 .. [Hunt07] Hunter, J.D. (2007). Matplotlib: A 2D graphics environment. Computing in Science and Engineering, 9(3), 90-95.
 
@@ -36,7 +36,11 @@ References
 
 .. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2012). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
-.. [Mcki13] McKinney W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
+.. [Lamb01] Lambert, A. (2001). What do we know about pressure-leakage relationships in distribution systems. Proceedings of the IWA Specialised Conference ‘System Approach to Leakage Control and Water Distribution Systems Management’, Brno, Czech Republic, 2001, May 16-18, 89-96.
+
+.. [LWFZ17] Liu, H., Walski, T., Fu, G., Zhang, C. (2017). Failure Impact Analysis of Isolation Valves in a Water Distribution Network. Journal of Water Resources Planning and Management 143(7): 04017019.
+
+.. [Mcki13] McKinney, W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
 
 .. [NIAC09]	National Infrastructure Advisory Council (NIAC). (2009). Critical Infrastructure Resilience, Final Report and Recommendations, U.S. Department of Homeland Security, Washington, D.C., Accessed September 20, 2014. http://www.dhs.gov/xlibrary/assets/niac/niac_critical_infrastructure_resilience.pdf.
 
@@ -57,6 +61,8 @@ References
 .. [VaCV11] van der Walt, S., Colbert, S.C., and Varoquaux, G. (2011). The NumPy array: A structure for efficient numerical computation. Computing in Science and Engineering, 13, 22-30.
 
 .. [WaSM88] Wagner, J.M., Shamir, U., and Marks, D.H. (1988). Water distribution reliability: Simulation methods. Journal of Water Resources Planning and Management, 114(3), 276-294.
+
+.. [WaWC06] Walski, T., Weiler, J. Culver, T. (2006). Using Criticality Analysis to Identify Impact of Valve Location. Water Distribution Systems Analysis Symposium. Cincinnati, OH, American Society of Civil Engineers: 1-9.
 
 .. [WWQP06] Wald, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). ShakeMap manual: Technical manual, user's guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
 

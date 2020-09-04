@@ -1,6 +1,7 @@
 .. raw:: latex
 
     \clearpage
+    \setcounter{secnumdepth}{0}
 
 Disclaimer
 ======================================
