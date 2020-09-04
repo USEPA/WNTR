@@ -1,6 +1,6 @@
 .. _whatsnew_0230:
 
-v0.2.3 (master)
+v0.2.3 (September 4, 2020)
 ---------------------------------------------------
 
 * Fixed bug in :class:`~wntr.network.model.WaterNetworkModel.reset_initial_values`.  
