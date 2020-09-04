@@ -67,8 +67,4 @@ Additional features planned for the 0.2.3 release include:
 
 * Additional valve topographic metrics
 * Graphics updates
-<<<<<<< HEAD
  
-=======
- 
->>>>>>> 8e00e1cb63d7733890347a01ea0d9e6378d81cc5
