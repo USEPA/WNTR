@@ -360,7 +360,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
-                 min_vol=0.0, vol_curve=None, coordinates=None):
+                 min_vol=0.0, vol_curve=None, overflow=False, coordinates=None):
         """
         Adds a tank to the water network model
 
@@ -382,6 +382,8 @@ class WaterNetworkModel(AbstractModel):
             Minimum tank volume.
         vol_curve : str
             Name of a volume curve, optional
+        overflow : bool
+            Does this tank overflow (EpanetSimulator only)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
@@ -393,7 +395,7 @@ class WaterNetworkModel(AbstractModel):
         """
         self._node_reg.add_tank(name, elevation, init_level, min_level, 
                                 max_level, diameter, min_vol, vol_curve, 
-                                coordinates)
+                                overflow, coordinates)
 
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
@@ -2180,7 +2182,8 @@ class NodeRegistry(Registry):
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
-                 min_vol=0.0, vol_curve=None, coordinates=None):
+                 min_vol=0.0, vol_curve=None, overflow=False, 
+                 coordinates=None):
         """
         Adds a tank to the water network model.
 
@@ -2204,6 +2207,8 @@ class NodeRegistry(Registry):
         vol_curve : str, optional
             Name of a volume curve. The volume curve overrides the tank diameter
             and minimum volume.
+        overflow : bool, optional
+            Overflow indicator (allows "yes"/"no", True/False, 1/0; default False)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
@@ -2223,7 +2228,7 @@ class NodeRegistry(Registry):
             raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
         if init_level > max_level:
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
-        if not vol_curve is None:
+        if vol_curve is not None and vol_curve != '*':
             if not isinstance(vol_curve, six.string_types):
                 raise ValueError('Volume curve name must be a string')
             elif not vol_curve in self._curve_reg.volume_curve_names:
@@ -2239,6 +2244,7 @@ class NodeRegistry(Registry):
                 raise ValueError('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
                                  'less than the maximum level for tank "' + name + '" ({1:5.2f})\n' +
                                  'please correct the user input.'.format(vcurve[-1,0],max_level))
+
         tank = Tank(name, self)
         tank.elevation = elevation
         tank.init_level = init_level
@@ -2247,6 +2253,7 @@ class NodeRegistry(Registry):
         tank.diameter = diameter
         tank.min_vol = min_vol
         tank.vol_curve_name = vol_curve
+        tank.overflow = overflow
         self[name] = tank
         if coordinates is not None:
             tank.coordinates = coordinates
