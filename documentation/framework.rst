@@ -83,12 +83,13 @@ These classes are listed in :numref:`table-sim-subpackage`.
    =================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator can run both the EPANET 2.00.12 Programmer's Toolkit [Ross00]_ and EPANET 2.2.0 Programmer's Toolkit [EPANET22]_ to run hydraulic and water quality simulations.  
                                                       EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure dependent analysis, while EPANET 2.00.12 includes only demand-driven analysis. 
-                                                      When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
-                                                      This allows the user to run 
+                                                      When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation. This allows the user to run 
                                                       EPANET simulations, while taking advantage of additional analysis options in WNTR. 
-	
-	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks. 
-	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
+    
+   :class:`~wntr.sim.core.WNTRSimulator`              The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks.
+                                                      The simulator includes an algebraic model, which can be extended to simulate additional components or behaviors in water network models.	
+                                                      The WNTRSimulator does not perform water quality simulations. The WNTRSimulator does not perform water quality simulations.
+
    =================================================  =============================================================================================================================================================================================================================================================================
 
 .. _limitations:

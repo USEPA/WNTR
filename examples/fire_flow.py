@@ -7,6 +7,7 @@ import wntr
 # Create a water network model and simulate under nominal conditions
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
+wn.options.hydraulic.demand_model = 'PDD'
 
 # Add fire demand and simulate
 fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
@@ -14,14 +15,12 @@ fire_start = 10*3600
 fire_end = 36*3600
 node = wn.get_node('197')
 node.add_fire_fighting_demand(wn, fire_flow_demand, fire_start, fire_end)
-wn.options.hydraulic.demand_model = 'PDD'
 sim = wntr.sim.WNTRSimulator(wn)
 fire_results = sim.run_sim()
 
 # Reset initial values and simulate hydraulics under nominal conditions
 wn.reset_initial_values()
 node.remove_fire_fighting_demand(wn)
-wn.options.hydraulic.demand_model = 'PDD'
 sim = wntr.sim.WNTRSimulator(wn)
 results = sim.run_sim()
 
