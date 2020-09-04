@@ -6,10 +6,6 @@
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> import matplotlib.pylab as plt
-    >>> import plotly
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -27,6 +23,9 @@ using the EpanetSimulator is run using the following code:
 
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
 
@@ -120,6 +119,18 @@ For example, the following code can be used to add a source, and associated patt
 
 In the above example, the pattern is given a value of 1 between 2 and 15 hours, and 0 otherwise.
 The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be used to remove sources from the water network model.
+
+In the example below, the strength of the source is changed from 1000 to 1500.
+
+.. doctest::
+
+    >>> source = wn.get_source('Source')
+    >>> print(source)                                                                                           
+    <Source: 'Source', '121', 'SETPOINT', 1000, SourcePattern>
+
+    >>> source.strength_timeseries.base_value = 1500
+    >>> print(source)
+    <Source: 'Source', '121', 'SETPOINT', 1500, SourcePattern>
 
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer related to the number of sources in the INP file.

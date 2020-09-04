@@ -1703,33 +1703,50 @@ class WaterNetworkModel(AbstractModel):
             node.demand = None
             node.leak_demand = None
             node.leak_status = False
+            node._is_isolated = False
 
         for name, node in self.nodes(Tank):
             node.head = node.init_level+node.elevation
+            node._prev_head = node.head
             node.demand = None
             node.leak_demand = None
             node.leak_status = False
+            node._is_isolated = False
 
         for name, node in self.nodes(Reservoir):
-            node.head = node.head_timeseries.base_value
+            node.head = None  # node.head_timeseries.base_value
             node.demand = None
             node.leak_demand = None
+            node._is_isolated = False
 
         for name, link in self.links(Pipe):
             link.status = link.initial_status
+            link.setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
             link._flow = None
+            link._prev_setting = None
 
         for name, link in self.links(Pump):
             link.status = link.initial_status
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
             link._flow = None
-            link.power = link._base_power
+            if isinstance(link, PowerPump):
+                link.power = link._base_power
             link._power_outage = LinkStatus.Open
+            link._prev_setting = None
 
         for name, link in self.links(Valve):
             link.status = link.initial_status
-            link._flow = None
             link.setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
             link._prev_setting = None
+
+        for name, control in self.controls():
+            control._reset()
 
     def read_inpfile(self, filename):
         """

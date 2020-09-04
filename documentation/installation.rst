@@ -12,10 +12,38 @@ See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
-Users can install the latest release of WNTR from PyPI using the following command in a command line or PowerShell prompt::
+Users can install the latest release of WNTR from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
 
-    pip install wntr
-    
+.. only:: html
+
+   * PyPI |pypi version|_ |pypi downloads|_ ::
+
+       pip install wntr
+
+   * Anaconda |anaconda version|_ |anaconda downloads|_ ::
+
+       conda install -c conda-forge wntr
+
+.. only:: latex
+
+   * PyPI::
+
+       pip install wntr
+
+   * Anaconda::
+
+       conda install -c conda-forge wntr
+
+
+.. |pypi version| image:: https://img.shields.io/pypi/v/wntr.svg?maxAge=3600
+.. _pypi version: https://pypi.org/project/wntr/
+.. |pypi downloads| image:: https://pepy.tech/badge/wntr
+.. _pypi downloads: https://pepy.tech/project/wntr
+.. |anaconda version| image:: https://anaconda.org/conda-forge/wntr/badges/version.svg 
+.. _anaconda version: https://anaconda.org/conda-forge/wntr
+.. |anaconda downloads| image:: https://anaconda.org/conda-forge/wntr/badges/downloads.svg
+.. _anaconda downloads: https://anaconda.org/conda-forge/wntr
+
 Developers can install the master branch of WNTR from the GitHub 
 repository using the following commands in a command line or PowerShell prompt::
 
@@ -36,7 +64,7 @@ Detailed installation instructions are included below.
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
 	WNTR requires 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
-	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/distribution/.  
+	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/products/individual.
 	General information on Python can be found at https://www.python.org/.
 	
 	.. note:: 
@@ -53,7 +81,7 @@ Detailed installation instructions are included below.
 	Anaconda includes the Python packages needed for WNTR, including NumPy, SciPy, NetworkX, pandas, and
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	If the Python installation does not include these dependencies, the user will need to install them. 
-	This is most commonly done using pip. 
+	This is most commonly done using pip or conda. 
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debugging features along with a graphical user interface. 
@@ -85,9 +113,14 @@ Detailed installation instructions are included below.
 	The installation process differs for users and developers.  
 	Installation instructions for both types are described below.
 	
-	**For users**: Users can install WNTR using pip or by downloading a zip file and building the source code.
+	**For users**: Users can install WNTR using PyPI, Anaconda, or by downloading a zip file and building the source code.
 	
-	* **Option 1**: Users can install WNTR using pip, which is a command line software tool used to install and manage Python 
+	.. note:: 
+	   If WNTR is installed using PyPI or Anaconda (Options 1 or 2 below), the examples folder will not be downloaded.  
+	   The examples can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
+	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
+	   
+	* **Option 1**: Users can install WNTR from PyPI using pip, which is a command line software tool used to install and manage Python 
 	  packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
 	
 	  To install WNTR using pip, open a command line or PowerShell prompt and run::
@@ -96,13 +129,24 @@ Detailed installation instructions are included below.
 	
 	  This will install the latest release of WNTR from https://pypi.python.org/pypi/wntr.  
 	
-	* **Option 2**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
+	* **Option 2**: Users can install WNTR from Anaconda using conda, which is a command line software tool used to install and manage Python 
+	  packages.  It can be downloaded from https://www.anaconda.com/products/individual.
+	
+	  To install WNTR using conda, open a command line or PowerShell prompt and run::
+
+		  conda install -c conda-forge wntr
+	
+	  This will install the latest release of WNTR from https://anaconda.org/conda-forge/wntr.
+	  
+	* **Option 3**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
+	  
 	  To download the master branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	  This downloads a zip file called WNTR-master.zip.
+	  
 	  To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
+	  
 	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
 	  WNTR can then be installed by running a Python script, called setup.py, that is included in the source files.
-	  
 	  To build WNTR from the source files, open a command line or PowerShell prompt from within the folder that contains the files and run:: 
 	  
 		  python setup.py install
@@ -136,8 +180,10 @@ Detailed installation instructions are included below.
 
 Requirements
 -------------
+
 Requirements for WNTR include 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python packages. 
-The following Python packages are required:
+Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
+
 
 * NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/

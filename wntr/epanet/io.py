@@ -817,17 +817,17 @@ class InpFile(object):
                  'node2': valve.end_node_name,
                  'diam': from_si(self.flow_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
-                 'set': valve._initial_setting,
+                 'set': valve._setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
             formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Pressure)
+                valve_set = from_si(self.flow_units, valve._setting, HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Flow)
+                valve_set = from_si(self.flow_units, valve._setting, HydParam.Flow)
             elif valve_type == 'TCV':
-                valve_set = valve._initial_setting
+                valve_set = valve._setting
             elif valve_type == 'GPV':
                 valve_set = valve.headloss_curve_name
                 formatter = _GPV_ENTRY
