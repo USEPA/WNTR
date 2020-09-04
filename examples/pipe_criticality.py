@@ -17,9 +17,9 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 # Adjust simulation options for criticality analyses
 analysis_end_time = 72*3600 
 wn.options.time.duration = analysis_end_time
-nominal_pressure = 17.57 
+wn.options.hydraulic.demand_model = 'PDD'
 for name, node in wn.nodes():
-    node.nominal_pressure = nominal_pressure
+    node.required_pressure = 17.57 
 
 # Create a list of pipes with large diameter to include in the analysis
 pipes = wn.query_link_attribute('diameter', np.greater_equal, 24*0.0254, 
@@ -33,7 +33,6 @@ pressure_threshold = 14.06
 
 # Run a preliminary simulation to determine if junctions drop below the 
 # pressure threshold during normal conditions
-wn.options.hydraulic.demand_model = 'PDD'
 sim = wntr.sim.WNTRSimulator(wn)
 results = sim.run_sim()
 min_pressure = results.node['pressure'].loc[:,wn.junction_name_list].min()
@@ -42,7 +41,7 @@ below_threshold_normal_conditions = set(min_pressure[min_pressure < pressure_thr
 # Run the criticality analysis, closing one pipe for each simulation
 junctions_impacted = {} 
 for pipe_name in pipes:
-    
+
     print('Pipe:', pipe_name)     
     
     # Reset the water network model
@@ -57,7 +56,6 @@ for pipe_name in pipes:
     wn.add_control('close pipe ' + pipe_name, ctrl)
         
     # Run a PDD simulation
-    wn.options.hydraulic.demand_model = 'PDD'
     sim = wntr.sim.WNTRSimulator(wn)
     results = sim.run_sim()
         

@@ -180,8 +180,10 @@ Detailed installation instructions are included below.
 
 Requirements
 -------------
-Requirements for WNTR include 64-bit Python (tested on versions 3.6, 3.7 and 3.8) along with several Python packages. 
+
+Requirements for WNTR include 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python packages. 
 Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
+
 
 * NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/

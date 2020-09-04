@@ -31,6 +31,9 @@ the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
 	>>> wn.options.hydraulic.demand_model = 'DD'  
 	>>> wn.options.hydraulic.demand_model = 'PDD'
 	
@@ -43,18 +46,11 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	
 .. doctest::
 
-<<<<<<< HEAD
-	>>> sim = wntr.sim.EpanetSimulator(wn)
-	>>> results = sim.run_sim() # by default, this runs EPANET 2.2.0
-	
-The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:
-=======
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
->>>>>>> b97ba952952a008ab457d5f288262aa325ae8507
 
 .. doctest::
 
@@ -267,8 +263,9 @@ The following example sets required and minimum pressure for each junction.  Not
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi = 21.097 psi
+    ...     node.required_pressure = 21.097 # 30 psi = 21.097 psi
     ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 psi
+
     
 .. _leak_model:
 
