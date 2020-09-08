@@ -58,8 +58,8 @@ _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 _RES_ENTRY = ' {name:20s} {head:15.11g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>20s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:15.11g} {initlev:15.11g} {minlev:15.11g} {maxlev:15.11g} {diam:15.11g} {minvol:15.11g} {curve:20s} {com:>3s}\n'
-_TANK_LABEL = '{:21s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:20s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:15.11g} {initlev:15.11g} {minlev:15.11g} {maxlev:15.11g} {diam:15.11g} {minvol:15.11g} {curve:20s} {overflow:20s} {com:>3s}\n'
+_TANK_LABEL = '{:21s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:20s} {:20s}\n'
 
 _PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:15.11g} {diam:15.11g} {rough:15.11g} {mloss:15.11g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s}\n'
@@ -435,7 +435,7 @@ class InpFile(object):
             self._write_title(f, wn)
             self._write_junctions(f, wn)
             self._write_reservoirs(f, wn)
-            self._write_tanks(f, wn)
+            self._write_tanks(f, wn, version=version)
             self._write_pipes(f, wn)
             self._write_pumps(f, wn)
             self._write_valves(f, wn)
@@ -585,17 +585,25 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            if len(current) == 8:  # Volume curve provided
+            if len(current) >= 8:  # Volume curve provided
                 curve_name = current[7]
-                curve_points = []
-                for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Length)
-                    y = to_si(self.flow_units, point[1], HydParam.Volume)
-                    curve_points.append((x, y))
-                self.wn.add_curve(curve_name, 'VOLUME', curve_points)
+                if curve_name == '*':
+                    curve_name = None
+                else:
+                    curve_points = []
+                    for point in self.curves[curve_name]:
+                        x = to_si(self.flow_units, point[0], HydParam.Length)
+                        y = to_si(self.flow_units, point[1], HydParam.Volume)
+                        curve_points.append((x, y))
+                    self.wn.add_curve(curve_name, 'VOLUME', curve_points)
 #                curve = self.wn.get_curve(curve_name)
+                if len(current) == 9:
+                    overflow = current[8]
+                else:
+                    overflow = False
             elif len(current) == 7:
                 curve_name = None
+                overflow = False
             else:
                 raise RuntimeError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
@@ -605,12 +613,16 @@ class InpFile(object):
                         to_si(self.flow_units, float(current[4]), HydParam.Length),
                         to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
                         to_si(self.flow_units, float(current[6]), HydParam.Volume),
-                        curve_name)
+                        curve_name, overflow)
 
-    def _write_tanks(self, f, wn):
+    def _write_tanks(self, f, wn, version=2.2):
         f.write('[TANKS]\n'.encode('ascii'))
-        f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
-                                   'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
+        if version != 2.2:
+            f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
+                                       'Diameter', 'Min Volume', 'Volume Curve','').encode('ascii'))
+        else:
+            f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
+                            'Diameter', 'Min Volume', 'Volume Curve','Overflow').encode('ascii'))
         nnames = list(wn.tank_name_list)
         # nnames.sort()
         for tank_name in nnames:
@@ -623,9 +635,15 @@ class InpFile(object):
                  'diam': from_si(self.flow_units, tank.diameter, HydParam.TankDiameter),
                  'minvol': from_si(self.flow_units, tank.min_vol, HydParam.Volume),
                  'curve': '',
+                 'overflow': '',
                  'com': ';'}
             if tank.vol_curve is not None:
                 E['curve'] = tank.vol_curve.name
+            if version ==2.2:
+                if tank.overflow:
+                    E['overflow'] = 'YES'
+                    if tank.vol_curve is None:
+                        E['curve'] = '*'
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 

@@ -277,6 +277,7 @@ class Tank(Node):
         self._mixing_model = None
         self.mixing_fraction = None
         self.bulk_coeff = None
+        self._overflow = False
         
         self._leak = False
         self.leak_status = False
@@ -297,6 +298,7 @@ class Tank(Node):
            abs(self.diameter    - other.diameter)<1e-9  and \
            abs(self.min_vol     - other.min_vol)<1e-9   and \
            self.bulk_coeff == other.bulk_coeff   and \
+           self.overflow == other.overflow  and \
            self.vol_curve      == other.vol_curve:
             return True
         return False
@@ -354,6 +356,28 @@ class Tank(Node):
         self._curve_reg.remove_usage(self._vol_curve_name, (self._name, 'Tank'))
         self._curve_reg.add_usage(name, (self._name, 'Tank'))
         self._vol_curve_name = name
+
+    @property
+    def overflow(self):
+        """bool : Is this tank allowed to overflow"""
+        return self._overflow
+    @overflow.setter
+    def overflow(self, value):
+        if isinstance(value, six.string_types):
+            value = value.upper()
+            if value in ["YES", "TRUE"]:
+                value = True
+            elif value in ["NO", "FALSE"]:
+                value = False
+            else:
+                raise ValueError('The overflow entry must "YES" or "NO"')
+        elif isinstance(value, int):
+            value = bool(value)
+        elif value is None:
+            value = False
+        elif not isinstance(value, bool):
+            raise ValueError('The overflow entry must be blank, "YES"/"NO", 1/0, of True/False')
+        self._overflow = value
 
     @property
     def level(self):
