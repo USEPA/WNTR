@@ -241,8 +241,8 @@ The following example sets nominal and minimum pressure for each junction.  Note
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi = 21.097 psi
-    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 psi
+    ...     node.nominal_pressure = 21.097 # 30 psi = 21.097 m
+    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 m
     
 .. _leak_model:
 
