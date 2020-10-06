@@ -40,15 +40,20 @@ class WaterNetworkSimulator(object):
     wn : WaterNetworkModel object
         Water network model
 
-    mode: string (optional)
-        Specifies whether the simulation will be demand-driven (DD) or
-        pressure dependent demand (PDD), default = DD
+    .. warning::
+
+        The mode parameter has been deprecated. Please set the mode using the network option,
+        wn.options.hydraulic.demand_model.
+
+    
     """
 
-    def __init__(self, wn=None, mode='DD'):
+    def __init__(self, wn=None):
 
         self._wn = wn
-        self.mode = mode
+        # self.mode = mode
+        self.mode = self._wn.options.hydraulic.demand_model
+
 
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
@@ -196,11 +201,12 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         plotly.offline.plot(fig, auto_open=auto_open)
 
 
-def _write_DD_results_to_json_for_diagnostics(wn, res, filename, mode='DD'):
+def _write_DD_results_to_json_for_diagnostics(wn, res, filename):
     d = dict()
-    if mode == 'DD':
+    mode = wn.options.hydraulic.demand_model
+    if mode in ['DD','DDA']:
         demand_key = 'expected_demand'
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         demand_key = 'demand'
     else:
         raise ValueError('Unexpected mode: {0}'.format(mode))
@@ -260,7 +266,8 @@ class _Diagnostics(object):
     def __init__(self, wn, model, mode, enable=False):
         self.wn = wn
         self.model = model
-        self.mode = mode
+        # self.mode = mode
+        self.mode = wn.options.hydraulic.demand_model
         self.enabled = enable
         self.time_to_enable = -1
 
@@ -446,6 +453,7 @@ class _Diagnostics(object):
         os.system('open link_comparison_' + link_name + '_' + str(t) + '.html')
 
     def store_var_values_in_network(self):
+        self.mode = self._wn.options.hydraulic.demand_model
         wntr.sim.hydraulics.store_results_in_network(self.wn, self.model, self.mode)
 
 
@@ -459,14 +467,16 @@ class WNTRSimulator(WaterNetworkSimulator):
     wn : WaterNetworkModel object
         Water network model
 
-    mode: string (optional)
-        Specifies whether the simulation will be demand-driven (DD) or
-        pressure dependent demand (PDD), default = DD
+
+    .. note::
+    
+        The mode parameter has been deprecated. Please set the mode using Options.hydraulic.demand_model
+
     """
 
-    def __init__(self, wn, mode='DD'):
+    def __init__(self, wn):
 
-        super(WNTRSimulator, self).__init__(wn, mode)
+        super(WNTRSimulator, self).__init__(wn)
 
         # attributes needed isolated junctions/links
         self._prev_isolated_junctions = OrderedSet()
@@ -815,7 +825,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             If True, then run with diagnostics on
         """
         logger.debug('creating hydraulic model')
-        self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, mode=self.mode, HW_approx=HW_approx)
+        self.mode = self._wn.options.hydraulic.demand_model
+        self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, HW_approx=HW_approx)
 
         if diagnostics:
             diagnostics = _Diagnostics(self._wn, self._model, self.mode, enable=True)
@@ -840,7 +851,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         else:
             first_step = False
         trial = -1
-        max_trials = self._wn.options.solver.trials
+        max_trials = self._wn.options.hydraulic.trials
         resolve = False
         self._rule_iter = 0  # this is used to determine the rule timestep
 
@@ -898,7 +909,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             # Enter results in network and update previous inputs
             logger.debug('storing results in network')
-            wntr.sim.hydraulics.store_results_in_network(self._wn, self._model, mode=self.mode)
+            wntr.sim.hydraulics.store_results_in_network(self._wn, self._model)
 
             diagnostics.run(last_step='solve and store results in network', next_step='postsolve controls')
 
@@ -928,7 +939,11 @@ class WNTRSimulator(WaterNetworkSimulator):
                 if self._wn.sim_time % self._report_timestep == 0:
                     wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
-                        raise RuntimeError('Simulation already solved this timestep')
+                        if int(self._wn.sim_time) != self._wn.sim_time:
+                            raise RuntimeError('Time steps increments smaller than 1 second are forbidden.'+
+                                               ' Keep time steps as an integer number of seconds.')
+                        else:
+                            raise RuntimeError('Simulation already solved this timestep')
                     results.time.append(int(self._wn.sim_time))
             elif self._report_timestep.upper() == 'ALL':
                 wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)

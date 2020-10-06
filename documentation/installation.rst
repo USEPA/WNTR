@@ -6,7 +6,7 @@ Installation
 ======================================
 .. include:: <isonum.txt>
 
-WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several 
+WNTR requires 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several 
 Python package dependencies. 
 See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
@@ -62,7 +62,7 @@ Detailed installation instructions are included below.
 **Step 1**: Setup the Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several Python package dependencies.
+	WNTR requires 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/products/individual.
 	General information on Python can be found at https://www.python.org/.
@@ -180,8 +180,10 @@ Detailed installation instructions are included below.
 
 Requirements
 -------------
-Requirements for WNTR include 64-bit Python (tested on versions 3.6 and 3.7) along with several Python packages. 
+
+Requirements for WNTR include 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python packages. 
 Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
+
 
 * NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/

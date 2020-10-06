@@ -147,10 +147,20 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         cost =  [2850, 3225, 3307, 3563, 3820, 4133, 4339, 4554, 4823]
         pump_cost = pd.Series(cost, Pmp)
 
-    # Tank construction cost
+    # Tank construction cost - not only looking at direct volume capacity but also
+    #                          but a rough estimate of the support structure size
+    #                          below the tank.
     for node_name, node in wn.nodes(Tank):
-        tank_volume = np.pi*(node.diameter/2)**2*(node.max_level)
-        idx = np.argmin([np.abs(tank_cost.index - tank_volume)])
+        if node.vol_curve is None:
+            tank_construction_volume = np.pi*(node.diameter/2)**2 *node.max_level
+        else:
+            vcurve = np.array(node.vol_curve.points)
+            tank_volume = np.interp(node.max_level,vcurve[:,0],vcurve[:,1])
+            avg_area = tank_volume / (node.max_level - node.min_level)
+            tank_base_volume = node.min_level * avg_area
+            tank_construction_volume = tank_volume + tank_base_volume 
+        # choose the entry that is closest (keep the cost structure discreet)
+        idx = np.argmin([np.abs(tank_cost.index - tank_construction_volume)])
         #print(node_name, tank_cost.iloc[idx])
         network_cost = network_cost + tank_cost.iloc[idx]
 

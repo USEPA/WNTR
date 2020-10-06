@@ -18,7 +18,7 @@ from wntr.sim.models.utils import ModelUpdater
 logger = logging.getLogger(__name__)
 
 
-def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
+def create_hydraulic_model(wn, HW_approx='default'):
     """
     Parameters
     ----------
@@ -44,9 +44,10 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
 
     param.source_head_param(m, wn)
     param.expected_demand_param(m, wn)
-    if mode == 'DD':
+    mode = wn.options.hydraulic.demand_model
+    if mode in ['DD', 'DDA']:
         pass
-    elif mode == 'PDD':
+    elif mode in ['PDD', 'PDA']:
         param.pmin_param.build(m, wn, model_updater)
         param.pnom_param.build(m, wn, model_updater)
         param.pdd_poly_coeffs_param.build(m, wn, model_updater)
@@ -60,17 +61,17 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
     param.pump_power_param.build(m, wn, model_updater)
     param.valve_setting_param.build(m, wn, model_updater)
 
-    if mode == 'DD':
+    if mode in ['DD','DDA']:
         pass
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         var.demand_var(m, wn)
     var.flow_var(m, wn)
     var.head_var(m, wn)
     var.leak_rate_var(m, wn)
 
-    if mode == 'DD':
+    if mode in ['DD','DDA']:
         constraint.mass_balance_constraint.build(m, wn, model_updater)
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         constraint.pdd_mass_balance_constraint.build(m, wn, model_updater)
         constraint.pdd_constraint.build(m, wn, model_updater)
     else:
@@ -154,17 +155,40 @@ def update_network_previous_values(wn):
     for tank_name, tank in wn.tanks():
         tank._prev_head = tank.head
 
-
 def update_tank_heads(wn):
     """
     Parameters
     ----------
     wn: wntr.network.WaterNetworkModel
     """
+    dt = wn.sim_time - wn._prev_sim_time   
+
     for tank_name, tank in wn.tanks():
         q_net = tank.demand
-        delta_h = 4.0 * q_net * (wn.sim_time - wn._prev_sim_time) / (math.pi * tank.diameter ** 2)
+        dV = q_net * dt
+        
+        if tank.vol_curve is None:    
+            delta_h = 4.0 * dV / (math.pi * tank.diameter ** 2)
+        else:
+            vcurve = np.array(tank.vol_curve.points)
+            level_x = vcurve[:,0]
+            volume_y = vcurve[:,1]
+            
+            # I had to include this because the _prev_head is the reference
+            # point needed if the tank.head (and tank.level) have already
+            # been updated. This isn't a problem for cases with no volume curve.
+            if tank.head == tank._prev_head:
+                cur_level = tank.level
+            else:
+                cur_level = tank._prev_head - (tank.head - tank.level)
+                            
+            V0 = np.interp(cur_level,level_x,volume_y)
+            V1 = V0 + dV
+            level_new = np.interp(V1,volume_y,level_x)
+            delta_h = level_new - cur_level
+                
         tank.head = tank._prev_head + delta_h
+            
 
 
 def initialize_results_dict(wn):
@@ -281,15 +305,16 @@ def get_results(wn, results, node_res, link_res):
     results.link = link_res
 
 
-def store_results_in_network(wn, m, mode='DD'):
+def store_results_in_network(wn, m):
     """
 
     Parameters
     ----------
     wn: wntr.network.WaterNetworkModel
     m: wntr.aml.Model
-    mode: str
+
     """
+    mode = wn.options.hydraulic.demand_model
     for name, link in wn.links():
         if link._is_isolated:
             link._flow = 0
@@ -303,7 +328,7 @@ def store_results_in_network(wn, m, mode='DD'):
             node.leak_demand = 0
         else:
             node.head = m.head[name].value
-            if mode == 'PDD':
+            if mode in ['PDD', 'PDA']:
                 node.demand = m.demand[name].value
             else:
                 node.demand = m.expected_demand[name].value
