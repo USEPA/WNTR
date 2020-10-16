@@ -1,11 +1,9 @@
+"""
+The following example demonstrates how to import WNTR, generate a water network 
+model from an INP file, simulate hydraulics, and plot simulation results on the network.
+"""
 import wntr
-"""
-The following example runs a simple example that uses EPANET Example Network 3 (Net3). This example demonstrates how to:
-* Import WNTR
-* Generate a water network model
-* Simulate hydraulics
-* Plot simulation results on the network
-"""
+
 # Create a water network model
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
