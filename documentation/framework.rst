@@ -40,6 +40,8 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
+Additional details on the water network model (network subpackage) and simulators (sim subpackage) are included below.  Information on all subpackages can be found in the :ref:`api_documentation`.
+
 Water network model
 ----------------------
 The :class:`~wntr.network` subpackage contains classes to define the water network model, network controls, and graph representation of the network.

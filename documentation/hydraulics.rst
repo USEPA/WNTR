@@ -34,8 +34,8 @@ the ``wn.options.hydraulic.demand_model`` option.
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-	>>> wn.options.hydraulic.demand_model = 'DD'  
-	>>> wn.options.hydraulic.demand_model = 'PDD'
+    >>> wn.options.hydraulic.demand_model = 'DD'  
+    >>> wn.options.hydraulic.demand_model = 'PDD'
 	
 .. note:: 
    EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 

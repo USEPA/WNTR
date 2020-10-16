@@ -51,6 +51,7 @@ repository using the following commands in a command line or PowerShell prompt::
     cd WNTR
     python setup.py develop
 
+More information for developers can be found in the :ref:`developers` section.
 
 .. _detailed_instructions:
 
@@ -59,7 +60,8 @@ Detailed instructions
 
 Detailed installation instructions are included below.
 
-**Step 1**: Setup the Python environment
+Step 1: Setup the Python environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
 	WNTR requires 64-bit Python (tested on versions 3.6, 3.7, and 3.8) along with several Python package dependencies.
@@ -108,8 +110,9 @@ Detailed installation instructions are included below.
 	   
 	   Python console using Spyder.
 	   
-**Step 2**: Install WNTR
-	
+Step 2: Install WNTR
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 	The installation process differs for users and developers.  
 	Installation instructions for both types are described below.
 	
@@ -164,7 +167,8 @@ Detailed installation instructions are included below.
 	This will install the master branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
-**Step 3**: Test installation
+Step 3: Test installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	To test that WNTR is installed, open a Python console and run::
 	
@@ -175,6 +179,9 @@ Detailed installation instructions are included below.
 	If WNTR is **not** installed properly, the user will see the following ImportError::
 	
 		ImportError: No module named wntr
+	
+	See :ref:`getting_started` for a simple example that can also be used to test installation.
+	A full set of software tests can also be run locally to ensure proper installation, see :ref:`software_tests` for more details.
 	
 .. _requirements:
 
