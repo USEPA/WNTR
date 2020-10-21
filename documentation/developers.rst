@@ -21,6 +21,8 @@ GitHub repository
 WNTR is maintained in a version controlled repository.  
 WNTR is hosted on US EPA GitHub organization at https://github.com/USEPA/WNTR.
 
+.. _software_tests:
+
 Software tests
 --------------------
 WNTR includes continuous integration software tests that are run using GitHub Actions.
@@ -71,6 +73,10 @@ are expected to follow standard practices to document and test new code.
 Software developers interested in contributing to the project are encouraged to 
 create a `Fork` of the project and submit a `Pull Request` using GitHub.  
 Pull requests will be reviewed by the core development team.  
+
+Pull requests can be made to the **master** or **dev** (development) branch.  
+Developers can discuss new features and the appropriate branch for contributing 
+by opening a new issue on https://github.com/USEPA/WNTR/issues.  
 
 Pull requests must meet the following minimum requirements to be included in WNTR:
 
