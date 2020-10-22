@@ -39,8 +39,13 @@ make up a water distribution system. WNTR has an application programming interfa
 that is flexible and allows for changes to the network structure and operations, 
 along with simulation of disruptive incidents and recovery actions. 
 
-WNTR is based upon EPANET, which is a tool to simulate the movement and fate of drinking water constituents within distribution systems. Users are encouraged to be familiar with the use of
-EPANET and/or should have background knowledge in hydraulics and pressurized pipe network modeling before using WNTR. EPANET has a graphical user interface that might be a useful tool to facilitate the visualization of the network and the associated analysis results. Information on EPANET can be found at https://www.epa.gov/water-research/epanet. **WNTR is compatible with EPANET 2.00.12** [Ross00]_ **and EPANET 2.2** [EPANET22]_. In addition, users should have experience using Python, including the installation of additional Python packages. General information on Python can be found at https://www.python.org/. 
+WNTR is based upon EPANET, which is a tool to simulate the movement and fate of drinking water 
+constituents within distribution systems. Users are encouraged to be familiar with the use of
+EPANET and/or should have background knowledge in hydraulics and pressurized pipe network modeling before using WNTR. 
+EPANET has a graphical user interface that might be a useful tool to facilitate the visualization of the network 
+and the associated analysis results. Information on EPANET can be found at https://www.epa.gov/water-research/epanet. 
+**WNTR is compatible with EPANET 2.00.12** [Ross00]_ **and EPANET 2.2** [EPANET22]_. In addition, users should have 
+experience using Python, including the installation of additional Python packages. General information on Python can be found at https://www.python.org/. 
 
 
 WNTR can be installed through the United States Environmental Protection Agency (US EPA) 

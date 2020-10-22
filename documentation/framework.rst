@@ -40,8 +40,6 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
-Additional details on the water network model (network subpackage) and simulators (sim subpackage) are included below.  Information on all subpackages can be found in the :ref:`api_documentation`.
-
 Water network model
 ----------------------
 The :class:`~wntr.network` subpackage contains classes to define the water network model, network controls, and graph representation of the network.
@@ -135,7 +133,7 @@ Current WNTR limitations include:
 [VALVES], and
 [VERTICES].  
 
-However, **the [LABELS] section cannot be modified/created through the WNTR API**:
+However, **the [LABELS] section cannot be modified/created through the WNTR API**.
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
 Of the EPANET model options that directly apply to hydraulic simulations, **the following options are not supported by the WNTRSimulator**:
@@ -169,6 +167,4 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
 * **Variable minimum and required pressure**: 
   While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
   those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
-  This impacts the ability to use those junction attributes in the EpanetSimulator. Also, while the minimum and required pressure
-  in an EPANET INP file are used to define junction attributes, if the options are later changed (in ``wn.options``) that has no impact on the junction attributes.
-
+  This impacts the ability to use those junction attributes in the EpanetSimulator. 
