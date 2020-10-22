@@ -219,7 +219,7 @@ In a pressure dependent demand simulation, the delivered demand depends on the p
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
 
-The WNTRSimulator can run hydraulics using a pressure dependent demand simulation
+Both simulators can run hydraulics using a pressure dependent demand simulation
 according to the following pressure-demand relationship [WaSM88]_:
 
 .. math::
@@ -238,7 +238,8 @@ where
 :math:`P_f` is the required pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
 :math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water, 
 :math:`e` is the pressure exponent, usually set equal to 0.5.
-The set of nonlinear equations comprising the hydraulic 
+
+When using the WNTRSimulator, the set of nonlinear equations comprising the hydraulic 
 model and the pressure-demand relationship is solved directly using a 
 Newton-Raphson algorithm.  
 
@@ -257,15 +258,26 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The following example sets required and minimum pressure for each junction.  Note that required and minimum pressure can vary throughout the network.
+The required pressure and minimum pressure are defined in the the hydarulic options, and can be reset as shown 
+in the following example.
+
+.. doctest::
+    
+    >>> wn.options.hydraulic.required_pressure = 21.097 # 30 psi = 21.097 m
+    >>> wn.options.hydraulic.minimum_pressure  = 3.516 # 5 psi = 3.516 m
+	
+When using the WNTRSimultor, the required pressure and minimum pressure can vary throughout the network.  
+By default, the each junction's required and minimum pressure is set to None and the global value
+in the hydraulic options are used.  If the user defines required pressure or minimum pressure on a junction, 
+that value will override the global value.  The following example defines required pressure and minimum pressure on 
+junction 121.
 
 .. doctest::
 
-    >>> for name, node in wn.junctions():
-    ...     node.required_pressure = 21.097 # 30 psi = 21.097 m
-    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 m
+    >>> junction = wn.get_node('121')
+    >>> junction.required_pressure = 14.065 # 20 psi = 14.065 m
+    >>> junction.minimum_pressure = 0.352 # 0.5 psi = 0.352 m												   
 
-    
 .. _leak_model:
 
 Leak model

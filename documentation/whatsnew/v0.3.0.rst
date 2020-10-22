@@ -37,9 +37,16 @@ The following features are under development in the dev branch and will be part 
 
 * The following changes were made to handle new options in EPANET 2.2.0 INP files.  
 
-  * Junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
-    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, the required and minimum pressure are defined from the REQUIRED PRESSURE and MINIMUM PRESSURE in the INP file.
+  * If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, the global hydraulic options for required and minimum pressure are 
+    defined from the REQUIRED PRESSURE and MINIMUM PRESSURE in the INP file.  The default values used in EPANET are shown below::
+	     
+		wn.options.hydraulic.required_pressure = 0.07 # 0.1 psi = 0.07 m
+		wn.options.hydraulic.minimum_pressure = 0
 
+  * Junction attributes ``required_pressure`` and ``minimum_pressure`` are set to None by default and the global hydraulic options are used in the WNTRSimulator.  
+    If the user defines required pressure or minimum pressure on a junction, that value will override the global value when using the WNTRSimulator.  
+    Note that junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
+	
   * The keyword argument `mode` has been removed from the WNTRSimulator.  DD and PDD are now defined using ``wn.options.hydraulic.demand_model`` (as shown above) 
     to make use of the new EPANET 2.2.0 options (API change).
     If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the DEMAND MODEL in the INP file.
@@ -62,9 +69,3 @@ The following features are under development in the dev branch and will be part 
 * Added Travis CI tests for Python 3.8
 * Updated tests
 * Updated documentation
-
-Additional features planned for the 0.2.3 release include:
-
-* Additional valve topographic metrics
-* Graphics updates
- 

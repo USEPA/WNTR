@@ -231,6 +231,7 @@ class TestPDD(unittest.TestCase):
         # Changed to handle the specific heads_to_test range, which is bad
         node = wn.get_node('j1')
         node.required_pressure = 20.0
+        node.minimum_pressure = 0.0
 
         m = wntr.sim.aml.Model()
         updater = ModelUpdater()

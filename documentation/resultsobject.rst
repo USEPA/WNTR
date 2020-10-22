@@ -43,13 +43,15 @@ As shown in the :ref:`hydraulic_simulation` and :ref:`water_quality_simulation` 
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-	
+
 The node and link results are dictionaries of pandas DataFrames.  Each dictionary is a key:value pair, where
 the key is a result attribute (e.g., node demand, link flowrate) and the value is a DataFrame. 
 DataFrames are indexed by timestep (in seconds from the start of the simulation) with columns that are
 labeled using node or link names. 
+
 The use of pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
-For more information on pandas, see http://pandas.pydata.org/.
+For more information on pandas, see https://pandas.pydata.org.
+
 
 Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as shown in :numref:`fig-dataframe`.
  

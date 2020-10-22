@@ -18,8 +18,8 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 analysis_end_time = 72*3600 
 wn.options.time.duration = analysis_end_time
 wn.options.hydraulic.demand_model = 'PDD'
-for name, node in wn.nodes():
-    node.required_pressure = 17.57 
+wn.options.hydraulic.required_pressure = 17.57
+wn.options.hydraulic.minimum_pressure = 0
 
 # Create a list of pipes with large diameter to include in the analysis
 pipes = wn.query_link_attribute('diameter', np.greater_equal, 24*0.0254, 
