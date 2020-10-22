@@ -66,14 +66,16 @@ class Junction(Node):
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
-        self.required_pressure = self._options.hydraulic.required_pressure
+        self.required_pressure = None
         """float: The required pressure attribute is used for pressure-dependent demand
         simulations. This is the lowest pressure at which the junction receives 
-        the full requested demand."""
+        the full requested demand. If set to None, the global value in 
+        wn.options.hydraulic.required_pressure is used."""
 
-        self.minimum_pressure = self._options.hydraulic.minimum_pressure
+        self.minimum_pressure = None
         """float: The minimum pressure attribute is used for pressure-dependent demand 
-        simulations. Below this pressure, the junction will not receive any water."""
+        simulations. Below this pressure, the junction will not receive any water.
+        If set to None, the global value in wn.options.hydraulic.minimum_pressure is used."""
 
         self.emitter_coefficient = None
         
@@ -92,8 +94,8 @@ class Junction(Node):
         if not super(Junction, self)._compare(other):
             return False
         if abs(self.elevation - other.elevation)<1e-9 and \
-           abs(self.required_pressure - other.required_pressure)<1e-9 and \
-           abs(self.minimum_pressure - other.minimum_pressure)<1e-9 and \
+           self.required_pressure == other.required_pressure and \
+           self.minimum_pressure == other.minimum_pressure and \
            self.emitter_coefficient == other.emitter_coefficient:
             return True
         return False

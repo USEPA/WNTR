@@ -1764,13 +1764,10 @@ class InpFile(object):
         if opts.hydraulic.minimum_pressure != 0.0:
             minimum_pressure = to_si(self.flow_units, opts.hydraulic.minimum_pressure, HydParam.Pressure)
             opts.hydraulic.minimum_pressure = minimum_pressure
-            for junc in self.wn.junctions():
-                junc.minimum_pressure = minimum_pressure
+
         if opts.hydraulic.required_pressure != 0.07:
             required_pressure = to_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
             opts.hydraulic.required_pressure = required_pressure
-            for junc in self.wn.junctions():
-                junc.required_pressure = required_pressure
 
     def _write_options(self, f, wn, version=2.2):
         f.write('[OPTIONS]\n'.encode('ascii'))
