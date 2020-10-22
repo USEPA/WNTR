@@ -2774,7 +2774,7 @@ class BinFile(object):
             self.peak_energy = peakenergy
 
             logger.debug('... read EP simulation data ...')
-            reporttimes = np.arange(reportstart, duration+reportstep, reportstep)
+            reporttimes = np.arange(reportstart, duration+reportstep-(duration%reportstep), reportstep)
             nrptsteps = len(reporttimes)
             statsN = nrptsteps
             if statsflag in [StatisticsType.Maximum, StatisticsType.Minimum, StatisticsType.Range]:
