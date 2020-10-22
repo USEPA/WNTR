@@ -34,8 +34,8 @@ the ``wn.options.hydraulic.demand_model`` option.
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-	>>> wn.options.hydraulic.demand_model = 'DD'  
-	>>> wn.options.hydraulic.demand_model = 'PDD'
+    >>> wn.options.hydraulic.demand_model = 'DD'  
+    >>> wn.options.hydraulic.demand_model = 'PDD'
 	
 .. note:: 
    EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 
@@ -262,8 +262,8 @@ The following example sets required and minimum pressure for each junction.  Not
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.required_pressure = 21.097 # 30 psi = 21.097 psi
-    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 psi
+    ...     node.required_pressure = 21.097 # 30 psi = 21.097 m
+    ...     node.minimum_pressure = 3.516 # 5 psi = 3.516 m
 
     
 .. _leak_model:

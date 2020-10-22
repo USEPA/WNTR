@@ -40,6 +40,8 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
+Additional details on the water network model (network subpackage) and simulators (sim subpackage) are included below.  Information on all subpackages can be found in the :ref:`api_documentation`.
+
 Water network model
 ----------------------
 The :class:`~wntr.network` subpackage contains classes to define the water network model, network controls, and graph representation of the network.
@@ -66,7 +68,7 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.elements.Pattern`             Class to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 
    :class:`~wntr.network.controls.Control`             Class to define controls. Controls define a single action based on a single condition.
    :class:`~wntr.network.controls.Rule`                Class to define rules. Rules can define multiple actions and multiple conditions.
-   :class:`~wntr.network.options.WaterNetworkOptions`  Class to define model options, including the simulation duration and timestep.
+   :class:`~wntr.network.options.Options`              Class to define model options, including the simulation duration and timestep.
    ==================================================  =============================================================================================================================================================================================================================================================================
 
 Simulators
