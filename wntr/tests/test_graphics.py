@@ -1,5 +1,4 @@
 from nose.tools import *
-from nose import SkipTest
 from os.path import abspath, dirname, join, isfile
 import os, sys
 import wntr
