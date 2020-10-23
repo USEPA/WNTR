@@ -17,10 +17,8 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.time.duration = 48*3600
 wn.options.time.hydraulic_timestep = 1800
 wn.options.time.report_timestep = 1800
-
-# Set required pressures
-for name, node in wn.junctions():
-    node.required_pressure = 15
+wn.options.hydraulic.required_pressure = 15
+wn.options.hydraulic.minimum_pressure = 0
 
 # Define failure probability for each pipe, based on pipe diameter. Failure
 # probability must sum to 1.  Net3 has a few pipes with diameter = 99 inches,
