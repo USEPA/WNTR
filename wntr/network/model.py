@@ -1772,7 +1772,7 @@ class WaterNetworkModel(AbstractModel):
 
             By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
             The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
-            Because the PDA analysis options will break EPANET 2.0, the ``version`` option will allow
+            Because the PDD analysis options will break EPANET 2.0, the ``version`` option will allow
             the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
             options being turned off.
 

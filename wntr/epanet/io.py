@@ -407,10 +407,14 @@ class InpFile(object):
         units : str, int or FlowUnits
             Name of the units for the EPANET INP file to be written in.
         version : float, {2.0, **2.2**}
-            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDA mode 
-            and supress the writing of other EPANET 2.2-specific options. If PDA mode is specified, a 
+            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDD mode 
+            and supress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a 
             warning will be issued.
-
+        force_coordinates : bool
+            This only applies if `self.options.graphics.map_filename` is not `None`,
+            and will force the COORDINATES section to be written even if a MAP file is
+            provided. False by default, but coordinates **are** written by default since
+            the MAP file is `None` by default.
 		"""
 
         if not isinstance(wn, WaterNetworkModel):
@@ -1809,7 +1813,7 @@ class InpFile(object):
         # EPANET 2.2 OPTIONS
         if version == 2.0:
             if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
-                logger.critical('You have specified a PDA analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DDA mode.')
+                logger.critical('You have specified a PDD analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DD mode.')
         else:
             if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
                 f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.hydraulic.demand_model).encode('ascii'))
