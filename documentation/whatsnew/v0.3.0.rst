@@ -16,7 +16,7 @@ The following features are under development in the dev branch and will be part 
 	
 		wn.options.hydraulic.demand_model = 'DD' # specify demand-driven analysis 
 		wn.options.hydraulic.demand_model = 'PDD' # specify pressure dependent demand analysis
-  
+ 
   * The EPANET 2.2.0 binaries for Mac and PC come from the Open Water Analytics EPANET 2.2.0 repository (https://github.com/OpenWaterAnalytics/EPANET).
     The Linux binary was built on Ubuntu and comes from the OWA group using the same source as the Windows and Mac binaries.
 	
@@ -47,6 +47,8 @@ The following features are under development in the dev branch and will be part 
     If the user defines required pressure or minimum pressure on a junction, that value will override the global value when using the WNTRSimulator.  
     Note that junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
 	
+  * Tanks attributes include an indicator for tank overflow.  This can be used in the EpanetSimulator using EPANET 2.2.
+  
   * The keyword argument `mode` has been removed from the WNTRSimulator.  DD and PDD are now defined using ``wn.options.hydraulic.demand_model`` (as shown above) 
     to make use of the new EPANET 2.2.0 options (API change).
     If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the DEMAND MODEL in the INP file.
