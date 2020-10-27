@@ -101,6 +101,16 @@ class Junction(Node):
         return False
     
     @property
+    def nominal_pressure(self):
+        """deprecated - use required pressure"""
+        raise DeprecationWarning('The nominal_pressure property has been renamed required_pressure. Please update your code')
+
+    @nominal_pressure.setter
+    def nominal_pressure(self, value):
+        """deprecated - use required pressure"""
+        raise DeprecationWarning('The nominal_pressure property has been renamed required_pressure. Please update your code')
+
+    @property
     def node_type(self):
         """returns ``"Junction"``"""
         return 'Junction'
