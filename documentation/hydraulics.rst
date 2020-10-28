@@ -129,7 +129,7 @@ Headloss in pipes
 -------------------------
 Both simulators use conservation of energy formulas from EPANET [Ross00]_. 
 While the EpanetSimulator can use the Hazen-Williams and Chezy-Manning pipe head loss formulas, 
-the WNTRSimulator uses only the Hazen-Williams hhead loss formula, shown below.
+the WNTRSimulator uses only the Hazen-Williams head loss formula, shown below.
 
 .. math:: H_{n_{j}} - H_{n_{i}} = h_{L} = 10.667 C^{-1.852} d^{-4.871} L q^{1.852}
 
@@ -259,7 +259,7 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The required pressure and minimum pressure are defined in the the hydarulic options, and can be reset as shown 
+The required pressure and minimum pressure are defined in the the hydraulic options, and can be reset as shown 
 in the following example.
 
 .. doctest::
@@ -304,11 +304,11 @@ where
 :math:`d_{leak}` is the leak demand (m³/s),
 :math:`C_d` is the discharge coefficient (unitless), 
 :math:`A` is the area of the hole (m²), 
-:math:`\alpha` is an exponent related to characteristics of the leak, 
+:math:`\alpha` is an exponent related to characteristics of the leak (unitless),
 :math:`p` is the gauge pressure (Pa), 
 :math:`h` is the gauge head (m), 
 :math:`g` is the acceleration of gravity (m/s²), and 
-:math:`\rho` is the density of the fluid.
+:math:`\rho` is the density of the fluid (kg/m³).
 
 The default discharge coefficient is 0.75 (assuming turbulent flow) [Lamb01]_, but 
 the user can specify other values if needed.  

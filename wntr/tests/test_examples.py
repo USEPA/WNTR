@@ -1,5 +1,4 @@
 # This is a test to ensure all of the examples run.
-from __future__ import print_function
 import unittest
 import sys
 import os
