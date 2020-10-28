@@ -864,7 +864,7 @@ class InpFile(object):
             if current == []:
                 continue
             junction = self.wn.get_node(current[0])
-            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.EmitterCoeff)
 
     def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode('ascii'))
@@ -876,7 +876,7 @@ class InpFile(object):
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
             if junction.emitter_coefficient:
-                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.Flow)
+                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.EmitterCoeff)
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
