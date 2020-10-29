@@ -794,7 +794,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
                 backup_solver_options=None, convergence_error=True, HW_approx='default',
-                diagnostics=False):
+                reset_intial_conditions=True, diagnostics=False):
         """
         Run an extended period simulation (hydraulics only).
 
@@ -823,6 +823,10 @@ class WNTRSimulator(WaterNetworkSimulator):
         HW_approx: str
             Specifies which Hazen-Williams headloss approximation to use. Options are 'default' and 'piecewise'. Please
             see the WNTR documentation on hydraulics for details.
+        reset_intial_conditions: bool
+            If reset_intial_conditions is True, initial conditions (including tank level and link status)  
+            are reset after running the simulation.  If False, conditions at the end of the simulation are retained 
+            on the water network model.
         diagnostics: bool
             If True, then run with diagnostics on
         """
@@ -962,6 +966,13 @@ class WNTRSimulator(WaterNetworkSimulator):
                 break
 
         wntr.sim.hydraulics.get_results(self._wn, results, node_res, link_res)
+        
+        if reset_intial_conditions:
+            self._wn.reset_initial_values()
+        else:
+            self._wn.options.time.start_clocktime = self._wn.options.time.duration
+            self._wn.options.time.report_start = self._wn.options.time.duration
+        
         return results
 
     def _initialize_name_id_maps(self):

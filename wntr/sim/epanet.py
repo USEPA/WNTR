@@ -59,7 +59,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
-    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.2):
+    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
+                version=2.2, reset_intial_conditions=True):
         """
         Run the EPANET simulator.
 
@@ -87,7 +88,10 @@ class EpanetSimulator(WaterNetworkSimulator):
         version : float, {2.0, **2.2**}
             Optionally change the version of the EPANET toolkit libraries. Valid choices are
             either 2.2 (the default if no argument provided) or 2.0.
-
+        reset_intial_conditions: bool
+            If reset_intial_conditions is True, initial conditions (including tank level and link status)  
+            are reset after running the simulation.  If False, conditions at the end of the simulation are retained 
+            on the water network model.
         """
         if isinstance(version, str):
             version = float(version)
@@ -115,5 +119,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData.ENclose()
         logger.debug('Completed run')
         #os.sys.stderr.write('Finished Closing\n')
-        return self.reader.read(outfile)
-
+        
+        results = self.reader.read(outfile)
+        
+        if reset_intial_conditions:
+            pass
+        else:
+            self._wn._reset_final_conditions(results)
+            
+        return results
+   
