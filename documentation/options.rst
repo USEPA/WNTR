@@ -11,7 +11,7 @@ Water network options are stored in an :class:`~wntr.network.options.Options`
 class which divides options into the following sections:
 
 * :class:`~wntr.network.options.TimeOptions`: Options related to simulation and model timing
-* :class:`~wntr.network.options.HydraulicOptions`: Options related to the hydraulic model, including hydraulics
+* :class:`~wntr.network.options.HydraulicOptions`: Options related to hydraulic modeling
 * :class:`~wntr.network.options.QualityOptions`: Options related to water quality modeling
 * :class:`~wntr.network.options.ReactionOptions`: Options related to water quality reactions
 * :class:`~wntr.network.options.EnergyOptions`: Options related to energy calculations

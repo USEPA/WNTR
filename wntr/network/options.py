@@ -430,10 +430,9 @@ class HydraulicOptions(_OptionsBase):
         Accuracy value at which solution damping begins. Default is 0 (no damping).
 
     demand_model : str
-        Demand model for EPANET 2.2; acceptable values are DDA and PDA, 
-        though DD and PDD are accepted for backward compatibility. Default is DDA.
+        Demand model for EPANET 2.2; acceptable values are DD and PDD. Default is DD.
         EPANET 2.0 only contains demand driven analysis, and will issue a warning 
-        if this option is not set to DDA.
+        if this option is not set to DD.
 
     inpfile_units : str
         Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
@@ -451,7 +450,7 @@ class HydraulicOptions(_OptionsBase):
                  specific_gravity: float = 1.0,
                  pattern: str = '1',
                  demand_multiplier: float = 1.0,
-                 demand_model: str = 'DDA',
+                 demand_model: str = 'DD',
                  minimum_pressure: float = 0.0,
                  required_pressure: float = 0.07,  # EPANET 2.2 default
                  pressure_exponent: float = 0.5,
@@ -503,7 +502,7 @@ class HydraulicOptions(_OptionsBase):
             if value is not None:
                 value = str.upper(value)
                 if value not in ['DDA', 'DD', 'PDD', 'PDA']:
-                    raise ValueError('demand_model must be None (off) or one of "DDA" or "PDA"')
+                    raise ValueError('demand_model must be None (off) or one of "DD", "DDA", "PDD", or "PDA"')
                 if value == 'DD': value = 'DDA'
                 if value == 'PDD': value = 'PDA'
         elif name == 'unbalanced':

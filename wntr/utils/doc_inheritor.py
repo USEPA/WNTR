@@ -1,5 +1,4 @@
 import inspect
-import sys
 
 
 class DocInheritor(object):
@@ -16,14 +15,7 @@ class DocInheritor(object):
         for meth in self.methods:
             if not hasattr(parent, meth):
                 raise ValueError('Parent class {0} does not have method {1}'.format(parent, meth))
-            if sys.version_info.major == 2:
-                if type(getattr(cls, meth)) is property:
-                    continue
-                setattr(getattr(getattr(cls, meth), '__func__'), '__doc__', getattr(parent, meth).__doc__)
-            else:
-                if sys.version_info.minor <= 4 and type(getattr(cls, meth)) is property:
-                    continue
-                setattr(getattr(cls, meth), '__doc__', getattr(parent, meth).__doc__)
+            setattr(getattr(cls, meth), '__doc__', getattr(parent, meth).__doc__)
         return cls
 
 

@@ -12,7 +12,6 @@ Programmers Toolkit DLLs.
     ENgetwarning
 
 """
-from __future__ import print_function
 import ctypes, os, sys
 from ctypes import byref
 import os.path
