@@ -218,6 +218,8 @@ class pdd_constraint(Definition):
         index_over: list of str
             list of junction names; default is all junctions in wn
         """
+        pressure_exponent = wn.options.hydraulic.pressure_exponent
+        
         if not hasattr(m, 'pdd'):
             m.pdd = aml.ConstraintDict()
 
@@ -250,7 +252,7 @@ class pdd_constraint(Definition):
                 con = aml.ConditionalExpression()
                 con.add_condition(aml.inequality(body=h - elev - pmin, ub=0), d - d_expected*slope*(h-elev-pmin))
                 con.add_condition(aml.inequality(body=h - elev - pmin - delta, ub=0), d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
-                con.add_condition(aml.inequality(body=h - elev - pnom + delta, ub=0), d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
+                con.add_condition(aml.inequality(body=h - elev - pnom + delta, ub=0), d - d_expected*((h-elev-pmin)/(pnom-pmin))**pressure_exponent)
                 con.add_condition(aml.inequality(body=h - elev - pnom, ub=0), d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
                 con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
                 con = aml.Constraint(con)

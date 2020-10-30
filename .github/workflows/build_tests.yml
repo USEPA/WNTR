@@ -83,7 +83,7 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace wntr
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
@@ -115,7 +115,7 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace --doctest-extension=.rst documentation/*.rst wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace --doctest-extension=.rst documentation/*.rst wntr
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
@@ -150,7 +150,7 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --doctest-extension=.rst --traverse-namespace documentation/*.rst wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --doctest-extension=.rst --traverse-namespace documentation/*.rst wntr
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage

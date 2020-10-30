@@ -1,5 +1,4 @@
 # This is a test to ensure all of the examples run.
-from __future__ import print_function
 import unittest
 import sys
 import os
@@ -28,6 +27,11 @@ class TestExamples(unittest.TestCase):
         flag = 0
         failed_examples = []
         for f in example_files:
+            if 'sensor_placement' in f:
+                try:
+                    import chama
+                except ImportError:
+                    continue
             tmp_flag = call([sys.executable, join(examplesdir,f)])
             print(f, tmp_flag)
             if tmp_flag == 1:

@@ -38,6 +38,8 @@ A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/exam
 of a pipe leak scenario where the location and duration are drawn from probability 
 distributions.
 
+.. _fragility_curves:
+
 Fragility curves
 ===============================
 Fragility curves are commonly used in disaster models to define the probability 

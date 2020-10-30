@@ -25,10 +25,7 @@ from wntr.utils.ordered_set import OrderedSet
 
 import enum
 import sys
-if sys.version_info[0] == 2:
-    from collections import MutableSequence, MutableMapping
-else:
-    from collections.abc import MutableSequence, MutableMapping
+from collections.abc import MutableSequence, MutableMapping
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 

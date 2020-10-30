@@ -37,7 +37,7 @@ peak ground acceleration, peak ground velocity,
 or repair rate.
 The American Lifelines Alliance report [ALA01]_ includes seismic fragility curves 
 for water system components.
-See :ref:`stochastic_simulation` for more information on fragility curves.
+See :ref:`fragility_curves` for more information.
 
 Since properties like peak ground acceleration, peak ground velocity, and repair rate are a function of the distance to the epicenter, 
 node coordinates in the water network model must be in units of meters.  
@@ -193,6 +193,7 @@ The following example changes supply and demand in the model.
 
     >>> for res_name, res in wn.reservoirs():
     ...     res.head_timeseries.base_value = res.head_timeseries.base_value*0.9
+	
     >>> for junc_name, junc in wn.junctions():
     ...     for demand in junc.demand_timeseries_list:
     ...         demand.base_value = demand.base_value*1.15
@@ -207,8 +208,6 @@ highlight the need to minimize human health and economic impacts.
 
 WNTR simulates contamination incidents by introducing contaminants into the distribution system and allowing them to propagate through the system. 
 The section on :ref:`water_quality_simulation` includes steps to define and simulate contamination incidents.
-
-Future versions of WNTR will be able to simulate changes in source water quality due to contamination incidents.
 
 Other disaster scenarios
 -------------------------------

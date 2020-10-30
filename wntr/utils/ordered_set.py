@@ -1,10 +1,7 @@
 import sys
-if sys.version_info.major == 2:
-    from collections import MutableSet
-else:
-    from collections.abc import MutableSet
+from collections.abc import MutableSet
 from collections import OrderedDict
-from collections import Iterable
+from collections.abc import Iterable
 
 
 class OrderedSet(MutableSet):

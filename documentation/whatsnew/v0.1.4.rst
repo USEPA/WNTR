@@ -11,7 +11,7 @@ WNTR is also tested on private servers using several large water utility network
 * Updated the order in which controls operate to match EPANET
 * Updated controls classes to include Control and Rule objects (API change, see :class:`~wntr.network.controls.Control` and :class:`~wntr.network.controls.Rule`)
 * Added ability to get the names of all required objects that are queried or acted upon by the control/rule (see :class:`~wntr.network.controls.Control.requires`)
-* Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
+* Modified the structure of the Options object to group options into types (API change, see :class:`~wntr.network.options.Options`)
 * Created water network model objects for different types of valves (see 
   :class:`~wntr.network.elements.PRValve`, 
   :class:`~wntr.network.elements.PSValve`, 
