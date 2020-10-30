@@ -1,8 +1,7 @@
 .. _whatsnew_0330:
 
-v0.3.0 (dev branch)
+v0.3.0 (master)
 ---------------------------------------------------
-The following features are under development in the dev branch and will be part of the next release.
 
 * Added EPANET 2.2.0 as the default engine in the EpanetSimulator.
 
