@@ -1,6 +1,6 @@
 .. _whatsnew_0330:
 
-v0.3.0 (master)
+v0.3.0 (November 2, 2020)
 ---------------------------------------------------
 
 * Added EPANET 2.2.0 as the default engine in the EpanetSimulator.
