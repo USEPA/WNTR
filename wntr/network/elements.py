@@ -34,13 +34,16 @@ import logging
 import math
 import six
 import copy
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, OptimizeWarning
 
 from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
+
+import warnings
+warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
 
 logger = logging.getLogger(__name__)
 
@@ -656,6 +659,8 @@ class Pump(Link):
         self.energy_price = None
         self.energy_pattern = None
         self._power_outage = LinkStatus.Open
+        self._outage_start_control_name = name+'_start_outage'
+        self._outage_end_control_name = name+'_end_outage'
 
     def _compare(self, other):
         if not super(Pump, self)._compare(other):
@@ -705,9 +710,11 @@ class Pump(Link):
         """Alias to speed for consistency with other link types"""
         return self._speed_timeseries
     
-    def add_outage(self, wn, start_time, end_time):
+    def add_outage(self, wn, start_time, end_time=None):
         """
-        Adds a pump outage control to the water network model
+        Adds a pump outage control to the water network model.
+        
+        The control is defined using a Rule with priority 6 (very high).
 
         Parameters
         ----------
@@ -719,17 +726,42 @@ class Pump(Link):
            The time at which the outage stops.
            
         """
-        from wntr.network.controls import _InternalControlAction, Control
+        from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
+        
+        self._power_outage = True
+        
+        # Start control
+        act = ControlAction(self, 'status', LinkStatus.Closed)
+        cond1 = SimTimeCondition(wn, 'Above' , start_time)
+        if end_time is not None:
+            cond2 = SimTimeCondition(wn, 'Below' , end_time)
+            cond = AndCondition(cond1, cond2)
+        else:
+            cond = cond1
+        rule = Rule(cond, act, priority=6)
+        wn.add_control(self._outage_start_control_name, rule)
+        
+        # End control
+        if end_time is not None:
+            act = ControlAction(self, 'status', LinkStatus.Open)
+            cond = SimTimeCondition(wn, 'Above' , end_time)
+            rule = Rule(cond, act, priority=1)
+            wn.add_control(self._outage_end_control_name, rule)
 
-        start_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Closed, 'status')
-        end_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Open, 'status')
+    def remove_outage(self,wn):
+        """
+        Remove an outage control from the water network model
 
-        start_control = Control._time_control(wn, start_time, 'SIM_TIME', False, start_power_outage_action)
-        end_control = Control._time_control(wn, end_time, 'SIM_TIME', False, end_power_outage_action)
-
-        wn.add_control(self.name+'_power_off_'+str(start_time), start_control)
-        wn.add_control(self.name+'_power_on_'+str(end_time), end_control)
-
+        Parameters
+        ----------
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
+           Water network model
+        """
+        self._power_outage = False
+        
+        wn._discard_control(self._outage_start_control_name)
+        wn._discard_control(self._outage_end_control_name)
+        
 
 class HeadPump(Pump):
     """

@@ -12,4 +12,8 @@ v0.3.1 (dev branch)
   
 * The default setting for `convergence_error` in the WNTRSimulator was changed to False.
   
-
+* Updated the `add_outage` method on pumps so it can be used with the EpanetSimulator.  
+  Added a `remove_outage` method on pumps.
+  
+* Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
+  This is not an error.
