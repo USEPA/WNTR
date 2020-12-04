@@ -2395,10 +2395,13 @@ class _EpanetRule(object):
                     value = to_si(self.inp_units, value, HydParam.Pressure)
                 elif attr.lower() in ['setting']:
                     link = model.get_link(words[2])
-                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                        value = to_si(self.inp_units, value, HydParam.Pressure)
-                    elif link.valve_type.upper() in ['FCV']:
-                        value = to_si(self.inp_units, value, HydParam.Flow)
+                    if isinstance(link, wntr.network.Pump):
+                        value = value
+                    elif isinstance(link, wntr.network.Valve):
+                        if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                            value = to_si(self.inp_units, value, HydParam.Pressure)
+                        elif link.valve_type.upper() in ['FCV']:
+                            value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
