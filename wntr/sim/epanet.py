@@ -70,7 +70,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
             By default, WNTR now uses the EPANET 2.2 toolkit as the engine for the EpanetSimulator.
             To force usage of the older EPANET 2.0 toolkit, use the ``version`` command line option.
-            Note that if the demand_model option is set to PDA, then a warning will be issued, as
+            Note that if the demand_model option is set to PDD, then a warning will be issued, as
             EPANET 2.0 does not support such analysis.
         
 

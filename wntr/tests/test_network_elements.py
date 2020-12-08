@@ -1,7 +1,6 @@
 """
 Test the wntr.network.elements classes
 """
-from __future__ import print_function
 import nose.tools
 from nose import SkipTest
 from nose.tools import *

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np

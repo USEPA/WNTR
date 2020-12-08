@@ -19,8 +19,7 @@ import networkx as nx
 import math
 from collections import Counter
 import sys
-if sys.version_info >= (3,0):
-    from functools import reduce
+from functools import reduce
     
 import logging
 

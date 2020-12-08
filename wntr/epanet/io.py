@@ -407,10 +407,14 @@ class InpFile(object):
         units : str, int or FlowUnits
             Name of the units for the EPANET INP file to be written in.
         version : float, {2.0, **2.2**}
-            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDA mode 
-            and supress the writing of other EPANET 2.2-specific options. If PDA mode is specified, a 
+            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDD mode 
+            and supress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a 
             warning will be issued.
-
+        force_coordinates : bool
+            This only applies if `self.options.graphics.map_filename` is not `None`,
+            and will force the COORDINATES section to be written even if a MAP file is
+            provided. False by default, but coordinates **are** written by default since
+            the MAP file is `None` by default.
 		"""
 
         if not isinstance(wn, WaterNetworkModel):
@@ -860,7 +864,7 @@ class InpFile(object):
             if current == []:
                 continue
             junction = self.wn.get_node(current[0])
-            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.EmitterCoeff)
 
     def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode('ascii'))
@@ -872,7 +876,7 @@ class InpFile(object):
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
             if junction.emitter_coefficient:
-                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.Flow)
+                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.EmitterCoeff)
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1809,7 +1813,7 @@ class InpFile(object):
         # EPANET 2.2 OPTIONS
         if version == 2.0:
             if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
-                logger.critical('You have specified a PDA analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DDA mode.')
+                logger.critical('You have specified a PDD analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DD mode.')
         else:
             if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
                 f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.hydraulic.demand_model).encode('ascii'))
@@ -2389,10 +2393,13 @@ class _EpanetRule(object):
                     value = to_si(self.inp_units, value, HydParam.Pressure)
                 elif attr.lower() in ['setting']:
                     link = model.get_link(words[2])
-                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                        value = to_si(self.inp_units, value, HydParam.Pressure)
-                    elif link.valve_type.upper() in ['FCV']:
-                        value = to_si(self.inp_units, value, HydParam.Flow)
+                    if isinstance(link, wntr.network.Pump):
+                        value = value
+                    elif isinstance(link, wntr.network.Valve):
+                        if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                            value = to_si(self.inp_units, value, HydParam.Pressure)
+                        elif link.valve_type.upper() in ['FCV']:
+                            value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:

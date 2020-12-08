@@ -12,7 +12,7 @@ See :ref:`software_framework` for more information on features and limitations o
 
 EpanetSimulator
 -----------------
-The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [EPANET22]_.  
+The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [RWTS20]_.  
 EPANET 2.2.0 is used by default and runs demand-driven and pressure dependent hydraulic analysis.  
 EPANET 2.00.12 runs demand-driven hydraulic analysis only.
 Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
@@ -84,6 +84,8 @@ More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.core.WNTRSimulator`.
 The simulators use different solvers for the system of hydraulic equations; as such, small differences in the results
 are expected.
+While the EpanetSimulator uses Todini's Global Gradient Algorithm to solve the system of equations,
+the WNTRSimulator uses a Newton-Raphson algorithm. 
 
 Hydraulic options
 -------------------
@@ -125,7 +127,9 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 
 Headloss in pipes
 -------------------------
-Both simulators use the Hazen-Williams headloss formula from EPANET [Ross00]_:
+Both simulators use conservation of energy formulas from EPANET [Ross00]_. 
+While the EpanetSimulator can use the Hazen-Williams and Chezy-Manning pipe head loss formulas, 
+the WNTRSimulator uses only the Hazen-Williams head loss formula, shown below.
 
 .. math:: H_{n_{j}} - H_{n_{i}} = h_{L} = 10.667 C^{-1.852} d^{-4.871} L q^{1.852}
 
@@ -142,9 +146,7 @@ The flow rate in a pipe is positive if water is flowing from
 the starting node to the ending node and negative if water is flowing
 from the ending node to the starting node. 
 
-The WNTRSimulator solves for pressures and flows throughout the network 
-as a set of linear equations.
-However, the Hazen-Williams headloss formula is not valid for negative
+The Hazen-Williams headloss formula is not valid for negative
 flow rates. Therefore, the WNTRSimulator uses a reformulation of this constraint. 
 
 For :math:`q<0`:
@@ -163,6 +165,9 @@ set of hydraulic equations to become singular (when :math:`q=0`).
 To overcome this limitation, the WNTRSimulator
 splits the domain of :math:`q` into segments to
 create a piecewise smooth function.
+
+See `EPANET documentation <https://epanet22.readthedocs.io/en/latest/12_analysis_algorithms.html#analysis-algorithms>`_ for more details 
+on analysis algorithms used by EPANET (and therefore used by the EpanetSimulator).
 
 .. as presented below.
 
@@ -227,7 +232,7 @@ according to the following pressure-demand relationship [WaSM88]_:
 	d = 
 	\begin{cases}
 	0 & p \leq P_0 \\
-	D_f(\frac{p-P_0}{P_f-P_0})^e & P_0 \leq p \leq P_f \\
+	D_f(\frac{p-P_0}{P_f-P_0})^{1/e} & P_0 \leq p \leq P_f \\
 	D_f & p \geq P_f
 	\end{cases}
 
@@ -237,11 +242,7 @@ where
 :math:`p` is the pressure (Pa), 
 :math:`P_f` is the required pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
 :math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water, 
-:math:`e` is the pressure exponent, usually set equal to 0.5.
-
-When using the WNTRSimulator, the set of nonlinear equations comprising the hydraulic 
-model and the pressure-demand relationship is solved directly using a 
-Newton-Raphson algorithm.  
+:math:`1/e` is the pressure exponent, usually set equal to 0.5.
 
 :numref:`fig-pressure-dependent` illustrates the pressure-demand relationship using both the demand-driven and pressure dependent demand simulations.
 In the example, 
@@ -258,7 +259,7 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The required pressure and minimum pressure are defined in the the hydarulic options, and can be reset as shown 
+The required pressure and minimum pressure are defined in the the hydraulic options, and can be reset as shown 
 in the following example.
 
 .. doctest::
@@ -286,8 +287,7 @@ Leak model
 The WNTRSimulator includes the ability to add leaks to the network using a leak model. 
 As such, emitter coefficients defined in the water network model options are not used by the WNTRSimulator. 
 Users interested in using the EpanetSimulator to model leaks can still do so by defining 
-emitter coefficients. Note, that the emitter coefficient cannot be modified using 
-the WNTR API, and can only be modified within the EPANET INP file.
+emitter coefficients. 
 
 When using the WNTRSimulator, leaks are modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
@@ -295,17 +295,25 @@ When using the WNTRSimulator, leaks are modeled with a general form of the equat
 .. math::
 
 	d_{leak} = C_{d} A p^{\alpha} \sqrt{\frac{2}{\rho}}
+	
+.. math::
 
+    d_{leak} = C_{d} A \sqrt{2gh} \hspace{0.2in} \text{when } \alpha = 0.5
+	
 where 
 :math:`d_{leak}` is the leak demand (m³/s),
 :math:`C_d` is the discharge coefficient (unitless), 
 :math:`A` is the area of the hole (m²), 
-:math:`p` is the gauge pressure inside the pipe (Pa), 
-:math:`\alpha` is the discharge coefficient, and 
-:math:`\rho` is the density of the fluid.
+:math:`\alpha` is an exponent related to characteristics of the leak (unitless),
+:math:`p` is the gauge pressure (Pa), 
+:math:`h` is the gauge head (m), 
+:math:`g` is the acceleration of gravity (m/s²), and 
+:math:`\rho` is the density of the fluid (kg/m³).
+
 The default discharge coefficient is 0.75 (assuming turbulent flow) [Lamb01]_, but 
 the user can specify other values if needed.  
-The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) [Lamb01]_. 
+The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) [Lamb01]_ and currently cannot be changed by the user.
+
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 
