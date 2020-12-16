@@ -659,8 +659,8 @@ class Pump(Link):
         self.energy_price = None
         self.energy_pattern = None
         self._power_outage = LinkStatus.Open
-        self._outage_start_control_name = name+'_start_outage'
-        self._outage_end_control_name = name+'_end_outage'
+        self._outage_rule_name = name+'_outage'
+        self._after_outage_rule_name = name+'_after_outage'
 
     def _compare(self, other):
         if not super(Pump, self)._compare(other):
@@ -710,11 +710,9 @@ class Pump(Link):
         """Alias to speed for consistency with other link types"""
         return self._speed_timeseries
     
-    def add_outage(self, wn, start_time, end_time=None):
+    def add_outage(self, wn, start_time, end_time=None, priority=6, add_after_outage_rule=False):
         """
-        Adds a pump outage control to the water network model.
-        
-        The control is defined using a Rule with priority 6 (very high).
+        Adds a pump outage rule to the water network model.
 
         Parameters
         ----------
@@ -724,13 +722,18 @@ class Pump(Link):
            The time at which the outage starts.
         end_time : int
            The time at which the outage stops.
-           
+        priority : int
+            The outage rule priority, default = 6 (very high)
+        add_after_outage_rule : bool
+            Flag indicating if a rule is added to open the pump after the outage. 
+            Pump status after the outage is generally defined by existing controls/rules in the water network model. 
+            For example, the pump opens based on the level of a specific tank.
         """
         from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
         
         self._power_outage = True
         
-        # Start control
+        # Outage
         act = ControlAction(self, 'status', LinkStatus.Closed)
         cond1 = SimTimeCondition(wn, 'Above' , start_time)
         if end_time is not None:
@@ -738,15 +741,15 @@ class Pump(Link):
             cond = AndCondition(cond1, cond2)
         else:
             cond = cond1
-        rule = Rule(cond, act, priority=6)
-        wn.add_control(self._outage_start_control_name, rule)
+        rule = Rule(cond, act, priority=priority)
+        wn.add_control(self._outage_rule_name, rule)
         
-        # End control
-        if end_time is not None:
+        # After outage
+        if add_after_outage_rule and end_time is not None:
             act = ControlAction(self, 'status', LinkStatus.Open)
             cond = SimTimeCondition(wn, 'Above' , end_time)
-            rule = Rule(cond, act, priority=1)
-            wn.add_control(self._outage_end_control_name, rule)
+            rule = Rule(cond, act, priority=priority)
+            wn.add_control(self._after_outage_rule_name, rule)
 
     def remove_outage(self,wn):
         """
