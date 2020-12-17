@@ -1,0 +1,19 @@
+.. _whatsnew_031:
+
+v0.3.1 (dev branch)
+---------------------------------------------------
+
+* The `run_sim` method for the EpanetSimulator now includes the option to define convergence error behavior.
+  
+  * If the simulation does not converge and `convergence_error` is True, an error is raised. 
+  * If the simulation does not converge and `convergence_error` is False, partial results are returned, a warning is issued, and results object `error_code` is set to 0.
+  
+  The default setting for `convergence_error` when using the EpanetSimulator is False.
+  
+* The default setting for `convergence_error` in the WNTRSimulator was changed to False.
+  
+* Updated the `add_outage` method on pumps so it can be used with the EpanetSimulator.  
+  Added a `remove_outage` method on pumps.
+  
+* Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
+  This is not an error.

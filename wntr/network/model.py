@@ -1693,6 +1693,26 @@ class WaterNetworkModel(AbstractModel):
                 pass
         return pd.Series(link_attribute_dict)
 
+    def convert_controls_to_rules(self, priority=3):
+        """
+        Convert all controls to rules
+
+        Parameters
+        ----------
+        priority : int, optional
+           Rule priority, default is 3.
+
+        """
+        for name in self.control_name_list:
+            control = self.get_control(name)
+            if isinstance(control, Control):
+                act = control.actions()[0]
+                cond = control.condition
+                rule = Rule(cond, act, priority=priority)
+                self.add_control(name.replace(' ', '_')+'_Rule', rule)
+                self.remove_control(name)
+                
+        
     def reset_initial_values(self):
         """
         Resets all initial values in the network
