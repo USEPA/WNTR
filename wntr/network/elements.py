@@ -890,15 +890,15 @@ class Pump(Link):
     """
     Pump class, inherited from Link.
 
+    For details about the different subclasses, please see one of the following:
+    :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
+
     .. rubric:: Constructor
     
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
     Direct creation through the constructor is highly discouraged.
     
-    For details about the different subclasses, please see one of the following:
-    :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
-
     Parameters
     ----------
     name : string
@@ -909,7 +909,30 @@ class Pump(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -917,12 +940,9 @@ class Pump(Link):
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
-        self.efficiency = None
-        """float : pump efficiency"""
-        self.energy_price = None 
-        """float : energy price surcharge (only used by EPANET)"""
-        self.energy_pattern = None
-        """float : energy pattern name"""
+        self._efficiency = None
+        self._energy_price = None 
+        self._energy_pattern = None
         self._power_outage = LinkStatus.Open
 
     def _compare(self, other):
@@ -931,8 +951,32 @@ class Pump(Link):
         return True
 
     @property
+    def efficiency(self): 
+        """float : pump efficiency"""
+        return self._efficiency
+    @efficiency.setter
+    def efficiency(self, value):
+        self._efficiency = value
+
+    @property
+    def energy_price(self):
+        """float : energy price surcharge (only used by EPANET)"""
+        return self._energy_price
+    @energy_price.setter
+    def energy_price(self, value):
+        self._energy_price = value
+
+    @property
+    def energy_pattern(self):
+        """str : energy pattern name"""
+        return self._energy_pattern
+    @energy_pattern.setter
+    def energy_pattern(self, value):
+        self._energy_pattern = value
+
+    @property
     def status(self):
-        """The current status of the pump"""
+        """LinkStatus : the current status of the pump"""
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
         elif self._power_outage == LinkStatus.Closed:
@@ -945,16 +989,17 @@ class Pump(Link):
 
     @property
     def link_type(self):
-        """returns ``"Pump"``"""
+        """str : ``"Pump"`` (read only)"""
         return 'Pump'
 
     @property
     def speed_timeseries(self):
-        """TimeSeries : """
+        """TimeSeries : timeseries of speed values (retrieve only)"""
         return self._speed_timeseries
 
     @property
     def base_speed(self):
+        """float : base multiplier for a speed timeseries"""
         return self._speed_timeseries.base_value
     @base_speed.setter
     def base_speed(self, value):
@@ -962,6 +1007,7 @@ class Pump(Link):
         
     @property
     def speed_pattern_name(self):
+        """str : pattern name for the speed"""
         return self._speed_timeseries.pattern_name
     @speed_pattern_name.setter
     def speed_pattern_name(self, name):
@@ -1004,6 +1050,10 @@ class HeadPump(Pump):
     """
     Head pump class, inherited from Pump.
     
+    This type of pump uses a pump curve (see curves). The curve is 
+    set using the ``pump_curve_name`` attribute. The curve itself 
+    can be accessed using the ``get_pump_curve()`` method.
+
     .. rubric:: Constructor
 
     This class is intended to be instantiated through the 
@@ -1020,7 +1070,32 @@ class HeadPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-    
+
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        pump_type
+        pump_curve_name
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
 #    def __init__(self, name, start_node_name, end_node_name, wn):
 #        super(HeadPump,self).__init__(name, start_node_name, 
@@ -1045,12 +1120,12 @@ class HeadPump(Pump):
     
     @property
     def pump_type(self): 
-        """returns ``"HEAD"``"""
+        """str : ``"HEAD"`` (read only)"""
         return 'HEAD'
     
     @property
     def pump_curve_name(self):
-        """Returns the pump curve name"""
+        """str : the pump curve name"""
         return self._pump_curve_name
     @pump_curve_name.setter
     def pump_curve_name(self, name):
@@ -1063,6 +1138,14 @@ class HeadPump(Pump):
         self._curve_coeffs = None 
 
     def get_pump_curve(self):
+        """
+        Get the pump curve object
+
+        Returns
+        -------
+        Curve
+            the head curve for this pump
+        """        
         curve = self._curve_reg[self.pump_curve_name]
         return curve
         
@@ -1177,6 +1260,9 @@ class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
 
+    This is a constant power type of pump. The constant power is
+    set and modified through the ``power`` attribute.
+
     .. rubric:: Constructor
 
     This class is intended to be instantiated through the 
@@ -1194,6 +1280,31 @@ class PowerPump(Pump):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
         
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        pump_type
+        power
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
     
     def __repr__(self):
@@ -1211,12 +1322,12 @@ class PowerPump(Pump):
     
     @property
     def pump_type(self): 
-        """returns ``"POWER"``"""
+        """str : ``"POWER"`` (read only)"""
         return 'POWER'
     
     @property
     def power(self):
-        """Returns the fixed_power value"""
+        """float : the fixed power value"""
         return self._base_power
     @power.setter
     def power(self, kW):
