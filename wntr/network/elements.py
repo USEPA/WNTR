@@ -1375,16 +1375,16 @@ class Valve(Link):
     """
     Valve class, inherited from Link.
     
+    For details about the  subclasses, please see one of the following:
+    :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
+    :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
+    :class:`~wntr.network.elemedifferentnts.TCValve`, and :class:`~wntr.network.elements.GPValve`.
+
     .. rubric:: Constructor
 
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
     Direct creation through the constructor is highly discouraged.
-    
-    For details about the different subclasses, please see one of the following:
-    :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
-    :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
-    :class:`~wntr.network.elements.TCValve`, and :class:`~wntr.network.elements.GPValve`.
 
     Parameters
     ----------
@@ -1397,6 +1397,25 @@ class Valve(Link):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1468,6 +1487,25 @@ class PRValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1500,6 +1538,25 @@ class PSValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1532,6 +1589,25 @@ class PBValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1564,6 +1640,25 @@ class FCValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1596,6 +1691,25 @@ class TCValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1628,6 +1742,27 @@ class GPValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        headloss_curve
+        headloss_curve_name
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1641,6 +1776,7 @@ class GPValve(Valve):
 
     @property
     def headloss_curve(self):
+        """Curve : the headloss curve object (read only)"""
         return self._curve_reg[self._headloss_curve_name]
 
     @property
@@ -2222,7 +2358,17 @@ class Source(object):
     pattern: Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used
         (default = None).
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        node_name
+        source_type
+        strength_timeseries
+
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):
@@ -2232,9 +2378,9 @@ class Source(object):
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
         self._node_reg = model._node_reg
         self._node_reg.add_usage(node_name, (name, 'Source'))
-        self.name = name
-        self.node_name = node_name
-        self.source_type = source_type
+        self._name = name
+        self._node_name = node_name
+        self._source_type = source_type
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2251,4 +2397,29 @@ class Source(object):
 
     @property
     def strength_timeseries(self): 
+        """TimeSeries : timeseries of the source values (read only)"""
         return self._strength_timeseries
+
+    @property
+    def name(self):
+        """str : the name for this source"""
+        return self._name 
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def node_name(self):
+        """str : the node where this source is located"""
+        return self._node_name 
+    @node_name.setter
+    def node_name(self, value):
+        self._node_name = value
+
+    @property
+    def source_type(self):
+        """str : the source type for this source"""
+        return self._source_type 
+    @source_type.setter
+    def source_type(self, value):
+        self._source_type = value
