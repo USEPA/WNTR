@@ -52,8 +52,14 @@ class Junction(Node):
     """
     Junction class, inherited from Node.
     
+    Junctions are the nodes that contain demand, emitters, and 
+    water quality sources.
+
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_junction()` method. 
+    Direct creation through the constructor is highly discouraged.
 
     Parameters
     ----------
@@ -61,34 +67,45 @@ class Junction(Node):
         Name of the junction.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the junction will belong to
-        
-    """
 
+
+    .. rubric:: Attributes
+
+    .. autosummary:: 
+
+        name
+        node_type
+        head
+        demand
+        demand_timeseries_list
+        elevation
+        required_pressure
+        minimum_pressure
+        emitter_coefficient
+        base_demand
+        coordinates
+        initial_quality
+        tag
+        leak_demand
+        leak_status
+        leak_area
+        leak_discharge_coeff
+
+
+    """
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
-        self.demand_timeseries_list = Demands(self._pattern_reg)
-        self.elevation = 0.0
-
-        self.required_pressure = None
-        """float: The required pressure attribute is used for pressure-dependent demand
-        simulations. This is the lowest pressure at which the junction receives 
-        the full requested demand. If set to None, the global value in 
-        wn.options.hydraulic.required_pressure is used."""
-
-        self.minimum_pressure = None
-        """float: The minimum pressure attribute is used for pressure-dependent demand 
-        simulations. Below this pressure, the junction will not receive any water.
-        If set to None, the global value in wn.options.hydraulic.minimum_pressure is used."""
-
-        self.emitter_coefficient = None
-        
+        self._demand_timeseries_list = Demands(self._pattern_reg)
+        self._elevation = 0.0
+        self._required_pressure = None
+        self._minimum_pressure = None
+        self._emitter_coefficient = None
         self._leak = False
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
-
         
     def __repr__(self):
         return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
@@ -104,6 +121,51 @@ class Junction(Node):
         return False
     
     @property
+    def elevation(self):
+        """float : elevation of the junction"""
+        return self._elevation
+    @elevation.setter
+    def elevation(self, value):
+        self._elevation = value
+
+    @property
+    def demand_timeseries_list(self):
+        """Demands : list of demand patterns and base multipliers"""
+        return self._demand_timeseries_list
+    @demand_timeseries_list.setter
+    def demand_timeseries_list(self, value):
+        self._demand_timeseries_list = value
+
+    @property
+    def required_pressure(self):
+        """float: The required pressure attribute is used for pressure-dependent demand
+        simulations. This is the lowest pressure at which the junction receives 
+        the full requested demand. If set to None, the global value in 
+        wn.options.hydraulic.required_pressure is used."""
+        return self._required_pressure
+    @required_pressure.setter
+    def required_pressure(self, value):
+        self._required_pressure = value
+
+    @property
+    def minimum_pressure(self):
+        """float: The minimum pressure attribute is used for pressure-dependent demand 
+        simulations. Below this pressure, the junction will not receive any water.
+        If set to None, the global value in wn.options.hydraulic.minimum_pressure is used."""
+        return self._minimum_pressure
+    @minimum_pressure.setter
+    def minimum_pressure(self, value):
+        self._minimum_pressure = value
+
+    @property
+    def emitter_coefficient(self):
+        """float : if not None, then activate an emitter with the specified coefficient"""
+        return self._emitter_coefficient
+    @emitter_coefficient.setter
+    def emitter_coefficient(self, value):
+        self._emitter_coefficient = value
+
+    @property
     def nominal_pressure(self):
         """deprecated - use required pressure"""
         raise DeprecationWarning('The nominal_pressure property has been renamed required_pressure. Please update your code')
@@ -115,7 +177,7 @@ class Junction(Node):
 
     @property
     def node_type(self):
-        """returns ``"Junction"``"""
+        """str : ``"Junction"`` (read only)"""
         return 'Junction'
 
     def add_demand(self, base, pattern_name, category=None):
@@ -262,38 +324,70 @@ class Tank(Node):
     """
     Tank class, inherited from Node.
     
-    This class is intended to be instantiated through the 
-    :class:`~wntr.network.model.WaterNetworkModel.add_tank()` method. 
-    
     Tank volume can be defined using a constant diameter or a volume curve. 
     If the tank has a volume curve, the diameter has no effect on hydraulic 
     simulations. 
     
+    .. rubric:: Constructor
+
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_tank()` method. 
+    Direct creation through the constructor is highly discouraged.
+
     Parameters
     ----------
     name : string
         Name of the tank.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        node_type
+        head
+        demand
+        elevation
+        init_level
+        min_level
+        max_level
+        level
+        diameter
+        min_vol
+        vol_curve_name
+        vol_curve
+        overflow
+        mixing_model
+        mixing_fraction
+        bulk_coeff
+        coordinates
+        initial_quality
+        tag
+        leak_demand
+        leak_status
+        leak_area
+        leak_discharge_coeff
+
     """
 
     def __init__(self, name, wn):
         super(Tank, self).__init__(wn, name)
-        self.elevation=0.0
+        self._elevation=0.0
         self._init_level=3.048
-        self.min_level=0.0
-        self.max_level=6.096
-        self.diameter=15.24,
+        self._min_level=0.0
+        self._max_level=6.096
+        self._diameter=15.24
         self.head = self.elevation + self._init_level
         self._prev_head = self.head
-        self.min_vol=0
+        self._min_vol=0 
         self._vol_curve_name = None
         self._mixing_model = None
-        self.mixing_fraction = None
-        self.bulk_coeff = None
+        self._mixing_fraction = None
+        self._bulk_coeff = None
         self._overflow = False
-        
         self._leak = False
         self.leak_status = False
         self.leak_area = 0.0
@@ -318,6 +412,46 @@ class Tank(Node):
             return True
         return False
     
+    @property
+    def elevation(self):
+        """float : elevation to the bottom of the tank. head = level + elevation"""
+        return self._elevation
+    @elevation.setter
+    def elevation(self, value):
+        self._elevation = value
+
+    @property
+    def min_level(self):
+        """float : minimum level for the tank to be able to drain"""
+        return self._min_level
+    @min_level.setter
+    def min_level(self, value):
+        self._min_level = value
+
+    @property 
+    def max_level(self):
+        """float : maximum level before tank begins to overflow (if permitted)"""
+        return self._max_level
+    @max_level.setter
+    def max_level(self, value):
+        self._max_level = value
+
+    @property
+    def diameter(self):
+        """float : diameter of the tank as a cylinder""" 
+        return self._diameter
+    @diameter.setter
+    def diameter(self, value):
+        self._diameter = value
+
+    @property
+    def min_vol(self):
+        """float : minimum volume to be able to drain (when using a tank curve)"""
+        return self._min_vol
+    @min_vol.setter
+    def min_vol(self, value):
+        self._min_vol = value
+
     @property
     def mixing_model(self):
         """
@@ -344,6 +478,22 @@ class Tank(Node):
             raise ValueError('Mixing model must be MIXED, 2COMP, FIFO or LIFO or a MixType object')
 
     @property
+    def mixing_fraction(self):
+        """float : for water quality simulations only, the compartment size for 2-compartment mixing"""
+        return self._mixing_fraction
+    @mixing_fraction.setter
+    def mixing_fraction(self, value):
+        self._mixing_fraction = value    
+
+    @property
+    def bulk_coeff(self):
+        """float : bulk reaction coefficient for this tank only; leave None to use global value"""
+        return self._bulk_coeff
+    @bulk_coeff.setter
+    def bulk_coeff(self, value):
+        self._bulk_coeff = value
+
+    @property
     def init_level(self):
         """The initial tank level at the start of simulation"""
         return self._init_level
@@ -359,7 +509,10 @@ class Tank(Node):
 
     @property
     def vol_curve(self):
-        """The volume curve, if defined"""
+        """The volume curve, if defined (read only)
+        
+        Set this using the vol_curve_name.
+        """
         return self._curve_reg[self._vol_curve_name]
 
     @property
@@ -396,7 +549,7 @@ class Tank(Node):
 
     @property
     def level(self):
-        """Returns tank level (head - elevation)"""
+        """Returns tank level = head - elevation (read only)"""
         return self.head - self.elevation
     
     
@@ -500,8 +653,11 @@ class Reservoir(Node):
     """
     Reservoir class, inherited from Node
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_reservoir()` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -513,14 +669,35 @@ class Reservoir(Node):
         Base head at the reservoir.
         Internal units must be meters (m).
     head_pattern : str, optional
-        Head pattern.
-        
+        Head pattern **name**
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        node_type
+        base_head
+        head_pattern_name
+        head_timeseries
+        head
+        demand
+        leak_demand
+        leak_status
+        leak_area
+        leak_discharge_coeff
+        tag
+        initial_quality
+        coordinates
+
     """
     
     def __init__(self, name, wn, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(wn, name)
         self._head_timeseries = TimeSeries(wn._pattern_reg, base_head)
         self.head_pattern_name = head_pattern
+        """str : Name of the head pattern to use"""
 
     def __repr__(self):
         return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
@@ -534,12 +711,12 @@ class Reservoir(Node):
 
     @property
     def node_type(self):
-        """returns ``"Reservoir"``"""
+        """``"Reservoir"`` (read only)"""
         return 'Reservoir'
 
     @property
     def head_timeseries(self):
-        """The head timeseries for the reservoir"""
+        """The head timeseries for the reservoir (read only)"""
         return self._head_timeseries
 
     @property
@@ -566,9 +743,12 @@ class Pipe(Link):
     """
     Pipe class, inherited from Link.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_pipe()` method. 
-    
+    Direct creation through the constructor is highly discouraged.
+
     Parameters
     ----------
     name : string
@@ -579,18 +759,44 @@ class Pipe(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pipe will belong to.
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        start_node_name
+        end_node_name
+        link_type
+        length
+        diameter
+        roughness
+        minor_loss
+        cv
+        bulk_coeff
+        wall_coeff
+        initial_status
+        initial_setting
+        start_node
+        end_node
+        status
+        setting
+        tag
+        vertices
+
+
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Pipe, self).__init__(wn, name, start_node_name, end_node_name)
-        self.length = 304.8
-        self.diameter = 0.3048
-        self.roughness = 100
-        self.minor_loss = 0.0
-        self.cv = False
-        self.bulk_coeff = None
-        self.wall_coeff = None
+        self._length = 304.8
+        self._diameter = 0.3048
+        self._roughness = 100
+        self._minor_loss = 0.0
+        self._cv = False
+        self._bulk_coeff = None
+        self._wall_coeff = None
         
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
@@ -616,8 +822,64 @@ class Pipe(Link):
         return 'Pipe'
     
     @property
+    def length(self):
+        """float : length of the pipe"""
+        return self._length
+    @length.setter
+    def length(self, value):
+        self._length = value
+
+    @property
+    def diameter(self):
+        """float : diameter of the pipe"""
+        return self._diameter
+    @diameter.setter
+    def diameter(self, value):
+        self._diameter = value
+
+    @property
+    def roughness(self):
+        """float : pipe roughness"""
+        return self._roughness 
+    @roughness.setter
+    def roughness(self, value):
+        self._roughness = value
+
+    @property
+    def minor_loss(self):
+        """float : minor loss coefficient"""
+        return self._minor_loss
+    @minor_loss.setter
+    def minor_loss(self, value):
+        self._minor_loss = value
+
+    @property
+    def cv(self):
+        """bool : does this pipe have a check valve"""
+        return self._cv
+    @cv.setter
+    def cv(self, value): 
+        self._cv = value
+
+    @property
+    def bulk_coeff(self):
+        """float or None : if not None, then a pipe specific bulk reaction coefficient"""
+        return self._bulk_coeff
+    @bulk_coeff.setter
+    def bulk_coeff(self, value):
+        self._bulk_coeff = value
+
+    @property
+    def wall_coeff(self):
+        """float or None : if not None, then a pipe specific wall reaction coefficient"""
+        return self._wall_coeff
+    @wall_coeff.setter
+    def wall_coeff(self, value):
+        self._wall_coeff = value
+
+    @property
     def status(self):
-        """The current status of the pipe"""
+        """LinkStatus : the current status of the pipe"""
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
         else:
@@ -631,12 +893,15 @@ class Pump(Link):
     """
     Pump class, inherited from Link.
 
-    This class is intended to be instantiated through the 
-    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
-    
     For details about the different subclasses, please see one of the following:
     :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
 
+    .. rubric:: Constructor
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    Direct creation through the constructor is highly discouraged.
+    
     Parameters
     ----------
     name : string
@@ -647,7 +912,30 @@ class Pump(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -655,9 +943,9 @@ class Pump(Link):
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
-        self.efficiency = None
-        self.energy_price = None
-        self.energy_pattern = None
+        self._efficiency = None
+        self._energy_price = None 
+        self._energy_pattern = None
         self._power_outage = LinkStatus.Open
         self._outage_rule_name = name+'_outage'
         self._after_outage_rule_name = name+'_after_outage'
@@ -666,10 +954,34 @@ class Pump(Link):
         if not super(Pump, self)._compare(other):
             return False
         return True
-   
+
+    @property
+    def efficiency(self): 
+        """float : pump efficiency"""
+        return self._efficiency
+    @efficiency.setter
+    def efficiency(self, value):
+        self._efficiency = value
+
+    @property
+    def energy_price(self):
+        """float : energy price surcharge (only used by EPANET)"""
+        return self._energy_price
+    @energy_price.setter
+    def energy_price(self, value):
+        self._energy_price = value
+
+    @property
+    def energy_pattern(self):
+        """str : energy pattern name"""
+        return self._energy_pattern
+    @energy_pattern.setter
+    def energy_pattern(self, value):
+        self._energy_pattern = value
+
     @property
     def status(self):
-        """The current status of the pump"""
+        """LinkStatus : the current status of the pump"""
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
         elif self._power_outage == LinkStatus.Closed:
@@ -682,15 +994,17 @@ class Pump(Link):
 
     @property
     def link_type(self):
-        """returns ``"Pump"``"""
+        """str : ``"Pump"`` (read only)"""
         return 'Pump'
 
     @property
     def speed_timeseries(self):
+        """TimeSeries : timeseries of speed values (retrieve only)"""
         return self._speed_timeseries
 
     @property
     def base_speed(self):
+        """float : base multiplier for a speed timeseries"""
         return self._speed_timeseries.base_value
     @base_speed.setter
     def base_speed(self, value):
@@ -698,6 +1012,7 @@ class Pump(Link):
         
     @property
     def speed_pattern_name(self):
+        """str : pattern name for the speed"""
         return self._speed_timeseries.pattern_name
     @speed_pattern_name.setter
     def speed_pattern_name(self, name):
@@ -766,12 +1081,19 @@ class Pump(Link):
         wn._discard_control(self._outage_end_control_name)
         
 
-class HeadPump(Pump):
+class HeadPump(Pump):    
     """
     Head pump class, inherited from Pump.
     
+    This type of pump uses a pump curve (see curves). The curve is 
+    set using the ``pump_curve_name`` attribute. The curve itself 
+    can be accessed using the ``get_pump_curve()`` method.
+
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -783,7 +1105,32 @@ class HeadPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-    
+
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        pump_type
+        pump_curve_name
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
 #    def __init__(self, name, start_node_name, end_node_name, wn):
 #        super(HeadPump,self).__init__(name, start_node_name, 
@@ -808,12 +1155,12 @@ class HeadPump(Pump):
     
     @property
     def pump_type(self): 
-        """returns ``"HEAD"``"""
+        """str : ``"HEAD"`` (read only)"""
         return 'HEAD'
     
     @property
     def pump_curve_name(self):
-        """Returns the pump curve name"""
+        """str : the pump curve name"""
         return self._pump_curve_name
     @pump_curve_name.setter
     def pump_curve_name(self, name):
@@ -826,6 +1173,14 @@ class HeadPump(Pump):
         self._curve_coeffs = None 
 
     def get_pump_curve(self):
+        """
+        Get the pump curve object
+
+        Returns
+        -------
+        Curve
+            the head curve for this pump
+        """        
         curve = self._curve_reg[self.pump_curve_name]
         return curve
         
@@ -939,9 +1294,15 @@ class HeadPump(Pump):
 class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
-    
+
+    This is a constant power type of pump. The constant power is
+    set and modified through the ``power`` attribute.
+
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -954,6 +1315,31 @@ class PowerPump(Pump):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
         
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        pump_type
+        power
+        speed_timeseries
+        efficiency
+        energy_price
+        energy_pattern
+        status
+        setting
+        tag
+        vertices
+
+
     """
     
     def __repr__(self):
@@ -971,12 +1357,12 @@ class PowerPump(Pump):
     
     @property
     def pump_type(self): 
-        """returns ``"POWER"``"""
+        """str : ``"POWER"`` (read only)"""
         return 'POWER'
     
     @property
     def power(self):
-        """Returns the fixed_power value"""
+        """float : the fixed power value"""
         return self._base_power
     @power.setter
     def power(self, kW):
@@ -985,16 +1371,20 @@ class PowerPump(Pump):
 
 
 class Valve(Link):
+    
     """
     Valve class, inherited from Link.
     
-    This class is intended to be instantiated through the 
-    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
-    
-    For details about the different subclasses, please see one of the following:
+    For details about the  subclasses, please see one of the following:
     :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
     :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
-    :class:`~wntr.network.elements.TCValve`, and :class:`~wntr.network.elements.GPValve`.
+    :class:`~wntr.network.elemedifferentnts.TCValve`, and :class:`~wntr.network.elements.GPValve`.
+
+    .. rubric:: Constructor
+
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
 
     Parameters
     ----------
@@ -1007,6 +1397,25 @@ class Valve(Link):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1050,14 +1459,22 @@ class Valve(Link):
     def link_type(self):
         """returns ``"Valve"``"""
         return 'Valve'
-        
+
+    @property
+    def valve_type(self): 
+        """returns ``None`` because this is an abstact class"""
+        return None
+
 
 class PRValve(Valve):
     """
     Pressure reducing valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -1070,6 +1487,25 @@ class PRValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1085,8 +1521,11 @@ class PSValve(Valve):
     """
     Pressure sustaining valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -1099,6 +1538,25 @@ class PSValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1114,8 +1572,11 @@ class PBValve(Valve):
     """
     Pressure breaker valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -1128,6 +1589,25 @@ class PBValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1143,9 +1623,12 @@ class FCValve(Valve):
     """
     Flow control valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
-    
+    Direct creation through the constructor is highly discouraged.
+   
     Parameters
     ----------
     name : string
@@ -1157,6 +1640,25 @@ class FCValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1172,8 +1674,11 @@ class TCValve(Valve):
     """
     Throttle control valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -1186,6 +1691,25 @@ class TCValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1201,8 +1725,11 @@ class GPValve(Valve):
     """
     General purpose valve class, inherited from Valve.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    Direct creation through the constructor is highly discouraged.
     
     Parameters
     ----------
@@ -1215,6 +1742,27 @@ class GPValve(Valve):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
         
+    
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        valve_type
+        headloss_curve
+        headloss_curve_name
+        status
+        setting
+        tag
+        vertices
+
     """
     
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1228,6 +1776,7 @@ class GPValve(Valve):
 
     @property
     def headloss_curve(self):
+        """Curve : the headloss curve object (read only)"""
         return self._curve_reg[self._headloss_curve_name]
 
     @property
@@ -1246,6 +1795,8 @@ class Pattern(object):
     """
     Pattern class.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_pattern` method. 
     
@@ -1406,7 +1957,9 @@ class TimeSeries(object):
     The object can be used to store changes in junction demand, source injection, 
     pricing, pump speed, and reservoir head. The class provides methods
     to calculate values using the base value and a multiplier pattern.
-    
+
+    .. rubric:: Constructor
+
     Parameters
     ----------
     base : number
@@ -1653,6 +2206,8 @@ class Curve(object):
     """
     Curve base class.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_curve` method. 
     
@@ -1784,6 +2339,8 @@ class Source(object):
     """
     Water quality source class.
     
+    .. rubric:: Constructor
+
     This class is intended to be instantiated through the 
     :class:`~wntr.network.model.WaterNetworkModel.add_source` method. 
     
@@ -1801,7 +2358,17 @@ class Source(object):
     pattern: Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used
         (default = None).
-        
+    
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        node_name
+        source_type
+        strength_timeseries
+
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):
@@ -1811,9 +2378,9 @@ class Source(object):
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
         self._node_reg = model._node_reg
         self._node_reg.add_usage(node_name, (name, 'Source'))
-        self.name = name
-        self.node_name = node_name
-        self.source_type = source_type
+        self._name = name
+        self._node_name = node_name
+        self._source_type = source_type
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -1830,4 +2397,29 @@ class Source(object):
 
     @property
     def strength_timeseries(self): 
+        """TimeSeries : timeseries of the source values (read only)"""
         return self._strength_timeseries
+
+    @property
+    def name(self):
+        """str : the name for this source"""
+        return self._name 
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def node_name(self):
+        """str : the node where this source is located"""
+        return self._node_name 
+    @node_name.setter
+    def node_name(self, value):
+        self._node_name = value
+
+    @property
+    def source_type(self):
+        """str : the source type for this source"""
+        return self._source_type 
+    @source_type.setter
+    def source_type(self, value):
+        self._source_type = value
