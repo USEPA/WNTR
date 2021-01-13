@@ -60,7 +60,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
-                version=2.2, reset_intial_conditions=True):
+                version=2.2, reset_intial_conditions=True, convergence_error=False):
+
         """
         Run the EPANET simulator.
 
@@ -92,6 +93,11 @@ class EpanetSimulator(WaterNetworkSimulator):
             If reset_intial_conditions is True, initial conditions (including tank level and link status)  
             are reset after running the simulation.  If False, conditions at the end of the simulation are retained 
             on the water network model.
+        convergence_error: bool (optional)
+            If convergence_error is True, an error will be raised if the
+            simulation does not converge. If convergence_error is False, partial results are returned, 
+            a warning will be issued, and results.error_code will be set to 0
+            if the simulation does not converge.  Default = False.
         """
         if isinstance(version, str):
             version = float(version)
@@ -119,8 +125,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData.ENclose()
         logger.debug('Completed run')
         #os.sys.stderr.write('Finished Closing\n')
-        
-        results = self.reader.read(outfile)
+
+        results = self.reader.read(outfile, convergence_error)
         
         if reset_intial_conditions:
             pass
@@ -128,4 +134,4 @@ class EpanetSimulator(WaterNetworkSimulator):
             self._wn._reset_final_conditions(results)
             
         return results
-   
+

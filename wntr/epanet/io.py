@@ -1364,6 +1364,8 @@ class InpFile(object):
         for text, all_control in wn.controls():
             entry = '{}\n'
             if all_control.epanet_control_type == _ControlType.rule:
+                if all_control.name == '':
+                    all_control._name = text
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
                 rule.from_if_then_else(all_control)
                 f.write(entry.format(str(rule)).encode('ascii'))
@@ -2393,10 +2395,13 @@ class _EpanetRule(object):
                     value = to_si(self.inp_units, value, HydParam.Pressure)
                 elif attr.lower() in ['setting']:
                     link = model.get_link(words[2])
-                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                        value = to_si(self.inp_units, value, HydParam.Pressure)
-                    elif link.valve_type.upper() in ['FCV']:
-                        value = to_si(self.inp_units, value, HydParam.Flow)
+                    if isinstance(link, wntr.network.Pump):
+                        value = value
+                    elif isinstance(link, wntr.network.Valve):
+                        if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                            value = to_si(self.inp_units, value, HydParam.Pressure)
+                        elif link.valve_type.upper() in ['FCV']:
+                            value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
@@ -2544,6 +2549,15 @@ class BinFile(object):
         self.keep_energy = energy
         self.keep_statistics = statistics
 
+    def _get_time(self, t):
+        s = int(t)
+        h = int(s/3600)
+        s -= h*3600
+        m = int(s/60)
+        s -= m*60
+        s = int(s)
+        return '{:02}:{:02}:{:02}'.format(h, m, s)
+    
     def setup_ep_results(self, times, nodes, links, result_types=None):
         """Set up the results object (or file, etc.) for save_ep_line() calls to use.
 
@@ -2661,13 +2675,18 @@ class BinFile(object):
         pass
 
 #    @run_lineprofile()
-    def read(self, filename, custom_handlers=False):
+    def read(self, filename, convergence_error=False, custom_handlers=False):
         """Read a binary file and create a results object.
 
         Parameters
         ----------
         filename : str
             An EPANET BIN output file
+        convergence_error: bool (optional)
+            If convergence_error is True, an error will be raised if the
+            simulation does not converge. If convergence_error is False, partial results are returned, 
+            a warning will be issued, and results.error_code will be set to 0
+            if the simulation does not converge.  Default = False.
         custom_handlers : bool, optional
             If true, then the the custom, by-line handlers will be used. (:func:`~save_ep_line`, 
             :func:`~setup_ep_results`, :func:`~finalize_save`, etc.) Otherwise read will use
@@ -2870,13 +2889,29 @@ class BinFile(object):
 #                tuples = zip(type_list, valuetype, name_list)
                 tuples = list(zip(valuetype, name_list))
 #                tuples = [(valuetype[i], v) for i, v in enumerate(name_list)]
-                index = pd.MultiIndex.from_tuples(tuples, names=['value','name'])          
+                index = pd.MultiIndex.from_tuples(tuples, names=['value','name'])      
+                
                 try:
                     data = np.fromfile(fin, dtype = np.dtype(ftype), count = (4*nnodes+8*nlinks)*nrptsteps)
-                    data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
                 except Exception as e:
                     logger.exception('Failed to process file: %s', e)
                     
+                N = int(np.floor(len(data)/(4*nnodes+8*nlinks)))
+                if N < nrptsteps:
+                    t = reporttimes[N]
+                    if convergence_error:
+                        logger.error('Simulation did not converge at time ' + self._get_time(t) + '.')
+                        raise RuntimeError('Simulation did not converge at time ' + self._get_time(t) + '.')
+                    else:
+                        data = data[0:N*(4*nnodes+8*nlinks)]
+                        data = np.reshape(data, (N, (4*nnodes+8*nlinks)))
+                        reporttimes = reporttimes[0:N]
+                        warnings.warn('Simulation did not converge at time ' + self._get_time(t) + '.')
+                        self.results.error_code = wntr.sim.results.ResultsStatus.error
+                else:
+                    data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
+                    self.results.error_code = None
+
                 df = pd.DataFrame(data.transpose(), index =index, columns = reporttimes)
                 df = df.transpose()
                 

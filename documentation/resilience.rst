@@ -523,5 +523,5 @@ The following examples compute economic metrics, including:
       >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
       >>> head = results.node['head']
       >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
-      >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
+      >>> pump_cost = wntr.metrics.pump_cost(pump_energy, wn)
     
