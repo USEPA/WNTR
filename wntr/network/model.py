@@ -2189,7 +2189,8 @@ class NodeRegistry(Registry):
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
 
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
-                     elevation=0.0, coordinates=None, demand_category=None):
+                     elevation=0.0, coordinates=None, demand_category=None,
+                     emitter_coeff=None, initial_quality=None):
         """
         Adds a junction to the water network model.
 
@@ -2203,9 +2204,14 @@ class NodeRegistry(Registry):
             Name of the demand pattern or the actual Pattern object
         elevation : float
             Elevation of the junction.
-        coordinates : tuple of floats
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
-                
+        demand_category : str, optional
+            Add a category to the **base** demand
+        emitter_ceoff : float, optional
+            Add an emitter at this node with the specified coefficient
+        initial_quality : float, optional
+            Initial quality at this junction
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
@@ -2216,6 +2222,10 @@ class NodeRegistry(Registry):
         self[name] = junction
         if coordinates is not None:
             junction.coordinates = coordinates
+        if emitter_coeff is not None:
+            junction.emitter_coefficient = emitter_coeff
+        if initial_quality is not None:
+            junction.initial_quality = initial_quality
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
