@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from nose.tools import *
 import wntr
+from wntr.network.controls import Control, Rule
 
 testdir = dirname(abspath(str(__file__)))
 test_network_dir = join(testdir,'networks_for_testing')
@@ -821,7 +822,50 @@ def test_assign_demand():
     assert_equal(len(wn.pattern_name_list), 2*wn.num_junctions+5)
     assert_less(abs((demands2/demands1).max().max()-2), 0.01)
     assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
-                
+
+def test_convert_controls_to_rules():
+    
+    inp_file = join(ex_datadir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn.options.time.rule_timestep = 1 # For an exact match, the rule timestep must be very small
+     
+    nControls = 0
+    nRules = 0
+    for name, control in wn.controls():
+        if isinstance(control, Control):
+            nControls = nControls + 1
+        elif isinstance(control, Rule):
+            nRules = nRules + 1
+    assert nControls == 18
+    assert nRules == 0
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results1 = sim.run_sim()
+
+    wn.convert_controls_to_rules(priority=3)
+    
+    nControls = 0
+    nRules = 0
+    for name, control in wn.controls():
+        if isinstance(control, Control):
+            nControls = nControls + 1
+        elif isinstance(control, Rule):
+            nRules = nRules + 1
+    assert nControls == 0
+    assert nRules == 18
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    
+    #(results1.node['pressure'] - results2.node['pressure']).plot()
+    
+    for node_name, node in wn.nodes():
+        for t in results1.node['pressure'].index:
+            assert_less(abs(results1.node['pressure'].at[t,node_name] - 
+                            results2.node['pressure'].at[t,node_name]), 0.001)
+    
+
+
 if __name__ == '__main__':
     #unittest.main()
-    test_assign_demand()
+    test_convert_controls_to_rules()

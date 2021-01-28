@@ -1027,7 +1027,7 @@ class Pump(Link):
     
     def add_outage(self, wn, start_time, end_time=None, priority=6, add_after_outage_rule=False):
         """
-        Adds a pump outage rule to the water network model.
+        Add a pump outage rule to the water network model.
 
         Parameters
         ----------
@@ -1077,8 +1077,8 @@ class Pump(Link):
         """
         self._power_outage = False
         
-        wn._discard_control(self._outage_start_control_name)
-        wn._discard_control(self._outage_end_control_name)
+        wn._discard_control(self._outage_rule_name)
+        wn._discard_control(self._after_outage_rule_name)
         
 
 class HeadPump(Pump):    
