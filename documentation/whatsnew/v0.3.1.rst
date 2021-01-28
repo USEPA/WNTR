@@ -14,6 +14,15 @@ v0.3.1 (dev branch)
   
 * Updated the `add_outage` method on pumps so it can be used with the EpanetSimulator.  
   Added a `remove_outage` method on pumps.
+ 
+* Added a `convert_controls_to_rules` method on the water network model.  In some instances, mixing controls and rules has unexpected consequences.  
+  By converting all controls to rules, the user can specify the priority for each rule. 
   
 * Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
   This is not an error.
+
+* Bug fix in the pump energy calculation and added additional tests.  The function, which was returning power in Watts, now returns energy in Joules. 
+
+* Pump cost function was updated to use pump energy, instead of recomputing those values.
+
+* Updated API documentation to include a table of class properties for each network class (Junction, Tank, Pipe, etc.).

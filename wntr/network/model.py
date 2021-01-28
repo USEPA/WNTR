@@ -1695,7 +1695,10 @@ class WaterNetworkModel(AbstractModel):
 
     def convert_controls_to_rules(self, priority=3):
         """
-        Convert all controls to rules
+        Convert all controls to rules.
+        
+        Note that for an exact match between controls and rules, the rule 
+        timestep must be very small.
 
         Parameters
         ----------
