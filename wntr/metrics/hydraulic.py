@@ -25,7 +25,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def expected_demand(wn, start_time=None, end_time=None, timestep=None):
+def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=None):
     """
     Compute expected demand at each junction and time using base demands
     and demand patterns along with the demand multiplier
@@ -44,6 +44,9 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
     timestep : int (optional)
         Timestep, if None then value is set to wn.options.time.report_timestep
     
+    category : str (optional)
+        Category name for this demand
+            
     Returns
     -------
     A pandas DataFrame that contains expected demand in m3/s
@@ -62,7 +65,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
         dem = []
         for ts in tsteps:
             dem.append(junc.demand_timeseries_list.at(ts, 
-                       multiplier=wn.options.hydraulic.demand_multiplier))
+                       multiplier=wn.options.hydraulic.demand_multiplier, category=category))
         exp_demand[name] = dem 
     
     exp_demand = pd.DataFrame(index=tsteps, data=exp_demand)
