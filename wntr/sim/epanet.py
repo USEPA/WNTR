@@ -143,7 +143,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 for i in stop_criteria.index:
                     link_name, attribute, operation, value, link_index = stop_criteria.loc[i,:]
                     link_attribute = enData.ENgetlinkvalue(int(link_index), int(attribute))
-                    if operation(link_attribute, value):
+                    if operation(link_attribute, int(value)): # if this isn't status, we should not convert to int
                         stop_criteria_met = True
                         #results.error_code = wntr.sim.results.ResultsStatus.error
                         warnings.warn('Simulation stoped based on stop criteria at time ' + str(t) + '. ') 
@@ -161,7 +161,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             
             del stop_criteria['_link_index']
         
-        results = self.reader.read(outfile, convergence_error, stop_criteria_met)
+        results = self.reader.read(outfile, convergence_error)
         self._wn.sim_time = results.node['demand'].index[-1]
         
         if reset_intial_conditions:
