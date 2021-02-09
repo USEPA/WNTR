@@ -1791,7 +1791,7 @@ class WaterNetworkModel(AbstractModel):
             if isinstance(node, (Pipe, Valve)):
                 link.setting = results.link['setting'].at[end_time, name]
                         
-        self.options.time.start_clocktime = end_time
+        #self.options.time.start_clocktime = end_time
         self.options.time.report_start = end_time
         self.sim_time = end_time
         

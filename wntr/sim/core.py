@@ -971,7 +971,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         if reset_intial_conditions:
             self._wn.reset_initial_values()
         else:
-            self._wn.options.time.start_clocktime = self._wn.options.time.duration
+            #self._wn.options.time.start_clocktime = self._wn.options.time.duration
             self._wn.options.time.report_start = self._wn.options.time.duration
         
         return results
