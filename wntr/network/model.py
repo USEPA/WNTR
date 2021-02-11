@@ -164,12 +164,12 @@ class WaterNetworkModel(AbstractModel):
         """
         Return the current time of day in seconds from 12 AM
         """
-        return self.shifted_time % (24*3600)
+        return self._shifted_time % (24*3600)
 
     @property
     def _clock_day(self):
         """Return the clock-time day of the simulation"""
-        return int(self.shifted_time / 86400)
+        return int(self._shifted_time / 86400)
 
     ### # 
     ### Iteratable attributes
