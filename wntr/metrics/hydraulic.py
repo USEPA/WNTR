@@ -169,7 +169,7 @@ def water_service_availability(expected_demand, demand):
     
     return wsa
 
-def todini_index(head, pressure, demand, flowrate, wn, Pstar):
+def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
     """
     Compute Todini index, equations from [Todi00]_.
 
@@ -199,7 +199,12 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar):
     wn : wntr WaterNetworkModel
         Water network model.  The water network model is needed to 
         find the start and end node to each pump.
-
+    
+    mode : int
+        1 = resilience index (todini)
+        2 = modified resilience index
+        3 = MRI for each node
+        
     Pstar : float
         Pressure threshold.
 
@@ -208,6 +213,33 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar):
     A pandas Series that contains a time-series of Todini indexes
     """
 
+    Pout = demand.loc[:,wn.junction_name_list]*head.loc[:,wn.junction_name_list]
+    elevation = head.loc[:,wn.junction_name_list]-pressure.loc[:,wn.junction_name_list]
+    Pexp = demand.loc[:,wn.junction_name_list]*(Pstar+elevation)
+
+    if mode == 1:
+        Pin_res = -demand.loc[:,wn.reservoir_name_list]*head.loc[:,wn.reservoir_name_list]
+    
+        headloss = pd.DataFrame()
+        for name, link in wn.pumps():
+            start_node = link.start_node_name
+            end_node = link.end_node_name
+            start_head = head.loc[:,start_node] # (m)
+            end_head = head.loc[:,end_node] # (m)
+            headloss[name] = end_head - start_head # (m)
+            
+        Pin_pump = flowrate.loc[:,wn.pump_name_list]*headloss.abs()
+    
+        todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/  \
+            (Pin_res.sum(axis=1) + Pin_pump.sum(axis=1) - Pexp.sum(axis=1))
+            
+    elif mode == 2:
+        todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/Pexp.sum(axis=1)
+        
+    elif mode == 3:
+        todini = (Pout - Pexp)/Pexp
+    
+    """
     POut = {}
     PExp = {}
     PInRes = {}
@@ -241,8 +273,10 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar):
         (sum(PInRes.values()) + sum(PInPump.values()) - sum(PExp.values()))
 
     todini = pd.Series(data = todini.tolist(), index = time)
-
+    """
+    
     return todini
+
 
 def entropy(G, sources=None, sinks=None):
     """
