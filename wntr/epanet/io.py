@@ -120,7 +120,8 @@ def _str_time_to_sec(s):
 
     Returns
     -------
-     Integer value of time in seconds.
+    int
+        Integer value of time in seconds.
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -284,6 +285,15 @@ class InpFile(object):
                 elif line.startswith('['):
                     vals = line.split(None, 1)
                     sec = vals[0].upper()
+                    # Add handlers to deal with extra 'S'es (or missing 'S'es) in INP file
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace(']','S]')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace('S]',']')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
                     edata['sec'] = sec
                     if sec in _INP_SECTIONS:
                         section = sec
@@ -589,7 +599,9 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
+            volume = None
             if len(current) >= 8:  # Volume curve provided
+                volume = float(current[6])
                 curve_name = current[7]
                 if curve_name == '*':
                     curve_name = None
@@ -608,6 +620,11 @@ class InpFile(object):
             elif len(current) == 7:
                 curve_name = None
                 overflow = False
+                volume = float(current[6])
+            elif len(current) == 6:
+                curve_name = None
+                overflow = False
+                volume = 0.0
             else:
                 raise RuntimeError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
@@ -616,7 +633,7 @@ class InpFile(object):
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
                         to_si(self.flow_units, float(current[4]), HydParam.Length),
                         to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
-                        to_si(self.flow_units, float(current[6]), HydParam.Volume),
+                        to_si(self.flow_units, float(volume), HydParam.Volume),
                         curve_name, overflow)
 
     def _write_tanks(self, f, wn, version=2.2):
