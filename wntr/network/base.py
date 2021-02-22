@@ -374,12 +374,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @initial_status.setter
     def initial_status(self, status):
         if not isinstance(status, LinkStatus):
-            if isinstance (status, (int, float)):
-                status = LinkStatus(int(status))
-            elif isinstance(status, str):
-                status = LinkStatus[status]
-            else: 
-                raise ValueError('initial_status must be a str, integer, or LinkStatus')
+            status = LinkStatus[status]
         self._initial_status = status
         
     @property
