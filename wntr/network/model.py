@@ -1714,12 +1714,12 @@ class WaterNetworkModel(AbstractModel):
                 rule = Rule(cond, act, priority=priority)
                 self.add_control(name.replace(' ', '_')+'_Rule', rule)
                 self.remove_control(name)
-                
-        
+
     def reset_initial_values(self):
         """
         Resets all initial values in the network
         """
+        #### TODO: move reset conditions to /sim
         self.sim_time = 0.0
         self._prev_sim_time = None
 
@@ -1745,7 +1745,7 @@ class WaterNetworkModel(AbstractModel):
             node._is_isolated = False
 
         for name, link in self.links(Pipe):
-            link.status = link.initial_status
+            link.set_current_status(link.initial_status)
             link.setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
@@ -1753,7 +1753,7 @@ class WaterNetworkModel(AbstractModel):
             link._prev_setting = None
 
         for name, link in self.links(Pump):
-            link.status = link.initial_status
+            link.set_current_status(link.initial_status)
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1763,7 +1763,7 @@ class WaterNetworkModel(AbstractModel):
             link._prev_setting = None
 
         for name, link in self.links(Valve):
-            link.status = link.initial_status
+            link.set_current_status(link.initial_status)
             link.setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
@@ -1774,9 +1774,9 @@ class WaterNetworkModel(AbstractModel):
             control._reset()
     
     def _reset_final_conditions(self, results):
-        
+        #### TODO: move reset conditions to /sim
         end_time = results.node['demand'].index[-1]
-                    
+        
         for name, node in self.nodes():
             node.head = results.node['head'].at[end_time, name]
             node.demand = results.node['demand'].at[end_time, name]
@@ -1784,7 +1784,7 @@ class WaterNetworkModel(AbstractModel):
                 node._prev_head = results.node['head'].at[end_time, name]
                             
         for name, link in self.links():
-            link.status = results.link['status'].at[end_time, name]
+            link.set_current_status(results.link['status'].at[end_time, name])
             link._internal_status = results.link['status'].at[end_time, name]
             link._flow = results.link['flowrate'].at[end_time, name]
             link._prev_setting = results.link['setting'].at[end_time, name]
@@ -2578,7 +2578,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.initial_status = status
-        pipe.status = status
+        pipe.set_current_status(status)
         pipe.cv = check_valve_flag
         self[name] = pipe
 

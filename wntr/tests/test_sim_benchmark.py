@@ -167,7 +167,7 @@ class Test_Benchmarks(unittest.TestCase):
         wn.add_pipe("bypass_pump1","r1","j1",length=5.0,diameter=inp['d'])
         bypass_pump1 = wn.get_link("bypass_pump1")
         # this pipe is not open unless the pump closes.
-        bypass_pump1.status = 0
+        bypass_pump1.set_current_status(0)
         
         pump1 = wn.get_link("pump1")
         t1 = wn.get_node("t1")

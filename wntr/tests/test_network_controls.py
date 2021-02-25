@@ -323,7 +323,7 @@ class TestControlCombinations(unittest.TestCase):
         tank1.init_level = 40.0
         tank1.head = tank1.elevation + 40.0
         pipe1 = wn.get_link('pipe1')
-        pipe1.status = self.wntr.network.LinkStatus.opened
+        pipe1.set_current_status(self.wntr.network.LinkStatus.opened)
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.controls.Control._time_control(wn, 19*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_19',control)
@@ -357,7 +357,7 @@ class TestControlCombinations(unittest.TestCase):
         tank1.init_level = 40.0
         tank1.head = tank1.elevation + 40.0
         pipe1 = wn.get_link('pipe1')
-        pipe1.status = self.wntr.network.LinkStatus.opened
+        pipe1.set_current_status(self.wntr.network.LinkStatus.Opened)
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.controls.Control._time_control(wn, 5*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_5',control)

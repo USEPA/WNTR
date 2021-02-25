@@ -374,7 +374,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @initial_status.setter
     def initial_status(self, status):
         if not isinstance(status, LinkStatus):
-            status = LinkStatus[status]
+            if isinstance(status, int): status = LinkStatus(status)
+            elif isinstance(status, str): status = LinkStatus[status]
         self._initial_status = status
         
     @property
@@ -434,6 +435,24 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @status.setter
     @abc.abstractmethod
     def status(self, status):
+        doc = """
+        Setting the status directly is no longer supported due to the confusion it causes.
+        Use "set_current_status" to modify current status."""
+        raise RuntimeError(doc)
+    
+    def set_current_status(self, status):
+        """
+        Set the current (**not initial**) status of a link. This will not be reflected in the
+        INP file.
+
+        Parameters
+        ----------
+        status : LinkStatus, int or str
+            The *current* link status
+        """
+        if not isinstance(status, LinkStatus):
+            if isinstance(status, int): status = LinkStatus(status)
+            elif isinstance(status, str): status = LinkStatus[status]
         self._user_status = status
     
     @property

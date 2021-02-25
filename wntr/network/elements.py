@@ -884,9 +884,9 @@ class Pipe(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+    # @status.setter
+    # def status(self, status):
+    #     self._user_status = status
 
 
 class Pump(Link):
@@ -988,9 +988,9 @@ class Pump(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+    # @status.setter
+    # def status(self, status):
+    #     self._user_status = status
 
     @property
     def link_type(self):
@@ -1451,9 +1451,9 @@ class Valve(Link):
         else:
             return self._internal_status
 
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+    # @status.setter
+    # def status(self, status):
+    #     self._user_status = status
 
     @property
     def link_type(self):
