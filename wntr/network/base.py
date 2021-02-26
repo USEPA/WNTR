@@ -110,7 +110,9 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, wn, name):
         self._name = name
         self._head = None
-        self._demand = None  
+        self._demand = None
+        self._pressure = None
+        self._quality = None
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
@@ -158,19 +160,29 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def head(self):
-        """float: The current head at the node"""
+        """float: The current head at the node (total head)"""
         return self._head
-    @head.setter
-    def head(self, value):
-        self._head = value
+    # @head.setter
+    # def head(self, value):
+    #     self._head = value
 
     @property
     def demand(self):
-        """float: The current demand at the node"""
+        """float: The current demand at the node (actual demand)"""
         return self._demand
-    @demand.setter
-    def demand(self, value):
-        self._demand = value
+    # @demand.setter
+    # def demand(self, value):
+    #     self._demand = value
+
+    @property
+    def pressure(self):
+        """float : The current pressure at the node"""
+        return self._pressure
+
+    @property
+    def quality(self):
+        """float : The current quality at the node"""
+        return self._quality
 
     @property
     def leak_demand(self):

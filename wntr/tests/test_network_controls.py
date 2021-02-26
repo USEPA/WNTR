@@ -254,8 +254,8 @@ class TestValveControls(unittest.TestCase):
         tank1_init_level = tank1.init_level
         tank1.init_level = tank2.init_level
         tank2.init_level = tank1_init_level
-        tank1.head = tank1.init_level + tank1.elevation
-        tank2.head = tank2.init_level + tank2.elevation
+        tank1._head = tank1.init_level + tank1.elevation
+        tank2._head = tank2.init_level + tank2.elevation
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.required_pressure = 15.0
@@ -321,7 +321,7 @@ class TestControlCombinations(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         tank1 = wn.get_node('tank1')
         tank1.init_level = 40.0
-        tank1.head = tank1.elevation + 40.0
+        tank1._head = tank1.elevation + 40.0
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
@@ -355,7 +355,7 @@ class TestControlCombinations(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         tank1 = wn.get_node('tank1')
         tank1.init_level = 40.0
-        tank1.head = tank1.elevation + 40.0
+        tank1._head = tank1.elevation + 40.0
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)

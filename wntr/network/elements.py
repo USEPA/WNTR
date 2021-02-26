@@ -380,7 +380,7 @@ class Tank(Node):
         self._min_level=0.0
         self._max_level=6.096
         self._diameter=15.24
-        self.head = self.elevation + self._init_level
+        self._head = self.elevation + self._init_level
         self._prev_head = self.head
         self._min_vol=0 
         self._vol_curve_name = None
@@ -500,7 +500,7 @@ class Tank(Node):
     @init_level.setter
     def init_level(self, value):
         self._init_level = value
-        self.head = self.elevation+self._init_level
+        self._head = self.elevation+self._init_level
 
     @property
     def node_type(self):
@@ -552,7 +552,16 @@ class Tank(Node):
         """Returns tank level = head - elevation (read only)"""
         return self.head - self.elevation
     
+    @property
+    def net_inflow(self):
+        """float : the flow into the tank (negative demand)"""
+        return 0.0 - self.demand
     
+    @property
+    def pressure(self):
+        """float : current pressure (head - elevation)"""
+        return self._head - self.elevation
+
     def get_volume(self, level=None):
         """
         Returns tank volume at a given level
@@ -737,6 +746,16 @@ class Reservoir(Node):
         if name is not None:
             self._pattern_reg.add_usage(name, (self.name, 'Reservoir'))
         self._head_timeseries.pattern_name = name
+
+    @property
+    def net_inflow(self):
+        """float : the flow into the tank (negative demand)"""
+        return 0.0 - self.demand
+
+    @property
+    def pressure(self):
+        """float : current pressure (0.0 for reservoirs)"""
+        return 0.0
 
 
 class Pipe(Link):
