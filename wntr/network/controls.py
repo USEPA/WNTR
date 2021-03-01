@@ -1723,7 +1723,10 @@ class ControlAction(BaseControlAction):
         return self._value
 
     def run_control_action(self):
-        setattr(self._target_obj, self._attribute, self._value)
+        if self._attribute == 'status':
+            setattr(self._target_obj, '_user_status', self._value)
+        else:
+            setattr(self._target_obj, self._attribute, self._value)
         self.notify()
 
     def target(self):
