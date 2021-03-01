@@ -317,6 +317,7 @@ def store_results_in_network(wn, m):
     for name, link in wn.links():
         if link._is_isolated:
             link._flow = 0
+            link
         else:
             link._flow = m.flow[name].value
 

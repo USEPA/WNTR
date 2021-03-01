@@ -306,10 +306,18 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         end_node_name
         initial_status
         initial_setting
-        status
         setting
         tag
         vertices
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        headloss
+        quality
+        status
 
 
     """
@@ -341,6 +349,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._setting = None
         self._flow = None
         self._is_isolated = False
+        self._quality = None
+        self._headloss = None
 
     def _compare(self, other):
         """
@@ -451,8 +461,20 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @status.setter
     @abc.abstractmethod
     def status(self, status):
-        self._user_status = status
+        raise RuntimeError("The status attribute is an output (result) property. Setting status by"
+                            " the user has been deprecated to avoid confusion.")
+        # self._user_status = status
     
+    @property
+    def quality(self):
+        """float : current average link quality"""
+        return self._quality
+
+    @property
+    def headloss(self):
+        """float : current headloss"""
+        return self._headloss
+
     @property
     def setting(self):
         """float: The current setting of the link"""

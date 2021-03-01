@@ -91,7 +91,15 @@ class Junction(Node):
         leak_area
         leak_discharge_coeff
 
+    .. rubric:: Results Attributes
 
+    .. autosummary::
+
+        demand
+        head
+        pressure
+        quality
+    
     """
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
@@ -370,6 +378,15 @@ class Tank(Node):
         leak_status
         leak_area
         leak_discharge_coeff
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        net_inflow
+        head
+        pressure
+        quality
 
     """
 
@@ -700,6 +717,15 @@ class Reservoir(Node):
         initial_quality
         coordinates
 
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        net_inflow
+        head
+        pressure
+        quality
+
     """
     
     def __init__(self, name, wn, base_head=0.0, head_pattern=None):
@@ -796,14 +822,22 @@ class Pipe(Link):
         bulk_coeff
         wall_coeff
         initial_status
-        initial_setting
         start_node
         end_node
-        status
-        setting
         tag
         vertices
 
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        friction_factor
+        reaction_rate
+        quality
+        status
 
     """
 
@@ -816,6 +850,9 @@ class Pipe(Link):
         self._cv = False
         self._bulk_coeff = None
         self._wall_coeff = None
+        self._velocity = None
+        self._friction_factor = None
+        self._reaction_rate = None
         
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
@@ -907,6 +944,21 @@ class Pipe(Link):
     def status(self, status):
         self._user_status = status
 
+    @property
+    def velocity(self):
+        """float : current velocity in the pipe"""
+        return self._velocity
+
+    @property
+    def friction_factor(self):
+        """float : current friction factor in the pipe"""
+        return self._friction_factor
+
+    @property
+    def reaction_rate(self):
+        """float : current reaction rate in the pipe"""
+        return self._reaction_rate
+
 
 class Pump(Link):
     """
@@ -953,6 +1005,15 @@ class Pump(Link):
         setting
         tag
         vertices
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        headloss
+        quality
+        status
 
 
     """
@@ -1353,7 +1414,6 @@ class PowerPump(Pump):
         efficiency
         energy_price
         energy_pattern
-        status
         setting
         tag
         vertices
@@ -1430,10 +1490,19 @@ class Valve(Link):
         initial_status
         initial_setting
         valve_type
-        status
         setting
         tag
         vertices
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
 
     """
     
@@ -1444,6 +1513,7 @@ class Valve(Link):
         self._initial_status = LinkStatus.Active
         self._user_status = LinkStatus.Active
         self._initial_setting = 0.0
+        self._velocity = None
 
     def __repr__(self):
         fmt = "<Valve '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
@@ -1472,7 +1542,14 @@ class Valve(Link):
 
     @status.setter
     def status(self, status):
+        raise RuntimeError("The status attribute is an output (result) property. Setting status by"
+                            " the user has been deprecated to avoid confusion.")
+
         self._user_status = status
+
+    @property
+    def velocity(self):
+        return self._velocity
 
     @property
     def link_type(self):
