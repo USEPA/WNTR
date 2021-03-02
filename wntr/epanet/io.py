@@ -2944,13 +2944,13 @@ class BinFile(object):
                 # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 elif self.quality_type is QualType.Age:
                     self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 else:
                     self.results.node['quality'] = df['quality']
-                    self.results.link['linkquality'] = df['linkquality']
+                    self.results.link['quality'] = df['linkquality']
 
                 # Link Results
                 self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
@@ -2972,8 +2972,8 @@ class BinFile(object):
                 settings[:, linktype == EN.PBV] = to_si(self.flow_units, settings[:, linktype == EN.PBV], HydParam.Pressure)
                 settings[:, linktype == EN.FCV] = to_si(self.flow_units, settings[:, linktype == EN.FCV], HydParam.Flow)
                 self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
-                self.results.link['frictionfact'] = df['frictionfactor']
-                self.results.link['rxnrate'] = df['reactionrate']
+                self.results.link['friction_factor'] = df['frictionfactor']
+                self.results.link['reaction_rate'] = df['reactionrate']
                 
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks
