@@ -940,9 +940,9 @@ class Pipe(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+    # @status.setter
+    # def status(self, status):
+    #     self._user_status = status
 
     @property
     def velocity(self):
@@ -1068,9 +1068,9 @@ class Pump(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+    # @status.setter
+    # def status(self, status):
+    #     self._user_status = status
 
     @property
     def link_type(self):

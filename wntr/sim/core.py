@@ -279,8 +279,8 @@ class _Diagnostics(object): # pragma: no cover
         os.system('open link_comparison_' + link_name + '_' + str(t) + '.html')
 
     def store_var_values_in_network(self):
-        self.mode = self._wn.options.hydraulic.demand_model
-        wntr.sim.hydraulics.store_results_in_network(self.wn, self.model, self.mode)
+        # self.mode = self._wn.options.hydraulic.demand_model
+        wntr.sim.hydraulics.store_results_in_network(self.wn, self.model) #, self.mode)
 
     @classmethod
     def _plot_interactive_network(cls, wn, title=None, node_size=8, link_width=2,
@@ -794,7 +794,8 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
                 backup_solver_options=None, convergence_error=False, HW_approx='default',
-                diagnostics=False):
+                stop_criteria=None, reset_intial_conditions=True, diagnostics=False):
+
         """
         Run an extended period simulation (hydraulics only).
 
@@ -823,6 +824,10 @@ class WNTRSimulator(WaterNetworkSimulator):
         HW_approx: str
             Specifies which Hazen-Williams headloss approximation to use. Options are 'default' and 'piecewise'. Please
             see the WNTR documentation on hydraulics for details.
+        reset_intial_conditions: bool
+            If reset_intial_conditions is True, initial conditions (including tank level and link status)  
+            are reset after running the simulation.  If False, conditions at the end of the simulation are retained 
+            on the water network model.
         diagnostics: bool
             If True, then run with diagnostics on
         """
@@ -957,11 +962,32 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._wn.sim_time += self._hydraulic_timestep
             overstep = float(self._wn.sim_time) % self._hydraulic_timestep
             self._wn.sim_time -= overstep
-
+            
+            stop_criteria_met = False
+            if stop_criteria is not None:
+                for i in stop_criteria.index:
+                    link_name, attribute, operation, value = stop_criteria.loc[i,:]
+                    link_attribute = getattr(self._wn.get_link(link_name), attribute)
+                    if operation(link_attribute, value):
+                        stop_criteria_met = True
+                        results.error_code = wntr.sim.results.ResultsStatus.error
+                        warnings.warn('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ') 
+                        logger.warning('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ' ) 
+                        break # break out of for loop
+                if stop_criteria_met:
+                    break # break out of while loop
+                
             if self._wn.sim_time > self._wn.options.time.duration:
                 break
 
         wntr.sim.hydraulics.get_results(self._wn, results, node_res, link_res)
+        results.sim_time = self._wn.sim_time
+        if reset_intial_conditions:
+            self._wn.reset_initial_values()
+        else:
+            #self._wn.options.time.start_clocktime = self._wn.options.time.duration
+            self._wn.options.time.report_start = self._wn.options.time.duration
+        
         return results
 
     def _initialize_name_id_maps(self):
@@ -995,7 +1021,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             cols.append(to_node_id)
             rows.append(to_node_id)
             cols.append(from_node_id)
-            if link.status == wntr.network.LinkStatus.closed:
+            if link.status == wntr.network.LinkStatus.Closed:
                 vals.append(0)
                 vals.append(0)
             else:
@@ -1037,7 +1063,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     link = self._wn.get_link(link_name)
                     if link.start_node_name == to_node_name or link.end_node_name == to_node_name:
                         tmp_list.append(link)
-                        if link.status != wntr.network.LinkStatus.closed:
+                        if link.status != wntr.network.LinkStatus.Closed:
                             ndx1, ndx2 = ndx_map[link]
                             self._internal_graph.data[ndx1] = 1
                             self._internal_graph.data[ndx2] = 1
@@ -1057,7 +1083,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         for mgr in [self._presolve_controls, self._rules, self._postsolve_controls]:
             for obj, attr in mgr.get_changes():
                 if 'status' == attr:
-                    if obj.status == wntr.network.LinkStatus.closed:
+                    if obj.status == wntr.network.LinkStatus.Closed:
                         ndx1, ndx2 = ndx_map[obj]
                         data[ndx1] = 0
                         data[ndx2] = 0
@@ -1072,7 +1098,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             data[ndx1] = 0
             data[ndx2] = 0
             for link in link_list:
-                if link.status != wntr.network.LinkStatus.closed:
+                if link.status != wntr.network.LinkStatus.Closed:
                     ndx1, ndx2 = ndx_map[link]
                     data[ndx1] = 1
                     data[ndx2] = 1

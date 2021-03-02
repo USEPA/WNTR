@@ -1714,12 +1714,12 @@ class WaterNetworkModel(AbstractModel):
                 rule = Rule(cond, act, priority=priority)
                 self.add_control(name.replace(' ', '_')+'_Rule', rule)
                 self.remove_control(name)
-                
-        
+
     def reset_initial_values(self):
         """
         Resets all initial values in the network
         """
+        #### TODO: move reset conditions to /sim
         self.sim_time = 0.0
         self._prev_sim_time = None
 
@@ -1772,7 +1772,32 @@ class WaterNetworkModel(AbstractModel):
 
         for name, control in self.controls():
             control._reset()
-
+    
+    def _reset_final_conditions(self, results):
+        #### TODO: move reset conditions to /sim
+        end_time = results.node['demand'].index[-1]
+        
+        for name, node in self.nodes():
+            node.head = results.node['head'].at[end_time, name]
+            node.demand = results.node['demand'].at[end_time, name]
+            if isinstance(node, Tank):
+                node._prev_head = results.node['head'].at[end_time, name]
+                            
+        for name, link in self.links():
+            link.set_current_status(results.link['status'].at[end_time, name])
+            link._internal_status = results.link['status'].at[end_time, name]
+            link._flow = results.link['flowrate'].at[end_time, name]
+            link._prev_setting = results.link['setting'].at[end_time, name]
+            if isinstance(node, (Pipe, Valve)):
+                link.setting = results.link['setting'].at[end_time, name]
+                        
+        #self.options.time.start_clocktime = end_time
+        self.options.time.report_start = end_time
+        self.sim_time = end_time
+        
+        ## WNTRSimulator needs to use start_clocktime (and report_start?)
+        
+        
     def read_inpfile(self, filename):
         """
         Defines water network model components from an EPANET INP file
