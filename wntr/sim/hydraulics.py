@@ -186,7 +186,7 @@ def update_tank_heads(wn):
             level_new = np.interp(V1,volume_y,level_x)
             delta_h = level_new - cur_level
                 
-        tank.head = tank._prev_head + delta_h
+        tank._head = tank._prev_head + delta_h
             
 
 
@@ -317,20 +317,23 @@ def store_results_in_network(wn, m):
     for name, link in wn.links():
         if link._is_isolated:
             link._flow = 0
+            link
         else:
             link._flow = m.flow[name].value
 
     for name, node in wn.junctions():
         if node._is_isolated:
-            node.head = 0
-            node.demand = 0
+            node._head = 0
+            node._demand = 0
+            node._pressure = 0
             node.leak_demand = 0
         else:
-            node.head = m.head[name].value
+            node._head = m.head[name].value
+            node._pressure = m.head[name].value - node.elevation
             if mode in ['PDD', 'PDA']:
-                node.demand = m.demand[name].value
+                node._demand = m.demand[name].value
             else:
-                node.demand = m.expected_demand[name].value
+                node._demand = m.expected_demand[name].value
             if node.leak_status:
                 node.leak_demand = m.leak_rate[name].value
             else:
@@ -341,12 +344,12 @@ def store_results_in_network(wn, m):
             node.leak_demand = m.leak_rate[name].value
         else:
             node.leak_demand = 0
-        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
+        node._demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
                        node.leak_demand)
 
     for name, node in wn.reservoirs():
-        node.head = node.head_timeseries.at(wn.sim_time)
+        node._head = node.head_timeseries.at(wn.sim_time)
         node.leak_demand = 0
-        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
+        node._demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')))

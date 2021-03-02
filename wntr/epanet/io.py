@@ -1082,7 +1082,7 @@ class InpFile(object):
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()]
                 link.initial_status = new_status
-                link.set_current_status(new_status)
+                link._user_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
                     new_status = LinkStatus.Active
@@ -1100,7 +1100,7 @@ class InpFile(object):
                     setting = float(current[1])
 #                link.setting = setting
                 link.initial_setting = setting
-                link.set_current_status(new_status)
+                link._user_status = new_status
                 link.initial_status = new_status
 
     def _write_status(self, f, wn):

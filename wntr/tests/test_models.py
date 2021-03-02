@@ -107,7 +107,7 @@ class TestHeadloss(unittest.TestCase):
         m.head['j1'].value = j1_head
 
         for status in status_to_test:
-            pipe.set_current_status(status)
+            pipe._user_status = status
             self.updater.update(m, wn, pipe, 'status')
             for f in flows_to_test:
                 m.flow['p1'].value = f
@@ -154,7 +154,7 @@ class TestHeadloss(unittest.TestCase):
             self.updater.update(m, wn, pump, 'pump_curve_name')
             A, B, C = pump.get_head_curve_coefficients()
             for status in status_to_test:
-                pump.set_current_status(status)
+                pump._user_status = status
                 self.updater.update(m, wn, pump, 'status')
                 for f in flows_to_test:
                     m.flow['pump1'].value = f
@@ -199,7 +199,7 @@ class TestHeadloss(unittest.TestCase):
         m.head['j1'].value = j1_head
 
         for status in status_to_test:
-            pump.set_current_status(status)
+            pump._user_status = status
             self.updater.update(m, wn, pump, 'status')
             for f in flows_to_test:
                 ff = float(f) # expr.m does not bind to

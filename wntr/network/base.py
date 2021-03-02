@@ -110,7 +110,9 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, wn, name):
         self._name = name
         self._head = None
-        self._demand = None  
+        self._demand = None
+        self._pressure = None
+        self._quality = None
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
@@ -158,19 +160,29 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def head(self):
-        """float: The current head at the node"""
+        """float: The current head at the node (total head)"""
         return self._head
-    @head.setter
-    def head(self, value):
-        self._head = value
+    # @head.setter
+    # def head(self, value):
+    #     self._head = value
 
     @property
     def demand(self):
-        """float: The current demand at the node"""
+        """float: The current demand at the node (actual demand)"""
         return self._demand
-    @demand.setter
-    def demand(self, value):
-        self._demand = value
+    # @demand.setter
+    # def demand(self, value):
+    #     self._demand = value
+
+    @property
+    def pressure(self):
+        """float : The current pressure at the node"""
+        return self._pressure
+
+    @property
+    def quality(self):
+        """float : The current quality at the node"""
+        return self._quality
 
     @property
     def leak_demand(self):
@@ -294,10 +306,18 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         end_node_name
         initial_status
         initial_setting
-        status
         setting
         tag
         vertices
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        headloss
+        quality
+        status
 
 
     """
@@ -329,6 +349,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._setting = None
         self._flow = None
         self._is_isolated = False
+        self._quality = None
+        self._headloss = None
 
     def _compare(self, other):
         """
@@ -435,26 +457,20 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @status.setter
     @abc.abstractmethod
     def status(self, status):
-        doc = """
-        Setting the status directly is no longer supported due to the confusion it causes.
-        Use "set_current_status" to modify current status."""
-        raise RuntimeError(doc)
+        raise RuntimeError("The status attribute is an output (result) property. Setting status by"
+                            " the user has been deprecated to avoid confusion.")
+        # self._user_status = status
     
-    def set_current_status(self, status):
-        """
-        Set the current (**not initial**) status of a link. This will not be reflected in the
-        INP file.
+    @property
+    def quality(self):
+        """float : current average link quality"""
+        return self._quality
 
-        Parameters
-        ----------
-        status : LinkStatus, int or str
-            The *current* link status
-        """
-        if not isinstance(status, LinkStatus):
-            if isinstance(status, int): status = LinkStatus(status)
-            elif isinstance(status, str): status = LinkStatus[status]
-        self._user_status = status
-    
+    @property
+    def headloss(self):
+        """float : current headloss"""
+        return self._headloss
+
     @property
     def setting(self):
         """float: The current setting of the link"""
