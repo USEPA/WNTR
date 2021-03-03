@@ -1704,6 +1704,13 @@ class ControlAction(BaseControlAction):
         self._target_obj = target_obj
         self._attribute = attribute
         self._value = value
+        self._private_attribute = attribute
+        if attribute == 'status':
+            self._private_attribute = '_user_status'
+        elif attribute == 'leak_status':
+            self._private_attribute = '_leak_status'
+        elif attribute == 'setting':
+            self._private_attribute = '_setting'
 
     def requires(self):
         return OrderedSet([self._target_obj])
@@ -1723,10 +1730,7 @@ class ControlAction(BaseControlAction):
         return self._value
 
     def run_control_action(self):
-        if self._attribute == 'status':
-            setattr(self._target_obj, '_user_status', self._value)
-        else:
-            setattr(self._target_obj, self._attribute, self._value)
+        setattr(self._target_obj, self._private_attribute, self._value)
         self.notify()
 
     def target(self):

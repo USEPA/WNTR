@@ -326,7 +326,7 @@ def store_results_in_network(wn, m):
             node._head = 0
             node._demand = 0
             node._pressure = 0
-            node.leak_demand = 0
+            node._leak_demand = 0
         else:
             node._head = m.head[name].value
             node._pressure = m.head[name].value - node.elevation
@@ -335,21 +335,21 @@ def store_results_in_network(wn, m):
             else:
                 node._demand = m.expected_demand[name].value
             if node.leak_status:
-                node.leak_demand = m.leak_rate[name].value
+                node._leak_demand = m.leak_rate[name].value
             else:
-                node.leak_demand = 0
+                node._leak_demand = 0
 
     for name, node in wn.tanks():
         if node.leak_status:
-            node.leak_demand = m.leak_rate[name].value
+            node._leak_demand = m.leak_rate[name].value
         else:
-            node.leak_demand = 0
+            node._leak_demand = 0
         node._demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
-                       node.leak_demand)
+                       node._leak_demand)
 
     for name, node in wn.reservoirs():
         node._head = node.head_timeseries.at(wn.sim_time)
-        node.leak_demand = 0
+        node._leak_demand = 0
         node._demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')))
