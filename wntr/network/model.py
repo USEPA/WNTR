@@ -1726,27 +1726,27 @@ class WaterNetworkModel(AbstractModel):
         for name, node in self.nodes(Junction):
             node._head = None
             node._demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Tank):
             node._head = node.init_level+node.elevation
             node._prev_head = node.head
             node._demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Reservoir):
             node._head = None  # node.head_timeseries.base_value
             node._demand = None
-            node.leak_demand = None
+            node._leak_demand = None
             node._is_isolated = False
 
         for name, link in self.links(Pipe):
             link._user_status = link.initial_status
-            link.setting = link.initial_setting
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1764,7 +1764,7 @@ class WaterNetworkModel(AbstractModel):
 
         for name, link in self.links(Valve):
             link._user_status = link.initial_status
-            link.setting = link.initial_setting
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -2632,23 +2632,23 @@ class LinkRegistry(Registry):
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self)
             valve.headloss_curve_name = setting
