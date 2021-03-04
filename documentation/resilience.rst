@@ -119,7 +119,13 @@ WNTR includes additional topographic metrics to help compute resilience.
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
                                           Valve segmentation returns a segment number for each node and link, along with
-                                          the number of nodes and links in each segment.  
+                                          the number of nodes and links in each segment. 
+
+   Valve criticality                 	  Valve criticality valve is defined as the number of valves necessary to isolate a given valve.
+
+   Valve criticality length               Valve criticality length is defined as the ratio of link lengths in each segment on either side of a given isolation valve. If both sides of the valve are in the same segment, the criticality is set to zero.
+
+   Valve criticality demand               Valve criticality demand is defined as the ratio of node demands in each segment on either side of a given isolation valve. If both sides of the valve are in the same segment, the criticality is set to zero.							  
    =====================================  ================================================================================================================================================
 
 .. doctest::
@@ -215,7 +221,25 @@ use NetworkX directly, while others use metrics included in WNTR.
 	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
 	  ...     valve_layer)
 
+* Valve criticality
 
+  .. doctest::
+	
+	  >>> valve_crit = wntr.metrics.valve_criticality(valve_layer, node_segments, link_segments)
+
+* Valve criticality length
+
+  .. doctest::
+	
+	  >>> link_lengths = wn.query_link_attribute('length')
+	  >>> valve_crit_length = wntr.metrics.valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments)
+
+* Valve criticality demand 
+
+  .. doctest::
+	
+	  >>> node_demands = wn.query_node_attribute('base_demand')
+	  >>> valve_crit_demand = wntr.metrics.valve_criticality_demand(node_demands, valve_layer, node_segments, link_segments)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 

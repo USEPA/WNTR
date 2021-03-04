@@ -14,6 +14,9 @@ NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
     algebraic_connectivity
     critical_ratio_defrag
     valve_segments
+    valve_criticality
+    valve_criticality_length
+    valve_criticality_demand
 
 """
 import networkx as nx
@@ -346,4 +349,229 @@ def valve_segments(G, valve_layer):
     seg_sizes = seg_sizes.astype(int)
     
     return node_segments, link_segments, seg_sizes
+
+
+def valve_criticality(valve_layer, node_segments, link_segments, 
+                            screen_updating=False):
+    """
+	A valve criticality metric: the number of valves surrounding each valve
+	
+    Parameters
+    ----------
+
+    valve_layer: pandas DataFrame
+        Valve layer, defined by node and link pairs (for example, valve 0 is 
+        on link A and protects node B). The valve_layer DataFrame is indexed by
+        valve number, with columns named 'node' and 'link'.
+    
+    node_segments: pandas Series
+       Segment number for each node, indexed by node name.
+       One of the outputs of wntr.metrics.topographic.valve_segments
+       
+    link_segments: pandas Series
+        Segment number for each link, indexed by link name. 
+    
+    screen_updating: boolean, optional
+        Determines whether to show valve criticality calculations realtime. 
+        The default is False.
+
+    Returns
+    -------
+    VC: dictionary
+        A dictionary with valve numbers as keys and valve criticalities as 
+        indexes. Also includes a 'Type' key which is used for plotting.
+
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)   
+
+    # Calculate valve-based valve criticality
+    if screen_updating:
+        print('\n\nValve-Based Valve Criticality')
+    VC = {}
+    VC['Type'] = 'valve'
+    for i in range(n_valves):
+        # identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']] 
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_val_i = 0 
+        else:
+            V_list = []
+            # identify links and nodes in surrounding segments
+            links_in_segs = link_segments[(link_segments == link_seg) | (link_segments == node_seg)].index
+            nodes_in_segs = node_segments[(node_segments == link_seg) | (node_segments == node_seg)].index
+            # add unique valves to the V_list from the link list
+            for link in links_in_segs:
+                valves = valve_layer[valve_layer['link'] == link].index
+                if len(valves) == 0:
+                    pass
+                else:
+                    for valve in valves:
+                        if valve in V_list:
+                            pass
+                        else:
+                            V_list.append(valve)
+            # add unique valves to the V_list from the node list
+            for node in nodes_in_segs:
+                valves = valve_layer[valve_layer['node'] == node].index
+                if len(valves) == 0:
+                    pass
+                else:
+                    for valve in valves:
+                        if valve in V_list:
+                            pass
+                        else:
+                            V_list.append(valve)
+            # calculate valve-based criticality for the valve
+            # count the number of valves in the list, minus the valve in question
+            VC_val_i = len(V_list) - 1
+        if screen_updating:
+            print('Valve: ', i, '\t\tVC_val = ', VC_val_i)
+        VC[i] = VC_val_i
+    
+    return VC
+
+
+
+def valve_criticality_length(link_lengths, valve_layer, node_segments, 
+                             link_segments, screen_updating=False):
+    """
+	A valve criticality metric: the ratio of the segment lengths on either side of the valve
+	
+    Parameters
+    ----------
+
+    link_lengths: pandas Series
+        A list of 'length' attributes for each link in the network.
+        The output from wn.query_link_attribute('length')
+        
+    valve_layer: pandas DataFrame
+        Valve layer, defined by node and link pairs (for example, valve 0 is 
+        on link A and protects node B). The valve_layer DataFrame is indexed by
+        valve number, with columns named 'node' and 'link'.
+    
+    node_segments: pandas Series
+       Segment number for each node, indexed by node name.
+       One of the outputs of wntr.metrics.topographic.valve_segments
+       
+    link_segments: pandas Series
+        Segment number for each link, indexed by link name. 
+        One of the outputs of wntr.metrics.topographic.valve_segments
+    
+    screen_updating: boolean, optional
+        Determines whether to show valve criticality calculations realtime. 
+        The default is False.
+
+    Returns
+    -------
+    VC: dictionary
+        A dictionary with valve numbers as keys and valve criticalities as 
+        indexes. Also includes a 'Type' key which is used for plotting.
+
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)   
+
+    # Calculate the length-based valve crticiality
+    if screen_updating:
+        print('Length-Based Valve Criticality')
+    VC = {}
+    VC['Type'] = 'length'
+    
+    for i in range(n_valves):
+        # identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']]
+        
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_len_i = 0
+        else:
+            # calculate total length of links in the node segment
+            links_in_node_seg = link_segments[link_segments == node_seg].index
+            L_node = link_lengths[links_in_node_seg].sum()
+            # calculate total length of links in the link segment
+            links_in_link_seg = link_segments[link_segments == link_seg].index
+            L_link = link_lengths[links_in_link_seg].sum()
+            # calculate link length criticality for the valve
+            if L_node == 0 and L_link == 0:
+                VC_len_i = 0.0
+            else:
+                VC_len_i = 100 * ((L_link + L_node) / max(L_link, L_node) - 1)
+        if screen_updating:    
+            print('Valve: ', i, '\t\tVC_len = %.1f' %VC_len_i)
+        VC[i] = VC_len_i
+    
+    return VC
+
+def valve_criticality_demand(node_demands, valve_layer, node_segments, 
+                             link_segments, screen_updating=False):
+    """
+	A valve criticality metric: the ratio of the sums of the node base demands on either side of a valve.
+	
+    Parameters
+    ----------
+
+    node_demands: pandas Series
+        A list of 'base_demand' attributes for each node in the network.
+        The output from wn.query_node_attribute('base_demand') 
+
+    valve_layer: pandas DataFrame
+        Valve layer, defined by node and link pairs (for example, valve 0 is 
+        on link A and protects node B). The valve_layer DataFrame is indexed by
+        valve number, with columns named 'node' and 'link'.
+    
+    node_segments: pandas Series
+       Segment number for each node, indexed by node name.
+       One of the outputs of wntr.metrics.topographic.valve_segments
+       
+    link_segments: pandas Series
+        Segment number for each link, indexed by link name. 
+        One of the outputs of wntr.metrics.topographic.valve_segments
+    
+    screen_updating: boolean, optional
+        Determines whether to show valve criticality calculations realtime. 
+        The default is False.
+
+    Returns
+    -------
+    VC: dictionary
+        A dictionary with valve numbers as keys and valve criticalities as 
+        indexes. Also includes a 'Type' key which is used for plotting.
+
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)         
+
+    # Calculate the demand-based valve crticiality
+    if screen_updating:
+        print('\n\nDemand-Based Valve Criticality')
+    VC = {}
+    VC['Type'] = 'demand'
+    for i in range(n_valves):
+        # identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']] 
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_dem_i = 0.0
+        else:
+            # calculate total demand in the node segment
+            nodes_in_node_seg = node_segments[node_segments == node_seg].index
+            D_node = node_demands[nodes_in_node_seg].sum()
+            # calculate total demand in the link segment
+            nodes_in_link_seg = node_segments[node_segments == link_seg].index
+            D_link = node_demands[nodes_in_link_seg].sum()
+            # calculate demand criticality for the valve
+            if D_node == 0 and D_link == 0:
+                VC_dem_i = 0
+            else:
+                VC_dem_i = 100 * ((D_link + D_node) / max(D_link, D_node) - 1)
+        if screen_updating:
+            print('Valve: ', i, '\t\tVC_dem = %.1f' %VC_dem_i)
+        VC[i] = VC_dem_i
+                
+    return VC
 

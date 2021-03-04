@@ -5,6 +5,9 @@ water network model.
 import logging
 import networkx as nx
 import pandas as pd
+import os
+from wntr.morph import convert_node_coordinates_to_longlat
+from wntr.epanet import FlowUnits
 try:
     import matplotlib.pyplot as plt
     from matplotlib import animation
@@ -16,9 +19,13 @@ except:
     plotly = None
 try:
     import folium
+    import folium.plugins
 except:
     folium = None
-    
+try:
+    import json
+except:
+    json = None    
 from wntr.graphics.color import custom_colormap
 
 logger = logging.getLogger(__name__)
@@ -48,17 +55,17 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               valve_layer=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               valve_layer=None, valve_criticality=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
                directed=False, ax=None, filename=None):
     """
     Plot network graphic
 
     Parameters
     ----------
-    wn : wntr WaterNetworkModel
+    wn: wntr WaterNetworkModel
         A WaterNetworkModel object
 
-    node_attribute : None, str, list, pd.Series, or dict, optional
+    node_attribute: None, str, list, pd.Series, or dict, optional
 
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
@@ -69,7 +76,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
-    link_attribute : None, str, list, pd.Series, or dict, optional
+    link_attribute: None, str, list, pd.Series, or dict, optional
 
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
@@ -80,40 +87,47 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
 
-    title : str, optional
+    title: str, optional
         Plot title 
 
-    node_size : int, optional
+    node_size: int, optional
         Node size 
 
-    node_range : list, optional
+    node_range: list, optional
         Node range ([None,None] indicates autoscale)
         
-    node_alpha : int, optional
+    node_alpha: int, optional
         Node transparency
         
-    node_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Node colormap 
         
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name. 
         
-    link_width : int, optional
+    link_width: int, optional
         Link width
 
-    link_range : list, optional
+    link_range: list, optional
         Link range ([None,None] indicates autoscale)
 
-    link_alpha : int, optional
+    link_alpha: int, optional
         Link transparency
     
-    link_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Link colormap
         
     link_labels: bool, optional
-        If True, the graph will include each link labelled with its name. 
+        If True, the graph will include each link labelled with its name.
         
-    add_colorbar : bool, optional
+    valve_layer: pd.Dataframe, optional
+        list of valves with their associated link and node
+    
+    valve_criticality:
+        A dictionary of valve: criticality values. Includes "Type" key for plotting.
+        See valve-criticality-plotting.py
+        
+    add_colorbar: bool, optional
         Add colorbar
 
     node_colorbar_label: str, optional
@@ -122,10 +136,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     link_colorbar_label: str, optional
         Link colorbar label
         
-    directed : bool, optional
+    directed: bool, optional
         If True, plot the directed graph
     
-    ax : matplotlib axes object, optional
+    ax: matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
         
@@ -239,6 +253,15 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     ax.axis('off')
     
     if valve_layer is not None:
+        if valve_criticality is not None:
+            print(valve_criticality['Type'])
+            # set the color scheme
+            if valve_criticality['Type'] == 'valve':
+                vc_temp = valve_criticality.copy()
+                del vc_temp['Type']
+                max_criticality = max(vc_temp.values())
+            else:
+                max_criticality = 100
         for valve_name, (pipe_name, node_name) in valve_layer.iterrows():
             pipe = wn.get_link(pipe_name)
             if node_name == pipe.start_node_name:
@@ -256,8 +279,18 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             dy = end_node.coordinates[1] - y0
             valve_coordinates = (x0 + dx * 0.1,
                                      y0 + dy * 0.1)
-            ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
-     
+            if valve_criticality is not None:
+                crit_value = valve_criticality[valve_name]/max_criticality
+                if crit_value > 0.75:
+                    color = 'r'
+                if crit_value > 0.5 and crit_value <= 0.75:
+                    color = 'y'
+                if crit_value <= 0.5:
+                    color = 'b'
+                ax.scatter(valve_coordinates[0], valve_coordinates[1], s=25, c=color, marker='v')   
+            else:
+                ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
+    
     if filename:
         plt.savefig(filename)
         
@@ -425,7 +458,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                 
                 node_trace['text'] += tuple([node_info])
             #node_trace['marker']['size'] += tuple([5])
-    #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
+    #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'    
     
     # Create figure
     data = [edge_trace, node_trace]
@@ -441,6 +474,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
     
     fig = plotly.graph_objs.Figure(data=data,layout=layout)
+
     if filename:
         plotly.offline.plot(fig, filename=filename, auto_open=auto_open)  
     else:
@@ -455,7 +489,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                link_width=2, link_range=[None,None], 
                link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
                link_cmap_bins='cut', link_labels=True,
-               add_legend=False, round_ndigits=2, zoom_start=13, 
+               blank_background=False, add_legend=False, round_ndigits=2, zoom_start=13, 
                add_to_node_popup=None, add_to_link_popup=None,
                filename='leaflet_network.html'):
     """
@@ -524,6 +558,10 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     link_labels: bool, optional
         If True, the graph will include each link labelled with its name. 
     
+    blank_background: bool, optional
+        If True, the leaflet plot will have a blank background instead of 
+        a geogaphical map. 
+    
     add_legend: bool, optional
          Add a legend to the map
     
@@ -550,6 +588,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     if folium is None:
         raise ImportError('folium is required')
     
+    # format node attributes for plotting
     if node_attribute is not None:
         if isinstance(node_attribute, list):
             node_cmap=['red']
@@ -565,7 +604,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         elif node_cmap_bins == 'qcut':
             node_colors, node_bins = pd.qcut(node_attribute, len(node_cmap), 
                                                  labels=node_cmap, retbins =True)
-        
+    
+    # format link attributes for plotting
     if link_attribute is not None:
         if isinstance(link_attribute, list):
             link_cmap=['red']
@@ -581,14 +621,56 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         elif link_cmap_bins == 'qcut':
             link_colors, link_bins  = pd.qcut(link_attribute, len(link_cmap), 
                                               labels=link_cmap, retbins =True)
-        
+
+    # use node locations to center the map
     G = wn.get_graph()
     pos = nx.get_node_attributes(G,'pos')
-    center = pd.DataFrame(pos).mean(axis=1)
+    pos_pd = pd.DataFrame(pos)
+    map_center = pos_pd.mean(axis=1)
+             
+    if blank_background is True:    
+    # add a white geojson blank background and re-center the map   
+        rel_location = pos_pd.copy()
+        for node in rel_location.columns:
+            rel_location[node] = rel_location[node] - map_center
+        max_dist = max((rel_location**2).sum(axis=0)**0.5)
+        corner_dist = (2*max_dist**2)**0.5
+        wn.add_junction('dummy_node1', coordinates=(map_center[0]-corner_dist,
+                                                    map_center[1]-corner_dist)
+                        )
+        wn.add_junction('dummy_node2', coordinates=(map_center[0]+corner_dist,
+                                                    map_center[1]+corner_dist)
+                        )
+        longlat_map = {'dummy_node1': (-100.125, 39.825),
+                       'dummy_node2': (-99.825, 40.125)}
+        wn = convert_node_coordinates_to_longlat(wn, longlat_map)
+        wn.remove_node('dummy_node1')
+        wn.remove_node('dummy_node2')
+        G = wn.get_graph()
+        new_pos = nx.get_node_attributes(G,'pos')
+        new_pos_pd = pd.DataFrame(new_pos)
+        new_map_center = new_pos_pd.mean(axis=1)
+        map_location = [new_map_center.iloc[1], new_map_center.iloc[0]]
+        m = folium.Map(location=map_location, zoom_start=12, min_zoom=12, 
+                       tiles='cartodbpositron')
+        blank_geojson = {"type":"Feature",
+                         "geometry":{"type":"Polygon",
+                                           "coordinates":[[[-100.25,39.7],
+                                                           [-100.25,40.2],
+                                                           [-99.7,40.2],
+                                                           [-99.7,39.7],
+                                                           [-100.25,39.7]]]}}
+        style_function = lambda x: {'fill-color': '#fff', 
+                                    'color': '#fff', 'fillOpacity': 1}
+        folium.GeoJson(blank_geojson, style_function=style_function, 
+                       name='Background').add_to(m)
+    else:
+        # map node locations to map locations
+        map_location = [map_center.iloc[1], map_center.iloc[0]]
+        m = folium.Map(location=map_location, zoom_start=zoom_start, 
+                       tiles='cartodbpositron')    
     
-    m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start, 
-                   tiles='cartodbpositron')
-    #folium.TileLayer('cartodbpositron').add_to(m)
+    
     
     # Node popup
     node_popup = {k: '' for k in wn.node_name_list}
@@ -619,28 +701,12 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                     for key, val in add_to_link_popup.loc[name].iteritems():
                         link_popup[name] = link_popup[name] + '<br>' + \
                             key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
-                            
-    if node_size > 0:
-        for name, node in wn.nodes():
-            loc = (node.coordinates[1], node.coordinates[0])
-            radius = node_size
-            color = 'black'
-            if node_labels:
-                popup = node_popup[name]
-            else:
-                popup = None
-                    
-            if node_attribute is not None:
-                if name in node_attribute.index:
-                    color = node_colors[name]
-                else:
-                    radius = 0.1
-            
-            folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
-                                fill_color=color, radius=radius, fill_opacity=0.7, opacity=0.7).add_to(m)
-            
+
+    # Add pipes, pumps, and valves as separate featuregroups to the network
     if link_width > 0:
-        for name, link in wn.links():            
+        # add pipes
+        pipe_featuregroup = folium.map.FeatureGroup(name='Pipes')
+        for name, link in wn.pipes():            
             start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
             end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
             weight = link_width
@@ -657,8 +723,155 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                     weight = 1.5
             
             folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
-                            weight=weight, opacity=0.7).add_to(m)
-    
+                            weight=weight, name=name, opacity=0.7
+                            ).add_to(pipe_featuregroup)
+        pipe_featuregroup.add_to(m)     
+        # # 4/15/20 - search feature not yet available for featuregroups
+        # pipe_search = folium.plugins.Search(layer=pipe_featuregroup, 
+        #                 geom_type='Line', placeholder="Search for a pipe", 
+        #                 collapsed=False, search_label='name', 
+        #                 position='topright').add_to(m)
+        
+        # add pumps
+        pump_featuregroup = folium.map.FeatureGroup(name='Pumps')
+        for name, link in wn.pumps():            
+            start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
+            end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
+            weight = link_width
+            color='black'
+            if link_labels:
+                popup = link_popup[name]
+            else:
+                popup = None
+            
+            if link_attribute is not None:
+                if name in link_attribute.index:
+                    color = link_colors[name]
+                else:
+                    weight = 1.5
+            
+            folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
+                            weight=weight, name=name, opacity=0.7
+                            ).add_to(pump_featuregroup)
+        pump_featuregroup.add_to(m) 
+        # # 4/15/20 - search feature not yet available for featuregroups
+        # pump_search = folium.plugins.Search(layer=pump_featuregroup, 
+        #                 geom_type='Line', placeholder="Search for a pump", 
+        #                 collapsed=False, search_label='name', 
+        #                 position='topright').add_to(m)
+        
+        # add valves
+        valve_featuregroup = folium.map.FeatureGroup(name='Valves')
+        for name, link in wn.valves():            
+            start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
+            end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
+            weight = link_width
+            color='black'
+            if link_labels:
+                popup = link_popup[name]
+            else:
+                popup = None
+            
+            if link_attribute is not None:
+                if name in link_attribute.index:
+                    color = link_colors[name]
+                else:
+                    weight = 1.5
+            
+            folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
+                            weight=weight, name=name, opacity=0.7
+                            ).add_to(valve_featuregroup)
+        valve_featuregroup.add_to(m)
+        # # 4/15/20 - search feature not yet available for featuregroups        
+        # valve_search = folium.plugins.Search(layer=valve_featuregroup, 
+        #                 geom_type='Line', placeholder="Search for a valve", 
+        #                 collapsed=False, search_label='name', 
+        #                 position='topright').add_to(m)
+            
+    # Add junctions, reservoirs, and tanks as separate featuregroups to the network            
+    if node_size > 0:
+        # add junctions
+        junction_featuregroup = folium.map.FeatureGroup(name='Junctions')
+        for name, node in wn.junctions():
+            loc = (node.coordinates[1], node.coordinates[0])
+            radius = node_size
+            color = 'black'
+            if node_labels:
+                popup = node_popup[name]
+            else:
+                popup = None
+                    
+            if node_attribute is not None:
+                if name in node_attribute.index:
+                    color = node_colors[name]
+                else:
+                    radius = 0.1
+            
+            folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
+                                fill_color=color, radius=radius, 
+                                fill_opacity=0.7, opacity=0.7, label=node
+                                ).add_to(junction_featuregroup)
+        junction_featuregroup.add_to(m)
+        # # 4/15/20 - search feature not yet available for featuregroups
+        # junction_search = folium.plugins.Search(layer=junction_featuregroup, 
+        #                 geom_type='point', placeholder="Search for a junction", 
+        #                 collapsed=False, search_label='label',
+        #                 position='topright').add_to(m)
+        
+        # add reservoirs
+        reservoir_featuregroup = folium.map.FeatureGroup(name='Reservoirs')
+        for name, node in wn.reservoirs():
+            loc = (node.coordinates[1], node.coordinates[0])
+            radius = node_size
+            color = 'black'
+            if node_labels:
+                popup = node_popup[name]
+            else:
+                popup = None
+            if node_attribute is not None:
+                if name in node_attribute.index:
+                    color = node_colors[name]
+                else:
+                    radius = 0.1
+            folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
+                                fill_color=color, radius=radius, 
+                                fill_opacity=0.7, opacity=0.7, label=node
+                                ).add_to(reservoir_featuregroup)
+        reservoir_featuregroup.add_to(m)
+        # # 4/15/20 - search feature not yet available for featuregroups
+        # reservoir_search = folium.plugins.Search(layer=reservoir_featuregroup, 
+        #                 geom_type='point', placeholder="Search for a reservoir", 
+        #                 collapsed=False, search_label='label',
+        #                 position='topright').add_to(m)
+        
+        # add tanks
+        tank_featuregroup = folium.map.FeatureGroup(name='Tanks')
+        for name, node in wn.tanks():
+            loc = (node.coordinates[1], node.coordinates[0])
+            radius = node_size
+            color = 'black'
+            if node_labels:
+                popup = node_popup[name]
+            else:
+                popup = None
+                    
+            if node_attribute is not None:
+                if name in node_attribute.index:
+                    color = node_colors[name]
+                else:
+                    radius = 0.1
+            folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
+                                fill_color=color, radius=radius, 
+                                fill_opacity=0.7, opacity=0.7, label=node
+                                ).add_to(tank_featuregroup)            
+        
+        tank_featuregroup.add_to(m)
+        # # 4/15/20 - search feature not yet available for featuregroups
+        # tank_search = folium.plugins.Search(layer=tank_featuregroup, 
+        #                 geom_type='point', placeholder="Search for a tank", 
+        #                 collapsed=False, search_label='label',
+        #                 position='topright').add_to(m)
+        
     if (add_legend) & ((len(node_cmap) >= 1) or (len(link_cmap) >= 1)):
         if node_attribute is not None:  #Produce node legend
             height = 50+len(node_cmap)*20 + (int(len(node_attribute_name)/20) + 1)*20
@@ -673,25 +886,25 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                 style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
             node_legend_html += """</div>"""
             m.get_root().html.add_child(folium.Element(node_legend_html))
-			
+ 			
         if link_attribute is not None:   #Produce link legend
             height = 50+len(link_cmap)*20 + (int(len(link_attribute_name)/20) + 1)*20
             link_legend_html = """<div style="position: fixed; 
-			bottom: 50px; left: 250px; width: 150px; height: """+str(height)+"""px; 
-			background-color:white;z-index:9999; font-size:14px; "><br>
+ 			bottom: 50px; left: 250px; width: 150px; height: """+str(height)+"""px; 
+ 			background-color:white;z-index:9999; font-size:14px; "><br>
             <b><P ALIGN=CENTER>""" + "Link Legend: " + link_attribute_name + """</b> </P>"""
             for color, val in zip(link_cmap, link_bins[0:-1]):
                 val = '{:.{prec}f}'.format(val, prec=round_ndigits)
                 link_legend_html += """
-               &emsp;<i class="fa fa-minus fa-1x" 
+                &emsp;<i class="fa fa-minus fa-1x" 
                 style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
             link_legend_html += """</div>"""
             m.get_root().html.add_child(folium.Element(link_legend_html))
     
-    #plugins.Search(points, search_zoom=20, ).add_to(m)
+
     #if add_longlat_popup:
     #    m.add_child(folium.LatLngPopup())
-    
+
     folium.LayerControl().add_to(m)
     
     m.save(filename)
@@ -841,3 +1054,66 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     anim = animation.FuncAnimation(fig, update, interval=50, frames=len(index), blit=False, repeat=repeat)
     
     return anim
+
+def wn_to_geojson(wn, to_file=True):
+    """
+    Write a minimal geojson representation of the Water Network.
+
+    Parameters
+    ----------
+    wn: wntr WaterNetworkModel object
+        The network to be make the geojson from
+    to_file: Boolean, default=False
+        To save the geojson representation as a file in the directory of the
+        inp file
+    Returns
+    -------
+    wn_geojson: dict in geojson format
+        geojson spatial representation of the water network
+    """
+    if json is None:
+        raise ImportError('json is required')
+    inp_path = os.path.abspath(wn.name)
+    # Translate the nodes to geojson.
+    wn_geojson = {"type": "FeatureColllection",
+                  "features": []
+                  }
+    for name, node in wn.nodes():
+        feature = {"type": "Feature",
+                   "geometry": {"type": "Point",
+                                "coordinates": list(node.coordinates)
+                                },
+                   "id": name,
+                   "properties": {"ID": name,
+                                  }
+                   }
+        if node.node_type == 'Junction':
+            feature['properties']["Base Demand (gpm)"] = node.base_demand/FlowUnits.GPM.factor
+        else:
+            feature['properties']["Base Demand (gpm)"] = node.node_type
+        wn_geojson["features"].append(feature)
+    # Translate the links to geojson.
+    for name, link in wn.links():
+        link = wn.get_link(link)
+        start = list(link.start_node.coordinates)
+        end = list(link.end_node.coordinates)
+        feature = {"type": "Feature",
+                   "geometry": {"type": "LineString",
+                                "coordinates": [start, end]
+                                },
+                   "id": name,
+                   "properties": {"ID": name
+                                  }
+                   }
+        link_type = link.link_type
+        if link_type == 'Pump':
+            feature['properties']["Pipe Diameter (in)"] = "Pump"
+        else:
+            feature['properties']["Pipe Diameter (in)"] = round(link.diameter * 39.3701)
+        wn_geojson["features"].append(feature)
+    if to_file:
+        # Write out the network to the file.
+        output_file = inp_path.split('.inp')[0] + '.json'
+        with open(output_file, 'w') as fp:
+            json.dump(wn_geojson, fp)
+    return wn_geojson
