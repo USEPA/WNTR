@@ -1724,36 +1724,36 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None
 
         for name, node in self.nodes(Junction):
-            node.head = None
-            node.demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._head = None
+            node._demand = None
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Tank):
-            node.head = node.init_level+node.elevation
+            node._head = node.init_level+node.elevation
             node._prev_head = node.head
-            node.demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._demand = None
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Reservoir):
-            node.head = None  # node.head_timeseries.base_value
-            node.demand = None
-            node.leak_demand = None
+            node._head = None  # node.head_timeseries.base_value
+            node._demand = None
+            node._leak_demand = None
             node._is_isolated = False
 
         for name, link in self.links(Pipe):
-            link.status = link.initial_status
-            link.setting = link.initial_setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
             link._prev_setting = None
 
         for name, link in self.links(Pump):
-            link.status = link.initial_status
+            link._user_status = link.initial_status
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1763,8 +1763,8 @@ class WaterNetworkModel(AbstractModel):
             link._prev_setting = None
 
         for name, link in self.links(Valve):
-            link.status = link.initial_status
-            link.setting = link.initial_setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -2553,7 +2553,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.initial_status = status
-        pipe.status = status
+        pipe._user_status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
 
@@ -2632,23 +2632,23 @@ class LinkRegistry(Registry):
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self)
             valve.headloss_curve_name = setting
