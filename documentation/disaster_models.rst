@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _disaster:
+
 Disaster scenarios
 ======================================
 
