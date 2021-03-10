@@ -12,11 +12,11 @@ splitting or breaking pipes.
 
 Network skeletonization
 ----------------------------
-The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavoir.
+The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavior.
 Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
-Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavoir.
+Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
 Pipes that fall below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
@@ -81,10 +81,14 @@ Finally, the algorithm loops over all candidate pipes and merges pipes in parall
 This initial set of operations can generate new branch pipes, pipes in series, and pipes in parallel.
 This cycle repeats until the network can no longer be reduced.  
 The user can specify if branch trimming, series pipe merge, and/or parallel pipe merge should be included in the skeletonization operations.  
-The user can also specify a maximum number of cycles to include in the process.
+The user can also specify a maximum number of cycles to include in the process. 
+
+.. only:: latex
+
+   See the `online API documentation <https://wntr.readthedocs.io/en/latest/apidoc/wntr.morph.skel.html>`_ for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
-a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  
+a "skeletonization map" that maps original network nodes to merged nodes that are represented in the skeletonized network.  
 The skeletonization map is a dictionary where 
 the keys are original network nodes and 
 the values are a list of nodes in the network that were merged as a result of skeletonization operations.  
@@ -105,22 +109,14 @@ the original 'Junction 1' and 'Junction 2.'
 
 The following example performs network skeletonization on Net6  
 and compares system pressure using the original and skeletonized networks.
-The example starts by creating a water network model for Net6 and then skeletonizing 
-it using a using a pipe diameter threshold of 12 inches. 
+The example starts by creating a water network model for Net6, listing the number of network components (e.g., 3356 nodes, 3892 links), and then skeletonizing it using a using a pipe diameter threshold of 12 inches. 
 The skeletonization procedure reduces the number of nodes in the network from 
 approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 
 .. doctest::
     :hide:
-
+	
     >>> import wntr
-    >>> import numpy as np
-    >>> import matplotlib.pylab as plt
-    >>> from __future__ import print_function
-    
-.. doctest::
-    :hide:
-    
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
     ... except:
@@ -128,7 +124,10 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 	
 .. doctest::
 
-    >>> wn = wntr.network.WaterNetworkModel('Net6.inp') # doctest: +SKIP
+    >>> import matplotlib.pylab as plt
+    >>> import wntr  # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net6.inp') # doctest: +SKIP
     >>> wn.describe()
     {'Nodes': 3356, 'Links': 3892, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
     
@@ -241,7 +240,7 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
   the nodes could be in the upper right and lower left).
 
 .. note:: 
-   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm**, which is an optional dependency of WNTR.
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** [Bieni19]_, which is an optional dependency of WNTR.
 		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
@@ -250,8 +249,6 @@ node coordinates scaled by 100 m.
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -259,9 +256,10 @@ node coordinates scaled by 100 m.
 	
 .. doctest::
 
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
-The next example converts node coordinates to longitude/latitude.
+The next example converts node coordinates to longitude/latitude. The longitude and latitude coordinates of two locations (e.g., nodes, tanks) on the map must be provided to convert the other node coordinates to longitude/latitude. 
 
 .. doctest::
 
@@ -280,10 +278,9 @@ For a pipe split, the original pipe is split into two pipes by adding a new
 junction and new pipe to the model.  
 For a pipe break, the original pipe is broken into two disconnected pipes by 
 adding two new junctions and a new pipe to the model.  
-**With a pipe break, there is no longer flow possible from one side of the break to the other. 
-This is more likely to 
-introduce non-convergable hydraulics than a pipe split with a leak 
-added.**
+
+.. note::
+  With a pipe break, flow is no longer possible from one side of the break to the other. This is more likely to introduce non-convergable hydraulics than a pipe split with a leak added.
 
 The updated model retains the original length of the pipe section (:numref:`fig-split-break`). 
 The split or break occurs at a user specified distance between the 

@@ -2,16 +2,23 @@
 
     \clearpage
 
+.. _hydraulic_simulation:
+
 Hydraulic simulation
 ==============================
 
 WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
-The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET 2.0 Programmer's Toolkit. The simulator can also be 
-used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-A hydraulic simulation using the EpanetSimulator is run using the following code:
+EpanetSimulator
+-----------------
+The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [RWTS20]_.  
+EPANET 2.2.0 is used by default and runs demand-driven and pressure dependent hydraulic analysis.  
+EPANET 2.00.12 runs demand-driven hydraulic analysis only.
+Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
+
+The user can switch between pressure dependent demand (PDD) or demand-driven (DD) hydraulic simulation by setting
+the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
     :hide:
@@ -21,62 +28,87 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+
+.. doctest::
+
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn.options.hydraulic.demand_model = 'DD'  
+    >>> wn.options.hydraulic.demand_model = 'PDD'
+	
+.. note:: 
+   EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 
+   analysis (PDA).  In WNTR, the user can select demand-driven using 'DD' or 'DDA'
+   and pressure dependent demand using 'PDD' or 'PDA'.
+
+A hydraulic simulation using the EpanetSimulator is run using the following code:
 	
 .. doctest::
 
 	>>> sim = wntr.sim.EpanetSimulator(wn)
-	>>> results = sim.run_sim()
+	>>> results = sim.run_sim() # by default, this runs EPANET 2.2.0
+	
+The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:
 
+.. doctest::
+
+	>>> results1 = sim.run_sim(version=2.0) # runs EPANET 2.00.12
+	>>> results2 = sim.run_sim(version=2.2) # runs EPANET 2.2.0
+	
+WNTRSimulator
+-----------------
 The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
-in either demand-driven or pressure dependent demand mode ('DD' or 'PDD').
+in demand-driven or pressure dependent demand mode.
+
+As with the EpanetSimulator, the user can switch between DD and PDD by setting
+the ``wn.options.hydraulic.demand_model`` option.  
+
+.. doctest::
+
+	>>> wn.options.hydraulic.demand_model = 'DD'  
+	>>> wn.options.hydraulic.demand_model = 'PDD'
+	
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
 .. doctest::
 
-	>>> sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+	>>> sim = wntr.sim.WNTRSimulator(wn)
 	>>> results = sim.run_sim()
+
 
 More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
+The simulators use different solvers for the system of hydraulic equations; as such, small differences in the results
+are expected.
+While the EpanetSimulator uses Todini's Global Gradient Algorithm to solve the system of equations,
+the WNTRSimulator uses a Newton-Raphson algorithm. 
 
-Options
-----------
-Hydraulic simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
-These options include 
-duration, 
-hydraulic timestep, 
-rule timestep, 
-pattern timestep, 
-pattern start, 
+Hydraulic options
+-------------------
+The hydraulic simulation options include 
+headloss model, 
+viscosity, 
+diffusivity, 
+trails,
+accuracy,
 default pattern, 
-report timestep, 
-report start, 
-start clocktime, 
-headloss, 
-trials, 
-accuracy, 
-unbalanced, 
-demand multiplier, and 
-emitter exponent.
-All options are used with the EpanetSimulator.  
-Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
+demand multiplier, 
+demand model,
+minimum pressure,
+required pressure, and 
+pressure exponent.
+Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
+Options that directly apply to hydraulic simulation that are not used in the
+WNTRSimulator are described in :ref:`limitations`.   
 
-The following example returns model options, which all have default values.
+When creating a water network model from an EPANET INP file, hydraulic options are populated from the [OPTIONS] sections of the EPANET INP file.
+All of these options can be modified in WNTR and then written to an EPANET INP file.
+More information on water network options can be found in :ref:`options`. 
 
-.. doctest::
-
-    >>> wn.options # doctest: +SKIP
-    Time options:
-      duration            : 604800              
-      hydraulic_timestep  : 900                 
-      quality_timestep    : 900                 
-      rule_timestep       : 360.0               
-      pattern_timestep    : 3600
-      ...
-      
 Mass balance at nodes
 -------------------------
 Both simulators use the mass balance equations from EPANET [Ross00]_:
@@ -95,7 +127,9 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 
 Headloss in pipes
 -------------------------
-Both simulators use the Hazen-Williams headloss formula from EPANET [Ross00]_:
+Both simulators use conservation of energy formulas from EPANET [Ross00]_. 
+While the EpanetSimulator can use the Hazen-Williams and Chezy-Manning pipe head loss formulas, 
+the WNTRSimulator uses only the Hazen-Williams head loss formula, shown below.
 
 .. math:: H_{n_{j}} - H_{n_{i}} = h_{L} = 10.667 C^{-1.852} d^{-4.871} L q^{1.852}
 
@@ -112,9 +146,7 @@ The flow rate in a pipe is positive if water is flowing from
 the starting node to the ending node and negative if water is flowing
 from the ending node to the starting node. 
 
-The WNTRSimulator solves for pressures and flows throughout the network 
-as a set of linear equations.
-However, the Hazen-Williams headloss formula is not valid for negative
+The Hazen-Williams headloss formula is not valid for negative
 flow rates. Therefore, the WNTRSimulator uses a reformulation of this constraint. 
 
 For :math:`q<0`:
@@ -128,11 +160,14 @@ For :math:`q \geq 0`:
 These equations are symmetric across the origin
 and valid for any :math:`q`. Thus, this equation can be used for flow in
 either direction. However, the derivative with respect to :math:`q` at :math:`q = 0` 
-is :math:`0`. In certain scenarios, this can cause the Jacobian of the
+is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
-splits the domain of :math:`q` into six segments to
+splits the domain of :math:`q` into segments to
 create a piecewise smooth function.
+
+See `EPANET documentation <https://epanet22.readthedocs.io/en/latest/12_analysis_algorithms.html#analysis-algorithms>`_ for more details 
+on analysis algorithms used by EPANET (and therefore used by the EpanetSimulator).
 
 .. as presented below.
 
@@ -189,7 +224,7 @@ In a pressure dependent demand simulation, the delivered demand depends on the p
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
 
-The WNTRSimulator can run hydraulics using a pressure dependent demand simulation
+Both simulators can run hydraulics using a pressure dependent demand simulation
 according to the following pressure-demand relationship [WaSM88]_:
 
 .. math::
@@ -197,25 +232,23 @@ according to the following pressure-demand relationship [WaSM88]_:
 	d = 
 	\begin{cases}
 	0 & p \leq P_0 \\
-	D_f(\frac{p-P_0}{P_f-P_0})^{\frac{1}{2}} & P_0 \leq p \leq P_f \\
-	D^f & p \geq P_f
+	D_f(\frac{p-P_0}{P_f-P_0})^{1/e} & P_0 \leq p \leq P_f \\
+	D_f & p \geq P_f
 	\end{cases}
 
 where 
 :math:`d` is the actual demand (m³/s), 
 :math:`D_f` is the desired demand (m³/s), 
 :math:`p` is the pressure (Pa), 
-:math:`P_f` is the nominal pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
-:math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water.  
-The set of nonlinear equations comprising the hydraulic 
-model and the pressure-demand relationship is solved directly using a 
-Newton-Raphson algorithm.  
+:math:`P_f` is the required pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
+:math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water, 
+:math:`1/e` is the pressure exponent, usually set equal to 0.5.
 
 :numref:`fig-pressure-dependent` illustrates the pressure-demand relationship using both the demand-driven and pressure dependent demand simulations.
 In the example, 
 :math:`D_f` is 0.0025 m³/s (39.6 GPM),
-:math:`P_f` is 30 psi, and 
-:math:`P_0` is 5 psi.
+:math:`P_f` is 30 psi (21.097 m), and 
+:math:`P_0` is 5 psi (3.516 m).
 Using the demand-driven simulation, the demand is equal to :math:`D_f` regardless of pressure.  
 Using the pressure dependent demand simulation, the demand starts to decrease when the pressure is below :math:`P_f` and goes to 0 when pressure is below :math:`P_0`.
 
@@ -226,35 +259,61 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The following example sets nominal and minimum pressure for each junction.  Note that nominal and minimum pressure can vary throughout the network.
+The required pressure and minimum pressure are defined in the the hydraulic options, and can be reset as shown 
+in the following example.
+
+.. doctest::
+    
+    >>> wn.options.hydraulic.required_pressure = 21.097 # 30 psi = 21.097 m
+    >>> wn.options.hydraulic.minimum_pressure  = 3.516 # 5 psi = 3.516 m
+	
+When using the WNTRSimultor, the required pressure and minimum pressure can vary throughout the network.  
+By default, the each junction's required and minimum pressure is set to None and the global value
+in the hydraulic options are used.  If the user defines required pressure or minimum pressure on a junction, 
+that value will override the global value.  The following example defines required pressure and minimum pressure on 
+junction 121.
 
 .. doctest::
 
-    >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi
-    ...     node.minimum_pressure = 3.516 # 5 psi
-    
+    >>> junction = wn.get_node('121')
+    >>> junction.required_pressure = 14.065 # 20 psi = 14.065 m
+    >>> junction.minimum_pressure = 0.352 # 0.5 psi = 0.352 m												   
+
+.. _leak_model:
+
 Leak model
 -------------------------
 
-The WNTRSimulator includes the ability to add leaks to the network.
-The leak is modeled with a general form of the equation proposed by Crowl and Louvar
+The WNTRSimulator includes the ability to add leaks to the network using a leak model. 
+As such, emitter coefficients defined in the water network model options are not used by the WNTRSimulator. 
+Users interested in using the EpanetSimulator to model leaks can still do so by defining 
+emitter coefficients. 
+
+When using the WNTRSimulator, leaks are modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
 
 	d_{leak} = C_{d} A p^{\alpha} \sqrt{\frac{2}{\rho}}
+	
+.. math::
 
+    d_{leak} = C_{d} A \sqrt{2gh} \hspace{0.2in} \text{when } \alpha = 0.5
+	
 where 
 :math:`d_{leak}` is the leak demand (m³/s),
 :math:`C_d` is the discharge coefficient (unitless), 
 :math:`A` is the area of the hole (m²), 
-:math:`p` is the gauge pressure inside the pipe (Pa), 
-:math:`\alpha` is the discharge coefficient, and 
-:math:`\rho` is the density of the fluid.
-The default discharge coefficient is 0.75 (assuming turbulent flow), but 
+:math:`\alpha` is an exponent related to characteristics of the leak (unitless),
+:math:`p` is the gauge pressure (Pa), 
+:math:`h` is the gauge head (m), 
+:math:`g` is the acceleration of gravity (m/s²), and 
+:math:`\rho` is the density of the fluid (kg/m³).
+
+The default discharge coefficient is 0.75 (assuming turbulent flow) [Lamb01]_, but 
 the user can specify other values if needed.  
-The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes).  
+The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) [Lamb01]_ and currently cannot be changed by the user.
+
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 
@@ -315,6 +374,8 @@ To restart the simulation from time zero, the user has several options.
 
 2. Save the water network model to a file and reload that file each time a simulation is run.  
    A pickle file is generally used for this purpose.  
+   A pickle file is a binary file used to serialize and de-serialize a Python object.
+   More information on the use of pickle files can be found at https://docs.python.org/3/library/pickle.html.
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
    
@@ -323,6 +384,7 @@ To restart the simulation from time zero, the user has several options.
    .. doctest::
 
        >>> import pickle
+	   
        >>> f=open('wn.pickle','wb')
        >>> pickle.dump(wn,f)
        >>> f.close()
@@ -340,7 +402,8 @@ To restart the simulation from time zero, the user has several options.
        >>> results = sim.run_sim()
     
 If these options do not cover user specific needs, then the water network
-model would need to be recreated between simulations or reset by hand.
+model would need to be recreated between simulations or reset manually by changing individual attributes to the desired
+values.
 Note that when using the EpanetSimulator, the model is reset each time it is used in 
 a simulation.
 
@@ -348,7 +411,7 @@ a simulation.
 Advanced: Customized models with WNTR's AML
 -------------------------------------------
 
-WNTR has a custom algebraic modeling language (AML) which is used for
+WNTR has a custom algebraic modeling language (AML) that is used for
 WNTR's hydraulic model (used in the
 :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for
 efficient evaluation of constraint residuals and derivatives. WNTR's
@@ -367,6 +430,7 @@ To create this model using WNTR's AML, the following can be used:
 .. doctest::
 
    >>> from wntr.sim import aml
+   
    >>> m = aml.Model()
    >>> m.x = aml.Var(1.0)
    >>> m.y = aml.Var(1.0)
@@ -396,6 +460,7 @@ step (without a line search) would look something like
 .. doctest::
 
    >>> from scipy.sparse.linalg import spsolve
+   
    >>> x = m.get_x()
    >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
    >>> x += d
@@ -409,6 +474,7 @@ which can solve one of these models.
 .. doctest::
 
    >>> from wntr.sim.solvers import NewtonSolver
+   
    >>> opt = NewtonSolver()
    >>> res = opt.solve(m)
    >>> m.x.value # doctest: +SKIP

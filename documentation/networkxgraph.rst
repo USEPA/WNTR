@@ -6,6 +6,9 @@ NetworkX graph
 ======================================
 
 WNTR can generate a NetworkX data object that stores network connectivity as a graph. 
+The ability to easily integrate NetworkX with WNTR facilitates the use of numerous standard graph algorithms, 
+including algorithms that describe network structure.
+
 A **graph** is a collection of nodes that are connected by links.  
 For water networks, nodes represent junctions, tanks, and reservoirs while links represent pipes, pumps, and valves.
 The NetworkX graph can be used to analyze network structure.
@@ -19,6 +22,7 @@ The link direction is used as a reference to track flow direction in the network
 For example, positive flow indicates that the flow direction is from the start node to the end node 
 while negative flow indicates that the flow direction is from the end node to the start node.
 Multiple links with the same start and end node can be used to represent redundant pipes or backup pumps.
+
 A NetworkX graph generated from a water network model stores 
 the start and end node of each link, 
 node coordinates, 
@@ -29,7 +33,7 @@ For more information on NetworkX, see https://networkx.github.io/.
 
 .. _fig-graph:
 .. figure:: figures/graph.png
-   :width: 389
+   :width: 325
    :alt: Directed multigraph
 
    Example directed multigraph.
@@ -41,8 +45,6 @@ the following function:
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -50,10 +52,13 @@ the following function:
 	
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> G = wn.get_graph() # directed multigraph
 	
-The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in NetworkX)
-can be accessed using the following:
+The graph is stored as a nested dictionary.  The nodes and links
+can be accessed using the graph's `node` and `adj` attribute (`adj` is used to get adjacent nodes and links).
 
 .. doctest::
 
@@ -66,6 +71,7 @@ The graph can be used to access NetworkX methods, for example:
 .. doctest::
 
     >>> import networkx as nx
+	
     >>> node_degree = G.degree()
     >>> closeness_centrality = nx.closeness_centrality(G)
     >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)

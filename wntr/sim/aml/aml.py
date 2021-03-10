@@ -4,10 +4,7 @@ from .evaluator import Evaluator
 from .expr import Var, Param, native_numeric_types, Float, ConditionalExpression
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
-if sys.version_info.major == 2:
-    from collections import MutableMapping
-else:
-    from collections.abc import MutableMapping
+from collections.abc import MutableMapping
 
 
 class Constraint(object):

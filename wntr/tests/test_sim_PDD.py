@@ -29,9 +29,10 @@ class TestPDD(unittest.TestCase):
 
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
+            j.required_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         for t in results.time:

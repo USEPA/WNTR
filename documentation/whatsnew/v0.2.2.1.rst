@@ -1,0 +1,18 @@
+.. _whatsnew_0221:
+
+v0.2.2.1 (June 16, 2020)
+---------------------------------------------------
+
+* Fixed :class:`~wntr.network.model.WaterNetworkModel.assign_demand`. 
+  The function now reassigns demands using the demand_timeseries_list and uses the demand 
+  multiplier to create a new pattern.
+* Fixed issues in WNTRSimulator controls, including
+ 
+  * Fixed a bug in tank controls that are used when a pipe entering/leaving the tank has a CV
+  * Fixed a bug in the PSV headloss constraint, which now uses elevation at the start node
+  * Added a tolerance threshold to ValueCondition and TankLevelCondition
+  * Added a tolerance threshold to the condition that activates FCV
+  
+* Updated tests
+* Updated documentation
+  

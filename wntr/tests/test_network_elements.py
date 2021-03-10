@@ -1,7 +1,6 @@
 """
 Test the wntr.network.elements classes
 """
-from __future__ import print_function
 import nose.tools
 from nose import SkipTest
 from nose.tools import *
@@ -206,10 +205,33 @@ def test_Demands():
     nose.tools.assert_list_equal(demandlist1.pattern_list(), [pattern1, pattern2, pattern2])
     nose.tools.assert_list_equal(demandlist1.pattern_list(category='residential'), [pattern2, pattern2])
     nose.tools.assert_list_equal(demandlist1.category_list(), ['_base_demand','residential','residential'])    
+
+def test_fire_fighting_demand():
+    # Setup network
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction('new_junction', base_demand=1, elevation=10,
+                    coordinates=(6, 25))
+    duration = 1*5*60*60
+    wn.options.time.duration = duration
+    
+    # Add fire demand
+    node = wn.get_node('new_junction')
+    fire_flow_demand = 0.252
+    fire_start = 2*60*60
+    fire_end = 4*60*60
+    node.add_fire_fighting_demand(wn, fire_flow_demand, fire_start, fire_end)
+    ff_demand = list(wntr.metrics.hydraulic.expected_demand(wn)['new_junction'].values)
+    expected_ff_demand = [1, 1, 1.252, 1.252, 1, 1]
+    nose.tools.assert_list_equal(ff_demand, expected_ff_demand)
+    
+    # Remove fire demand
+    node.remove_fire_fighting_demand(wn)
+    nose.tools.assert_true(not('Fire_Flow' in node.demand_timeseries_list.category_list()))
     
 
 def test_Enums():
     pass
 
-if __name__ == '__main__':
-    test_Demands()
+#if __name__ == '__main__':
+    # test_Demands()
+    # test_fire_fighting_demand()

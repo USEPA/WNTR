@@ -30,15 +30,16 @@ class TestTCVs(unittest.TestCase):
         control = wntr.network.controls.Control._time_control(wn, 7200, time_flag='SIM_TIME', daily_flag=False, control_action=open_action)
         wn.add_control('c1', control)
 
-        sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+        wn.options.hydraulic.demand_model = 'DDA'
+        sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
-        raise SkipTest # EPANET seg faults
+        #raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
-        for t in results2.time:
+        for t in results2.node['head'].index:
             head1 = results1.node['head'].loc[t, 'j2']
             head2 = results2.node['head'].loc[t, 'j2']
             head_diff = abs(head1 - head2)
@@ -202,12 +203,12 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
-        raise SkipTest # EPANET seg faults
+        #raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
-        for t in results2.time:
+        for t in results2.link['flowrate'].index:
             self.assertAlmostEqual(results1.link['flowrate'].loc[t, 'v1'], 0.01, 7)
             self.assertAlmostEqual(results2.link['flowrate'].loc[t, 'v1'], 0.01, 7)
 
@@ -228,12 +229,12 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
-        raise SkipTest # EPANET seg faults
+        #raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
-        for t in results2.time:
+        for t in results2.link['flowrate'].index:
             self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - results2.link['flowrate'].loc[t, 'v1']), 1e-5)
             self.assertLess(results1.link['flowrate'].loc[t, 'v1'], 0.09)
 
@@ -257,16 +258,16 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
 
-        raise SkipTest # EPANET seg faults
+        #raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
-        for t in results2.time:
+        for t in results2.link['flowrate'].index:
             self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - results2.link['flowrate'].loc[t, 'v1']), 1e-4)
             if t > 7200:
                 self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - 0.03), 1e-8)
                 
-        self.assertLess(abs(results1.link['flowrate'].loc[0, 'v1'] - 0.0), 1e-5)
+        self.assertLess(abs(results1.link['flowrate'].loc[0, 'v1'] - 0.0), 1e-4)
         self.assertLess(abs(results1.link['flowrate'].loc[3600, 'v1'] - 0.0245344210416), 1e-5)
         self.assertLess(abs(results1.link['flowrate'].loc[7200, 'v1'] - 0.0293480847031), 1e-5)

@@ -1,6 +1,6 @@
 """
 The following example uses WNTR with Chama (https://chama.readthedocs.io) to 
-optize the placement of sensors that minimizes detection time. 
+optimize the placement of sensors that minimizes detection time. 
 In this example, simulation data is extracted from trace simulations.  
 This data could also be extracted from contaminant injection simulations 
 and could be translated into other metrics (e.g. extent of 
@@ -23,7 +23,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 scenario_names = wn.junction_name_list
 sim = wntr.sim.EpanetSimulator(wn)
 sim.run_sim(save_hyd = True)
-wn.options.quality.mode = 'TRACE'
+wn.options.quality.parameter = 'TRACE'
 signal = pd.DataFrame()
 for inj_node in scenario_names:
     print(inj_node)

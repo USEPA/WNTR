@@ -9,16 +9,23 @@ sudo: false # if false, use TravisCI's container based build
 matrix:
     include:
     - python: 3.6
+      dist: xenial
       env: CONDA_ENV=py36
       services:
       - xvfb
+      sudo: true
     - python: 3.7
       dist: xenial
       services:
       - xvfb
       sudo: true
       env: CONDA_ENV=py37
-
+    - python: 3.8
+      dist: xenial
+      env: CONDA_ENV=py38
+      services:
+      - xvfb
+      sudo: true
 addons:
     apt:
         packages:
@@ -39,7 +46,7 @@ before_script:
 before_install:
     - echo "before install"
     - export PATH=/usr/lib/ccache:$PATH
-    - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh
+    - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - hash -r
@@ -55,12 +62,13 @@ install:
     - echo $PATH
     - ls -l /home/travis/miniconda/envs/test_env/lib
     - pip install --upgrade pip
-    - pip install chama coveralls
+    - pip install chama coveralls coverage
     - conda install -y --channel conda-forge glpk
     - python setup.py develop
 
 script:
-    - nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr
+    - coverage run --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --doctest-extension=.rst --traverse-namespace documentation/*.rst wntr
+    # - nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr
       
 after_success:
     coveralls

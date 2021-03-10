@@ -1,0 +1,17 @@
+.. _whatsnew_0230:
+
+v0.2.3 (September 4, 2020)
+---------------------------------------------------
+
+* Fixed bug in :class:`~wntr.network.model.WaterNetworkModel.reset_initial_values`.  
+  The method now resets controls and additional network attributes needed to reset the model to initial conditions.
+* Fixed bug for valve settings in the EPANET INP file writer, :class:`~wntr.epanet.io.InpFile.write`
+* Fixed bug in emitter coefficient unit conversion
+* Included conda install instructions
+* Added methods to add and remove fire fighting demand to a junction 
+* Added pipe criticality and fire flow examples
+* Minor updates to support NetworkX 2.5
+* Added binaries for Python 3.8
+* Added testing capabilities through GitHub Actions. This includes a quick check run on Linux using Python 3.8 and a complete build run on Windows, Linux, and MacOS using Python 3.6, 3.7 and 3.8. The GitHub Action tests are initiated after push and pull requests to the master and dev branches.
+* Updated tests
+* Updated documentation

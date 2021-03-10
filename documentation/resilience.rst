@@ -10,7 +10,7 @@ design, maintenance, and operations of that system.
 All these aspects must work together to limit the effects of disasters and 
 enable rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA14]_.  
-These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
+These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic [USEPA14]_.
 When quantifying resilience, 
 it is important to understand which metric best defines resilience for 
 a particular scenario.  WNTR includes many metrics to help 
@@ -43,7 +43,7 @@ For metrics that vary with respect to time and space, network animation can be u
    :width: 962
    :alt: Resilience metrics
 
-   Example state transition plot and network graphic used to visualize resilience.
+   Example state transition plot (left) and network graphic (right) used to visualize resilience.
 
 .. _topographic_metrics:
 
@@ -54,7 +54,7 @@ Topographic metrics, based on graph theory, can be used to assess the connectivi
 of water distribution networks.
 These metrics rely on the physical layout of the network components and can be used to
 understand how the underlying structure and connectivity constrains resilience. For
-example, a regular lattice, where each node has the same number of edges, is considered to be
+example, a regular lattice, where each node has the same number of edges (except at the border), is considered to be
 the most reliable graph structure. On the other hand, a random lattice has nodes and edges
 that are placed according to a random process. A real world water distribution system probably lies somewhere in
 between a regular lattice and a random lattice in terms of structure and reliability.
@@ -62,8 +62,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 Many of these metrics can be computed using NetworkX directly 
 (see https://networkx.github.io/ for more information).
-WNTR includes additional topographic metrics to help compute resilience 
-(see :class:`~wntr.metrics.topographic` for more information).
+WNTR includes additional topographic metrics to help compute resilience.
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
@@ -120,15 +119,19 @@ WNTR includes additional topographic metrics to help compute resilience
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
                                           Valve segmentation returns a segment number for each node and link, along with
-                                          the number of nodes and links in each segment.  
+                                          the number of nodes and links in each segment. 
+
+   Valve criticality                 	  Valve criticality valve is defined as the number of valves necessary to isolate a given valve.
+
+   Valve criticality length               Valve criticality length is defined as the ratio of link lengths in each segment on either side of a given isolation valve. If both sides of the valve are in the same segment, the criticality is set to zero.
+
+   Valve criticality demand               Valve criticality demand is defined as the ratio of node demands in each segment on either side of a given isolation valve. If both sides of the valve are in the same segment, the criticality is set to zero.							  
    =====================================  ================================================================================================================================================
 
 .. doctest::
     :hide:
 
     >>> import wntr
-    >>> import networkx as nx
-    >>> import numpy as np
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -141,6 +144,9 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
@@ -215,7 +221,25 @@ use NetworkX directly, while others use metrics included in WNTR.
 	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
 	  ...     valve_layer)
 
+* Valve criticality
 
+  .. doctest::
+	
+	  >>> valve_crit = wntr.metrics.valve_criticality(valve_layer, node_segments, link_segments)
+
+* Valve criticality length
+
+  .. doctest::
+	
+	  >>> link_lengths = wn.query_link_attribute('length')
+	  >>> valve_crit_length = wntr.metrics.valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments)
+
+* Valve criticality demand 
+
+  .. doctest::
+	
+	  >>> node_demands = wn.query_node_attribute('base_demand')
+	  >>> valve_crit_demand = wntr.metrics.valve_criticality_demand(node_demands, valve_layer, node_segments, link_segments)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
@@ -233,8 +257,8 @@ use NetworkX directly, while others use metrics included in WNTR.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network. NPR is computed using ...
-	Connectivity will change at each time step, depending on the flow direction.  
-	The method :class:`~wntr.network.WaterNetworkModel.get_graph` method 
+	Connectivity will change at each timestep, depending on the flow direction.  
+	The method :class:`~wntr.network.model.WaterNetworkModel.get_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
@@ -280,8 +304,8 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           flow in the pipes and entropy can be used to measure alternate flow paths
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
-                                          Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
+                                          Connectivity will change at each timestep, depending on the flow direction.  
+                                          The :class:`~wntr.network.model.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -294,7 +318,10 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
     
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
-                                          impacted by pressure below a specified threshold.
+                                          impacted by pressure below a specified threshold.  Population per node is computed using the method  
+                                          :class:`~wntr.metrics.misc.population`, which divides the average expected demand by the average volume of water 
+                                          consumed per capita per day. The default value for average volume of water consumed per capita per day is 200 gallons/day and can be 
+                                          modified by the user.
    =====================================  ================================================================================================================================================
 
 The following examples compute hydraulic metrics, including:
@@ -303,7 +330,10 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+      >>> import numpy as np
+	  
+      >>> wn.options.hydraulic.demand_model = 'PDD'
+      >>> sim = wntr.sim.WNTRSimulator(wn)
       >>> results = sim.run_sim()
     
       >>> pressure = results.node['pressure']
@@ -311,7 +341,7 @@ The following examples compute hydraulic metrics, including:
       >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
       ...     threshold)
     
-* Water service availability
+* Water service availability (Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0).
 	
   .. doctest::
 
@@ -349,7 +379,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Water age                              To determine the number of node-time pairs above or below a specified water age threshold, 
-                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE. Water age can also be computed using the average age from the last 48 hours of the simulation results.
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
@@ -365,7 +395,7 @@ The following examples compute water quality metrics, including:
 
   .. doctest::
 
-      >>> wn.options.quality.mode = 'AGE'
+      >>> wn.options.quality.parameter = 'AGE'
       >>> sim = wntr.sim.EpanetSimulator(wn)
       >>> results = sim.run_sim()
       
@@ -386,7 +416,7 @@ The following examples compute water quality metrics, including:
 	
   .. doctest::
 
-      >>> wn.options.quality.mode = 'CHEMICAL'
+      >>> wn.options.quality.parameter = 'CHEMICAL'
       >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
       ...     step_size=3600, start_time=2*3600, end_time=15*3600, duration=7*24*3600)
       >>> wn.add_pattern('SourcePattern', source_pattern)
@@ -517,5 +547,5 @@ The following examples compute economic metrics, including:
       >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
       >>> head = results.node['head']
       >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
-      >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
+      >>> pump_cost = wntr.metrics.pump_cost(pump_energy, wn)
     

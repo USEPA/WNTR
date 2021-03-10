@@ -1,3 +1,7 @@
+"""
+The following example demonstrates how to import WNTR, generate a water network 
+model from an INP file, simulate hydraulics, and plot simulation results on the network.
+"""
 import wntr
 
 # Create a water network model

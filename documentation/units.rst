@@ -23,8 +23,8 @@ All data in WNTR is stored in the following SI (International System) units:
 * Volume = :math:`m^3`
 
 When setting up analysis in WNTR, all input values should be specified in SI units. 
-All simulation results are also stored in SI units and can be converted to other units if desired.
-The SymPy Python package can be used to convert between units [JCMG11]_.  
+All simulation results are also stored in SI units and can be converted to other units if desired, 
+for instance by using the SymPy Python package [JCMG11]_.  
 
 EPANET unit conventions
 ------------------------
