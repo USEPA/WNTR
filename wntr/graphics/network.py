@@ -46,15 +46,15 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               valve_layer=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               valve_layer=None, valve_criticality=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
                directed=False, ax=None, filename=None):
     """
     Plot network graphic
     Parameters
     ----------
-    wn : wntr WaterNetworkModel
+    wn: wntr WaterNetworkModel
         A WaterNetworkModel object
-    node_attribute : None, str, list, pd.Series, or dict, optional
+    node_attribute: None, str, list, pd.Series, or dict, optional
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node in the list is given a 
@@ -63,7 +63,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
-    link_attribute : None, str, list, pd.Series, or dict, optional
+    link_attribute: None, str, list, pd.Series, or dict, optional
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
         - If link_attribute is a list, then each link in the list is given a 
@@ -72,36 +72,44 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
-    title : str, optional
+    title: str, optional
         Plot title 
-    node_size : int, optional
+
+    node_size: int, optional
         Node size 
-    node_range : list, optional
+
+    node_range: list, optional
         Node range ([None,None] indicates autoscale)
         
-    node_alpha : int, optional
+    node_alpha: int, optional
         Node transparency
         
-    node_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Node colormap 
         
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name. 
         
-    link_width : int, optional
+    link_width: int, optional
         Link width
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
     link_alpha : int, optional
         Link transparency
     
-    link_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Link colormap
         
     link_labels: bool, optional
-        If True, the graph will include each link labelled with its name. 
+        If True, the graph will include each link labelled with its name.
         
-    add_colorbar : bool, optional
+    valve_layer: pd.Dataframe, optional
+        list of valves with their associated link and node
+    
+    valve_criticality: dict, optional
+        dictionary of valve criticality values
+        
+    add_colorbar: bool, optional
         Add colorbar
     node_colorbar_label: str, optional
         Node colorbar label
@@ -109,10 +117,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     link_colorbar_label: str, optional
         Link colorbar label
         
-    directed : bool, optional
+    directed: bool, optional
         If True, plot the directed graph
     
-    ax : matplotlib axes object, optional
+    ax: matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
         
@@ -222,6 +230,15 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     ax.axis('off')
     
     if valve_layer is not None:
+        if valve_criticality is not None:
+            print(valve_criticality['Type'])
+            # set the color scheme
+            if valve_criticality['Type'] == 'valve':
+                vc_temp = valve_criticality.copy()
+                del vc_temp['Type']
+                max_criticality = max(vc_temp.values())
+            else:
+                max_criticality = 100        
         for valve_name, (pipe_name, node_name) in valve_layer.iterrows():
             pipe = wn.get_link(pipe_name)
             if node_name == pipe.start_node_name:
@@ -239,7 +256,18 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             dy = end_node.coordinates[1] - y0
             valve_coordinates = (x0 + dx * 0.1,
                                      y0 + dy * 0.1)
-            ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
+            if valve_criticality is not None:
+                crit_value = valve_criticality[valve_name]/max_criticality
+                # set the color scheme
+                if crit_value > 0.75:
+                    color = 'r'
+                if crit_value > 0.5 and crit_value <= 0.75:
+                    color = 'y'
+                if crit_value <= 0.5:
+                    color = 'b'
+                ax.scatter(valve_coordinates[0], valve_coordinates[1], s=25, c=color, marker='v')   
+            else:
+                ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
      
     if filename:
         plt.savefig(filename)
