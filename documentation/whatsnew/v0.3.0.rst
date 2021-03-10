@@ -1,0 +1,72 @@
+.. _whatsnew_0330:
+
+v0.3.0 (November 2, 2020)
+---------------------------------------------------
+
+* Added EPANET 2.2.0 as the default engine in the EpanetSimulator.
+
+  * When creating a WaterNetworkModel, ``wn``, from an EPANET INP file, the DEMAND MODEL, MINIMUM PRESSURE, and REQUIRED PRESSURE
+    along with other options are used to populate the WaterNetworkModel.  These options are stored in ``wn.options``.  
+    These options are also used when writing an INP file.  INP files created using EPANET 2.00.12 are compatible with this update.
+
+  * The option to run demand-driven and pressure dependent demand analysis is stored in ``wn.options.hydraulic.demand_model``. 
+    If no demand model is specified, demand-driven analysis is used. Note, demand-driven analysis can be specified as DD or DDA and 
+    pressure dependent demand analysis can be specified as PDA or PDD to maintain compatibility with EPANET 2.2.0::
+	
+		wn.options.hydraulic.demand_model = 'DD' # specify demand-driven analysis 
+		wn.options.hydraulic.demand_model = 'PDD' # specify pressure dependent demand analysis
+ 
+  * The EPANET 2.2.0 binaries for Mac and PC come from the Open Water Analytics EPANET 2.2.0 repository (https://github.com/OpenWaterAnalytics/EPANET).
+    The Linux binary was built on Ubuntu and comes from the OWA group using the same source as the Windows and Mac binaries.
+	
+  * The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:: 
+    
+		sim = wntr.sim.EpanetSimulator(wn)
+		results1 = sim.run_sim(version=2.0) # results using EPANET 2.00.12
+		results2 = sim.run_sim(version=2.2) # results using EPANET 2.2.0
+	
+  * EPANET 2.00.12 only runs demand-driven analysis
+
+* Certain WaterNetworkModel option names have been updated to better align with EPANET nomenclature (API change).  Key changes are noted below:
+  
+  * Hydraulics options that were in ``wn.options.solver`` are now in ``wn.options.hydraulic``
+  * Reaction options that were in ``wn.options.quality`` now stored in ``wn.options.reactions``
+  * ``wn.options.quality.mode`` is now ``wn.options.quality.quality.parameter``    
+  * ``wn.options.hydraulic.units`` has been updated to ``wn.options.hydraulic.inpfile_units`` to make it clear that these units are only used when writing an INP file
+
+* The following changes were made to handle new options in EPANET 2.2.0 INP files.  
+
+  * If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, the global hydraulic options for required and minimum pressure are 
+    defined from the REQUIRED PRESSURE and MINIMUM PRESSURE in the INP file.  The default values used in EPANET are shown below::
+	     
+		wn.options.hydraulic.required_pressure = 0.07 # 0.1 psi = 0.07 m
+		wn.options.hydraulic.minimum_pressure = 0
+
+  * Junction attributes ``required_pressure`` and ``minimum_pressure`` are set to None by default and the global hydraulic options are used in the WNTRSimulator.  
+    If the user defines required pressure or minimum pressure on a junction, that value will override the global value when using the WNTRSimulator.  
+    Note that junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
+	
+  * Tanks attributes include an indicator for tank overflow.  This can be used in the EpanetSimulator using EPANET 2.2.
+  
+  * The keyword argument `mode` has been removed from the WNTRSimulator.  DD and PDD are now defined using ``wn.options.hydraulic.demand_model`` (as shown above) 
+    to make use of the new EPANET 2.2.0 options (API change).
+    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the DEMAND MODEL in the INP file.
+
+  * The WNTRSimulator uses the exponent defined in ``wn.options.hydraulic.pressure_exponent`` to model the PDA pressure-demand relationship.  
+    The exponent had been set to 0.5 before, and could not be modified through options.
+    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the PRESSURE EXPONENT in the INP file.
+  
+* While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
+  those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
+  This impacts the ability to use those junction attributes in the EpanetSimulator.  
+  This note has been added to the :ref:`discrepancies` section of the user manual.
+	
+* Added support for multi-point pump curves in the WNTRSimulator.  The points are fit to the same
+  function that is used for 3-point curves.
+* Added support for tank volume curves in the WNTRSimulator.  
+  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
+  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+* Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
+* Added Travis CI tests for Python 3.8
+* Updated tests
+* Updated documentation

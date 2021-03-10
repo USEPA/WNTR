@@ -6,15 +6,16 @@ the network model.
 
 .. autosummary::
 
-    AbstractModel
-    Subject
-    Observer
     Node
     Link
     Registry
     NodeType
     LinkType
     LinkStatus
+    AbstractModel
+    Subject
+    Observer
+
 
 """
 import logging
@@ -25,10 +26,7 @@ from wntr.utils.ordered_set import OrderedSet
 
 import enum
 import sys
-if sys.version_info[0] == 2:
-    from collections import MutableSequence, MutableMapping
-else:
-    from collections.abc import MutableSequence, MutableMapping
+from collections.abc import MutableSequence, MutableMapping
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -79,19 +77,51 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     :class:`~wntr.network.elements.Tank`, and
     :class:`~wntr.network.elements.Reservoir`
 
+
+    .. rubric:: Constructor
+    
+    This is an abstract class and should not be instantiated directly.
+
     Parameters
     -----------
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object
     name : string
         Name of the node (must be unique among nodes of all types)
+    
 
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        node_type
+        coordinates
+        initial_quality
+        tag
+    
+
+    .. rubric:: Read-only simulation results
+
+    The following attributes are read-only. The values are the final calculated
+    value from a simulation.
+
+    .. autosummary::
+
+        head
+        demand
+        leak_demand
+        leak_status
+        leak_area
+        leak_discharge_coeff
 
     """
     def __init__(self, wn, name):
         self._name = name
         self._head = None
-        self._demand = None  
+        self._demand = None
+        self._pressure = None
+        self._quality = None
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
@@ -110,6 +140,19 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._is_isolated = False
 
     def _compare(self, other):
+        """
+        Comparison function
+
+        Parameters
+        ----------
+        other : Node
+            object to compare with
+
+        Returns
+        -------
+        bool
+            is these the same items
+        """        
         if not type(self) == type(other):
             return False
         if self.name == other.name and \
@@ -126,60 +169,70 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def head(self):
-        """float: The current head at the node"""
+        """float: (read-only) the current simulation head at the node (total head)"""
         return self._head
-    @head.setter
-    def head(self, value):
-        self._head = value
+    # @head.setter
+    # def head(self, value):
+    #     self._head = value
 
     @property
     def demand(self):
-        """float: The current demand at the node"""
+        """float: (read-only) the current simulation demand at the node (actual demand)"""
         return self._demand
-    @demand.setter
-    def demand(self, value):
-        self._demand = value
+    # @demand.setter
+    # def demand(self, value):
+    #     self._demand = value
+
+    @property
+    def pressure(self):
+        """float : (read-only) the current simulation pressure at the node"""
+        return self._pressure
+
+    @property
+    def quality(self):
+        """float : (read-only) the current simulation quality at the node"""
+        return self._quality
 
     @property
     def leak_demand(self):
-        """float: The current demand at the node"""
+        """float: (read-only) the current simulation leak demand at the node"""
         return self._leak_demand
-    @leak_demand.setter
-    def leak_demand(self, value):
-        self._leak_demand = value
+    # @leak_demand.setter
+    # def leak_demand(self, value):
+    #     self._leak_demand = value
 
     @property
     def leak_status(self):
-        """bool: The current leak status at the node"""
+        """bool:(read-only) the current simulation leak status at the node"""
         return self._leak_status
-    @leak_status.setter
-    def leak_status(self, value):
-        self._leak_status = value
+    # @leak_status.setter
+    # def leak_status(self, value):
+    #     self._leak_status = value
 
     @property
     def leak_area(self):
-        """float: The leak area at the node"""
+        """float: (read-only) the current simulation leak area at the node"""
         return self._leak_area
-    @leak_area.setter
-    def leak_area(self, value):
-        self._leak_area = value
+    # @leak_area.setter
+    # def leak_area(self, value):
+    #     self._leak_area = value
 
     @property
     def leak_discharge_coeff(self):
-        """float: The leak discharge coefficient"""
+        """float: (read-only) the current simulation leak discharge coefficient"""
         return self._leak_discharge_coeff
-    @leak_discharge_coeff.setter
-    def leak_discharge_coeff(self, value):
-        self._leak_discharge_coeff = value
+    # @leak_discharge_coeff.setter
+    # def leak_discharge_coeff(self, value):
+    #     self._leak_discharge_coeff = value
 
     @property
     def node_type(self):
-        """str: The node type"""
+        """str: The node type (read only)"""
         return 'Node'
     
     @property
     def name(self):
-        """str: The name of the node"""
+        """str: The name of the node (read only)"""
         return self._name
     
     @property
@@ -218,9 +271,11 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         d = {}
         for k in dir(self):
             if not k.startswith('_'):
-                val = getattr(self, k)
-                if not isinstance(val, types.MethodType):
-                    d[k] = val
+                try:
+                    val = getattr(self, k)
+                    if not isinstance(val, types.MethodType):
+                        d[k] = val
+                except DeprecationWarning: pass
         return d
 
 
@@ -231,6 +286,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     :class:`~wntr.network.elements.Pipe`, 
     :class:`~wntr.network.elements.Pump`, and
     :class:`~wntr.network.elements.Valve`
+
+    .. rubric:: Constructor
+    
+    This is an abstract class and should not be instantiated directly.
 
     Parameters
     ----------
@@ -243,6 +302,35 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     end_node_name : string
         Name of the end node
     
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        name
+        link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
+        initial_status
+        initial_setting
+        tag
+        vertices
+
+    .. rubric:: Read-only simulation results
+
+    The following attributes are read-only. The values are the final calculated
+    value from a simulation.
+
+    .. autosummary::
+
+        flow
+        headloss
+        quality
+        status
+        setting
+
     """
     def __init__(self, wn, link_name, start_node_name, end_node_name):
         # Set the registries
@@ -261,17 +349,20 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._end_node = self._node_reg[end_node_name]
         self._node_reg.add_usage(end_node_name, (link_name, self.link_type))
         # Set up other metadata fields
-        self._initial_status = LinkStatus.opened
+        self._initial_status = LinkStatus.Opened
         self._initial_setting = None
         self._vertices = []
         self._tag = None
         # Model state variables
-        self._user_status = LinkStatus.opened
-        self._internal_status = LinkStatus.active
+        self._user_status = LinkStatus.Opened
+        self._internal_status = LinkStatus.Active
         self._prev_setting = None
         self._setting = None
         self._flow = None
+        self._velocity = None
         self._is_isolated = False
+        self._quality = None
+        self._headloss = None
 
     def _compare(self, other):
         """
@@ -307,7 +398,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def link_type(self):
-        """str: The link type"""
+        """str: the link type (read only)"""
         return 'Link'
 
     @property
@@ -317,7 +408,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @initial_status.setter
     def initial_status(self, status):
         if not isinstance(status, LinkStatus):
-            status = LinkStatus[status]
+            if isinstance (status, (int, float)):
+                status = LinkStatus(int(status))
+            elif isinstance(status, str):
+                status = LinkStatus[status]
+            else: 
+                raise ValueError('initial_status must be a str, integer, or LinkStatus')
         self._initial_status = status
         
     @property
@@ -366,26 +462,47 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def flow(self):
-        """float: Current flow through the link (read only)"""
+        """float: (read-only) current simulated flow through the link"""
         return self._flow
+    
+    @property
+    def velocity(self):
+        """float: (read-only) current simulated velocity through the link"""
+        return self._velocity
     
     @property
     @abc.abstractmethod
     def status(self):
-        """:class:`~wntr.network.base.LinkStatus`: Current status of the link"""
+        """:class:`~wntr.network.base.LinkStatus`: (**abstract**) current status of the link"""
         pass
     @status.setter
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def status(self, status):
-        self._user_status = status
+        raise RuntimeError("The status attribute is an output (result) property. Setting status by"
+                            " the user has been deprecated to avoid confusion. To change the simulation"
+                            " behavior, use initial_status.")
+        # self._user_status = status
     
     @property
+    def quality(self):
+        """float : (read-only) current simulated average link quality"""
+        return self._quality
+
+    @property
+    def headloss(self):
+        """float : (read-only) current simulated headloss"""
+        return self._headloss
+
+    @property
     def setting(self):
-        """float: The current setting of the link"""
+        """float: (read-only) current simulated setting of the link"""
         return self._setting
     @setting.setter
     def setting(self, setting):
-        self._setting = setting
+        raise RuntimeError("The setting attribute is an output (result) property. Setting the setting by"
+                            " the user has been deprecated to avoid confusion. To change the simulation"
+                            " behavior, use initial_setting.")
+        # self._setting = setting
     
     @property
     def tag(self):
@@ -429,6 +546,7 @@ class Registry(MutableMapping):
     ----------
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object
+    
     """
     
     def __init__(self, wn):
@@ -497,6 +615,7 @@ class Registry(MutableMapping):
             The name of the object in the registry
         value : tuple of (str, str)
             Tuple of (name, typestr) of the external items using the object
+        
         """
         for k, v in self._usage.items():
             yield k, v
@@ -601,16 +720,17 @@ class NodeType(enum.IntEnum):
 
     .. rubric:: Enum Members
 
-    ==================  ==================================================================
-    :attr:`~Junction`   Node is a :class:`~wntr.network.model.Junction`
-    :attr:`~Reservoir`  Node is a :class:`~wntr.network.model.Reservoir`
-    :attr:`~Tank`       Node is a :class:`~wntr.network.model.Tank`
-    ==================  ==================================================================
+    .. autosummary::
+
+        Junction
+        Reservoir
+        Tank
+
 
     """
-    Junction = 0
-    Reservoir = 1
-    Tank = 2
+    Junction = 0  #: node is a junction
+    Reservoir = 1  #: node is a reservoir
+    Tank = 2  #: node is a tank
 
     def __init__(self, val):
         if self.name != self.name.upper():
@@ -632,30 +752,31 @@ class LinkType(enum.IntEnum):
 
     .. rubric:: Enum Members
 
-    ===============  ==================================================================
-    :attr:`~CV`      Pipe with check valve
-    :attr:`~Pipe`    Regular pipe
-    :attr:`~Pump`    Pump
-    :attr:`~Valve`   Any valve type (see following)
-    :attr:`~PRV`     Pressure reducing valve
-    :attr:`~PSV`     Pressure sustaining valve
-    :attr:`~PBV`     Pressure breaker valve
-    :attr:`~FCV`     Flow control valve
-    :attr:`~TCV`     Throttle control valve
-    :attr:`~GPV`     General purpose valve
-    ===============  ==================================================================
+    .. autosummary::
+
+        CV
+        Pipe
+        Pump
+        PRV
+        PSV
+        PBV
+        FCV
+        TCV
+        GPV
+        Valve
+
 
     """
-    CV = 0
-    Pipe = 1
-    Pump = 2
-    PRV = 3
-    PSV = 4
-    PBV = 5
-    FCV = 6
-    TCV = 7
-    GPV = 8
-    Valve = 9
+    CV = 0  #: pipe with a check valve
+    Pipe = 1  #: pipe with no check valve
+    Pump = 2  #: a pump of any type 
+    PRV = 3  #: a pressure reducing valve
+    PSV = 4  #: a pressure sustaining valve
+    PBV = 5  #: a pressure breaker valve
+    FCV = 6  #: a flow control valve
+    TCV = 7  #: a throttle control valve
+    GPV = 8  #: a general purpose valve
+    Valve = 9  #: a valve of any type
 
     def __init__(self, val):
         if self.name != self.name.upper():
@@ -676,24 +797,26 @@ class LinkStatus(enum.IntEnum):
     Enum class for link statuses.
 
     .. warning::
-        This is NOT the class for determining output status from an EPANET binary file.
+        This is NOT the class for determining output status from an EPANET **binary** file.
         The class for output status is wntr.epanet.util.LinkTankStatus.
 
     .. rubric:: Enum Members
 
-    =================  ==================================================================
-    :attr:`~Closed`    Pipe/valve/pump is closed.
-    :attr:`~Opened`    Pipe/valve/pump is open.
-    :attr:`~Open`      Alias to "Opened"
-    :attr:`~Active`    Valve is partially open.
-    =================  ==================================================================
+    .. autosummary::
+
+        Closed
+        Opened
+        Active
+        CV
+        Open
+
 
     """
-    Closed = 0
-    Open = 1
-    Opened = 1
-    Active = 2
-    CV = 3
+    Closed = 0  #: pipe/valve/pump is closed
+    Open = 1  #: alias for `Opened`
+    Opened = 1  #: pipe/valve/pump is open
+    Active = 2  #: valve is partially open or pump has a specific setting
+    CV = 3  #: pipe has a check valve
 
     def __init__(self, val):
         if self.name != self.name.upper():

@@ -19,8 +19,7 @@ import networkx as nx
 import math
 from collections import Counter
 import sys
-if sys.version_info >= (3,0):
-    from functools import reduce
+from functools import reduce
     
 import logging
 
@@ -307,7 +306,8 @@ def entropy(G, sources=None, sinks=None):
             S[nodej] = np.nan # nodej is not connected to any sources
             continue
 
-        sp = np.array(sp)
+        # "dtype=object" is needed to create an array from a list of lists with differnet lengths
+        sp = np.array(sp, dtype=object)
 
         # Uj = set of nodes on the upstream ends of links incident on node j
         Uj = G.predecessors(nodej)
@@ -343,7 +343,7 @@ def entropy(G, sources=None, sinks=None):
         # Equation 7
         S[nodej] = 0
         for idx in range(len(qij)):
-            if qij[idx]/Q[nodej] > 0:
+            if Q[nodej] != 0 and qij[idx]/Q[nodej] > 0:
                 S[nodej] = S[nodej] - \
                     qij[idx]/Q[nodej]*math.log(qij[idx]/Q[nodej]) + \
                     qij[idx]/Q[nodej]*math.log(aij[idx])

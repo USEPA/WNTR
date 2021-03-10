@@ -257,8 +257,8 @@ use NetworkX directly, while others use metrics included in WNTR.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network. NPR is computed using ...
-	Connectivity will change at each time step, depending on the flow direction.  
-	The method :class:`~wntr.network.WaterNetworkModel.get_graph` method 
+	Connectivity will change at each timestep, depending on the flow direction.  
+	The method :class:`~wntr.network.model.WaterNetworkModel.get_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
@@ -304,8 +304,8 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           flow in the pipes and entropy can be used to measure alternate flow paths
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
-                                          Connectivity will change at each time step, depending on the flow direction.  
-                                          The :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
+                                          Connectivity will change at each timestep, depending on the flow direction.  
+                                          The :class:`~wntr.network.model.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -318,7 +318,10 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
     
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
-                                          impacted by pressure below a specified threshold.
+                                          impacted by pressure below a specified threshold.  Population per node is computed using the method  
+                                          :class:`~wntr.metrics.misc.population`, which divides the average expected demand by the average volume of water 
+                                          consumed per capita per day. The default value for average volume of water consumed per capita per day is 200 gallons/day and can be 
+                                          modified by the user.
    =====================================  ================================================================================================================================================
 
 The following examples compute hydraulic metrics, including:
@@ -329,7 +332,8 @@ The following examples compute hydraulic metrics, including:
 
       >>> import numpy as np
 	  
-      >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+      >>> wn.options.hydraulic.demand_model = 'PDD'
+      >>> sim = wntr.sim.WNTRSimulator(wn)
       >>> results = sim.run_sim()
     
       >>> pressure = results.node['pressure']
@@ -337,7 +341,7 @@ The following examples compute hydraulic metrics, including:
       >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
       ...     threshold)
     
-* Water service availability
+* Water service availability (Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0).
 	
   .. doctest::
 
@@ -391,7 +395,7 @@ The following examples compute water quality metrics, including:
 
   .. doctest::
 
-      >>> wn.options.quality.mode = 'AGE'
+      >>> wn.options.quality.parameter = 'AGE'
       >>> sim = wntr.sim.EpanetSimulator(wn)
       >>> results = sim.run_sim()
       
@@ -412,7 +416,7 @@ The following examples compute water quality metrics, including:
 	
   .. doctest::
 
-      >>> wn.options.quality.mode = 'CHEMICAL'
+      >>> wn.options.quality.parameter = 'CHEMICAL'
       >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
       ...     step_size=3600, start_time=2*3600, end_time=15*3600, duration=7*24*3600)
       >>> wn.add_pattern('SourcePattern', source_pattern)
@@ -543,5 +547,5 @@ The following examples compute economic metrics, including:
       >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
       >>> head = results.node['head']
       >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
-      >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
+      >>> pump_cost = wntr.metrics.pump_cost(pump_energy, wn)
     

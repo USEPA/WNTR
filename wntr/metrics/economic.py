@@ -147,10 +147,20 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         cost =  [2850, 3225, 3307, 3563, 3820, 4133, 4339, 4554, 4823]
         pump_cost = pd.Series(cost, Pmp)
 
-    # Tank construction cost
+    # Tank construction cost - not only looking at direct volume capacity but also
+    #                          but a rough estimate of the support structure size
+    #                          below the tank.
     for node_name, node in wn.nodes(Tank):
-        tank_volume = np.pi*(node.diameter/2)**2*(node.max_level)
-        idx = np.argmin([np.abs(tank_cost.index - tank_volume)])
+        if node.vol_curve is None:
+            tank_construction_volume = np.pi*(node.diameter/2)**2 *node.max_level
+        else:
+            vcurve = np.array(node.vol_curve.points)
+            tank_volume = np.interp(node.max_level,vcurve[:,0],vcurve[:,1])
+            avg_area = tank_volume / (node.max_level - node.min_level)
+            tank_base_volume = node.min_level * avg_area
+            tank_construction_volume = tank_volume + tank_base_volume 
+        # choose the entry that is closest (keep the cost structure discreet)
+        idx = np.argmin([np.abs(tank_cost.index - tank_construction_volume)])
         #print(node_name, tank_cost.iloc[idx])
         network_cost = network_cost + tank_cost.iloc[idx]
 
@@ -246,21 +256,12 @@ def pump_energy(flowrate, head, wn):
     """
     Compute the pump energy over time.
     
-    The computation uses pump flow rate, pump head, pump efficiency, and the 
-    electricity price. Pump efficiency curves may be specified through the 
-    "efficiency" attribute on the pump object. Alternatively, a global 
-    efficiency may be set on the wn.energy object:
+    The computation uses pump flow rate, node head (used to compute headloss at
+    each pump), and pump efficiency. Pump efficiency is defined in
+    ``wn.options.energy.global_efficiency``. Pump efficiency curves are currently 
+    not supported.
 
-        wn.energy.global_efficiency = 75 # This means 75% or 0.75
-
-    The price can also be set on the pump or the energy object:
-
-        wn.energy.global_price = 3.61e-8  # $/J; equal to $0.13/kW-h
-
-    or
-
-        pump = wn.get_link('pump1')
-        pump.energy_price = 3.61e-8  # $/J
+        wn.options.energy.global_efficiency = 75 # This means 75% or 0.75
 
     Parameters
     ----------
@@ -269,23 +270,18 @@ def pump_energy(flowrate, head, wn):
         (index = times, columns = pump names).
     
     head : pandas DataFrame
-        A pandas Dataframe containing node head 
+        A pandas DataFrame containing node head 
         (index = times, columns = node names).
         
-     wn: wntr WaterNetworkModel
+    wn: wntr WaterNetworkModel
         Water network model.  The water network model is needed to 
         define energy efficiency.
 
     Returns
     -------
-    A tuple of pandas DataFrames: the first DataFrame contains pump energy in Watts,
-    the second contains pump cost is $/s (index = times, columns = pump names).
+    A DataFrame that contains pump energy in J (index = times, columns = pump names).
     """
     
-    # TODO: Need to get this unit tested and not just functionally tested
-    if wn.options.energy.demand_charge is not None and wn.options.energy.demand_charge != 0:
-        raise ValueError('WNTR does not support demand charge yet.')
-
     pumps = wn.pump_name_list
     time = flowrate.index
     
@@ -311,23 +307,25 @@ def pump_energy(flowrate, head, wn):
 
     efficiency = pd.DataFrame(data=efficiency_dict, index=time, columns=pumps)
 
-    energy = 1000.0 * 9.81 * headloss * flowrate / efficiency
+    power = 1000.0 * 9.81 * headloss * flowrate / efficiency # Watts = J/s
+    energy = power * wn.options.time.report_timestep # J = Ws
     
     return energy
 
-def pump_cost(flowrate, head, wn):
+def pump_cost(energy, wn):
     """
-    Compute the pump cost over time.
+    Compute the pump cost over time. 
     
+    Energy cost is defined in ``wn.options.energy.global_price``. Pump energy 
+    price and price patterns are currently not supported. 
+
+        wn.options.energy.global_price = 3.61e-8  # $/J; equal to $0.13/kW-h
+        
     Parameters
     ----------
-    flowrate : pandas DataFrame
-        A pandas Dataframe containing pump flowrates 
+    energy : pandas DataFrame
+        A pandas DataFrame containing pump energy (J), computed from ``wntr.metrics.pump_energy`` 
         (index = times, columns = pump names).
-    
-    head : pandas DataFrame
-        A pandas Dataframe containing node head 
-        (index = times, columns = node names).
         
     wn: wntr WaterNetworkModel
         Water network model.  The water network model is needed to 
@@ -335,13 +333,17 @@ def pump_cost(flowrate, head, wn):
         
     Returns
     -----------
-    Pump cost (float)
+    A DataFrame that contains pump cost in $ (index = times, columns = pump names).
     
     """
-    time = flowrate.index
+    time = energy.index
     pumps = wn.pump_name_list
-    energy = pump_energy(flowrate, head, wn)
     
+    # TODO: Need to get this unit tested and not just functionally tested
+    if wn.options.energy.demand_charge is not None and wn.options.energy.demand_charge != 0:
+        # Additional energy charge per maximum kilowatt usage
+        raise ValueError('WNTR does not support demand charge yet.')
+        
     price_dict = {}
     for pump_name, pump in wn.pumps():
         if pump.energy_price is None and pump.energy_pattern is None:
@@ -359,7 +361,7 @@ def pump_cost(flowrate, head, wn):
             
     price = pd.DataFrame(data=price_dict, index=time, columns=pumps)
     
-    pump_cost =energy * price
+    pump_cost = energy * price
     
     return pump_cost
     

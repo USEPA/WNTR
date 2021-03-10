@@ -1,11 +1,14 @@
 import unittest
 from os.path import abspath, dirname, join
+import pandas as pd
 import numpy as np
 from nose.tools import *
 import wntr
+from wntr.network.controls import Control, Rule
 
 testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir,'networks_for_testing')
+test_network_dir = join(testdir,'networks_for_testing')
+test_data_dir = join(testdir,'data_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestNetworkCreation(unittest.TestCase):
@@ -202,7 +205,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertNotIn('TANK-3326',{name for name, node in wn.nodes()})
         self.assertNotIn('TANK-3326',wn.node_name_list)
 
-        inp_file = join(test_datadir,'conditional_controls_1.inp')
+        inp_file = join(test_network_dir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         tank1 = wn.get_node('tank1')
@@ -324,6 +327,26 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[0],0.0)
         self.assertAlmostEqual(Y[1],0.0)
         self.assertAlmostEqual(Y[2],0.0)
+        
+    def test_2_pt_head_curve(self):
+        q1 = 0.0
+        h1 = 1.0
+        q2 = 1.0
+        h2 = 0.0
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_curve('curve1','HEAD',[(q1, h1),(q2, h2)])
+        curve = wn.get_curve('curve1')
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_pump('p1', 'j1', 'j2', 'HEAD', curve)
+        link = wn.get_link('p1')
+        a,b,c = link.get_head_curve_coefficients()
+
+        Y = [a-b,0.5 - (a - b * (0.5) ** c),1.0 - a]
+        
+        self.assertAlmostEqual(Y[0],0.0)
+        self.assertAlmostEqual(Y[1],0.0)
+        self.assertAlmostEqual(Y[2],0.0)
 
     def test_3_pt_head_curve(self):
         q1 = 0.0
@@ -354,6 +377,73 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[0],0.0)
         self.assertAlmostEqual(Y[1],0.0)
         self.assertAlmostEqual(Y[2],0.0)
+        
+    def test_multi_pt_head_curve(self):
+        #pump_curves = pump_curves_for_testing() # change this to read in a csv file
+        
+        df = pd.read_csv(join(test_data_dir,'pump_practice_curves.csv'),skiprows=5)
+        pump_curves = []
+        for i in range(11):
+            pump_curves.append(df[df['curve number']==i].iloc[:,1:3])
+
+        # these are the least squares optimal curve coefficients for 
+        # pump_curves!            
+        expected_coef = [
+                (95.2793750017631, 92.93210451708887, 1.7962733026912), 
+                (65.73126364420834, 754.0506268456613, 3.4783989343179305), 
+                (21.278376275311476, 4077.4535673165924, 2.358360722834581), 
+                (80.75954376866605, 7027.4864048631935, 4.082009299805731), 
+                (136.17943689581463, 829.0733504294045, 4.489091828720322), 
+                (127.24246902634025, 180.0189467345297, 3.932735276445609), 
+                (26.851737190843544, 546.1599637089113, 2.200609181978668), 
+                (49.44241876166496, 933337.4378918532, 2.7686910719067157), 
+                (34.29268375712387, 110108.09777459255, 3.522011383917406), 
+                (34.11693364265361, 170.07427285446153, 1.6314432418473557), 
+                (14.886248327061447, 3667.672645345962, 2.1488882176053345)]
+        
+        # start an empty WNTR model and add dummy junctions so that
+        # head pumps can be added
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_junction("j1")
+        wn.add_junction("j2")
+
+        # check all of the pump_curves
+        for idx, curve in enumerate(pump_curves):
+            pump_name = "p" + str(idx+1)
+            curve_name = "c" + str(idx+1)
+            
+            wn.add_curve(curve_name,"HEAD",curve.values)
+            wn.add_pump(pump_name,"j1","j2",pump_type="HEAD", pump_parameter=curve_name)
+            pump = wn.get_link(pump_name)
+            coef = pump.get_head_curve_coefficients()
+    
+            for i in range(2):
+                error = abs(coef[i] - expected_coef[idx][i])/expected_coef[idx][i]
+                self.assertLess(error, 1e-6)
+            #self.wntr.graphics.curve.plot_pump_curve(pump)
+            #savefig(pump_name + "_" + cname + ".png")
+            
+    def test_multi_pt_head_curve_expected_error(self):
+        # now test two error conditions using bad datasets.
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_junction("j1")
+        wn.add_junction("j2")
+
+        # Negative coefficients
+        data_points1 = [(x,x**2 + 2*x + 3) for x in range(10)]
+        wn.add_curve("curve1","HEAD", data_points1)
+        wn.add_pump("pump1","j1","j2",pump_type="HEAD", pump_parameter="curve1")
+        pump = wn.get_link("pump1")
+        with self.assertRaises(RuntimeError):
+            pump.get_head_curve_coefficients()
+
+        # Bad fit
+        data_points2 = [(x,(-1)**x * np.exp(-0.001*x) * 100) for x in range(10)]
+        wn.add_curve("curve2","HEAD", data_points2)
+        wn.add_pump("pump2","j1","j2",pump_type="HEAD", pump_parameter="curve2")
+        pump = wn.get_link("pump2")
+        with self.assertRaises(RuntimeError):
+            pump.get_head_curve_coefficients()
 
     def test_get_links_for_node_all(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -682,7 +772,7 @@ def test_describe():
                                       'Headloss': 0, 
                                       'Volume': 0}, 
                            'Sources': 0, 
-                           'Controls': 18})
+                           'Controls': 18})  
 
 def test_assign_demand():
     
@@ -732,7 +822,50 @@ def test_assign_demand():
     assert_equal(len(wn.pattern_name_list), 2*wn.num_junctions+5)
     assert_less(abs((demands2/demands1).max().max()-2), 0.01)
     assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
-                
+
+def test_convert_controls_to_rules():
+    
+    inp_file = join(ex_datadir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn.options.time.rule_timestep = 1 # For an exact match, the rule timestep must be very small
+     
+    nControls = 0
+    nRules = 0
+    for name, control in wn.controls():
+        if isinstance(control, Control):
+            nControls = nControls + 1
+        elif isinstance(control, Rule):
+            nRules = nRules + 1
+    assert nControls == 18
+    assert nRules == 0
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results1 = sim.run_sim()
+
+    wn.convert_controls_to_rules(priority=3)
+    
+    nControls = 0
+    nRules = 0
+    for name, control in wn.controls():
+        if isinstance(control, Control):
+            nControls = nControls + 1
+        elif isinstance(control, Rule):
+            nRules = nRules + 1
+    assert nControls == 0
+    assert nRules == 18
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    
+    #(results1.node['pressure'] - results2.node['pressure']).plot()
+    
+    for node_name, node in wn.nodes():
+        for t in results1.node['pressure'].index:
+            assert_less(abs(results1.node['pressure'].at[t,node_name] - 
+                            results2.node['pressure'].at[t,node_name]), 0.001)
+    
+
+
 if __name__ == '__main__':
     #unittest.main()
-    test_assign_demand()
+    test_convert_controls_to_rules()

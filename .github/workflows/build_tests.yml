@@ -1,0 +1,242 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: build
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install wheel
+        pip install -r requirements.txt
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        ls dist/*
+    - name: Save wheel
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel
+        path: dist/wntr*.whl
+
+  test:
+    name: Import test
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [windows-latest, macOS-latest, ubuntu-latest]    
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Download wheel
+      uses: actions/download-artifact@v2
+      with:
+        name: wheel
+    - name: Install wntr
+      run: |
+        python -m pip install --upgrade pip
+        pip install wheel
+        pip install --find-links=. wntr
+    - name: Import test
+      run: |
+        python -c "import wntr"
+
+  windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coveralls
+        python setup.py develop
+    - name: Run Tests
+      run: |
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace wntr
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      # if: ${{ matrix.os != 'windows-latest' }}
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+
+  macOS:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [macOS-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coveralls
+        python setup.py develop
+    - name: Run Tests
+      run: |
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace --doctest-extension=.rst documentation/*.rst wntr
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      # if: ${{ matrix.os != 'windows-latest' }}
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+
+  linux:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup conda
+      uses: s-weigand/setup-conda@v1
+      with:
+        update-conda: true
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        conda config --set always_yes yes --set changeps1 no
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        conda install -c conda-forge glpk
+        pip install chama coveralls
+        python setup.py develop
+    - name: Run Tests
+      run: |
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose -v --nologcapture --with-doctest --doctest-extension=.rst --traverse-namespace documentation/*.rst wntr
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      # if: ${{ matrix.os != 'windows-latest' }}
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+
+  coverage:
+    needs: [ windows, macOS, linux ]
+    runs-on: windows-latest
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - uses: actions/checkout@v2
+    - name: Install coverage
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coveralls
+        python setup.py develop
+    - name: Download coverage artifacts from test matrix
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage
+    - name: Setup coverage and combine reports
+      run: |
+        echo "[paths]" > .coveragerc
+        echo "source = " >> .coveragerc
+        echo "    wntr/" >> .coveragerc
+        echo "    wntr\\" >> .coveragerc
+        echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
+        echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        coverage combine
+    - name: Create coverage report
+      run: |
+        coverage report
+        coverage json --pretty-print
+        coverage html --show-contexts
+    - name: Save coverage JSON
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage.json
+    - name: Save coverage html
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: htmlcov
+
+  coveralls:
+    needs: [ windows, macOS, linux ]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - uses: actions/checkout@v2
+    - name: Install coverage
+      run: |
+        python -m pip install --upgrade pip
+        pip install coveralls
+        pip install -r requirements.txt
+        python setup.py develop
+    - name: Download coverage artifacts from test matrix
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage
+    - name: Setup coverage and combine reports
+      run: |
+        echo "[paths]" > .coveragerc
+        echo "source = " >> .coveragerc
+        echo "    wntr/" >> .coveragerc
+        echo "    wntr\\" >> .coveragerc
+        echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
+        echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        coverage combine
+    - name: Push to coveralls
+      run: |
+        coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

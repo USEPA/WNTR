@@ -14,7 +14,6 @@ Valve layer
 ------------
 
 While valves are typically included in the water network model, the user can also define a valve layer to be used in additional analysis.
-If the valves are not used in the hydraulic analysis, this can help reduce the size of the network.
 A valve layer can be used to group links and nodes into segments based on the location of isolation valves.
 In a valve layer, the location of each valve is defined using the link the valve is installed on 
 and the node the valve protects. This information is stored in a pandas DataFrame, which is indexed by valve 
@@ -85,7 +84,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
    
 The **strategic** placement specifies the number of pipes (n) from each node that do NOT contain a valve.  
 In this case, n is generally 0, 1, or 2 (i.e., N, N-1, or N-2 valve placement) [WaWC06]_ [LWFZ17]_.
-For example, if 3 pipes connect to a node and n = 2, then 2 of those pipes will not contain a valve and 1 pipe will contain a valve.
+For example, if three pipes connect to a node and n = 2, then two of those pipes will not contain a valve and one pipe will contain a valve.
 The following example generates a strategic N-2 valve placement.
 The valve layer can be included in water network graphics (:numref:`fig-strategic-valve-layer`).
 

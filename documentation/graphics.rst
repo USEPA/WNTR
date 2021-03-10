@@ -83,8 +83,8 @@ The following example plots the network along with node population (:numref:`fig
 .. doctest::
 
     >>> pop = wntr.metrics.population(wn)
-    >>> nodes, edges = wntr.graphics.plot_interactive_network(wn, node_attribute=pop, 
-    ...    node_range=[0,500], auto_open=False) # doctest: +SKIP
+    >>> wntr.graphics.plot_interactive_network(wn, node_attribute=pop, 
+    ...    node_range=[0,500], filename='population.html', auto_open=False)
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
@@ -106,7 +106,7 @@ As with basic network graphics, a wide range of plotting options can be supplied
    This function requires the Python package **folium** [Folium]_, which is an optional dependency of WNTR.
    
 The following example using EPANET Example Network 3 (Net3) converts node coordinates to longitude/latitude and plots the network along 
-with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'.  
+with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'. This example requires the Python package **utm** [Bieni19]_ to convert the node coordinates.
 
 .. doctest::
 
@@ -114,7 +114,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
     >>> wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
     >>> length = wn2.query_link_attribute('length')
     >>> wntr.graphics.plot_leaflet_network(wn2, link_attribute=length, link_width=3, 
-    ...                                    link_range=[0,1000])
+    ...                                    link_range=[0,1000], filename='length.html')
 
 .. _fig-leaflet:
 .. figure:: figures/interactive_network.png
@@ -155,14 +155,15 @@ Network animation can be generated using the
 function :class:`~wntr.graphics.network.network_animation`. Node and link attributes can be specified using pandas DataFrames, where the 
 index is time and columns are the node or link name.  
 
-The following example creates a network animation of node quality over time.
+The following example creates a network animation of water age over time.
 
 .. doctest::
 
+    >>> wn.options.quality.mode = 'AGE'
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-    >>> quality = results.node['quality']
-    >>> wntr.graphics.network_animation(wn, node_attribute=quality) # doctest: +SKIP
+    >>> water_age = results.node['quality']/3600 # convert seconds to hours
+    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, node_range=[0,24]) # doctest: +SKIP
    
 Time series
 ------------------
@@ -194,7 +195,7 @@ Interactive time series
 --------------------------------
 
 Interactive time series graphics are useful when visualizing large datasets.  
-Basic time series graphics can be converted to interactive time series graphics using the ``plot_mpl`` function from plotly.
+Basic time series graphics can be converted to interactive time series graphics using the ``plotly.express`` module.
 
 .. note:: 
    This functionality requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
@@ -203,16 +204,22 @@ The following example uses simulation results from above, and converts the graph
 
 .. doctest::
 
-    >>> import plotly
+    >>> import plotly.express as px
 	
     >>> tankH = results.node['pressure'].loc[:,wn.tank_name_list]
-    >>> tankH = tankH * 3.28084 # Convert tank height to ft
+    >>> tankH = tankH * 3.28084 # Convert tank head to ft
     >>> tankH.index /= 3600 # convert time to hours
-    >>> ax = tankH.plot(legend=True)
-    >>> text = ax.set_xlabel('Time (hr)')
-    >>> text = ax.set_ylabel('Head (ft)') 
-    >>> plotly.offline.plot_mpl(fig, filename='tankhead_timeseries.html', auto_open=False) # doctest: +SKIP
-    
+    >>> fig = px.line(tankH)
+    >>> fig = fig.update_layout(xaxis_title='Time (hr)', yaxis_title='Head (ft)', 
+    ...                   template='simple_white', width=650, height=400) 
+    >>> fig.write_html('tank_head.html')
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_pump_curve.png', dpi=300)
+	
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
    :width: 640
@@ -224,8 +231,8 @@ The following example uses simulation results from above, and converts the graph
     
     The interactive time series graphic is included below.
     
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-        <iframe src="_static/tanklevel_timeseries.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    <div style="position: relative; padding-bottom: 60%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="_static/tank_head.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
 Fragility curves
@@ -283,4 +290,53 @@ The following example plots a pump curve (:numref:`fig-pump`).
    :alt: Pump curve
 
    Pump curve graphic.
+   
+Tank volume curves
+-------------------
+
+Tank curves and profiles can be plotted using the 
+function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+
+The following example creates a tank curve and then plots the curve and 
+corresponding tank profile (:numref:`fig-tank`). The profile is 
+plotted as a stairstep line between points.  The minimum and maximum 
+level of the tank is included in the figure.
+
+.. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
+
+    >>> wn.add_curve('Curve', 'VOLUME', [
+    ...    (1,	0),
+    ...    (2,	60),
+    ...    (3,	188),
+    ...    (4,	372),
+    ...    (5,	596),
+    ...    (6,	848),
+    ...    (7,	1114),
+    ...    (8,	1379),
+    ...    (9,	1631),
+    ...    (10, 1856),
+    ...    (11, 2039),
+    ...    (12, 2168),
+    ...    (13, 2228)])
+    >>> tank = wn.get_node('2')
+    >>> tank.vol_curve_name = 'Curve'
+    >>> ax = wntr.graphics.plot_tank_volume_curve(tank)
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_tank_volume_curve.png', dpi=300)
+    
+.. _fig-tank:
+.. figure:: figures/plot_tank_volume_curve.png
+   :width: 800
+   :alt: Tank curve and profile
+
+   Tank curve and profile graphic.
    

@@ -43,19 +43,21 @@ As shown in the :ref:`hydraulic_simulation` and :ref:`water_quality_simulation` 
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-	
+
 The node and link results are dictionaries of pandas DataFrames.  Each dictionary is a key:value pair, where
 the key is a result attribute (e.g., node demand, link flowrate) and the value is a DataFrame. 
 DataFrames are indexed by timestep (in seconds from the start of the simulation) with columns that are
 labeled using node or link names. 
+
 The use of pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
-For more information on pandas, see http://pandas.pydata.org/.
+For more information on pandas, see https://pandas.pydata.org.
+
 
 Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as shown in :numref:`fig-dataframe`.
  
 .. _fig-dataframe:
 .. figure:: figures/dataframes.png
-   :width: 526
+   :width: 500
    :alt: Pandas DataFrames
    
    Conceptual representation of DataFrames used to store simulation results.
@@ -94,7 +96,7 @@ For example, link results generated with the EpanetSimulator have the following 
 
     >>> link_keys = results.link.keys()
     >>> print(link_keys) # doctest: +SKIP
-    dict_keys(['flowrate', 'frictionfact', 'headloss', 'linkquality', 'rxnrate', 'setting', 'status', 'velocity']) 
+    dict_keys(['flowrate', 'friction_factor', 'headloss', 'quality', 'reaction_rate', 'setting', 'status', 'velocity']) 
 
 To access node pressure over all nodes and times:
 
@@ -179,7 +181,7 @@ plotted in a similar manner.
     
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
-   :width: 659
+   :width: 640
    :alt: Network graphic
 
    Network graphic showing pressure at 1 hour.

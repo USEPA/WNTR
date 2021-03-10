@@ -1,7 +1,9 @@
 .. raw:: latex
 
     \clearpage
-	
+
+.. _getting_started:
+
 Getting started
 ======================================
 
@@ -9,7 +11,7 @@ To start using WNTR, open a Python console and import the package::
 
 	import wntr	
 
-WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/master/examples/getting_started.py>`_, shown below that uses EPANET Example Network 3 (Net3).
+WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/master/examples/getting_started.py>`_, shown below that uses the `EPANET Example Network 3 (Net3) INP file <https://github.com/USEPA/WNTR/blob/master/examples/networks/Net3.inp>`_.
 This example demonstrates how to:
 
 * Import WNTR
@@ -41,6 +43,11 @@ Additional examples
 WNTR comes with additional examples that illustrate advanced use cases, including:
 
 * `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_: 
-  This example runs multiple realizations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+  This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/master/examples/pipe_criticality.py>`_: 
+  This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
+* `Fire flow example <https://github.com/USEPA/WNTR/blob/master/examples/fire_flow.py>`_: 
+  This example runs hydraulic simulations with and without fire fighting flow demand.
 * `Sensor placement example <https://github.com/USEPA/WNTR/blob/master/examples/sensor_placement.py>`_: 
   This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 
+  Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.

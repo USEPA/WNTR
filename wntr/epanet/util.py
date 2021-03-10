@@ -770,13 +770,13 @@ def from_si(to_units, data, param,
 
     >>> from wntr.epanet.util import *
     >>> flow_us = from_si(FlowUnits.GPM, [6.309019640000001e-06, 6.30901964e-05, 0.00027128784452], HydParam.Flow)
-    >>> print(flow_si)
+    >>> print(flow_us)
     [0.1, 1.0, 4.3]
 
     Next, we show how to convert the quality parameter from kg/m3 to mg/L and then to ug/L.
     
     >>> from_si(FlowUnits.GPM, 0.0046, QualParam.Quality)
-    0.0046
+    4.6
     >>> from_si(FlowUnits.GPM, 0.0046, QualParam.Quality, mass_units=MassUnits.ug)
     4600.0
 

@@ -46,6 +46,8 @@ References
 
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cincinnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
 
+.. [RWTS20] Rossman, L., Woo, H., Tryby M., Shang, F., Janke, R., and  Haxton, T. (2020) EPANET 2.2 User Manual. U.S. Environmental Protection Agency, Washington, DC, EPA/600/R-20/133.
+
 .. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., and Simpson, A. (2012). The battle of the water networks II - Problem description. Water Distribution Systems Analysis Conference 2012, September 24-27, Adelaide, South Australia, Australia. Retrieved on May 23, 2017 from https://emps.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/WDSA2012-BWNII-ProblemDescription.pdf.
 
 .. [SPHC16] Sievert, C., Parmer, C., Hocking, T., Chamberlain, S., Ram, K., Corvellec, M., and Despouy, P. (2016). plotly: Create interactive web graphics via Plotly’s JavaScript graphing library [Software].

@@ -251,6 +251,9 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         self._backtrack = 0
 
+    def _reset(self):
+        pass
+
     @abc.abstractmethod
     def requires(self):
         """
@@ -752,6 +755,11 @@ class TankLevelCondition(ValueCondition):
             raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
+        # this is used to see if backtracking is needed
+        self._last_value = getattr(self._source_obj, self._source_attr)  
+
+
+    def _reset(self):
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
 
     def _compare(self, other):
@@ -778,7 +786,7 @@ class TankLevelCondition(ValueCondition):
 
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
-        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
+        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level, head, or pressure
         thresh_value = self._threshold
         relation = self._relation
         if relation is Comparison.gt:
@@ -797,8 +805,28 @@ class TankLevelCondition(ValueCondition):
             # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
             # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
             # next time. This prevents us from computing very small backtrack values over and over.
-            if self._source_obj.demand != 0:
-                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
+            if self._source_obj.demand != 0 and not self._source_obj.demand is None:
+                if self._source_obj.vol_curve is None:
+                    self._backtrack = int(math.floor((cur_value - thresh_value)
+                             *math.pi/4.0*self._source_obj.diameter**2
+                             /self._source_obj.demand))
+                else: # a volume curve must be used instead
+                    if self._source_attr == 'head':
+                        thresh_level = thresh_value - self._source_obj.elevation
+                        level = cur_value - self._source_obj.elevation
+                    elif self._source_attr == 'level':
+                        thresh_level = thresh_value
+                        level = cur_value
+                    else:
+                        raise NotImplementedError("Pressure tank value conditions with a " + 
+                                                     "volume curve have not been implemented.")
+                    
+                    cur_value_volume = self._source_obj.get_volume(level)
+                    thresh_volume = self._source_obj.get_volume(thresh_level)
+                    
+                    self._backtrack = int(math.floor((cur_value_volume 
+                                                      - thresh_volume) 
+                                                      / self._source_obj.demand))
         self._last_value = cur_value  # update the last value
         return bool(state)
 
@@ -931,6 +959,10 @@ class OrCondition(ControlCondition):
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
 
+    def _reset(self):
+        self._condition_1._reset()
+        self._condition_2._reset()
+
     def _compare(self, other):
         """
         Parameters
@@ -992,6 +1024,10 @@ class AndCondition(ControlCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+
+    def _reset(self):
+        self._condition_1._reset()
+        self._condition_2._reset()
 
     def _compare(self, other):
         """
@@ -1668,6 +1704,13 @@ class ControlAction(BaseControlAction):
         self._target_obj = target_obj
         self._attribute = attribute
         self._value = value
+        self._private_attribute = attribute
+        if attribute == 'status':
+            self._private_attribute = '_user_status'
+        elif attribute == 'leak_status':
+            self._private_attribute = '_leak_status'
+        elif attribute == 'setting':
+            self._private_attribute = '_setting'
 
     def requires(self):
         return OrderedSet([self._target_obj])
@@ -1687,7 +1730,7 @@ class ControlAction(BaseControlAction):
         return self._value
 
     def run_control_action(self):
-        setattr(self._target_obj, self._attribute, self._value)
+        setattr(self._target_obj, self._private_attribute, self._value)
         self.notify()
 
     def target(self):
@@ -1823,6 +1866,9 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
             return 'Rule'
         else:
             return 'Control'
+
+    def _reset(self):
+        self._condition._reset()
 
     @property
     def condition(self):

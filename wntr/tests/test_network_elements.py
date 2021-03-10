@@ -1,7 +1,6 @@
 """
 Test the wntr.network.elements classes
 """
-from __future__ import print_function
 import nose.tools
 from nose import SkipTest
 from nose.tools import *
@@ -233,6 +232,6 @@ def test_fire_fighting_demand():
 def test_Enums():
     pass
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     # test_Demands()
     # test_fire_fighting_demand()

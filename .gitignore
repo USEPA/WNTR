@@ -19,3 +19,7 @@ temp.rpt
 examples/*.inp
 wntr/tests/*.png
 wntr/tests/performance_results
+
+examples/signal.csv
+examples/temp.hyd
+

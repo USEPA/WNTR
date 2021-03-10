@@ -23,7 +23,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 scenario_names = wn.junction_name_list
 sim = wntr.sim.EpanetSimulator(wn)
 sim.run_sim(save_hyd = True)
-wn.options.quality.mode = 'TRACE'
+wn.options.quality.parameter = 'TRACE'
 signal = pd.DataFrame()
 for inj_node in scenario_names:
     print(inj_node)
