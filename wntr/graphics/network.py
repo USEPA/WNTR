@@ -50,11 +50,14 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                directed=False, ax=None, filename=None):
     """
     Plot network graphic
+	
     Parameters
     ----------
-    wn: wntr WaterNetworkModel
+    wn : wntr WaterNetworkModel
         A WaterNetworkModel object
-    node_attribute: None, str, list, pd.Series, or dict, optional
+		
+    node_attribute : None, str, list, pd.Series, or dict, optional
+	
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node in the list is given a 
@@ -63,7 +66,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
-    link_attribute: None, str, list, pd.Series, or dict, optional
+    
+	link_attribute : None, str, list, pd.Series, or dict, optional
+	
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
         - If link_attribute is a list, then each link in the list is given a 
@@ -72,6 +77,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
+		  
     title: str, optional
         Plot title 
 
@@ -92,8 +98,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         
     link_width: int, optional
         Link width
+		
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
+		
     link_alpha : int, optional
         Link transparency
     
@@ -105,7 +113,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         
     add_colorbar: bool, optional
         Add colorbar
-        
+
     node_colorbar_label: str, optional
         Node colorbar label
         
