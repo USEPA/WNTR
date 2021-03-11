@@ -373,8 +373,8 @@ def valve_segment_attributes(valve_layer, node_segments, link_segments,
 
     demands: pandas Series, optional
         Node demand, the average expected node demand can be computed using 
-        wntr.metrics.expected_demand(wn).mean(axis=0). 
-        Simulation results or base demand values can also be used.
+        wntr.metrics.average_expected_demand(wn). 
+        Demand from simulation results can also be used.
         
     lengths: pandas Series, optional
         A list of 'length' attributes for each link in the network.
@@ -478,10 +478,14 @@ def _valve_criticality_length(link_lengths, valve_layer, node_segments, link_seg
         else:
             # calculate total length of links in the node segment
             links_in_node_seg = link_segments[link_segments == node_seg].index
-            L_node = link_lengths[links_in_node_seg].sum()
+            n_ixs = link_lengths.index.intersection(links_in_node_seg)
+            L_node = link_lengths[n_ixs].sum()
+
             # calculate total length of links in the link segment
             links_in_link_seg = link_segments[link_segments == link_seg].index
-            L_link = link_lengths[links_in_link_seg].sum()
+            l_ixs = link_lengths.index.intersection(links_in_link_seg)
+            L_link = link_lengths[l_ixs].sum()
+
             # calculate link length criticality for the valve
             if L_node == 0 and L_link == 0:
                 VC_len_i = 0.0
@@ -514,10 +518,14 @@ def _valve_criticality_demand(node_demands, valve_layer, node_segments, link_seg
         else:
             # calculate total demand in the node segment
             nodes_in_node_seg = node_segments[node_segments == node_seg].index
-            D_node = node_demands[nodes_in_node_seg].sum()
+            n_ixs = node_demands.index.intersection(nodes_in_node_seg)
+            D_node = node_demands.loc[n_ixs].sum()
+
             # calculate total demand in the link segment
             nodes_in_link_seg = node_segments[node_segments == link_seg].index
-            D_link = node_demands[nodes_in_link_seg].sum()
+            l_ixs = node_demands.index.intersection(nodes_in_link_seg)
+            D_link = node_demands[l_ixs].sum()
+
             # calculate demand criticality for the valve
             if D_node == 0 and D_link == 0:
                 VC_dem_i = 0

@@ -55,13 +55,13 @@ class TestSegmentation(unittest.TestCase):
     def test_valve_criticality_demand(self):
 
         # Gather the node demands for the demand-based criticality calculation
-        node_demands = self.wn.query_node_attribute('base_demand')
+        node_demands = wntr.metrics.average_expected_demand(self.wn)
     
         # Calculate the demand-based valve criticality for each valve
         valve_crit = wntr.metrics.topographic._valve_criticality_demand(node_demands, 
                                 self.valves, self.node_segments, self.link_segments)
       
-        #valve_crit.to_csv('valve_crit_demand.csv') 
+        # valve_crit.to_csv('valve_crit_demand.csv') 
         # filename = 'valve_crit_demand.jpg'
         # wntr.graphics.plot_network(self.wn, valve_layer=self.valves, 
         #                            valve_criticality=valve_crit, 
