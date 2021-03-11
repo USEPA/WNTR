@@ -74,7 +74,7 @@ The graph can be used to access NetworkX methods, for example:
 	
     >>> node_degree = G.degree()
     >>> closeness_centrality = nx.closeness_centrality(G)
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)
 
 See :ref:`topographic_metrics` for more information.
 
