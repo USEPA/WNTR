@@ -745,7 +745,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     else:
         title_name = '0'
     
-    nodes, edges = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
+    ax = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
@@ -769,12 +769,12 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         fig.clf()  
         ax = plt.gca()
         
-        nodes, edges = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
+        ax = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
         
-        return nodes, edges
+        return ax
     
     anim = animation.FuncAnimation(fig, update, interval=50, frames=len(index), blit=False, repeat=repeat)
     
