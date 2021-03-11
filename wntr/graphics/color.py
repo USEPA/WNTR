@@ -1,4 +1,4 @@
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 import numpy as np
 import matplotlib.pylab as plt
 import logging
@@ -57,6 +57,6 @@ def random_colormap(N, colormap='jet', name='random', seed=None):
     vals = np.arange(0,1,1/N) 
     np.random.shuffle(vals)
     cmap = plt.get_cmap(colormap)
-    cmap_random = plt.colors.ListedColormap(cmap(vals), name=name)
+    cmap_random = ListedColormap(cmap(vals), name=name)
 
     return cmap_random

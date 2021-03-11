@@ -72,9 +72,10 @@ def plot_valve_layer(wn, valve_layer, valve_attribute=None, title=None,
 
     if title is not None:
         ax.set_title(title)
+    
+    if include_network:
+        nx.draw_networkx_edges(G, pos, edge_color='grey', width=0.5, ax=ax)
         
-    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
-                                             width=0.5, ax=ax)
     ax.axis('off')
     
     valve_coordinates = []
