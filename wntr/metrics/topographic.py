@@ -468,7 +468,7 @@ def _valve_criticality_length(link_lengths, valve_layer, node_segments, link_seg
     VC = {}
     
     for i in range(n_valves):
-        # identify the node-side and link-side segments
+		# identify the node-side and link-side segments
         node_seg = node_segments[valve_layer.loc[i,'node']]
         link_seg = link_segments[valve_layer.loc[i,'link']]
         
