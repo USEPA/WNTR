@@ -36,7 +36,7 @@ class TestSegmentation(unittest.TestCase):
         link_lengths = self.wn.query_link_attribute('length')
     
         # Calculate the length-based valve criticality for each valve
-        valve_crit = wntr.metrics.topographic.valve_criticality_length(link_lengths, 
+        valve_crit = wntr.metrics.topographic._valve_criticality_length(link_lengths, 
                                                                    self.valves, 
                                                                    self.node_segments, 
                                                                    self.link_segments)
@@ -55,7 +55,6 @@ class TestSegmentation(unittest.TestCase):
         #                            title=title, node_size=10, filename=filename)
         
         
-        del valve_crit['Type']
         expected_valve_crit = pd.read_csv(join(test_datadir, 'valve_crit_length.csv'), 
                                               index_col=0, 
                                               squeeze=True).to_dict()
@@ -75,7 +74,7 @@ class TestSegmentation(unittest.TestCase):
         node_demands = self.wn.query_node_attribute('base_demand')
     
         # Calculate the demand-based valve criticality for each valve
-        valve_crit = wntr.metrics.topographic.valve_criticality_demand(node_demands, 
+        valve_crit = wntr.metrics.topographic._valve_criticality_demand(node_demands, 
                                                                    self.valves, 
                                                                    self.node_segments, 
                                                                    self.link_segments)
@@ -93,8 +92,7 @@ class TestSegmentation(unittest.TestCase):
         # wntr.graphics.plot_network(self.wn, valve_layer=self.valves, 
         #                            valve_criticality=valve_crit, 
         #                            title=title, node_size=10, filename=filename)
-        
-        del valve_crit['Type']        
+           
         expected_valve_crit = pd.read_csv(join(test_datadir, 'valve_crit_demand.csv'), 
                                               index_col=0, 
                                               squeeze=True).to_dict()
@@ -112,7 +110,7 @@ class TestSegmentation(unittest.TestCase):
 
     
         # Calculate the valve-based valve criticality for each valve
-        valve_crit = wntr.metrics.topographic.valve_criticality(self.valves, 
+        valve_crit = wntr.metrics.topographic._valve_criticality(self.valves, 
                                                                 self.node_segments, 
                                                                 self.link_segments)
 
@@ -128,8 +126,7 @@ class TestSegmentation(unittest.TestCase):
         # wntr.graphics.plot_network(self.wn, valve_layer=self.valves, 
         #                            valve_criticality=valve_crit, 
         #                            title=title, node_size=10, filename=filename)
-                
-        del valve_crit['Type']        
+                      
         expected_valve_crit = pd.read_csv(join(test_datadir, 'valve_crit_valve.csv'), 
                                               index_col=0, 
                                               squeeze=True).to_dict()
