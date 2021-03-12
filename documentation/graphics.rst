@@ -160,7 +160,7 @@ The following example creates a network animation of water age over time.
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
+    >>> wn.options.quality.parameter = 'AGE'
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
     >>> water_age = results.node['quality']/3600 # convert seconds to hours
