@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 logger = logging.getLogger(__name__)
 
 def plot_valve_layer(wn, valve_layer, valve_attribute=None, title=None,
-               valve_size=15, valve_cmap=None, add_colorbar=True, 
+               valve_size=15, valve_range=[None,None], valve_cmap=None, add_colorbar=True, 
                colorbar_label=None, include_network=True, ax=None, filename=None):
     """
     Plot valve layer
@@ -33,8 +33,11 @@ def plot_valve_layer(wn, valve_layer, valve_attribute=None, title=None,
 
     valve_size: int, optional
         Node size 
-
-    valve_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+    
+    valve_range: list, optional
+        Value range used to scale colormap ([None,None] indicates autoscale)
+        
+    valve_cmap: matplotlib.pyplot.cm colormap or named color, optional
         Valve colormap 
 
     add_colorbar: bool, optional
@@ -99,13 +102,14 @@ def plot_valve_layer(wn, valve_layer, valve_attribute=None, title=None,
     valve_coordinates = np.array(valve_coordinates)
     
     if valve_attribute is not None: 
-        sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], s=valve_size, c=valve_attribute, marker='v')   
+        sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], s=valve_size, c=valve_attribute, marker='v', cmap=valve_cmap)  
     else:
         sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], valve_size, 'k', 'v')   
  
     if add_colorbar:
         clb = plt.colorbar(sc, shrink=0.5, pad=0.05, ax=ax)
         clb.ax.set_title(colorbar_label, fontsize=10)
+        clb.mappable.set_clim(valve_range[0],valve_range[1])
         
     if filename:
         plt.savefig(filename)

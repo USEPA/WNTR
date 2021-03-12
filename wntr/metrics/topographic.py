@@ -351,10 +351,14 @@ def valve_segments(G, valve_layer):
 def valve_segment_attributes(valve_layer, node_segments, link_segments, 
                              demand=None, length=None):
     """
-	Valve segment attributes include the number of valves surrounding each valve
-    and (optionally) the ratio of node demands on either side each valve and 
-    the ratio of the segment lengths on either side each valve. If both sides 
-    of the valve are in the same segment, the attribute is set to zero.
+	Valve segment attributes include 1) the number of valves surrounding each valve
+    and (optionally) the increase in segment demand if a given valve is removed and 
+    the increase in segment pipe length if a given valve is removed. 
+    
+    The increase in segment demand is  expressed as a fraction of the 
+    max segment demand associated with that valve.  Likewise, 
+    the increase in segment pipe length is expressed as a fraction of the 
+    max segment pipe length associated with that valve.
 	
     Parameters
     ----------
@@ -382,21 +386,22 @@ def valve_segment_attributes(valve_layer, node_segments, link_segments,
 
     Returns
     -------
-    A pandas DataFrame (index = valve number) that contains the a column for 
-    each of the following attributes:
-        - num_surround: number of valves surrounding each valve
-        - demand_ratio: ratio of node demands on either side each valve
-        - length_ratio: ratio of the segment lengths on either side each valve
+    pandas DataFrame 
+        Valve segement attributes, indexed by valve number, that contains:
+    
+       * num_surround: number of valves surrounding each valve
+       * demand_increase: increase in segment demand if a given valve is removed, expressed as a fraction
+       * length_increase: increase in segment pipe length if a given valve is removed, expressed as a fraction
     """
     valve_attr = pd.DataFrame()
     
     valve_attr['num_surround'] = _valve_criticality(valve_layer, node_segments, link_segments)
     
     if demand is not None:
-        valve_attr['demand_ratio'] = _valve_criticality_demand(demand, valve_layer, node_segments, link_segments)
+        valve_attr['demand_increase'] = _valve_criticality_demand(demand, valve_layer, node_segments, link_segments)
     
     if length is not None:
-        valve_attr['length_ratio'] = _valve_criticality_length(length, valve_layer, node_segments, link_segments)
+        valve_attr['length_increase'] = _valve_criticality_length(length, valve_layer, node_segments, link_segments)
                                            
     return valve_attr
 
