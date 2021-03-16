@@ -173,7 +173,7 @@ class Junction(Node):
         """float: The pressure exponent attribute is used for pressure-dependent demand 
         simulations. 
         If set to None, the global value in wn.options.hydraulic.pressure_exponent is used."""
-        return self._minimum_pressure
+        return self._pressure_exponent
     @pressure_exponent.setter
     def pressure_exponent(self, value):
         self._pressure_exponent = value
