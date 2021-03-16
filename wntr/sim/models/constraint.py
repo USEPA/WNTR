@@ -218,8 +218,7 @@ class pdd_constraint(Definition):
         index_over: list of str
             list of junction names; default is all junctions in wn
         """
-        pressure_exponent = wn.options.hydraulic.pressure_exponent
-        
+
         if not hasattr(m, 'pdd'):
             m.pdd = aml.ConstraintDict()
 
@@ -234,7 +233,12 @@ class pdd_constraint(Definition):
             h = m.head[node_name]
             d = m.demand[node_name]
             d_expected = m.expected_demand[node_name]
-
+            
+            if node.pressure_exponent is None:
+                pressure_exponent = wn.options.hydraulic.pressure_exponent
+            else:
+                pressure_exponent = node.pressure_exponent
+                
             if not node._is_isolated:
                 pmin = m.pmin[node_name]
                 pnom = m.pnom[node_name]
