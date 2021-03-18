@@ -135,12 +135,11 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
     </div>
 
 
-If desired, the network can be plotted with a blank background as well (:numref:'fig-leaflet-blank').
+If desired, the plot can have a blank background (:numref:`fig-leaflet-blank`).
 
 .. doctest::
 
-    >>> nodes, edges = wntr.graphics.plot_leaflet_network(wn,
-    ...    blank_background=True) # doctest: +SKIP
+    >>> nodes, edges = wntr.graphics.plot_leaflet_network(wn, blank_background=True) # doctest: +SKIP
 
 .. _fig-leaflet-blank:
 .. figure:: figures/interactive_network_blank.png

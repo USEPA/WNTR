@@ -122,9 +122,12 @@ WNTR includes additional topographic metrics to help compute resilience.
                                           the number of nodes and links in each segment. 
 
    Valve segment attributes               Valve segment attributes include the number of valves surrounding each valve 
-                                          and (optionally) the ratio of node demands on either side each valve and 
-                                          the ratio of the segment lengths on either side each valve. If both sides 
-                                          of the valve are in the same segment, the attribute is set to zero.
+                                          and (optionally) the increase in segment demand if a given valve is removed, and 
+                                          the increase in segment pipe length if a given valve is removed. 
+                                          The increase in segment demand is  expressed as a fraction of the 
+                                          max segment demand associated with that valve.  Likewise, 
+                                          the increase in segment pipe length is expressed as a fraction of the 
+                                          max segment pipe length associated with that valve.
 						  
    =====================================  ================================================================================================================================================
 

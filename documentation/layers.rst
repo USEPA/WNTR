@@ -17,8 +17,8 @@ While valves are typically included in the water network model, the user can als
 A valve layer can be used to group links and nodes into segments based on the location of isolation valves.
 The segments can be used to compute valve layer attributes, including 
 the number of valves surrounding each valve,
-the ratio of node demands on either side each valve, and 
-the ratio of the segment lengths on either side each valve                                     
+the increase in segment demand if a given valve is removed, and 
+the increase in segment pipe length if a given valve is removed.                                   
 See :ref:`topographic_metrics` for more details.
 An example is included in the :ref:`graphics` section.
 

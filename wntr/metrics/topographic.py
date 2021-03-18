@@ -351,7 +351,7 @@ def valve_segments(G, valve_layer):
 def valve_segment_attributes(valve_layer, node_segments, link_segments, 
                              demand=None, length=None):
     """
-	Valve segment attributes include 1) the number of valves surrounding each valve
+    Valve segment attributes include 1) the number of valves surrounding each valve
     and (optionally) the increase in segment demand if a given valve is removed and 
     the increase in segment pipe length if a given valve is removed. 
     
@@ -405,7 +405,6 @@ def valve_segment_attributes(valve_layer, node_segments, link_segments,
                                            
     return valve_attr
 
-    
 def _valve_criticality(valve_layer, node_segments, link_segments):
     """
 	Returns the number of valves surrounding each valve
@@ -459,8 +458,6 @@ def _valve_criticality(valve_layer, node_segments, link_segments):
     VC = pd.Series(VC)
     
     return VC
-
-
 
 def _valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments):
     """

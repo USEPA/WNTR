@@ -1,5 +1,5 @@
 """
-The wntr.graphics.layer module includes methods plot the
+The wntr.graphics.layer module includes methods plot
 water network data layers.
 """
 import logging

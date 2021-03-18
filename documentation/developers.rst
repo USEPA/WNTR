@@ -54,7 +54,7 @@ and information on the code structure and functions.
 WNTR includes documentation on the API for all 
 public functions, methods, and classes.
 New content is marked `Draft`.
-Python documentation string formatting can be found here:
+Python documentation string formatting can be found at
 https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 
 Examples
