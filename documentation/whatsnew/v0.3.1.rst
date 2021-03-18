@@ -31,8 +31,6 @@ v0.3.1 (master branch)
 * Changed `plot_network` to return a matplotlib axes object rather than networkx nodes and edges objects. 
   This helps use the axes to layer additional data (such as valve segment attributes).
 
-* The interactive network graphics, created using `plot_leaflet_network` can now include a blank background.
-
 * Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
   This is not an error.
 
