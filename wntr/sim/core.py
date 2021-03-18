@@ -794,7 +794,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
                 backup_solver_options=None, convergence_error=False, HW_approx='default',
-                stop_criteria=None, reset_intial_conditions=True, diagnostics=False):
+                stop_criteria=None, reset_intial_conditions=False, diagnostics=False):
 
         """
         Run an extended period simulation (hydraulics only).

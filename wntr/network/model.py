@@ -1726,6 +1726,7 @@ class WaterNetworkModel(AbstractModel):
         for name, node in self.nodes(Junction):
             node._head = None
             node._demand = None
+            node._pressure = None
             node._leak_demand = None
             node._leak_status = False
             node._is_isolated = False
@@ -1754,6 +1755,7 @@ class WaterNetworkModel(AbstractModel):
 
         for name, link in self.links(Pump):
             link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1773,30 +1775,177 @@ class WaterNetworkModel(AbstractModel):
         for name, control in self.controls():
             control._reset()
     
+    def set_initial_conditions(self, results, idx=None, ts=None, remove_controls=True, warn=False):
+        """
+        Set the initial conditions of the network based on prior simulation results.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Results from a prior simulation
+        idx : int, optional
+            The report index from the results to use as initial conditions, by default None 
+            (which will use the final values)
+        ts : int, optional
+            The time value (in seconds) from the results to use to select initial conditions,
+            by default None (which will use the final values)
+        remove_controls : bool, optional
+            If a rule or control has a SimTimeCondition that now occurs prior to simulation start, remove
+            the control, by default True. 
+        warn : bool
+            Send a warning to the logger that the rule has been deleted, by default False.
+            When False, information is sent to the logger at the `info` level. 
+
+
+        Returns
+        -------
+        list 
+            Control names that have been, when `remove_controls is True`, 
+            or need to be, when `remove_controls is False`,
+            removed from the water network model
+
+
+        Raises
+        ------
+        NameError
+            If both `ts` and `idx` are passed in
+        IndexError
+            If `ts` is passed, but no such time exists in the results
+        ValueError
+            If the time selected is not a multiple of the pattern timestep
+
+
+        """
+        if idx is None and ts is None:
+            end_time = results.node['demand'].index[-1]
+        elif idx is not None and ts is None:
+            end_time = results.node['demand'].index[idx]
+        elif ts is not None and idx is None:
+            ts = int(ts)
+            if ts in results.node['demand'].index:
+                end_time = ts
+            else:
+                raise IndexError('There is no time "{}" in the results'.format(ts))
+        else:
+            raise NameError('You cannot use both "idx" and "ts" as arguments')
+        
+        # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
+        #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
+
+        pattern_start = end_time
+        clocktime_start = pattern_start
+        self.sim_time = end_time
+        self.options.time.pattern_start = (self.options.time.pattern_start + pattern_start)
+        self.options.time.start_clocktime = (self.options.time.start_clocktime + clocktime_start) % 86400
+        self._prev_sim_time = None   #end_time - self.options.time.hydraulic_timestep
+        self.sim_time = 0.0
+        self._prev_sim_time = None
+
+        for name, node in self.nodes(Junction):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._leak_demand = None
+            node._leak_status = False
+            node._is_isolated = False
+
+        for name, node in self.nodes(Tank):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            node.init_level = float(results.node['head'].loc[end_time, name] - node.elevation)
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._prev_head = node.head
+            node._leak_demand = None
+            node._leak_status = False
+            node._is_isolated = False
+
+        for name, node in self.nodes(Reservoir):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._leak_demand = None
+            node._is_isolated = False
+
+        for name, link in self.links(Pipe):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            link._user_status = link.initial_status
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            link._prev_setting = None
+
+        for name, link in self.links(Pump):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            if isinstance(link, PowerPump):
+                link.power = link._base_power
+            link._power_outage = LinkStatus.Open
+            link._prev_setting = None
+
+        for name, link in self.links(Valve):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            # print(name, link.initial_status, link.initial_setting)
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            link._prev_setting = None
+
+        to_delete = []
+        for name, control in self.controls():
+            control._reset()
+            still_good = control._shift(end_time)
+            if not still_good:
+                to_delete.append(name)
+         
+        for name in to_delete:
+            msg = 'Rule {} {} removed from the network'.format(name, 'has been' if remove_controls else 'needs to be')
+            if warn: logger.warning(msg)
+            else: logger.info(msg)
+            if remove_controls:
+                self.remove_control(name)
+        return to_delete
+
     def _reset_final_conditions(self, results):
         #### TODO: move reset conditions to /sim
         end_time = results.node['demand'].index[-1]
         
         for name, node in self.nodes():
-            node.head = results.node['head'].at[end_time, name]
-            node.demand = results.node['demand'].at[end_time, name]
+            node._head = results.node['head'].at[end_time, name]
+            node._demand = results.node['demand'].at[end_time, name]
             if isinstance(node, Tank):
                 node._prev_head = results.node['head'].at[end_time, name]
-                            
+
         for name, link in self.links():
-            link.set_current_status(results.link['status'].at[end_time, name])
+            link._user_status = results.link['status'].at[end_time, name]
             link._internal_status = results.link['status'].at[end_time, name]
             link._flow = results.link['flowrate'].at[end_time, name]
             link._prev_setting = results.link['setting'].at[end_time, name]
             if isinstance(node, (Pipe, Valve)):
                 link.setting = results.link['setting'].at[end_time, name]
-                        
+
         #self.options.time.start_clocktime = end_time
         self.options.time.report_start = end_time
         self.sim_time = end_time
         
         ## WNTRSimulator needs to use start_clocktime (and report_start?)
-        
         
     def read_inpfile(self, filename):
         """

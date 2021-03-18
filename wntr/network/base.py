@@ -410,6 +410,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         if not isinstance(status, LinkStatus):
             if isinstance(status, int): status = LinkStatus(status)
             elif isinstance(status, str): status = LinkStatus[status]
+            else: status = LinkStatus(int(status))
         self._initial_status = status
         
     @property
