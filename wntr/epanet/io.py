@@ -778,7 +778,7 @@ class InpFile(object):
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
             #if pump.speed_timeseries.base_value != 1:
-	    if pump.speed_timeseries.base_value is not None:
+            if pump.speed_timeseries.base_value is not None:
                 E['speed_keyword'] = 'SPEED'
                 E['speed'] = pump.speed_timeseries.base_value
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
