@@ -136,9 +136,9 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
     {'Nodes': 1154, 'Links': 1610, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
     
     >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=10, title='Original', 
+    >>> ax = wntr.graphics.plot_network(wn, node_size=10, title='Original', 
     ...     ax=ax1) 
-    >>> nodes, edges = wntr.graphics.plot_network(skel_wn, node_size=10, 
+    >>> ax = wntr.graphics.plot_network(skel_wn, node_size=10, 
     ...     title='Skeletonized', ax=ax2)
 
 .. doctest::

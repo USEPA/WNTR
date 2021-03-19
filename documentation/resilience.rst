@@ -119,7 +119,16 @@ WNTR includes additional topographic metrics to help compute resilience.
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
                                           Valve segmentation returns a segment number for each node and link, along with
-                                          the number of nodes and links in each segment.  
+                                          the number of nodes and links in each segment. 
+
+   Valve segment attributes               Valve segment attributes include the number of valves surrounding each valve 
+                                          and (optionally) the increase in segment demand if a given valve is removed, and 
+                                          the increase in segment pipe length if a given valve is removed. 
+                                          The increase in segment demand is  expressed as a fraction of the 
+                                          max segment demand associated with that valve.  Likewise, 
+                                          the increase in segment pipe length is expressed as a fraction of the 
+                                          max segment pipe length associated with that valve.
+						  
    =====================================  ================================================================================================================================================
 
 .. doctest::
@@ -215,7 +224,14 @@ use NetworkX directly, while others use metrics included in WNTR.
 	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
 	  ...     valve_layer)
 
+* Valve segment attributes
 
+  .. doctest::
+
+      >>> average_expected_demand = wntr.metrics.average_expected_demand(wn)
+      >>> link_lengths = wn.query_link_attribute('length')
+      >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, node_segments, 
+      ...     link_segments, average_expected_demand, link_lengths)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
