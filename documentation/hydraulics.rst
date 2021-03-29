@@ -269,7 +269,7 @@ in the following example.
     >>> wn.options.hydraulic.minimum_pressure = 0.55
 	
 When using the WNTRSimulator, the required pressure, minimum pressure, and pressure exponent can vary throughout the network.  
-By default, the each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value
+By default, each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value
 in the hydraulic options are used to define the PDD constraint for that junction. 
 If the user defines required pressure, minimum pressure, or pressure exponent on a junction, 
 those values will override the required pressure, minimum pressure, and pressure exponent defined in the global hydraulic options 
@@ -286,7 +286,7 @@ junction 121.
     
 The ability to use spatially variable required pressure, minimum pressure, and pressure 
 exponent is only available when using the WNTRSimulator.
-The EpanetSimulator always uses the global hydraulic options.
+The EpanetSimulator always uses values in the global hydraulic options.
 
 .. _leak_model:
 
