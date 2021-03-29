@@ -15,31 +15,35 @@ model.
 
 """
 import logging
-import six
-
 import sys
+from collections import OrderedDict
 from collections.abc import MutableSequence
 
-import numpy as np
 import networkx as nx
+import numpy as np
 import pandas as pd
-
-from .options import Options
-from .base import Link, Registry, LinkStatus, AbstractModel
-from .elements import Junction, Reservoir, Tank
-from .elements import Pipe, Pump, HeadPump, PowerPump
-from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
-from .elements import Pattern, TimeSeries, Demands, Curve, Source
-from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
-    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
-    _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
-    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _ClosePSVCondition, _OpenPSVCondition, \
-    _ActivePSVCondition, _OpenFCVCondition, _ActiveFCVCondition, ControlAction, _InternalControlAction, Control, \
-    ControlManager, Comparison, Rule
-from collections import OrderedDict
+import six
+import wntr.epanet
 from wntr.utils.ordered_set import OrderedSet
 
-import wntr.epanet
+from .base import AbstractModel, Link, LinkStatus, Registry
+from .controls import (AndCondition, Comparison, Control, ControlAction,
+                       ControlManager, ControlPriority, OrCondition,
+                       RelativeCondition, Rule, SimTimeCondition,
+                       TankLevelCondition, TimeOfDayCondition, ValueCondition,
+                       _ActiveFCVCondition, _ActivePRVCondition,
+                       _ActivePSVCondition, _CloseCVCondition,
+                       _CloseHeadPumpCondition, _ClosePowerPumpCondition,
+                       _ClosePRVCondition, _ClosePSVCondition, _ControlType,
+                       _InternalControlAction, _OpenCVCondition,
+                       _OpenFCVCondition, _OpenHeadPumpCondition,
+                       _OpenPowerPumpCondition, _OpenPRVCondition,
+                       _OpenPSVCondition)
+from .elements import (Curve, Demands, FCValve, GPValve, HeadPump, Junction,
+                       Pattern, PBValve, Pipe, PowerPump, PRValve, PSValve,
+                       Pump, Reservoir, Source, Tank, TCValve, TimeSeries,
+                       Valve)
+from .options import Options
 
 logger = logging.getLogger(__name__)
 
