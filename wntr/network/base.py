@@ -96,11 +96,20 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
         name
         node_type
-        head
-        demand
         coordinates
         initial_quality
         tag
+    
+
+    .. rubric:: Read-only simulation results
+
+    The following attributes are read-only. The values are the final calculated
+    value from a simulation.
+
+    .. autosummary::
+
+        head
+        demand
         leak_demand
         leak_status
         leak_area
@@ -110,7 +119,9 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, wn, name):
         self._name = name
         self._head = None
-        self._demand = None  
+        self._demand = None
+        self._pressure = None
+        self._quality = None
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
@@ -158,51 +169,61 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def head(self):
-        """float: The current head at the node"""
+        """float: (read-only) the current simulation head at the node (total head)"""
         return self._head
-    @head.setter
-    def head(self, value):
-        self._head = value
+    # @head.setter
+    # def head(self, value):
+    #     self._head = value
 
     @property
     def demand(self):
-        """float: The current demand at the node"""
+        """float: (read-only) the current simulation demand at the node (actual demand)"""
         return self._demand
-    @demand.setter
-    def demand(self, value):
-        self._demand = value
+    # @demand.setter
+    # def demand(self, value):
+    #     self._demand = value
+
+    @property
+    def pressure(self):
+        """float : (read-only) the current simulation pressure at the node"""
+        return self._pressure
+
+    @property
+    def quality(self):
+        """float : (read-only) the current simulation quality at the node"""
+        return self._quality
 
     @property
     def leak_demand(self):
-        """float: The current demand at the node"""
+        """float: (read-only) the current simulation leak demand at the node"""
         return self._leak_demand
-    @leak_demand.setter
-    def leak_demand(self, value):
-        self._leak_demand = value
+    # @leak_demand.setter
+    # def leak_demand(self, value):
+    #     self._leak_demand = value
 
     @property
     def leak_status(self):
-        """bool: The current leak status at the node"""
+        """bool:(read-only) the current simulation leak status at the node"""
         return self._leak_status
-    @leak_status.setter
-    def leak_status(self, value):
-        self._leak_status = value
+    # @leak_status.setter
+    # def leak_status(self, value):
+    #     self._leak_status = value
 
     @property
     def leak_area(self):
-        """float: The leak area at the node"""
+        """float: (read-only) the current simulation leak area at the node"""
         return self._leak_area
-    @leak_area.setter
-    def leak_area(self, value):
-        self._leak_area = value
+    # @leak_area.setter
+    # def leak_area(self, value):
+    #     self._leak_area = value
 
     @property
     def leak_discharge_coeff(self):
-        """float: The leak discharge coefficient"""
+        """float: (read-only) the current simulation leak discharge coefficient"""
         return self._leak_discharge_coeff
-    @leak_discharge_coeff.setter
-    def leak_discharge_coeff(self, value):
-        self._leak_discharge_coeff = value
+    # @leak_discharge_coeff.setter
+    # def leak_discharge_coeff(self, value):
+    #     self._leak_discharge_coeff = value
 
     @property
     def node_type(self):
@@ -294,11 +315,21 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         end_node_name
         initial_status
         initial_setting
-        status
-        setting
         tag
         vertices
 
+    .. rubric:: Read-only simulation results
+
+    The following attributes are read-only. The values are the final calculated
+    value from a simulation.
+
+    .. autosummary::
+
+        flow
+        headloss
+        quality
+        status
+        setting
 
     """
     def __init__(self, wn, link_name, start_node_name, end_node_name):
@@ -328,7 +359,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._prev_setting = None
         self._setting = None
         self._flow = None
+        self._velocity = None
         self._is_isolated = False
+        self._quality = None
+        self._headloss = None
 
     def _compare(self, other):
         """
@@ -374,7 +408,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @initial_status.setter
     def initial_status(self, status):
         if not isinstance(status, LinkStatus):
-            status = LinkStatus[status]
+            if isinstance (status, (int, float)):
+                status = LinkStatus(int(status))
+            elif isinstance(status, str):
+                status = LinkStatus[status]
+            else: 
+                raise ValueError('initial_status must be a str, integer, or LinkStatus')
         self._initial_status = status
         
     @property
@@ -423,8 +462,13 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def flow(self):
-        """float: Current flow through the link (read only)"""
+        """float: (read-only) current simulated flow through the link"""
         return self._flow
+    
+    @property
+    def velocity(self):
+        """float: (read-only) current simulated velocity through the link"""
+        return self._velocity
     
     @property
     @abc.abstractmethod
@@ -432,17 +476,33 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         """:class:`~wntr.network.base.LinkStatus`: (**abstract**) current status of the link"""
         pass
     @status.setter
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def status(self, status):
-        self._user_status = status
+        raise RuntimeError("The status attribute is an output (result) property. Setting status by"
+                            " the user has been deprecated to avoid confusion. To change the simulation"
+                            " behavior, use initial_status.")
+        # self._user_status = status
     
     @property
+    def quality(self):
+        """float : (read-only) current simulated average link quality"""
+        return self._quality
+
+    @property
+    def headloss(self):
+        """float : (read-only) current simulated headloss"""
+        return self._headloss
+
+    @property
     def setting(self):
-        """float: The current setting of the link"""
+        """float: (read-only) current simulated setting of the link"""
         return self._setting
     @setting.setter
     def setting(self, setting):
-        self._setting = setting
+        raise RuntimeError("The setting attribute is an output (result) property. Setting the setting by"
+                            " the user has been deprecated to avoid confusion. To change the simulation"
+                            " behavior, use initial_setting.")
+        # self._setting = setting
     
     @property
     def tag(self):

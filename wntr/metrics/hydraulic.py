@@ -49,8 +49,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
             
     Returns
     -------
-    A pandas DataFrame that contains expected demand in m3/s
-    (index = times, columns = junction names).
+    A pandas DataFrame that contains expected demand in m3/s (index = times, columns = junction names).
     """
     if start_time is None:
         start_time = 0
@@ -87,8 +86,7 @@ def average_expected_demand(wn, category=None):
         
     Returns
     -------
-    A pandas Series that contains average expected demand in m3/s
-    (index = junction names).
+    A pandas Series that contains average expected demand in m3/s (index = junction names).
     """
     L = [24*3600] # start with a 24 hour pattern
     for name, pattern in wn.patterns():

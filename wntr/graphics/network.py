@@ -46,18 +46,18 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               valve_layer=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
                directed=False, ax=None, filename=None):
     """
     Plot network graphic
-
+	
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
-
+		
     node_attribute : None, str, list, pd.Series, or dict, optional
-
+	
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node in the list is given a 
@@ -66,9 +66,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
-
-    link_attribute : None, str, list, pd.Series, or dict, optional
-
+    
+	link_attribute : None, str, list, pd.Series, or dict, optional
+	
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
         - If link_attribute is a list, then each link in the list is given a 
@@ -77,41 +77,41 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
-
-    title : str, optional
+		  
+    title: str, optional
         Plot title 
 
-    node_size : int, optional
+    node_size: int, optional
         Node size 
 
-    node_range : list, optional
+    node_range: list, optional
         Node range ([None,None] indicates autoscale)
         
-    node_alpha : int, optional
+    node_alpha: int, optional
         Node transparency
         
-    node_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Node colormap 
         
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name. 
         
-    link_width : int, optional
+    link_width: int, optional
         Link width
-
+		
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
-
+		
     link_alpha : int, optional
         Link transparency
     
-    link_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
         Link colormap
         
     link_labels: bool, optional
-        If True, the graph will include each link labelled with its name. 
+        If True, the graph will include each link labelled with its name.
         
-    add_colorbar : bool, optional
+    add_colorbar: bool, optional
         Add colorbar
 
     node_colorbar_label: str, optional
@@ -120,20 +120,19 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     link_colorbar_label: str, optional
         Link colorbar label
         
-    directed : bool, optional
+    directed: bool, optional
         If True, plot the directed graph
     
-    ax : matplotlib axes object, optional
+    ax: matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
+    
+    filename : str, optional
+        Filename used to save the figure
         
     Returns
     -------
-    nodes, edges : matplotlib objects for network nodes and edges
-
-    Notes
-    -----
-    For more network draw options, see nx.draw_networkx
+    ax : matplotlib axes object  
     """
 
     if ax is None: # create a new figure
@@ -233,30 +232,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         clb.ax.set_title(link_colorbar_label, fontsize=10)
     ax.axis('off')
     
-    if valve_layer is not None:
-        for valve_name, (pipe_name, node_name) in valve_layer.iterrows():
-            pipe = wn.get_link(pipe_name)
-            if node_name == pipe.start_node_name:
-                start_node = pipe.start_node
-                end_node = pipe.end_node
-            elif node_name == pipe.end_node_name:
-                start_node = pipe.end_node
-                end_node = pipe.start_node
-            else:
-                print("Not valid")
-                continue
-            x0 = start_node.coordinates[0]
-            dx = end_node.coordinates[0] - x0
-            y0 = start_node.coordinates[1]
-            dy = end_node.coordinates[1] - y0
-            valve_coordinates = (x0 + dx * 0.1,
-                                     y0 + dy * 0.1)
-            ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
-     
     if filename:
         plt.savefig(filename)
         
-    return nodes, edges
+    return ax
 
 def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Value', title=None,
                node_size=8, node_range=[None,None], node_cmap='Jet', node_labels=True,
@@ -265,14 +244,11 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                filename='plotly_network.html', auto_open=True):
     """
     Create an interactive scalable network graphic using plotly.  
-
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
-
     node_attribute : None, str, list, pd.Series, or dict, optional
-
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node in the list is given a 
@@ -282,19 +258,14 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
           The time index is not used in the plot.
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
-
     node_attribute_name : str, optional 
         The node attribute name, which is used in the node popup and node legend
-
     title : str, optional
         Plot title
-
     node_size : int, optional
         Node size
-
     node_range : list, optional
         Node range ([None,None] indicates autoscale)
-
     node_cmap : palette name string, optional
         Node colormap, options include Greys, YlGnBu, Greens, YlOrRd, Bluered, 
         RdBu, Reds, Blues, Picnic, Rainbow, Portland, Jet, Hot, Blackbody, 
@@ -315,7 +286,6 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
         
     figsize: list, optional
         Figure size in pixels
-
     round_ndigits : int, optional
         Number of digits to round node values used in the label
     
@@ -455,14 +425,11 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                filename='leaflet_network.html'):
     """
     Create an interactive scalable network graphic on a Leaflet map using folium.  
-
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
-
     node_attribute : None, str, list, pd.Series, or dict, optional
-
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node in the list is given a 
@@ -471,9 +438,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
           {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
-
     link_attribute : None, str, list, pd.Series, or dict, optional
-
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
         - If link_attribute is a list, then each link in the list is given a 
@@ -482,7 +447,6 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
           {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
-
     node_attribute_name : str, optional 
         The node attribute name, which is used in the node popup and node legend
         
@@ -491,10 +455,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         
     node_size : int, optional
         Node size 
-
     node_range : list, optional
         Node range ([None,None] indicates autoscale)
-
     node_cmap : list of color names, optional
         Node colors 
     
@@ -506,10 +468,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         
     link_width : int, optional
         Link width
-
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
-
     link_cmap : list of color names, optional
         Link colors
     
@@ -697,26 +657,20 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
                add_colorbar=True, directed=False, ax=None, repeat=True):
     """
     Create a network animation
-
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
-
     node_attribute : pd.DataFrame, optional
         Node attributes stored in a pandas DataFrames, where the index is 
         time and columns are the node name 
-
     link_attribute : pd.DataFrame, optional
         Link attributes stored in a pandas DataFrames, where the index is 
         time and columns are the link name 
-
     title : str, optional
         Plot title 
-
     node_size : int, optional
         Node size 
-
     node_range : list, optional
         Node range ([None,None] indicates autoscale)
         
@@ -731,10 +685,8 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         
     link_width : int, optional
         Link width
-
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
-
     link_alpha : int, optional
         Link transparency
     
@@ -746,7 +698,6 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         
     add_colorbar : bool, optional
         Add colorbar
-
     directed : bool, optional
         If True, plot the directed graph
     
@@ -802,7 +753,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     else:
         title_name = '0'
     
-    nodes, edges = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
+    ax = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
@@ -826,12 +777,12 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         fig.clf()  
         ax = plt.gca()
         
-        nodes, edges = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
+        ax = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
         
-        return nodes, edges
+        return ax
     
     anim = animation.FuncAnimation(fig, update, interval=50, frames=len(index), blit=False, repeat=repeat)
     

@@ -15,6 +15,13 @@ Valve layer
 
 While valves are typically included in the water network model, the user can also define a valve layer to be used in additional analysis.
 A valve layer can be used to group links and nodes into segments based on the location of isolation valves.
+The segments can be used to compute valve layer attributes, including 
+the number of valves surrounding each valve,
+the increase in segment demand if a given valve is removed, and 
+the increase in segment pipe length if a given valve is removed.                                   
+See :ref:`topographic_metrics` for more details.
+An example is included in the :ref:`graphics` section.
+
 In a valve layer, the location of each valve is defined using the link the valve is installed on 
 and the node the valve protects. This information is stored in a pandas DataFrame, which is indexed by valve 
 number with columns named 'link' and 'node.'
@@ -66,8 +73,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
     2  283  239
     3  295  249
     4  303  257
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, 
-    ...     valve_layer=random_valve_layer)
+    >>> ax = wntr.graphics.plot_valve_layer(wn, random_valve_layer, add_colorbar=False)
     
 .. doctest::
     :hide:
@@ -91,8 +97,7 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 .. doctest::
 
     >>> strategic_valve_layer = wntr.network.generate_valve_layer(wn, 'strategic', 2)
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, 
-    ...     valve_layer=strategic_valve_layer)
+    >>> ax = wntr.graphics.plot_valve_layer(wn, strategic_valve_layer, add_colorbar=False)
     
 .. doctest::
     :hide:

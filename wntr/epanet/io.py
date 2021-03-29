@@ -120,7 +120,8 @@ def _str_time_to_sec(s):
 
     Returns
     -------
-     Integer value of time in seconds.
+    int
+        Integer value of time in seconds.
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -284,6 +285,15 @@ class InpFile(object):
                 elif line.startswith('['):
                     vals = line.split(None, 1)
                     sec = vals[0].upper()
+                    # Add handlers to deal with extra 'S'es (or missing 'S'es) in INP file
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace(']','S]')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace('S]',']')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
                     edata['sec'] = sec
                     if sec in _INP_SECTIONS:
                         section = sec
@@ -589,7 +599,9 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
+            volume = None
             if len(current) >= 8:  # Volume curve provided
+                volume = float(current[6])
                 curve_name = current[7]
                 if curve_name == '*':
                     curve_name = None
@@ -608,6 +620,11 @@ class InpFile(object):
             elif len(current) == 7:
                 curve_name = None
                 overflow = False
+                volume = float(current[6])
+            elif len(current) == 6:
+                curve_name = None
+                overflow = False
+                volume = 0.0
             else:
                 raise RuntimeError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
@@ -616,7 +633,7 @@ class InpFile(object):
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
                         to_si(self.flow_units, float(current[4]), HydParam.Length),
                         to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
-                        to_si(self.flow_units, float(current[6]), HydParam.Volume),
+                        to_si(self.flow_units, float(volume), HydParam.Volume),
                         curve_name, overflow)
 
     def _write_tanks(self, f, wn, version=2.2):
@@ -1065,7 +1082,7 @@ class InpFile(object):
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()]
                 link.initial_status = new_status
-                link.status = new_status
+                link._user_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
                     new_status = LinkStatus.Active
@@ -1083,7 +1100,7 @@ class InpFile(object):
                     setting = float(current[1])
 #                link.setting = setting
                 link.initial_setting = setting
-                link.status = new_status
+                link._user_status = new_status
                 link.initial_status = new_status
 
     def _write_status(self, f, wn):
@@ -1721,7 +1738,7 @@ class InpFile(object):
                     required_pressure = to_si(self.flow_units, float(words[2]), HydParam.Pressure)
                     opts.hydraulic.required_pressure = required_pressure
                 elif key == 'PRESSURE':
-                    opts.hydraulic.pressure_exponenet = float(words[2])
+                    opts.hydraulic.pressure_exponent = float(words[2])
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
@@ -2927,13 +2944,13 @@ class BinFile(object):
                 # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 elif self.quality_type is QualType.Age:
                     self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 else:
                     self.results.node['quality'] = df['quality']
-                    self.results.link['linkquality'] = df['linkquality']
+                    self.results.link['quality'] = df['linkquality']
 
                 # Link Results
                 self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
@@ -2955,8 +2972,8 @@ class BinFile(object):
                 settings[:, linktype == EN.PBV] = to_si(self.flow_units, settings[:, linktype == EN.PBV], HydParam.Pressure)
                 settings[:, linktype == EN.FCV] = to_si(self.flow_units, settings[:, linktype == EN.FCV], HydParam.Flow)
                 self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
-                self.results.link['frictionfact'] = df['frictionfactor']
-                self.results.link['rxnrate'] = df['reactionrate']
+                self.results.link['friction_factor'] = df['frictionfactor']
+                self.results.link['reaction_rate'] = df['reactionrate']
                 
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks

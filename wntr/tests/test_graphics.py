@@ -189,7 +189,7 @@ def test_plot_tank_curve():
     assert_true(shouldBeNone is None)
 
 def test_custom_colormap():
-    cmp = wntr.graphics.custom_colormap(numcolors=3, colors=['blue','white','red'], name='custom')
+    cmp = wntr.graphics.custom_colormap(3, colors=['blue','white','red'], name='custom')
     assert_equal(cmp.N,3)
     assert_equal(cmp.name,'custom')
     
