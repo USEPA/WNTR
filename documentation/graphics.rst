@@ -2,21 +2,24 @@
 
     \clearpage
 
+.. _graphics
+
 .. doctest::
     :hide:
 
     >>> import wntr
+    >>> import numpy as np
     >>> import matplotlib.pylab as plt
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-	
+
 Graphics
 ======================================
 
 WNTR includes several functions to plot water network models and to plot 
-fragility and pump curves.
+fragility, pump curves, tank curves, and valve layers.
 
 Networks
 --------------------
@@ -37,8 +40,8 @@ Node and link attributes can be specified using the following options:
 * List of node/link names (i.e., ``['123', '199']``), this highlights the node or link in red
 
 The following example plots the network along with node elevation (:numref:`fig-network-2`).
-Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
-for the network nodes and edges, which can be further customized by the user.
+Note that the :class:`~wntr.graphics.network.plot_network` function returns a matplotlib axes object
+which can be further customized by the user.
 
 .. doctest::
     :hide:
@@ -50,7 +53,7 @@ for the network nodes and edges, which can be further customized by the user.
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute='elevation', 
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute='elevation', 
     ...    node_colorbar_label='Elevation (m)')
 
 .. doctest::
@@ -92,7 +95,7 @@ The following example plots the network along with node population (:numref:`fig
    :alt: Network
 
    Interactive network graphic with the legend showing the node population.
-   
+ 
 Interactive Leaflet networks
 ------------------------------------------
 Interactive Leaflet network graphics can be generated using the 
@@ -131,6 +134,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
         <iframe src="_static/comp_leaflet_map.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
+
 Network animation
 ----------------------
 
@@ -142,7 +146,7 @@ The following example creates a network animation of water age over time.
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
+    >>> wn.options.quality.parameter = 'AGE'
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
     >>> water_age = results.node['quality']/3600 # convert seconds to hours
@@ -322,4 +326,68 @@ level of the tank is included in the figure.
    :alt: Tank curve and profile
 
    Tank curve and profile graphic.
+
+Valve layers and segments
+--------------------------
+
+Valve layers and valve segment attributes can be plotted using the 
+function :class:`~wntr.graphics.curve.plot_valve_layer`.
+The following example starts by generating a valve layer and valve segments. 
+The valves and valve segments are plotted on the network (:numref:`fig-valve_segment`). 
+
+.. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
+
+    >>> valve_layer = wntr.network.generate_valve_layer(wn, 'strategic', 2, seed=123)
+    >>> G = wn.get_graph()   
+    >>> node_segments, link_segments, seg_sizes = wntr.metrics.topographic.valve_segments(G, valve_layer)
+    >>> N = seg_sizes.shape[0] 
+    >>> cmap = wntr.graphics.random_colormap(N) # random color map helps view segments
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=link_segments, node_size=0, link_width=2,
+    ...     node_range=[0,N], link_range=[0,N], node_cmap=cmap, link_cmap=cmap, 
+    ...     link_colorbar_label='Segment')
+    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, add_colorbar=False, include_network=False, ax=ax)
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_valve_segment.png', dpi=300)
+
+.. _fig-valve_segment:
+.. figure:: figures/plot_valve_segment.png
+   :width: 800
+   :alt: Valve segment attributes
+
+   Valves layer and segments.
    
+.. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+	
+Valve segment attributes are then computed and the number of 
+valves surrounding each valve is plotted on the network
+(:numref:`fig-valve_segment_attributes`).  
+
+    >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, node_segments, 
+    ...     link_segments)
+    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, valve_attributes['num_surround'], 
+    ...     colorbar_label='Surrounding valves')
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_valve_segment_attributes.png', dpi=300)
+    
+.. _fig-valve_segment_attributes:
+.. figure:: figures/plot_valve_segment_attributes.png
+   :width: 800
+   :alt: Valve segment attributes
+
+   Valve segment attribute showing the number of valves surrounding each valve.

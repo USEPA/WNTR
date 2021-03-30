@@ -96,7 +96,7 @@ For example, link results generated with the EpanetSimulator have the following 
 
     >>> link_keys = results.link.keys()
     >>> print(link_keys) # doctest: +SKIP
-    dict_keys(['flowrate', 'frictionfact', 'headloss', 'linkquality', 'rxnrate', 'setting', 'status', 'velocity']) 
+    dict_keys(['flowrate', 'friction_factor', 'headloss', 'quality', 'reaction_rate', 'setting', 'status', 'velocity']) 
 
 To access node pressure over all nodes and times:
 
@@ -170,7 +170,7 @@ plotted in a similar manner.
     
 .. doctest::
 
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
     ...    node_range=[30,55], node_colorbar_label='Pressure (m)')
 
 .. doctest::

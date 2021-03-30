@@ -26,7 +26,7 @@ class TestValveLayer(unittest.TestCase):
         valves = wntr.network.generate_valve_layer(self.wn, 'random', 40, 123)
         
         #valves.to_csv('valve_layer_random.csv')
-        #nodes, edges = wntr.graphics.plot_network(self.wn, node_size=7, valve_layer=valves,
+        #ax = wntr.graphics.plot_network(self.wn, node_size=7, valve_layer=valves,
         #                                          title='Random, 40')
         
         expected = pd.read_csv(join(test_datadir, 'valve_layer_random.csv'), index_col=0, dtype='object')
@@ -49,7 +49,7 @@ class TestValveLayer(unittest.TestCase):
             valves = wntr.network.generate_valve_layer(self.wn, 'strategic', N, 123)
             
             #valves.to_csv('valve_layer_stategic_'+str(N)+'.csv')
-            #nodes, edges = wntr.graphics.plot_network(self.wn, node_size=7, valve_layer=valves,
+            #ax = wntr.graphics.plot_network(self.wn, node_size=7, valve_layer=valves,
             #                                          title='Strategic, '+str(N))
             
             expected_valves = pd.read_csv(join(test_datadir, 'valve_layer_stategic_'+str(N)+'.csv'), index_col=0, dtype='object')

@@ -45,12 +45,11 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
         Timestep, if None then value is set to wn.options.time.report_timestep
     
     category : str (optional)
-        Category name for this demand
+        Demand category name.  If None, all demand categories are used.
             
     Returns
     -------
-    A pandas DataFrame that contains expected demand in m3/s
-    (index = times, columns = junction names).
+    A pandas DataFrame that contains expected demand in m3/s (index = times, columns = junction names).
     """
     if start_time is None:
         start_time = 0
@@ -72,7 +71,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
     
     return exp_demand
 
-def average_expected_demand(wn):
+def average_expected_demand(wn, category=None):
     """
     Compute average expected demand per day at each junction using base demands
     and demand patterns along with the demand multiplier
@@ -81,11 +80,13 @@ def average_expected_demand(wn):
     -----------
     wn : wntr WaterNetworkModel
         Water network model
+    
+    category : str (optional)
+        Demand category name.  If None, all demand categories are used.
         
     Returns
     -------
-    A pandas Series that contains average expected demand in m3/s
-    (index = junction names).
+    A pandas Series that contains average expected demand in m3/s (index = junction names).
     """
     L = [24*3600] # start with a 24 hour pattern
     for name, pattern in wn.patterns():
@@ -96,7 +97,7 @@ def average_expected_demand(wn):
     end_time = start_time+lcm
     timestep = wn.options.time.pattern_timestep
         
-    exp_demand = expected_demand(wn, start_time, end_time-timestep, timestep)
+    exp_demand = expected_demand(wn, start_time, end_time-timestep, timestep, category=category)
     ave_exp_demand = exp_demand.mean(axis=0)
 
     return ave_exp_demand
