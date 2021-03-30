@@ -259,18 +259,22 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The required pressure and minimum pressure are defined in the the hydraulic options, and can be reset as shown 
+The required pressure, minimum pressure, and pressure exponent are defined in the global hydraulic options, and can be reset as shown 
 in the following example.
 
 .. doctest::
     
     >>> wn.options.hydraulic.required_pressure = 21.097 # 30 psi = 21.097 m
     >>> wn.options.hydraulic.minimum_pressure  = 3.516 # 5 psi = 3.516 m
+    >>> wn.options.hydraulic.minimum_pressure = 0.55
 	
-When using the WNTRSimultor, the required pressure and minimum pressure can vary throughout the network.  
-By default, the each junction's required and minimum pressure is set to None and the global value
-in the hydraulic options are used.  If the user defines required pressure or minimum pressure on a junction, 
-that value will override the global value.  The following example defines required pressure and minimum pressure on 
+When using the WNTRSimulator, the required pressure, minimum pressure, and pressure exponent can vary throughout the network.  
+By default, each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value
+in the hydraulic options are used to define the PDD constraint for that junction. 
+If the user defines required pressure, minimum pressure, or pressure exponent on a junction, 
+those values will override the required pressure, minimum pressure, and pressure exponent defined in the global hydraulic options 
+when defining the PDD constraint for that junction.  
+The following example defines required pressure, minimum pressure, and pressure exponent on 
 junction 121.
 
 .. doctest::
@@ -278,6 +282,11 @@ junction 121.
     >>> junction = wn.get_node('121')
     >>> junction.required_pressure = 14.065 # 20 psi = 14.065 m
     >>> junction.minimum_pressure = 0.352 # 0.5 psi = 0.352 m												   
+    >>> junction.pressure_exponent = 0.4
+    
+The ability to use spatially variable required pressure, minimum pressure, and pressure 
+exponent is only available when using the WNTRSimulator.
+The EpanetSimulator always uses values in the global hydraulic options.
 
 .. _leak_model:
 

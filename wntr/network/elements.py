@@ -81,6 +81,7 @@ class Junction(Node):
         elevation
         required_pressure
         minimum_pressure
+        pressure_exponent
         emitter_coefficient
         base_demand
         coordinates
@@ -107,6 +108,7 @@ class Junction(Node):
         self._elevation = 0.0
         self._required_pressure = None
         self._minimum_pressure = None
+        self._pressure_exponent = None
         self._emitter_coefficient = None
         self._leak = False
         self._leak_status = False
@@ -124,6 +126,7 @@ class Junction(Node):
         if abs(self.elevation - other.elevation)<1e-9 and \
            self.required_pressure == other.required_pressure and \
            self.minimum_pressure == other.minimum_pressure and \
+           self.pressure_exponent == other.pressure_exponent and \
            self.emitter_coefficient == other.emitter_coefficient:
             return True
         return False
@@ -165,6 +168,16 @@ class Junction(Node):
     def minimum_pressure(self, value):
         self._minimum_pressure = value
 
+    @property
+    def pressure_exponent(self):
+        """float: The pressure exponent attribute is used for pressure-dependent demand 
+        simulations. 
+        If set to None, the global value in wn.options.hydraulic.pressure_exponent is used."""
+        return self._pressure_exponent
+    @pressure_exponent.setter
+    def pressure_exponent(self, value):
+        self._pressure_exponent = value
+        
     @property
     def emitter_coefficient(self):
         """float : if not None, then activate an emitter with the specified coefficient"""
