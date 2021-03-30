@@ -17,6 +17,8 @@ v0.3.1 (master branch)
  
 * Added a `convert_controls_to_rules` method on the water network model.  In some instances, mixing controls and rules has unexpected consequences.  
   By converting all controls to rules, the user can specify the priority for each rule. 
+
+* Updated the `expected_demand` and `average_expected_demand` metrics to optionally specify a demand category.  
   
 * Added a function to compute valve segment attributes from a valve layer (`valve_segment_attributes`).  This includes 
   the number of valves surrounding each valve,
