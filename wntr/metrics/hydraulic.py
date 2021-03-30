@@ -199,11 +199,6 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
     wn : wntr WaterNetworkModel
         Water network model.  The water network model is needed to 
         find the start and end node to each pump.
-    
-    mode : int
-        1 = resilience index (todini)
-        2 = modified resilience index
-        3 = MRI for each node
         
     Pstar : float
         Pressure threshold.
@@ -217,27 +212,21 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
     elevation = head.loc[:,wn.junction_name_list]-pressure.loc[:,wn.junction_name_list]
     Pexp = demand.loc[:,wn.junction_name_list]*(Pstar+elevation)
 
-    if mode == 1:
-        Pin_res = -demand.loc[:,wn.reservoir_name_list]*head.loc[:,wn.reservoir_name_list]
-    
-        headloss = pd.DataFrame()
-        for name, link in wn.pumps():
-            start_node = link.start_node_name
-            end_node = link.end_node_name
-            start_head = head.loc[:,start_node] # (m)
-            end_head = head.loc[:,end_node] # (m)
-            headloss[name] = end_head - start_head # (m)
-            
-        Pin_pump = flowrate.loc[:,wn.pump_name_list]*headloss.abs()
-    
-        todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/  \
-            (Pin_res.sum(axis=1) + Pin_pump.sum(axis=1) - Pexp.sum(axis=1))
-            
-    elif mode == 2:
-        todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/Pexp.sum(axis=1)
+    Pin_res = -demand.loc[:,wn.reservoir_name_list]*head.loc[:,wn.reservoir_name_list]
+
+    headloss = pd.DataFrame()
+    for name, link in wn.pumps():
+        start_node = link.start_node_name
+        end_node = link.end_node_name
+        start_head = head.loc[:,start_node] # (m)
+        end_head = head.loc[:,end_node] # (m)
+        headloss[name] = end_head - start_head # (m)
         
-    elif mode == 3:
-        todini = (Pout - Pexp)/Pexp
+    Pin_pump = flowrate.loc[:,wn.pump_name_list]*headloss.abs()
+
+    todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/  \
+        (Pin_res.sum(axis=1) + Pin_pump.sum(axis=1) - Pexp.sum(axis=1))
+            
     
     """
     POut = {}
@@ -277,7 +266,83 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
     
     return todini
 
+def modified_resilience_index(head, pressure, demand, Pstar, per_junction=False):
+    """
+    Compute the modified resilience index, equations from [JaSr08]_.
 
+    The modified resilience index is the total surplus power available at 
+    demand nodes as a percentage of the total minimum required power at demand 
+    nodes. The metric can also be computed on a per junction basis.
+
+    Parameters
+    ----------
+    head : pandas DataFrame
+        A pandas Dataframe containing node head 
+        (index = times, columns = junction names).
+        
+    pressure : pandas DataFrame
+        A pandas Dataframe containing node pressure 
+        (index = times, columns = junction names).
+        
+    demand : pandas DataFrame
+        A pandas Dataframe containing node demand 
+        (index = times, columns = junction names).
+    
+    Pstar : float
+        Pressure threshold.
+        
+    per_junction : bool (optional)
+        If True, compute the modified resilience index per junction.
+        If False, compute the modified resilience index summed over all junctions.
+        
+    Returns
+    -------
+    pandas Series or DataFrame
+        Modified resilience index time-series. If per_junction=True, columns=junction names.
+    """
+
+    Pout = demand*head
+    elevation = head - pressure
+    Pexp = demand*(Pstar+elevation)
+
+    if per_junction:
+        mri = (Pout - Pexp)/Pexp
+    else:
+        mri = (Pout.sum(axis=1) - Pexp.sum(axis=1))/Pexp.sum(axis=1)
+    
+    return mri
+
+def tank_capacity(pressure, wn):
+    """
+    Compute tank capacity, the ratio of water volume stored in tanks to the 
+    maximum volume of water that can be stored.
+
+    Parameters
+    ----------
+    pressure : pandas DataFrame
+        A pandas Dataframe containing tank water level (pressure) 
+        (index = times, columns = tank names).
+        
+    wn : wntr WaterNetworkModel
+        Water network model.  The water network model is needed to 
+        get the tank object to compute current and max volume.
+        
+    Returns
+    -------
+    pandas DataFrame
+        Tank capacity (index = times, columns = tank names)
+    """
+    
+    tank_capacity = pd.DataFrame(index=pressure.index, columns=pressure.columns)
+    
+    for name in wn.tank_name_list:
+        tank = wn.get_node(name)
+        max_volume = tank.get_volume(tank.max_level)
+        tank_volume = tank.get_volume(pressure[name])
+        tank_capacity[name] = tank_volume/max_volume
+    
+    return tank_capacity
+    
 def entropy(G, sources=None, sinks=None):
     """
     Compute entropy, equations from [AwGB90]_.
