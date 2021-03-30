@@ -7636,7 +7636,6 @@ Link PUMP-3884 Open If Node TANK-3355 Below 10
 Link PUMP-3884 Closed If Node TANK-3355 Above 11
 Link LINK-1827 Closed If Node TANK-3324 Above 27
 Link LINK-1827 Open If Node TANK-3324 Below 26.5
-Link PUMP-3882 Open If Node JUNCTION-2739 Below 20
 
 [RULES]
 
