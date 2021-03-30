@@ -43,6 +43,7 @@ class TestPerformance(unittest.TestCase):
         
         inp_file = join(test_datadir, 'Anytown_multipointcurves.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
         # Apply a curve that is very fine along H = a - b * Q ** c and 
         # verify the answers are nearly identical under these conditions.
@@ -52,13 +53,16 @@ class TestPerformance(unittest.TestCase):
         new_curve_name = 'perfect_curve'
         cdata = [(10*q,A - B*(10*q)**C) for q in range(1200)]
         wn.add_curve(new_curve_name,'HEAD',cdata)
+        wn2.add_curve(new_curve_name,'HEAD',cdata)
         for pump_name, pump in wn.pumps():
             pump.pump_curve_name = new_curve_name
-            
+        for pump_name, pump in wn2.pumps():
+            pump.pump_curve_name = new_curve_name
+
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        sim = self.wntr.sim.WNTRSimulator(wn)
+        sim = self.wntr.sim.WNTRSimulator(wn2)
         results = sim.run_sim()
 
         self.assertTrue(compare_results(results.node['head'], epa_res.node['head'], head_diff_abs_threshold, rel_threshold))
