@@ -120,7 +120,8 @@ def _str_time_to_sec(s):
 
     Returns
     -------
-     Integer value of time in seconds.
+    int
+        Integer value of time in seconds.
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -284,6 +285,15 @@ class InpFile(object):
                 elif line.startswith('['):
                     vals = line.split(None, 1)
                     sec = vals[0].upper()
+                    # Add handlers to deal with extra 'S'es (or missing 'S'es) in INP file
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace(']','S]')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
+                    if sec not in _INP_SECTIONS:
+                        trsec = sec.replace('S]',']')
+                        if trsec in _INP_SECTIONS:
+                            sec = trsec
                     edata['sec'] = sec
                     if sec in _INP_SECTIONS:
                         section = sec
@@ -589,7 +599,9 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
+            volume = None
             if len(current) >= 8:  # Volume curve provided
+                volume = float(current[6])
                 curve_name = current[7]
                 if curve_name == '*':
                     curve_name = None
@@ -608,6 +620,11 @@ class InpFile(object):
             elif len(current) == 7:
                 curve_name = None
                 overflow = False
+                volume = float(current[6])
+            elif len(current) == 6:
+                curve_name = None
+                overflow = False
+                volume = 0.0
             else:
                 raise RuntimeError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
@@ -616,7 +633,7 @@ class InpFile(object):
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
                         to_si(self.flow_units, float(current[4]), HydParam.Length),
                         to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
-                        to_si(self.flow_units, float(current[6]), HydParam.Volume),
+                        to_si(self.flow_units, float(volume), HydParam.Volume),
                         curve_name, overflow)
 
     def _write_tanks(self, f, wn, version=2.2):
@@ -648,6 +665,8 @@ class InpFile(object):
                     E['overflow'] = 'YES'
                     if tank.vol_curve is None:
                         E['curve'] = '*'
+            if E['initlev'] > E['maxlev']:
+                E['initlev'] = E['maxlev']
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -839,17 +858,17 @@ class InpFile(object):
                  'node2': valve.end_node_name,
                  'diam': from_si(self.flow_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
-                 'set': valve._setting,
+                 'set': valve.initial_setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
             formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = from_si(self.flow_units, valve._setting, HydParam.Pressure)
+                valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = from_si(self.flow_units, valve._setting, HydParam.Flow)
+                valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Flow)
             elif valve_type == 'TCV':
-                valve_set = valve._setting
+                valve_set = valve.initial_setting
             elif valve_type == 'GPV':
                 valve_set = valve.headloss_curve_name
                 formatter = _GPV_ENTRY
@@ -1065,7 +1084,7 @@ class InpFile(object):
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()]
                 link.initial_status = new_status
-                link.status = new_status
+                link._user_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
                     new_status = LinkStatus.Active
@@ -1083,44 +1102,42 @@ class InpFile(object):
                     setting = float(current[1])
 #                link.setting = setting
                 link.initial_setting = setting
-                link.status = new_status
+                link._user_status = new_status
                 link.initial_status = new_status
 
     def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
-        for link_name, link in wn.links():
-            if isinstance(link, Pipe):
-                continue
-            if isinstance(link, Pump):
-                setting = link.initial_setting
+
+        # vnames = list(wn.valve_name_list)
+        # # lnames.sort()
+        # for valve_name in vnames:
+        #     valve = wn.links[valve_name]
+        #     valve_type = valve.valve_type
+
+        #     if valve.initial_status not in (LinkStatus.Opened, LinkStatus.Open, LinkStatus.Active):
+        #         f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
+        #     if valve_type in ['PRV', 'PSV', 'PBV']:
+        #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
+        #     elif valve_type == 'FCV':
+        #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Flow)
+        #     elif valve_type == 'TCV':
+        #         valve_set = valve.initial_setting
+        #     elif valve_type == 'GPV':
+        #         valve_set = None
+        #     if valve_set is not None:
+        #         f.write('{:10s} {:10.7g}\n'.format(valve_name, float(valve_set)).encode('ascii'))
+
+        pnames = list(wn.pump_name_list)
+        for pump_name in pnames:
+            pump = wn.links[pump_name]
+            if pump.initial_status in (LinkStatus.Closed,):
+                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
+            else:
+                setting = pump.initial_setting
                 if type(setting) is float and setting != 1.0:
-                    f.write('{:10s} {:10.10g}\n'.format(link_name,
-                            setting).encode('ascii'))
-            if link.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.initial_status).name).encode('ascii'))
-            if isinstance(link, wntr.network.Valve) and link.initial_status in (LinkStatus.Open, LinkStatus.Opened):
-#           if link.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.initial_status).name).encode('ascii'))
-#                if link.initial_status is LinkStatus.Active:
-#                    valve_type = link.valve_type
-#                    if valve_type in ['PRV', 'PSV', 'PBV']:
-#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Pressure)
-#                    elif valve_type == 'FCV':
-#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Flow)
-#                    elif valve_type == 'TCV':
-#                        setting = link.initial_setting
-#                    else:
-#                        continue
-#                    continue
-#                elif isinstance(link, wntr.network.Pump):
-#                    setting = link.initial_setting
-#                else: continue
-#                f.write('{:10s} {:10.10g}\n'.format(link_name,
-#                        setting).encode('ascii'))
-#        f.write('\n'.encode('ascii'))
+                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
         control_count = 0
@@ -1915,7 +1932,6 @@ class InpFile(object):
 
         hrs, mm, sec = time.seconds_to_tuple(time.rule_timestep)
 
-        ### TODO: RULE TIMESTEP is not written?!
         f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(entry.format('STATISTIC', wn.options.time.statistic).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -2927,13 +2943,13 @@ class BinFile(object):
                 # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 elif self.quality_type is QualType.Age:
                     self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['linkquality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 else:
                     self.results.node['quality'] = df['quality']
-                    self.results.link['linkquality'] = df['linkquality']
+                    self.results.link['quality'] = df['linkquality']
 
                 # Link Results
                 self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
@@ -2955,8 +2971,8 @@ class BinFile(object):
                 settings[:, linktype == EN.PBV] = to_si(self.flow_units, settings[:, linktype == EN.PBV], HydParam.Pressure)
                 settings[:, linktype == EN.FCV] = to_si(self.flow_units, settings[:, linktype == EN.FCV], HydParam.Flow)
                 self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
-                self.results.link['frictionfact'] = df['frictionfactor']
-                self.results.link['rxnrate'] = df['reactionrate']
+                self.results.link['friction_factor'] = df['frictionfactor']
+                self.results.link['reaction_rate'] = df['reactionrate']
                 
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks

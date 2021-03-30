@@ -254,6 +254,25 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     def _reset(self):
         pass
 
+    def _shift(self, value):
+        """
+        Shift any SimTimeConditions within larger condition rules by value seconds (backward).
+
+        I.e., if a control is scheduled at simulation time 7200 and you shift by 3600, the new
+        control threshold with be sim time 3600.
+
+        Parameters
+        ----------
+        value : float
+            seconds to subtract from threshold
+
+        Returns
+        -------
+        bool
+            is this still a valid control?
+        """
+        return True
+
     @abc.abstractmethod
     def requires(self):
         """
@@ -414,6 +433,8 @@ class TimeOfDayCondition(ControlCondition):
         the time specified.
     first_day : float, default=0
         Start rule on day `first_day`, with the first day of simulation as day 0
+
+    TODO:  WE ARE NOT TESTING THIS!!!!
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
@@ -428,7 +449,7 @@ class TimeOfDayCondition(ControlCondition):
         self._first_day = first_day
         self._repeat = repeat
         self._backtrack = 0
-        if model is not None and not self._repeat and self._threshold < model._start_clocktime and first_day < 1:
+        if model is not None and not self._repeat and self._threshold < model.options.time.start_clocktime and first_day < 1:
             self._first_day = 1
 
     def _compare(self, other):
@@ -581,6 +602,13 @@ class SimTimeCondition(ControlCondition):
         if self._relation != other._relation:
             return False
         return True
+
+    def _shift(self, value):
+        self._threshold -= value
+        if self._threshold >= 0:
+            return True
+        self._threshold = 0
+        return False
 
     @property
     def name(self):
@@ -963,6 +991,11 @@ class OrCondition(ControlCondition):
         self._condition_1._reset()
         self._condition_2._reset()
 
+    def _shift(self, value):
+        success1 = self._condition_1._shift(value)
+        success2 = self._condition_2._shift(value)
+        return success1 or success2
+
     def _compare(self, other):
         """
         Parameters
@@ -1028,6 +1061,11 @@ class AndCondition(ControlCondition):
     def _reset(self):
         self._condition_1._reset()
         self._condition_2._reset()
+
+    def _shift(self, value):
+        success1 = self._condition_1._shift(value)
+        success2 = self._condition_2._shift(value)
+        return success1 or success2
 
     def _compare(self, other):
         """
@@ -1704,6 +1742,13 @@ class ControlAction(BaseControlAction):
         self._target_obj = target_obj
         self._attribute = attribute
         self._value = value
+        self._private_attribute = attribute
+        if attribute == 'status':
+            self._private_attribute = '_user_status'
+        elif attribute == 'leak_status':
+            self._private_attribute = '_leak_status'
+        elif attribute == 'setting':
+            self._private_attribute = '_setting'
 
     def requires(self):
         return OrderedSet([self._target_obj])
@@ -1723,7 +1768,7 @@ class ControlAction(BaseControlAction):
         return self._value
 
     def run_control_action(self):
-        setattr(self._target_obj, self._attribute, self._value)
+        setattr(self._target_obj, self._private_attribute, self._value)
         self.notify()
 
     def target(self):
@@ -2065,6 +2110,9 @@ class Control(Rule):
             self._control_type = _ControlType.presolve
         else:
             self._control_type = _ControlType.postsolve
+        
+    def _shift(self, step):
+        return self._condition._shift(step)
 
     @classmethod
     def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):

@@ -19,6 +19,7 @@ class SimulationResults(object):
         # Simulation time series
         self.timestamp = str(datetime.datetime.now())
         self.network_name = None
+        self.sim_time = 0
         self.link = None
         self.node = None
 
