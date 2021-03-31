@@ -81,17 +81,26 @@ class Junction(Node):
         elevation
         required_pressure
         minimum_pressure
+        pressure_exponent
         emitter_coefficient
         base_demand
         coordinates
         initial_quality
         tag
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        demand
+        head
+        pressure
+        quality
         leak_demand
         leak_status
         leak_area
         leak_discharge_coeff
-
-
+    
     """
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
@@ -99,11 +108,12 @@ class Junction(Node):
         self._elevation = 0.0
         self._required_pressure = None
         self._minimum_pressure = None
+        self._pressure_exponent = None
         self._emitter_coefficient = None
         self._leak = False
-        self.leak_status = False
-        self.leak_area = 0.0
-        self.leak_discharge_coeff = 0.0
+        self._leak_status = False
+        self._leak_area = 0.0
+        self._leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
         
@@ -116,6 +126,7 @@ class Junction(Node):
         if abs(self.elevation - other.elevation)<1e-9 and \
            self.required_pressure == other.required_pressure and \
            self.minimum_pressure == other.minimum_pressure and \
+           self.pressure_exponent == other.pressure_exponent and \
            self.emitter_coefficient == other.emitter_coefficient:
             return True
         return False
@@ -157,6 +168,16 @@ class Junction(Node):
     def minimum_pressure(self, value):
         self._minimum_pressure = value
 
+    @property
+    def pressure_exponent(self):
+        """float: The pressure exponent attribute is used for pressure-dependent demand 
+        simulations. 
+        If set to None, the global value in wn.options.hydraulic.pressure_exponent is used."""
+        return self._pressure_exponent
+    @pressure_exponent.setter
+    def pressure_exponent(self, value):
+        self._pressure_exponent = value
+        
     @property
     def emitter_coefficient(self):
         """float : if not None, then activate an emitter with the specified coefficient"""
@@ -248,8 +269,8 @@ class Junction(Node):
         from wntr.network.controls import ControlAction, Control
         
         self._leak = True
-        self.leak_area = area
-        self.leak_discharge_coeff = discharge_coeff
+        self._leak_area = area
+        self._leak_discharge_coeff = discharge_coeff
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
@@ -354,7 +375,6 @@ class Tank(Node):
         init_level
         min_level
         max_level
-        level
         diameter
         min_vol
         vol_curve_name
@@ -366,6 +386,15 @@ class Tank(Node):
         coordinates
         initial_quality
         tag
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        head
+        level
+        pressure
+        quality
         leak_demand
         leak_status
         leak_area
@@ -380,7 +409,7 @@ class Tank(Node):
         self._min_level=0.0
         self._max_level=6.096
         self._diameter=15.24
-        self.head = self.elevation + self._init_level
+        self._head = self.elevation + self._init_level
         self._prev_head = self.head
         self._min_vol=0 
         self._vol_curve_name = None
@@ -389,9 +418,9 @@ class Tank(Node):
         self._bulk_coeff = None
         self._overflow = False
         self._leak = False
-        self.leak_status = False
-        self.leak_area = 0.0
-        self.leak_discharge_coeff = 0.0
+        self._leak_status = False
+        self._leak_area = 0.0
+        self._leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'tank'+self._name+'start_leak_control'
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
 
@@ -500,7 +529,7 @@ class Tank(Node):
     @init_level.setter
     def init_level(self, value):
         self._init_level = value
-        self.head = self.elevation+self._init_level
+        self._head = self.elevation+self._init_level
 
     @property
     def node_type(self):
@@ -549,10 +578,14 @@ class Tank(Node):
 
     @property
     def level(self):
-        """Returns tank level = head - elevation (read only)"""
+        """float : (read-only) the current simulation tank level (= head - elevation)"""
         return self.head - self.elevation
     
-    
+    @property
+    def pressure(self):
+        """float : (read-only) the current simulation pressure (head - elevation)"""
+        return self._head - self.elevation
+
     def get_volume(self, level=None):
         """
         Returns tank volume at a given level
@@ -622,8 +655,8 @@ class Tank(Node):
         from wntr.network.controls import ControlAction, Control
         
         self._leak = True
-        self.leak_area = area
-        self.leak_discharge_coeff = discharge_coeff
+        self._leak_area = area
+        self._leak_discharge_coeff = discharge_coeff
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
@@ -681,15 +714,18 @@ class Reservoir(Node):
         base_head
         head_pattern_name
         head_timeseries
-        head
-        demand
-        leak_demand
-        leak_status
-        leak_area
-        leak_discharge_coeff
         tag
         initial_quality
         coordinates
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        demand
+        head
+        pressure
+        quality
 
     """
     
@@ -738,6 +774,11 @@ class Reservoir(Node):
             self._pattern_reg.add_usage(name, (self.name, 'Reservoir'))
         self._head_timeseries.pattern_name = name
 
+    @property
+    def pressure(self):
+        """float : (read-only) the current simulation pressure (0.0 for reservoirs)"""
+        return 0.0
+
 
 class Pipe(Link):
     """
@@ -777,14 +818,23 @@ class Pipe(Link):
         bulk_coeff
         wall_coeff
         initial_status
-        initial_setting
         start_node
         end_node
-        status
-        setting
         tag
         vertices
 
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        friction_factor
+        reaction_rate
+        quality
+        status
 
     """
 
@@ -797,6 +847,9 @@ class Pipe(Link):
         self._cv = False
         self._bulk_coeff = None
         self._wall_coeff = None
+        self._velocity = None
+        self._friction_factor = None
+        self._reaction_rate = None
         
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
@@ -884,9 +937,16 @@ class Pipe(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
+
+    @property
+    def friction_factor(self):
+        """float : (read-only) the current simulation friction factor in the pipe"""
+        return self._friction_factor
+
+    @property
+    def reaction_rate(self):
+        """float : (read-only) the current simulation reaction rate in the pipe"""
+        return self._reaction_rate
 
 
 class Pump(Link):
@@ -930,11 +990,20 @@ class Pump(Link):
         efficiency
         energy_price
         energy_pattern
-        status
-        setting
         tag
         vertices
 
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        flow
+        headloss
+        velocity
+        quality
+        status
+        setting
 
     """
 
@@ -988,9 +1057,6 @@ class Pump(Link):
             return LinkStatus.Closed
         else:
             return self._user_status
-    @status.setter
-    def status(self, status):
-        self._user_status = status
 
     @property
     def link_type(self):
@@ -1125,11 +1191,20 @@ class HeadPump(Pump):
         efficiency
         energy_price
         energy_pattern
-        status
-        setting
         tag
         vertices
 
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        flow
+        headloss
+        velocity
+        quality
+        status
+        setting
 
     """
 #    def __init__(self, name, start_node_name, end_node_name, wn):
@@ -1334,11 +1409,20 @@ class PowerPump(Pump):
         efficiency
         energy_price
         energy_pattern
-        status
-        setting
         tag
         vertices
 
+
+    .. rubric:: Read-only simulation results
+
+    .. autosummary::
+
+        flow
+        headloss
+        velocity
+        quality
+        status
+        setting
 
     """
     
@@ -1411,10 +1495,20 @@ class Valve(Link):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1425,6 +1519,7 @@ class Valve(Link):
         self._initial_status = LinkStatus.Active
         self._user_status = LinkStatus.Active
         self._initial_setting = 0.0
+        self._velocity = None
 
     def __repr__(self):
         fmt = "<Valve '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
@@ -1450,10 +1545,6 @@ class Valve(Link):
             return LinkStatus.Open
         else:
             return self._internal_status
-
-    @status.setter
-    def status(self, status):
-        self._user_status = status
 
     @property
     def link_type(self):
@@ -1501,10 +1592,20 @@ class PRValve(Valve):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1552,10 +1653,20 @@ class PSValve(Valve):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1603,10 +1714,20 @@ class PBValve(Valve):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1654,10 +1775,19 @@ class FCValve(Valve):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1705,10 +1835,20 @@ class TCValve(Valve):
         initial_status
         initial_setting
         valve_type
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     
@@ -1758,10 +1898,20 @@ class GPValve(Valve):
         valve_type
         headloss_curve
         headloss_curve_name
-        status
-        setting
         tag
         vertices
+
+
+    .. rubric:: Result attributes
+
+    .. autosummary::
+
+        flow
+        velocity
+        headloss
+        quality
+        status
+        setting
 
     """
     

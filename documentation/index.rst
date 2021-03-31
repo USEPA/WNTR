@@ -22,6 +22,7 @@ designed to simulate and analyze resilience of water distribution networks.
    waterquality
    resultsobject
    disaster_models
+   criticality
    resilience
    stochastic
    morph
@@ -29,6 +30,7 @@ designed to simulate and analyze resilience of water distribution networks.
    license
    whatsnew
    developers
+   users
    API documentation <apidoc/wntr>
    acronyms
    reference

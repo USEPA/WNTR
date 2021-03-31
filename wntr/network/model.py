@@ -164,12 +164,12 @@ class WaterNetworkModel(AbstractModel):
         """
         Return the current time of day in seconds from 12 AM
         """
-        return self.shifted_time % (24*3600)
+        return self._shifted_time % (24*3600)
 
     @property
     def _clock_day(self):
         """Return the clock-time day of the simulation"""
-        return int(self.shifted_time / 86400)
+        return int(self._shifted_time / 86400)
 
     ### # 
     ### Iteratable attributes
@@ -1724,36 +1724,36 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None
 
         for name, node in self.nodes(Junction):
-            node.head = None
-            node.demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._head = None
+            node._demand = None
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Tank):
-            node.head = node.init_level+node.elevation
+            node._head = node.init_level+node.elevation
             node._prev_head = node.head
-            node.demand = None
-            node.leak_demand = None
-            node.leak_status = False
+            node._demand = None
+            node._leak_demand = None
+            node._leak_status = False
             node._is_isolated = False
 
         for name, node in self.nodes(Reservoir):
-            node.head = None  # node.head_timeseries.base_value
-            node.demand = None
-            node.leak_demand = None
+            node._head = None  # node.head_timeseries.base_value
+            node._demand = None
+            node._leak_demand = None
             node._is_isolated = False
 
         for name, link in self.links(Pipe):
-            link.status = link.initial_status
-            link.setting = link.initial_setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
             link._prev_setting = None
 
         for name, link in self.links(Pump):
-            link.status = link.initial_status
+            link._user_status = link.initial_status
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1763,8 +1763,8 @@ class WaterNetworkModel(AbstractModel):
             link._prev_setting = None
 
         for name, link in self.links(Valve):
-            link.status = link.initial_status
-            link.setting = link.initial_setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -2192,7 +2192,8 @@ class NodeRegistry(Registry):
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
 
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
-                     elevation=0.0, coordinates=None, demand_category=None):
+                     elevation=0.0, coordinates=None, demand_category=None,
+                     emitter_coeff=None, initial_quality=None):
         """
         Adds a junction to the water network model.
 
@@ -2206,9 +2207,14 @@ class NodeRegistry(Registry):
             Name of the demand pattern or the actual Pattern object
         elevation : float
             Elevation of the junction.
-        coordinates : tuple of floats
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
-                
+        demand_category : str, optional
+            Add a category to the **base** demand
+        emitter_ceoff : float, optional
+            Add an emitter at this node with the specified coefficient
+        initial_quality : float, optional
+            Initial quality at this junction
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
@@ -2219,6 +2225,10 @@ class NodeRegistry(Registry):
         self[name] = junction
         if coordinates is not None:
             junction.coordinates = coordinates
+        if emitter_coeff is not None:
+            junction.emitter_coefficient = emitter_coeff
+        if initial_quality is not None:
+            junction.initial_quality = initial_quality
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
@@ -2543,7 +2553,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.initial_status = status
-        pipe.status = status
+        pipe._user_status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
 
@@ -2622,23 +2632,23 @@ class LinkRegistry(Registry):
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
-            valve.setting = setting
+            valve._setting = setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self)
             valve.headloss_curve_name = setting

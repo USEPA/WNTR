@@ -27,6 +27,21 @@ def test_expected_demand_net3_node101():
     error = abs((ave_ex_demand_101 - expected)/expected)
     assert_less(error, 0.01) # 1% error
 
+def test_expected_demand_category():
+    inp_file = join(net3dir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    node = wn.get_node('123')
+    node.demand_timeseries_list[0].category='A'
+    
+    ave_expected_demand = wntr.metrics.hydraulic.average_expected_demand(wn)
+    ave_expected_demand_A = wntr.metrics.hydraulic.average_expected_demand(wn, category='A')
+    
+    error = abs(ave_expected_demand['123'] - ave_expected_demand_A['123'])
+    assert_less(error, 1e-7) 
+    
+    error = abs(ave_expected_demand_A.sum() - ave_expected_demand_A['123']) # all other entries are 0
+    assert_less(error, 1e-7) 
+    
 def test_wsa():
     
     expected_demand = pd.DataFrame(data=[[12,2],[3,4],[5,10]], columns=['A', 'B'], index=[0,1,2])

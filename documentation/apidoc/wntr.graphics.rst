@@ -12,6 +12,7 @@ Submodules
 .. toctree::
 
    wntr.graphics.network
+   wntr.graphics.layer
    wntr.graphics.curve
    wntr.graphics.color
 

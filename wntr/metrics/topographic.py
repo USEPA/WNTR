@@ -14,6 +14,7 @@ NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
     algebraic_connectivity
     critical_ratio_defrag
     valve_segments
+    valve_segment_attributes
 
 """
 import networkx as nx
@@ -346,4 +347,196 @@ def valve_segments(G, valve_layer):
     seg_sizes = seg_sizes.astype(int)
     
     return node_segments, link_segments, seg_sizes
+
+def valve_segment_attributes(valve_layer, node_segments, link_segments, 
+                             demand=None, length=None):
+    """
+    Valve segment attributes include 1) the number of valves surrounding each valve
+    and (optionally) the increase in segment demand if a given valve is removed and 
+    the increase in segment pipe length if a given valve is removed. 
+    
+    The increase in segment demand is  expressed as a fraction of the 
+    max segment demand associated with that valve.  Likewise, 
+    the increase in segment pipe length is expressed as a fraction of the 
+    max segment pipe length associated with that valve.
+	
+    Parameters
+    ----------
+    valve_layer: pandas DataFrame
+        Valve layer, defined by node and link pairs (for example, valve 0 is 
+        on link A and protects node B). The valve_layer DataFrame is indexed by
+        valve number, with columns named 'node' and 'link'.
+    
+    node_segments: pandas Series
+       Segment number for each node, indexed by node name.
+       node_segments can be computed using `wntr.metrics.topographic.valve_segments`
+       
+    link_segments: pandas Series
+        Segment number for each link, indexed by link name. 
+        link_segments can be computed using `wntr.metrics.topographic.valve_segments`
+
+    demands: pandas Series, optional
+        Node demand, the average expected node demand can be computed using 
+        wntr.metrics.average_expected_demand(wn). 
+        Demand from simulation results can also be used.
+        
+    lengths: pandas Series, optional
+        A list of 'length' attributes for each link in the network.
+        The output from wn.query_link_attribute('length')
+
+    Returns
+    -------
+    pandas DataFrame 
+        Valve segement attributes, indexed by valve number, that contains:
+    
+       * num_surround: number of valves surrounding each valve
+       * demand_increase: increase in segment demand if a given valve is removed, expressed as a fraction
+       * length_increase: increase in segment pipe length if a given valve is removed, expressed as a fraction
+    """
+    valve_attr = pd.DataFrame()
+    
+    valve_attr['num_surround'] = _valve_criticality(valve_layer, node_segments, link_segments)
+    
+    if demand is not None:
+        valve_attr['demand_increase'] = _valve_criticality_demand(demand, valve_layer, node_segments, link_segments)
+    
+    if length is not None:
+        valve_attr['length_increase'] = _valve_criticality_length(length, valve_layer, node_segments, link_segments)
+                                           
+    return valve_attr
+
+def _valve_criticality(valve_layer, node_segments, link_segments):
+    """
+	Returns the number of valves surrounding each valve
+	
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)   
+
+    # Calculate valve-based valve criticality
+    VC = {}
+    for i in range(n_valves):
+        # identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']] 
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_val_i = 0 
+        else:
+            V_list = []
+            # identify links and nodes in surrounding segments
+            links_in_segs = link_segments[(link_segments == link_seg) | (link_segments == node_seg)].index
+            nodes_in_segs = node_segments[(node_segments == link_seg) | (node_segments == node_seg)].index
+            # add unique valves to the V_list from the link list
+            for link in links_in_segs:
+                valves = valve_layer[valve_layer['link'] == link].index
+                if len(valves) == 0:
+                    pass
+                else:
+                    for valve in valves:
+                        if valve in V_list:
+                            pass
+                        else:
+                            V_list.append(valve)
+            # add unique valves to the V_list from the node list
+            for node in nodes_in_segs:
+                valves = valve_layer[valve_layer['node'] == node].index
+                if len(valves) == 0:
+                    pass
+                else:
+                    for valve in valves:
+                        if valve in V_list:
+                            pass
+                        else:
+                            V_list.append(valve)
+            # calculate valve-based criticality for the valve
+            # count the number of valves in the list, minus the valve in question
+            VC_val_i = len(V_list) - 1
+
+        VC[i] = VC_val_i
+    
+    VC = pd.Series(VC)
+    
+    return VC
+
+def _valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments):
+    """
+	Returns the ratio of the segment lengths on either side of the valve
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)   
+
+    # Calculate the length-based valve crticiality
+    VC = {}
+    
+    for i in range(n_valves):
+		# identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']]
+        
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_len_i = 0
+        else:
+            # calculate total length of links in the node segment
+            links_in_node_seg = link_segments[link_segments == node_seg].index
+            n_ixs = link_lengths.index.intersection(links_in_node_seg)
+            L_node = link_lengths[n_ixs].sum()
+
+            # calculate total length of links in the link segment
+            links_in_link_seg = link_segments[link_segments == link_seg].index
+            l_ixs = link_lengths.index.intersection(links_in_link_seg)
+            L_link = link_lengths[l_ixs].sum()
+
+            # calculate link length criticality for the valve
+            if L_node == 0 and L_link == 0:
+                VC_len_i = 0.0
+            else:
+                VC_len_i = (L_link + L_node) / max(L_link, L_node) - 1
+
+        VC[i] = VC_len_i
+    
+    VC = pd.Series(VC)
+    
+    return VC
+
+def _valve_criticality_demand(node_demands, valve_layer, node_segments, link_segments):
+    """
+	Returns the ratio of node demands on either side of a valve.
+    """
+    # Assess the number of valves in the system
+    n_valves = len(valve_layer)         
+
+    # Calculate the demand-based valve crticiality
+    VC = {}
+
+    for i in range(n_valves):
+        # identify the node-side and link-side segments
+        node_seg = node_segments[valve_layer.loc[i,'node']]
+        link_seg = link_segments[valve_layer.loc[i,'link']] 
+        # if the node and link are in the same segment, set criticality to 0
+        if node_seg == link_seg:
+            VC_dem_i = 0.0
+        else:
+            # calculate total demand in the node segment
+            nodes_in_node_seg = node_segments[node_segments == node_seg].index
+            n_ixs = node_demands.index.intersection(nodes_in_node_seg)
+            D_node = node_demands.loc[n_ixs].sum()
+
+            # calculate total demand in the link segment
+            nodes_in_link_seg = node_segments[node_segments == link_seg].index
+            l_ixs = node_demands.index.intersection(nodes_in_link_seg)
+            D_link = node_demands[l_ixs].sum()
+
+            # calculate demand criticality for the valve
+            if D_node == 0 and D_link == 0:
+                VC_dem_i = 0
+            else:
+                VC_dem_i = (D_link + D_node) / max(D_link, D_node) - 1
+
+        VC[i] = VC_dem_i
+    
+    VC = pd.Series(VC)
+    
+    return VC
 
