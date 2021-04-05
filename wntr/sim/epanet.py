@@ -157,7 +157,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 if (tstep <= 0):
                     continue_sim = False
                     break
-            ret = enData.ENcloseH()
+            enData.ENcloseH()
             
             del stop_criteria['_link_index']
         

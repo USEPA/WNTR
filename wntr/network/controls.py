@@ -34,7 +34,8 @@ import six
 from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
@@ -152,7 +153,8 @@ class Comparison(enum.Enum):
     @property
     def func(self):
         """The function call to use for this comparison"""
-        return self.value[1]
+        value = getattr(self, '_value_')
+        return value[1]
     __call__ = func
 
     @property
@@ -1657,6 +1659,7 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
 
     def __init__(self):
         super(BaseControlAction, self).__init__()
+        self._value = None
 
     @abc.abstractmethod
     def run_control_action(self):
@@ -1855,6 +1858,14 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     reaches 6 AM, the ControlAction would be "turn the pump on", and the ControlCondition would be "when the simulation
     reaches 6 AM".
     """
+
+    def __init__(self):
+        super().__init__()
+        self._control_type = None
+        self._condition = None
+        self._priority = None
+
+
     @abc.abstractmethod
     def is_control_action_required(self):
         """

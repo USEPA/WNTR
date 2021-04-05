@@ -2654,7 +2654,7 @@ class BinFile(object):
             The values that go with the information
 
         """
-        self.results.meta[element] = values
+        pass
 
     def save_energy_line(self, pump_idx, pump_name, values):
         """Save pump energy from the output file.

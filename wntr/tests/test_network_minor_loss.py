@@ -31,7 +31,7 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.EpanetSimulator(wn2)
         results2 = sim.run_sim()
 
-        head1 = results1.node['head'].loc[0, 'j1']
-        head2 = results2.node['head'].loc[0, 'j1']
+        head1 = results1.node['head'].j1.iloc[0]
+        head2 = results2.node['head'].j1.iloc[0]
         head_diff = abs(head1-head2)
         self.assertLess(head_diff, 0.01)

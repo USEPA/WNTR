@@ -2007,7 +2007,7 @@ class WaterNetworkModel(AbstractModel):
 class PatternRegistry(Registry):
     """A registry for patterns."""
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._pattern_reg = None
 
     class DefaultPattern(object):
@@ -2102,7 +2102,7 @@ class CurveRegistry(Registry):
         self._volume_curves = OrderedSet()
 
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._curve_reg = None
 
     def __setitem__(self, key, value):
@@ -2266,7 +2266,7 @@ class CurveRegistry(Registry):
 class SourceRegistry(Registry):
     """A registry for sources."""
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._sources = None
 
     def __delitem__(self, key):
@@ -2296,7 +2296,7 @@ class NodeRegistry(Registry):
         self._tanks = OrderedSet()
     
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._node_reg = None
     
     def __setitem__(self, key, value):
@@ -2465,13 +2465,13 @@ class NodeRegistry(Registry):
                                  str(self._curve_reg.volume_curve_names))
             vcurve = np.array(self._curve_reg[vol_curve].points)
             if min_level < vcurve[0,0]:
-                raise ValueError('The volume curve ' + vol_curve + ' has a minimum value ({0:5.2f}) \n' +
+                raise ValueError(('The volume curve ' + vol_curve + ' has a minimum value ({0:5.2f}) \n' +
                                  'greater than the minimum level for tank "' + name + '" ({1:5.2f})\n' +
-                                 'please correct the user input.'.format(vcurve[0,0],min_level))
+                                 'please correct the user input.').format(vcurve[0,0],min_level))
             elif max_level > vcurve[-1,0]:
-                raise ValueError('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
+                raise ValueError(('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
                                  'less than the maximum level for tank "' + name + '" ({1:5.2f})\n' +
-                                 'please correct the user input.'.format(vcurve[-1,0],max_level))
+                                 'please correct the user input.').format(vcurve[-1,0],max_level))
 
         tank = Tank(name, self)
         tank.elevation = elevation
@@ -2602,7 +2602,7 @@ class LinkRegistry(Registry):
         self._valves = OrderedSet()
     
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._link_reg = None
 
     def __setitem__(self, key, value):

@@ -37,7 +37,7 @@ __all__ = ["FlowUnits", "MassUnits", "QualParam", "HydParam", "to_si", "from_si"
 
 
 class FlowUnits(enum.Enum):
-    u"""Epanet Units Enum class
+    r"""Epanet Units Enum class
 
     EPANET has defined unit codes that are used in its INP input files.
     This enumerated type class provides the appropriate values, rather than
@@ -127,13 +127,16 @@ class FlowUnits(enum.Enum):
     CMD = (9, (1.0/86400.0))
     SI = (11, 1.0)
 
-    def __init__(self, EN_id, flow_factor):
-        self._value2member_map_[EN_id] = self
-        self._member_map_[self.name.lower()] = self
+    def __init__(self, EN_id, flow_factor=1.0):
+        mmap = getattr(self, '_member_map_')
+        v2mmap = getattr(self, '_value2member_map_')
+        v2mmap[EN_id] = self
+        mmap[str(self.name).lower()] = self
 
     def __int__(self):
         """Convert to an EPANET Toolkit enum number."""
-        return int(self.value[0])
+        value = super().value
+        return int(value[0])
 
     def __str__(self):
         """Convert to a string for INP files."""
@@ -141,7 +144,7 @@ class FlowUnits(enum.Enum):
 
     @property
     def factor(self):
-        """float: The conversion factor to convert units into SI units of :math:`m^3\,s^{-1}`.
+        r"""float: The conversion factor to convert units into SI units of :math:`m^3\,s^{-1}`.
 
         Letting values in the original units be :math:`v`, and the resulting values in SI units
         be :math:`s`, the conversion factor, :math:`f`, such that
@@ -150,7 +153,8 @@ class FlowUnits(enum.Enum):
             v f = s
 
         """
-        return self.value[1]
+        value = super().value
+        return value[1]
 
     @property
     def is_traditional(self):
@@ -220,7 +224,8 @@ class MassUnits(enum.Enum):
     @property
     def factor(self):
         """float : The scaling factor to convert to kg."""
-        return self.value[1]
+        value = super().value
+        return value[1]
 
 
 class QualParam(enum.Enum):
@@ -257,10 +262,11 @@ class QualParam(enum.Enum):
     WaterAge = 39
 
     def __init__(self, value):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def _to_si(self, flow_units, data, mass_units=MassUnits.mg,
               reaction_order=0):
@@ -461,10 +467,11 @@ class HydParam(enum.Enum):
     Energy = 34
 
     def __init__(self, value):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def _to_si(self, flow_units, data, darcy_weisbach=False):
         """Convert from EPANET units groups to SI units.
@@ -825,10 +832,11 @@ class StatisticsType(enum.Enum):
     Range = 4
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -853,10 +861,11 @@ class QualType(enum.Enum):
     Trace = 3
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -881,10 +890,11 @@ class SourceType(enum.Enum):
     FlowPaced = 3
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -907,10 +917,11 @@ class PressureUnits(enum.Enum):
     Meters = 2
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -933,18 +944,22 @@ class FormulaType(enum.Enum):
     CM = (2, "C-M",)
 
     def __init__(self, eid, inpcode):
-        self._value2member_map_[eid] = self
-        self._member_map_[inpcode] = self
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        v2mm = getattr(self, '_value2member_map_')
+        mmap = getattr(self, '_member_map_')
+        v2mm[eid] = self
+        mmap[inpcode] = self
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __int__(self):
-        return self.value[0]
+        value = super().value
+        return value[0]
 
     def __str__(self):
-        return self.value[1]
+        value = super().value
+        return value[1]
 
 
 class ControlType(enum.Enum):
@@ -967,10 +982,11 @@ class ControlType(enum.Enum):
     TimeOfDay = 3
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -1008,10 +1024,11 @@ class LinkTankStatus(enum.Enum):
     Emptying = 9 
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -1038,10 +1055,11 @@ class MixType(enum.Enum):
     TwoComp = 1
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
