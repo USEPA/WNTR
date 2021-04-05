@@ -170,7 +170,7 @@ plotted in a similar manner.
     
 .. doctest::
 
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
     ...    node_range=[30,55], node_colorbar_label='Pressure (m)')
 
 .. doctest::

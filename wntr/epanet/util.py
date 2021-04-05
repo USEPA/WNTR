@@ -37,7 +37,7 @@ __all__ = ["FlowUnits", "MassUnits", "QualParam", "HydParam", "to_si", "from_si"
 
 
 class FlowUnits(enum.Enum):
-    u"""Epanet Units Enum class.
+    u"""Epanet Units Enum class
 
     EPANET has defined unit codes that are used in its INP input files.
     This enumerated type class provides the appropriate values, rather than

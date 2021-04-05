@@ -1,6 +1,6 @@
 .. _whatsnew_031:
 
-v0.3.1 (dev branch)
+v0.3.1 (master branch)
 ---------------------------------------------------
 
 * The `run_sim` method for the EpanetSimulator now includes the option to define convergence error behavior.
@@ -17,7 +17,22 @@ v0.3.1 (dev branch)
  
 * Added a `convert_controls_to_rules` method on the water network model.  In some instances, mixing controls and rules has unexpected consequences.  
   By converting all controls to rules, the user can specify the priority for each rule. 
+
+* Updated the `expected_demand` and `average_expected_demand` metrics to optionally specify a demand category.  
   
+* Added a function to compute valve segment attributes from a valve layer (`valve_segment_attributes`).  This includes 
+  the number of valves surrounding each valve,
+  the increase in segment demand if a given valve is removed, and 
+  the increase in segment pipe length if a given valve is removed. 
+  
+* Added graphics options to plot valve layers and valve segment attributes (`plot_valve_layer`).
+  Removed options in `plot_network` that plot valve layers.  
+  
+* Added a function to generate a randomly ordered colormap (`random_colormap`).  Updated `custom_colormap` so that the number of bins is not an optional argument.
+
+* Changed `plot_network` to return a matplotlib axes object rather than networkx nodes and edges objects. 
+  This helps use the axes to layer additional data (such as valve segment attributes).
+
 * Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
   This is not an error.
 

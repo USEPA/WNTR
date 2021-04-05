@@ -665,6 +665,8 @@ class InpFile(object):
                     E['overflow'] = 'YES'
                     if tank.vol_curve is None:
                         E['curve'] = '*'
+            if E['initlev'] > E['maxlev']:
+                E['initlev'] = E['maxlev']
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -856,17 +858,17 @@ class InpFile(object):
                  'node2': valve.end_node_name,
                  'diam': from_si(self.flow_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
-                 'set': valve._setting,
+                 'set': valve.initial_setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
             formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = from_si(self.flow_units, valve._setting, HydParam.Pressure)
+                valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = from_si(self.flow_units, valve._setting, HydParam.Flow)
+                valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Flow)
             elif valve_type == 'TCV':
-                valve_set = valve._setting
+                valve_set = valve.initial_setting
             elif valve_type == 'GPV':
                 valve_set = valve.headloss_curve_name
                 formatter = _GPV_ENTRY
@@ -1106,38 +1108,36 @@ class InpFile(object):
     def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
-        for link_name, link in wn.links():
-            if isinstance(link, Pipe):
-                continue
-            if isinstance(link, Pump):
-                setting = link.initial_setting
+
+        # vnames = list(wn.valve_name_list)
+        # # lnames.sort()
+        # for valve_name in vnames:
+        #     valve = wn.links[valve_name]
+        #     valve_type = valve.valve_type
+
+        #     if valve.initial_status not in (LinkStatus.Opened, LinkStatus.Open, LinkStatus.Active):
+        #         f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
+        #     if valve_type in ['PRV', 'PSV', 'PBV']:
+        #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
+        #     elif valve_type == 'FCV':
+        #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Flow)
+        #     elif valve_type == 'TCV':
+        #         valve_set = valve.initial_setting
+        #     elif valve_type == 'GPV':
+        #         valve_set = None
+        #     if valve_set is not None:
+        #         f.write('{:10s} {:10.7g}\n'.format(valve_name, float(valve_set)).encode('ascii'))
+
+        pnames = list(wn.pump_name_list)
+        for pump_name in pnames:
+            pump = wn.links[pump_name]
+            if pump.initial_status in (LinkStatus.Closed,):
+                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
+            else:
+                setting = pump.initial_setting
                 if type(setting) is float and setting != 1.0:
-                    f.write('{:10s} {:10.10g}\n'.format(link_name,
-                            setting).encode('ascii'))
-            if link.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.initial_status).name).encode('ascii'))
-            if isinstance(link, wntr.network.Valve) and link.initial_status in (LinkStatus.Open, LinkStatus.Opened):
-#           if link.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.initial_status).name).encode('ascii'))
-#                if link.initial_status is LinkStatus.Active:
-#                    valve_type = link.valve_type
-#                    if valve_type in ['PRV', 'PSV', 'PBV']:
-#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Pressure)
-#                    elif valve_type == 'FCV':
-#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Flow)
-#                    elif valve_type == 'TCV':
-#                        setting = link.initial_setting
-#                    else:
-#                        continue
-#                    continue
-#                elif isinstance(link, wntr.network.Pump):
-#                    setting = link.initial_setting
-#                else: continue
-#                f.write('{:10s} {:10.10g}\n'.format(link_name,
-#                        setting).encode('ascii'))
-#        f.write('\n'.encode('ascii'))
+                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
         control_count = 0
@@ -1738,7 +1738,7 @@ class InpFile(object):
                     required_pressure = to_si(self.flow_units, float(words[2]), HydParam.Pressure)
                     opts.hydraulic.required_pressure = required_pressure
                 elif key == 'PRESSURE':
-                    opts.hydraulic.pressure_exponenet = float(words[2])
+                    opts.hydraulic.pressure_exponent = float(words[2])
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
@@ -1932,7 +1932,6 @@ class InpFile(object):
 
         hrs, mm, sec = time.seconds_to_tuple(time.rule_timestep)
 
-        ### TODO: RULE TIMESTEP is not written?!
         f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(entry.format('STATISTIC', wn.options.time.statistic).encode('ascii'))
         f.write('\n'.encode('ascii'))

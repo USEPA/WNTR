@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _disaster:
+
 Disaster scenarios
 ======================================
 
@@ -83,7 +85,7 @@ The earthquake properties can be plotted on the network using the following exam
     
 .. doctest::
 
-    >>> nodes, edges = wntr.graphics.plot_network(wn, link_attribute=pga, node_size=4,
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=pga, node_size=4,
     ...     link_width=2, link_colorbar_label='PGA (g)')
 
 .. doctest::

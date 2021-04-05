@@ -57,7 +57,6 @@ min_det_time.rename(columns = {'Min':'Impact'}, inplace = True)
 #   The impact for undetected scenarios is set at 1.5x the max sample time
 #   Sensor cost is defined uniformly using a value of 1.  This means that
 #   sensor_budget is equal to the number of sensors to place
-impactform = chama.optimize.ImpactFormulation()
 scenario_characteristics = pd.DataFrame({'Scenario': scenario_names,
                                          'Undetected Impact': sample_times.max()*1.5})
 sensor_characteristics = pd.DataFrame({'Sensor': sensor_names,'Cost': 1})
@@ -65,7 +64,6 @@ sensor_budget = [0,1,2,3,4,5]
 results = {}
 for n in sensor_budget:
     impactform = chama.optimize.ImpactFormulation()
-    coveragform = chama.optimize.CoverageFormulation()
     results[n] = impactform.solve(min_det_time, sensor_characteristics, 
                                   scenario_characteristics, n)
 
