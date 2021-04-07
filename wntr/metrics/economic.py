@@ -299,11 +299,12 @@ def pump_energy(flowrate, head, wn):
             efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in time]
         else:
             raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
-            curve = wn.get_curve(pump.efficiency)
-            x = [point[0] for point in curve.points]
-            y = [point[1]/100.0 for point in curve.points]
-            interp = scipy.interpolate.interp1d(x, y, kind='linear')
-            efficiency_dict[pump_name] = interp(np.array(flowrate.loc[:, pump_name]))
+            # TODO: WNTR does not support pump efficiency curves yet
+            # curve = wn.get_curve(pump.efficiency)
+            # x = [point[0] for point in curve.points]
+            # y = [point[1]/100.0 for point in curve.points]
+            # interp = scipy.interpolate.interp1d(x, y, kind='linear')
+            # efficiency_dict[pump_name] = interp(np.array(flowrate.loc[:, pump_name]))
 
     efficiency = pd.DataFrame(data=efficiency_dict, index=time, columns=pumps)
 

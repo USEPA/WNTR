@@ -115,28 +115,28 @@ class Test_Reset_Conditions(unittest.TestCase):
         wn.options.time.duration = 100*3600
         results2 = sim.run_sim(reset_intial_conditions=True)
         results2.node['pressure'].plot(ax=ax, title='WNTRsim_reset2')
+    
+    # def test_both_continue(self):
+        
+    #     plt.figure()
+    #     ax = plt.gca()
+        
+    #     wn = wntr.network.WaterNetworkModel(self.inp_file)
 
-    def test_both_continue(self):
+    #     sim = wntr.sim.WNTRSimulator(wn)
+    #     wn.options.time.duration = 12*3600
+    #     results1 = sim.run_sim(reset_intial_conditions=False)
+    #     results1.node['pressure'].plot(ax=ax)
         
-        plt.figure()
-        ax = plt.gca()
+    #     sim = wntr.sim.EpanetSimulator(wn)
+    #     wn.options.time.duration = 56*3600
+    #     results2 = sim.run_sim(reset_intial_conditions=False)
+    #     results2.node['pressure'].plot(ax=ax)
         
-        wn = wntr.network.WaterNetworkModel(self.inp_file)
-
-        sim = wntr.sim.WNTRSimulator(wn)
-        wn.options.time.duration = 12*3600
-        results1 = sim.run_sim(reset_intial_conditions=False)
-        results1.node['pressure'].plot(ax=ax)
-        
-        sim = wntr.sim.EpanetSimulator(wn)
-        wn.options.time.duration = 56*3600
-        results2 = sim.run_sim(reset_intial_conditions=False)
-        results2.node['pressure'].plot(ax=ax)
-        
-        sim = wntr.sim.WNTRSimulator(wn)
-        wn.options.time.duration = 100*3600
-        results3 = sim.run_sim(reset_intial_conditions=False)
-        results3.node['pressure'].plot(ax=ax, title='Switch_combo')
+    #     sim = wntr.sim.WNTRSimulator(wn)
+    #     wn.options.time.duration = 100*3600
+    #     results3 = sim.run_sim(reset_intial_conditions=False)
+    #     results3.node['pressure'].plot(ax=ax, title='Switch_combo')
 
 
 if __name__ == "__main__":
