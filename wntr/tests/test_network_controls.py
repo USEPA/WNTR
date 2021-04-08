@@ -249,7 +249,7 @@ class TestTankControls(unittest.TestCase):
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
 
-    def SKIP_test_reopen_pipe_after_tank_fills_back_up(self):
+    def test_reopen_pipe_after_tank_fills_back_up(self):
         """
         inp_file = join(test_datadir, 'tank_controls_2.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -273,6 +273,7 @@ class TestTankControls(unittest.TestCase):
         self.assertEqual(tank_level_dropped_flag, True)
         self.assertEqual(tank_refilled_flag, True)
         """
+        raise unittest.SkipTest
         self.assertEqual(True, False)
 
 

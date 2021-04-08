@@ -13,7 +13,7 @@ class TestEpanetUnits(unittest.TestCase):
         data_expected = 1  # kg/m3
         data = 1000  # mg/L
         for flowunit in range(10):
-            self.execute_test_qual(typestring, flowunit, data, data_expected)
+            self.execute_check_qual(typestring, flowunit, data, data_expected)
 
     def test_Demand(self):
         data_expected = 1.0  # m/s
@@ -39,7 +39,7 @@ class TestEpanetUnits(unittest.TestCase):
                     data = 3600.0  # m3/h
                 elif flowunit == 9:
                     data = 86400.0  # m3/d
-                self.execute_test(typestring, flowunit, data, data_expected)
+                self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_emitter_coefficient(self):
         pass
@@ -52,7 +52,7 @@ class TestEpanetUnits(unittest.TestCase):
                 data = 39.3701  # in
             elif flowunit in [5, 6, 7, 8, 9]:
                 data = 1000  # mm
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Length(self):
         data_expected = 1.0  # m
@@ -62,7 +62,7 @@ class TestEpanetUnits(unittest.TestCase):
                     data = 3.28084  # ft
                 elif flowunit in [5, 6, 7, 8, 9]:
                     data = 1  # m
-                self.execute_test(typestring, flowunit, data, data_expected)
+                self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Velocity(self):
         typestring = "Velocity"
@@ -72,19 +72,19 @@ class TestEpanetUnits(unittest.TestCase):
                 data = 3.28084  # ft/s
             elif flowunit in [5, 6, 7, 8, 9]:
                 data = 1  # m/s
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
         # test list
         data = np.array([10, 20, 30])  # ft/s
         data_expected = [3.048, 6.096, 9.144]  # m/s
-        self.execute_test_list(typestring, 1, data, data_expected)
+        self.execute_check_list(typestring, 1, data, data_expected)
 
     def test_Energy(self):
         typestring = "Energy"
         data_expected = 1000000  # J
         data = 0.277777777778  # kW*hr
         for flowunit in range(10):
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Power(self):
         typestring = "Power"
@@ -94,7 +94,7 @@ class TestEpanetUnits(unittest.TestCase):
                 data = 1.34102209  # hp
             elif flowunit in [5, 6, 7, 8, 9]:
                 data = 1  # kW
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Pressure(self):
         typestring = "Pressure"
@@ -104,14 +104,14 @@ class TestEpanetUnits(unittest.TestCase):
                 data = 1.421970206324753  # psi
             elif flowunit in [5, 6, 7, 8, 9]:
                 data = 1  # m
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Source_Mass_Injection(self):
         typestring = "SourceMassInject"
         data_expected = 1  # kg/s
         data = 6.0e7  # mg/min
         for flowunit in range(10):
-            self.execute_test_qual(typestring, flowunit, data, data_expected)
+            self.execute_check_qual(typestring, flowunit, data, data_expected)
 
     def test_Volume(self):
         typestring = "Volume"
@@ -121,16 +121,16 @@ class TestEpanetUnits(unittest.TestCase):
                 data = 35.3147  # ft3
             elif flowunit in [5, 6, 7, 8, 9]:
                 data = 1  # m3
-            self.execute_test(typestring, flowunit, data, data_expected)
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Water_Age(self):
         typestring = "WaterAge"
         data_expected = 1  # s
         data = 0.000277778  # hr
         for flowunit in range(10):
-            self.execute_test_qual(typestring, flowunit, data, data_expected)
+            self.execute_check_qual(typestring, flowunit, data, data_expected)
 
-    def execute_test(self, typestring, flowunit, data, data_expected):
+    def execute_check(self, typestring, flowunit, data, data_expected):
         #    data_convert = wntr.utils.convert(typestring, flowunit, data)
         data_convert = wntr.epanet.util.HydParam[typestring]._to_si(
             wntr.epanet.util.FlowUnits(flowunit), data
@@ -143,7 +143,7 @@ class TestEpanetUnits(unittest.TestCase):
         )
         self.assertLess(abs((data_convert - data) / data), 0.001)
 
-    def execute_test_list(self, typestring, flowunit, data, data_expected):
+    def execute_check_list(self, typestring, flowunit, data, data_expected):
         #    data_convert = wntr.utils.convert(typestring, flowunit, data)
         data_convert = wntr.epanet.util.HydParam[typestring]._to_si(
             wntr.epanet.util.FlowUnits(flowunit), data
@@ -151,7 +151,7 @@ class TestEpanetUnits(unittest.TestCase):
         data_convert = [round(k, 3) for k in data_convert]
         self.assertListEqual(data_convert, data_expected)
 
-    def execute_test_qual(self, typestring, flowunit, data, data_expected):
+    def execute_check_qual(self, typestring, flowunit, data, data_expected):
         #    data_convert = wntr.utils.convert(typestring, flowunit, data)
         data_convert = wntr.epanet.util.QualParam[typestring]._to_si(
             wntr.epanet.util.FlowUnits(flowunit), data
@@ -164,7 +164,7 @@ class TestEpanetUnits(unittest.TestCase):
         )
         self.assertLess(abs((data_convert - data) / data), 0.001)
 
-    def execute_test_qual_list(self, typestring, flowunit, data, data_expected):
+    def execute_check_qual_list(self, typestring, flowunit, data, data_expected):
         #    data_convert = wntr.utils.convert(typestring, flowunit, data)
         data_convert = wntr.epanet.util.QualParam[typestring]._to_si(
             wntr.epanet.util.FlowUnits(flowunit), data
