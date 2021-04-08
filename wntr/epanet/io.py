@@ -15,32 +15,37 @@ The wntr.epanet.io module contains methods for reading/writing EPANET input and 
 from __future__ import absolute_import
 
 import datetime
-import re
-import io
-import os, sys
-import logging
-import six
-import warnings
-import numpy as np
-import pandas as pd
 import difflib
+import io
+import logging
+import os
+import re
+import sys
+import warnings
 from collections import OrderedDict
 
-#from .time_utils import run_lineprofile
-
+import numpy as np
+import pandas as pd
+import six
 import wntr
 import wntr.network
 from wntr.network.base import Link
-from wntr.network.model import WaterNetworkModel
-from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.network.controls import (AndCondition, Comparison, Control,
+                                   ControlAction, OrCondition, Rule,
+                                   SimTimeCondition, TimeOfDayCondition,
+                                   ValueCondition, _ControlType)
+from wntr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
+from wntr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
+                                WaterNetworkModel)
 from wntr.network.options import Options
-from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
-from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
 
-from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
-from .util import to_si, from_si
-from .util import StatisticsType, QualType, PressureUnits
+from .util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
+                   QualParam, QualType, ResultType, StatisticsType, from_si,
+                   to_si)
+
+#from .time_utils import run_lineprofile
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +103,10 @@ def _is_number(s):
     ----------
     s : anything
 
+    Returns
+    -------
+    bool
+        Input is a number
     """
 
     try:
@@ -161,7 +170,8 @@ def _clock_time_to_sec(s, am_pm):
 
     Returns
     -------
-    Integer value of time in seconds
+    int
+        Integer value of time in seconds
 
     """
     if am_pm.upper() == 'AM':
@@ -240,13 +250,15 @@ class InpFile(object):
 
     def read(self, inp_files, wn=None):
         """
-        Method to read an EPANET INP file and load data into a water network model object.
+        Read an EPANET INP file and load data into a water network model object.
         Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
 
         Parameters
         ----------
         inp_files : str or list
             An EPANET INP input file or list of INP files to be combined
+        wn : WaterNetworkModel, optional
+            An optional network model to append onto; by default a new model is created.
 
         Returns
         -------
@@ -2497,7 +2509,7 @@ class _EpanetRule(object):
 
 class BinFile(object):
     """
-    EPANET binary output file reader class.
+    EPANET binary output file reader.
     
     This class provides read functionality for EPANET binary output files.
     
@@ -2505,7 +2517,7 @@ class BinFile(object):
     ----------
     results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
         This parameter is *only* active when using a subclass of the BinFile that implements
-	a custom reader or writer.
+	    a custom reader or writer.
         If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
         Otherwise, a list of result types can be passed to limit the memory used.
     network : bool, default=False

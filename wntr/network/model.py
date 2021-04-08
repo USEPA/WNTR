@@ -2805,7 +2805,7 @@ class LinkRegistry(Registry):
         start_node = self._node_reg[start_node_name]
         end_node = self._node_reg[end_node_name]
         if type(start_node)==Tank or type(end_node)==Tank:
-            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+            logger.warning('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
         valve_type = valve_type.upper()
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)

@@ -1,7 +1,8 @@
-import wntr.sim.aml as aml
 import unittest
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+import wntr.sim.aml as aml
 
 
 def compare_evaluation(self, m, true_r, true_j):
@@ -71,8 +72,8 @@ class TestExpression(unittest.TestCase):
         expr = m.x / m.y
         self.assertAlmostEqual(expr.evaluate(), x / y, 10)
         ders = expr.reverse_ad()
-        self.assertAlmostEqual(ders[m.x], 1/y, 10)
-        self.assertAlmostEqual(ders[m.y], -x/y**2, 10)
+        self.assertAlmostEqual(ders[m.x], 1 / y, 10)
+        self.assertAlmostEqual(ders[m.y], -x / y ** 2, 10)
 
     def test_power(self):
         m = aml.Model()
@@ -81,11 +82,11 @@ class TestExpression(unittest.TestCase):
         m.x = aml.Var(x)
         m.y = aml.Var(y)
 
-        expr = m.x**(m.y)
+        expr = m.x ** (m.y)
         self.assertAlmostEqual(expr.evaluate(), x ** y, 10)
         ders = expr.reverse_ad()
-        self.assertAlmostEqual(ders[m.x], y*x**(y-1), 10)
-        self.assertAlmostEqual(ders[m.y], x**y * np.log(x), 10)
+        self.assertAlmostEqual(ders[m.x], y * x ** (y - 1), 10)
+        self.assertAlmostEqual(ders[m.y], x ** y * np.log(x), 10)
 
     def test_exp(self):
         m = aml.Model()
@@ -103,17 +104,20 @@ class TestExpression(unittest.TestCase):
 
         expr = aml.log(m.x)
         self.assertAlmostEqual(aml.value(expr), np.log(x), 10)
-        self.assertAlmostEqual(expr.reverse_ad()[m.x], 1/x, 10)
+        self.assertAlmostEqual(expr.reverse_ad()[m.x], 1 / x, 10)
 
     def test_chain_rule(self):
         m = aml.Model()
         x = 1.1
         m.x = aml.Var(x)
 
-        expr = aml.exp((m.x + m.x**0.5)**2) - m.x
+        expr = aml.exp((m.x + m.x ** 0.5) ** 2) - m.x
 
-        actual_deriv = np.exp((x + x**0.5)**2)*2*(x + x**0.5)*(1 + 0.5*x**(-0.5)) - 1
-        self.assertAlmostEqual(aml.value(expr), np.exp((x + x**0.5)**2) - x, 10)
+        actual_deriv = (
+            np.exp((x + x ** 0.5) ** 2) * 2 * (x + x ** 0.5) * (1 + 0.5 * x ** (-0.5))
+            - 1
+        )
+        self.assertAlmostEqual(aml.value(expr), np.exp((x + x ** 0.5) ** 2) - x, 10)
         self.assertAlmostEqual(expr.reverse_ad()[m.x], actual_deriv, 10)
 
 
@@ -163,21 +167,25 @@ class TestConstraint(unittest.TestCase):
         m.y = aml.Var(y)
 
         e = aml.ConditionalExpression()
-        e.add_condition(aml.inequality(body=m.x, ub=-1), -(-m.x)**1.852 - (-m.x)**2 - m.y)
+        e.add_condition(
+            aml.inequality(body=m.x, ub=-1), -((-m.x) ** 1.852) - (-m.x) ** 2 - m.y
+        )
         e.add_condition(aml.inequality(body=m.x, ub=1), m.x)
-        e.add_final_expr(m.x**1.852 + m.x**2 - m.y)
+        e.add_final_expr(m.x ** 1.852 + m.x ** 2 - m.y)
         m.con1 = aml.Constraint(e)
 
         e = aml.ConditionalExpression()
-        e.add_condition(aml.inequality(body=m.y, ub=-1), -(-m.y)**(1.852) - (-m.y)**(2) - m.x)
+        e.add_condition(
+            aml.inequality(body=m.y, ub=-1), -((-m.y) ** (1.852)) - (-m.y) ** (2) - m.x
+        )
         e.add_condition(aml.inequality(body=m.y, ub=1), m.y)
-        e.add_final_expr(m.y**(1.852) + m.y**(2) - m.x)
+        e.add_final_expr(m.y ** (1.852) + m.y ** (2) - m.x)
         m.con2 = aml.Constraint(e)
 
         true_con_values = OrderedDict()
         true_jac = OrderedDict()
-        true_con_values[m.con1] = -(abs(x)**1.852 + abs(x)**2) - y
-        true_con_values[m.con2] = -(abs(y)**1.852 + abs(y)**2) - x
+        true_con_values[m.con1] = -(abs(x) ** 1.852 + abs(x) ** 2) - y
+        true_con_values[m.con2] = -(abs(y) ** 1.852 + abs(y) ** 2) - x
         true_jac[m.con1] = OrderedDict()
         true_jac[m.con2] = OrderedDict()
         true_jac[m.con1][m.x] = 1.852 * abs(x) ** 0.852 + 2 * abs(x)
@@ -202,8 +210,8 @@ class TestConstraint(unittest.TestCase):
         y = 3.7
         m.x.value = x
         m.y.value = y
-        true_con_values[m.con1] = x**1.852 + x**2 - y
-        true_con_values[m.con2] = y**1.852 + y**2 - x
+        true_con_values[m.con1] = x ** 1.852 + x ** 2 - y
+        true_con_values[m.con2] = y ** 1.852 + y ** 2 - x
         true_jac[m.con1][m.x] = 1.852 * x ** 0.852 + 2 * x
         true_jac[m.con1][m.y] = -1
         true_jac[m.con2][m.x] = -1
@@ -214,9 +222,11 @@ class TestConstraint(unittest.TestCase):
         del true_jac[m.con2]
         del m.con2
         e = aml.ConditionalExpression()
-        e.add_condition(aml.inequality(body=m.y, ub=-1), -(-m.y)**2.852 - (-m.y)**3 - m.x)
-        e.add_condition(aml.inequality(body=m.y, ub=1), m.y**2)
-        e.add_final_expr(m.y**2.852 + m.y**3 - m.x)
+        e.add_condition(
+            aml.inequality(body=m.y, ub=-1), -((-m.y) ** 2.852) - (-m.y) ** 3 - m.x
+        )
+        e.add_condition(aml.inequality(body=m.y, ub=1), m.y ** 2)
+        e.add_final_expr(m.y ** 2.852 + m.y ** 3 - m.x)
         m.con2 = aml.Constraint(e)
 
         true_jac[m.con2] = OrderedDict()
@@ -224,8 +234,8 @@ class TestConstraint(unittest.TestCase):
         y = -3.7
         m.x.value = x
         m.y.value = y
-        true_con_values[m.con1] = -(abs(x)**1.852 + abs(x)**2) - y
-        true_con_values[m.con2] = -(abs(y)**2.852 + abs(y)**3) - x
+        true_con_values[m.con1] = -(abs(x) ** 1.852 + abs(x) ** 2) - y
+        true_con_values[m.con2] = -(abs(y) ** 2.852 + abs(y) ** 3) - x
         true_jac[m.con1][m.x] = 1.852 * abs(x) ** 0.852 + 2 * abs(x)
         true_jac[m.con1][m.y] = -1
         true_jac[m.con2][m.x] = -1
@@ -237,19 +247,19 @@ class TestConstraint(unittest.TestCase):
         m.x.value = x
         m.y.value = y
         true_con_values[m.con1] = x
-        true_con_values[m.con2] = y**2
+        true_con_values[m.con2] = y ** 2
         true_jac[m.con1][m.x] = 1
         true_jac[m.con1][m.y] = 0
         true_jac[m.con2][m.x] = 0
-        true_jac[m.con2][m.y] = 2*y
+        true_jac[m.con2][m.y] = 2 * y
         compare_evaluation(self, m, true_con_values, true_jac)
 
         x = 4.5
         y = 3.7
         m.x.value = x
         m.y.value = y
-        true_con_values[m.con1] = x**1.852 + x**2 - y
-        true_con_values[m.con2] = y**2.852 + y**3 - x
+        true_con_values[m.con1] = x ** 1.852 + x ** 2 - y
+        true_con_values[m.con2] = y ** 2.852 + y ** 3 - x
         true_jac[m.con1][m.x] = 1.852 * x ** 0.852 + 2 * x
         true_jac[m.con1][m.y] = -1
         true_jac[m.con2][m.x] = -1
@@ -266,7 +276,7 @@ class TestCSRJacobian(unittest.TestCase):
         m.v = aml.Var(10.0)
         m.c1 = aml.Constraint(m.x + m.y)
         m.c2 = aml.Constraint(m.x * m.y * m.v)
-        m.c3 = aml.Constraint(m.z**3.0)
+        m.c3 = aml.Constraint(m.z ** 3.0)
         m.c4 = aml.Constraint(m.x + 1.0 / m.v)
         m.set_structure()
         con_values = m.evaluate_residuals()
@@ -344,5 +354,5 @@ class TestExceptions(unittest.TestCase):
         self.assertEqual(len(x), 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
