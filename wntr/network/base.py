@@ -730,10 +730,11 @@ class NodeType(enum.IntEnum):
     Tank = 2  #: node is a tank
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -776,10 +777,11 @@ class LinkType(enum.IntEnum):
     Valve = 9  #: a valve of any type
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
@@ -816,10 +818,11 @@ class LinkStatus(enum.IntEnum):
     CV = 3  #: pipe has a check valve
 
     def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
+        mmap = getattr(self, '_member_map_')
+        if self.name != str(self.name).upper():
+            mmap[str(self.name).upper()] = self
+        if self.name != str(self.name).lower():
+            mmap[str(self.name).lower()] = self
 
     def __str__(self):
         return self.name
