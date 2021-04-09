@@ -100,16 +100,16 @@ class TestNetworkTimeBehavior(unittest.TestCase):
     def test_pattern_timestep(self):
         results = self.results
         for t in results.node['demand'].index:
-            self.assertEqual(results.node['demand'].at[t, 'junction1'], 1.0)
+            self.assertEqual(results.node['demand'].loc[t, 'junction1'], 1.0)
             total_seconds = t
             if (total_seconds/3900.0)%8 == 0.0 or ((total_seconds/3900.0)-1)%8 == 0.0:
-                self.assertEqual(results.node['demand'].at[t, 'junction2'], 0.5)
+                self.assertEqual(results.node['demand'].loc[t, 'junction2'], 0.5)
             elif (total_seconds/3900.0)%8 == 2.0 or ((total_seconds/3900.0)-1)%8 == 2.0:
-                self.assertEqual(results.node['demand'].at[t, 'junction2'], 1.0)
+                self.assertEqual(results.node['demand'].loc[t, 'junction2'], 1.0)
             elif (total_seconds/3900.0)%8 == 4.0 or ((total_seconds/3900.0)-1)%8 == 4.0:
-                self.assertEqual(results.node['demand'].at[t, 'junction2'], 1.5)
+                self.assertEqual(results.node['demand'].loc[t, 'junction2'], 1.5)
             elif (total_seconds/3900.0)%8 == 6.0 or ((total_seconds/3900.0)-1)%8 == 6.0:
-                self.assertEqual(results.node['demand'].at[t, 'junction2'], 1.0)
+                self.assertEqual(results.node['demand'].loc[t, 'junction2'], 1.0)
 
 if __name__ == '__main__':
     unittest.main()

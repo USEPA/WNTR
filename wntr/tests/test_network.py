@@ -861,8 +861,8 @@ def test_convert_controls_to_rules():
     
     for node_name, node in wn.nodes():
         for t in results1.node['pressure'].index:
-            assert_less(abs(results1.node['pressure'].at[t,node_name] - 
-                            results2.node['pressure'].at[t,node_name]), 0.001)
+            assert_less(abs(results1.node['pressure'].loc[t,node_name] - 
+                            results2.node['pressure'].loc[t,node_name]), 0.001)
     
 
 

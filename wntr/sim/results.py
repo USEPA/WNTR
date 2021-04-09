@@ -135,6 +135,7 @@ class SimulationResults(object):
         return new
 
     def _adjust_time(self, ts):
+        ts = int(ts)
         for key in self.link.keys():
             self.link[key].index += ts
         for key in self.node.keys():
