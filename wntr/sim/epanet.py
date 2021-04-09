@@ -158,11 +158,6 @@ class EpanetSimulator(WaterNetworkSimulator):
             del stop_criteria['_link_index']
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
-        
-        if reset_intial_conditions:
-            pass
-        else:
-            self._wn._reset_final_conditions(results)
-            
+        results._adjust_time(self._wn.options.time.pattern_start)
         return results
 
