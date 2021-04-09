@@ -328,9 +328,12 @@ class QualParam(enum.Enum):
             mass_units = MassUnits.mg
 
         # Do conversions
-        if self in [QualParam.Concentration, QualParam.Quality, QualParam.LinkQuality]:
+        if self in [QualParam.Concentration, QualParam.Quality, 
+                    QualParam.LinkQuality, QualParam.ReactionRate]:
             data = data * (mass_units.factor / 0.001)  # MASS /L to kg/m3
-
+            if self in [QualParam.ReactionRate]:
+                data = data / (24*3600)  # 1/day to 1/s
+            
         elif self in [QualParam.SourceMassInject]:
             data = data * (mass_units.factor / 60.0)  # MASS /min to kg/s
 
@@ -392,9 +395,12 @@ class QualParam(enum.Enum):
             data = np.array(data)
 
         # Do conversions
-        if self in [QualParam.Concentration, QualParam.Quality, QualParam.LinkQuality]:
+        if self in [QualParam.Concentration, QualParam.Quality, 
+                    QualParam.LinkQuality, QualParam.ReactionRate]:
             data = data / (mass_units.factor / 0.001)  # MASS /L fr kg/m3
-
+            if self in [QualParam.ReactionRate]:
+                data = data * (24*3600)  # 1/day fr 1/s
+                
         elif self in [QualParam.SourceMassInject]:
             data = data / (mass_units.factor / 60.0)  # MASS /min fr kg/s
 
@@ -557,9 +563,14 @@ class HydParam(enum.Enum):
             HydParam.Elevation,
             HydParam.HydraulicHead,
             HydParam.Length,
-        ]:  # , HydParam.HeadLoss]:
+            HydParam.HeadLoss]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft to m
+            if self in [HydParam.HeadLoss]: # unitless in SI
+                if flow_units.is_traditional:
+                    data = data * (1000 / 0.3048) # 1/1000 ft to to 1/m
+                else:
+                    data = data * 1000 # 1/1000 m to 1/m
 
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:
@@ -647,9 +658,14 @@ class HydParam(enum.Enum):
             HydParam.Elevation,
             HydParam.HydraulicHead,
             HydParam.Length,
-        ]:  # , HydParam.HeadLoss]:
+            HydParam.HeadLoss]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft from m
+            if self in [HydParam.HeadLoss]: # unitless in SI
+                if flow_units.is_traditional:
+                    data = data / (1000 / 0.3048) # 1/1000 ft from to 1/m
+                else:
+                    data = data / 1000 # 1/1000 m from to 1/m
 
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:

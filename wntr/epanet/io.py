@@ -2585,71 +2585,6 @@ class BinFile(object):
         s -= m*60
         s = int(s)
         return '{:02}:{:02}:{:02}'.format(h, m, s)
-    
-    def setup_ep_results(self, times, nodes, links, result_types=None):
-        """Set up the results object (or file, etc.) for save_ep_line() calls to use.
-
-        The basic implementation sets up a dictionary of pandas DataFrames with the keys
-        being member names of the ResultsType class. If the items parameter is left blank,
-        the function will use the items that were specified during object creation.
-        If this too was blank, then all results parameters will be saved.
-
-        """
-        if result_types is None:
-            result_types = self.items
-        for member in result_types:
-            if member.is_node:
-                self.results.node[member.name] = pd.DataFrame(index=times, columns=nodes)
-            elif member.is_link:
-                self.results.link[member.name] = pd.DataFrame(index=times, columns=links)
-            else:
-                pass
-        self.results.network_name = self.inp_file
-
-    def save_ep_line(self, period, result_type, values):
-        """
-        Save an extended period set of values.
-
-        Each report period contains all the hydraulics and quality values for
-        the nodes and links. Nodes and link values are provided in the same
-        order as the names are specified in the prolog.
-
-        The result types for node data are: :attr:`ResultType.demand`, :attr:`ResultType.head`,
-        :attr:`ResultType.pressure` and :attr:`ResultType.quality`.
-
-        The result types for link data are: :attr:`ResultType.linkquality`,
-        :attr:`ResultType.flowrate`, and :attr:`ResultType.velocity`.
-
-        Parameters
-        ----------
-        period : int
-            The report period
-        result_type : str
-            One of the type strings listed above
-        values : numpy.array
-            The values to save, in the node or link order specified earlier in the file
-
-        """
-        if result_type in [ResultType.quality, ResultType.linkquality]:
-            if self.quality_type is QualType.Chem:
-                values = QualParam.Concentration._to_si(self.flow_units, values, mass_units=self.mass_units)
-            elif self.quality_type is QualType.Age:
-                values = QualParam.WaterAge._to_si(self.flow_units, values)
-        elif result_type == ResultType.demand:
-            values = HydParam.Demand._to_si(self.flow_units, values)
-        elif result_type == ResultType.flowrate:
-            values = HydParam.Flow._to_si(self.flow_units, values)
-        elif result_type == ResultType.head:
-            values = HydParam.HydraulicHead._to_si(self.flow_units, values)
-        elif result_type == ResultType.pressure:
-            values = HydParam.Pressure._to_si(self.flow_units, values)
-        elif result_type == ResultType.velocity:
-            values = HydParam.Velocity._to_si(self.flow_units, values)
-        if result_type in self.items:
-            if result_type.is_node:
-                self.results.node[result_type.name].iloc[period] = values
-            else:
-                self.results.link[result_type.name].iloc[period] = values
 
     def save_network_desc_line(self, element, values):
         """Save network description meta-data and element characteristics.
@@ -2703,7 +2638,7 @@ class BinFile(object):
         pass
 
 #    @run_lineprofile()
-    def read(self, filename, convergence_error=False, custom_handlers=False):
+    def read(self, filename, convergence_error=False, darcy_weisbach=False):
         """Read a binary file and create a results object.
 
         Parameters
@@ -2715,22 +2650,11 @@ class BinFile(object):
             simulation does not converge. If convergence_error is False, partial results are returned, 
             a warning will be issued, and results.error_code will be set to 0
             if the simulation does not converge.  Default = False.
-        custom_handlers : bool, optional
-            If true, then the the custom, by-line handlers will be used. (:func:`~save_ep_line`, 
-            :func:`~setup_ep_results`, :func:`~finalize_save`, etc.) Otherwise read will use
-            a faster, all-at-once reader that reads all results.
 
         Returns
         -------
         object
-            returns a WaterNetworkResults object
-
-        .. note:: Overloading
-            This function should **not** be overloaded. Instead, overload the other functions
-            to change how it saves the results. Specifically, overload :func:`~setup_ep_results`,
-            :func:`~save_ep_line` and :func:`~finalize_save` to change how extended period
-            simulation results in a different format (such as directly to a file or database).
-            
+            returns a WaterNetworkResults object    
         """
         self.results = wntr.sim.SimulationResults()
         
@@ -2876,116 +2800,86 @@ class BinFile(object):
             self.save_network_desc_line('link_start', pd.Series(data=names[linkstart-1], index=linknames, copy=True))
             self.save_network_desc_line('link_end', pd.Series(data=names[linkend-1], index=linknames, copy=True))
             """
-            if custom_handlers is True:  
-                logger.debug('... set up results object ...')
-                self.setup_ep_results(reporttimes, nodenames, linknames)
-    
-                for ts in range(nrptsteps):
-                    try:
-                        demand = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
-                        head = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
-                        pressure = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
-                        quality = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
-                        flow = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        velocity = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        headloss = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        linkquality = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        linkstatus = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        linksetting = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        reactionrate = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        frictionfactor = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-                        self.save_ep_line(ts, ResultType.demand, demand)
-                        self.save_ep_line(ts, ResultType.head, head)
-                        self.save_ep_line(ts, ResultType.pressure, pressure)
-                        self.save_ep_line(ts, ResultType.quality, quality)
-                        self.save_ep_line(ts, ResultType.flowrate, flow)
-                        self.save_ep_line(ts, ResultType.velocity, velocity)
-                        self.save_ep_line(ts, ResultType.headloss, headloss)
-                        self.save_ep_line(ts, ResultType.linkquality, linkquality)
-                        self.save_ep_line(ts, ResultType.status, linkstatus)
-                        self.save_ep_line(ts, ResultType.setting, linksetting)
-                        self.save_ep_line(ts, ResultType.rxnrate, reactionrate)
-                        self.save_ep_line(ts, ResultType.frictionfact, frictionfactor)
-                    except Exception as e:
-                        logger.exception('Error reading or writing EP line: %s', e)
-                        logger.warning('Missing results from report period %d',ts)
-            else:
-#                type_list = 4*nnodes*['node'] + 8*nlinks*['link']
-                name_list = nodenames*4 + linknames*8
-                valuetype = nnodes*['demand']+nnodes*['head']+nnodes*['pressure']+nnodes*['quality'] + nlinks*['flow']+nlinks*['velocity']+nlinks*['headloss']+nlinks*['linkquality']+nlinks*['linkstatus']+nlinks*['linksetting']+nlinks*['reactionrate']+nlinks*['frictionfactor']
-                
-#                tuples = zip(type_list, valuetype, name_list)
-                tuples = list(zip(valuetype, name_list))
+            
+#           type_list = 4*nnodes*['node'] + 8*nlinks*['link']
+            name_list = nodenames*4 + linknames*8
+            valuetype = nnodes*['demand']+nnodes*['head']+nnodes*['pressure']+nnodes*['quality'] + nlinks*['flow']+nlinks*['velocity']+nlinks*['headloss']+nlinks*['linkquality']+nlinks*['linkstatus']+nlinks*['linksetting']+nlinks*['reactionrate']+nlinks*['frictionfactor']
+            
+#           tuples = zip(type_list, valuetype, name_list)
+            tuples = list(zip(valuetype, name_list))
 #                tuples = [(valuetype[i], v) for i, v in enumerate(name_list)]
-                index = pd.MultiIndex.from_tuples(tuples, names=['value','name'])      
+            index = pd.MultiIndex.from_tuples(tuples, names=['value','name'])      
+            
+            try:
+                data = np.fromfile(fin, dtype = np.dtype(ftype), count = (4*nnodes+8*nlinks)*nrptsteps)
+            except Exception as e:
+                logger.exception('Failed to process file: %s', e)
                 
-                try:
-                    data = np.fromfile(fin, dtype = np.dtype(ftype), count = (4*nnodes+8*nlinks)*nrptsteps)
-                except Exception as e:
-                    logger.exception('Failed to process file: %s', e)
-                    
-                N = int(np.floor(len(data)/(4*nnodes+8*nlinks)))
-                if N < nrptsteps:
-                    t = reporttimes[N]
-                    if convergence_error:
-                        logger.error('Simulation did not converge at time ' + self._get_time(t) + '.')
-                        raise RuntimeError('Simulation did not converge at time ' + self._get_time(t) + '.')
-                    else:
-                        data = data[0:N*(4*nnodes+8*nlinks)]
-                        data = np.reshape(data, (N, (4*nnodes+8*nlinks)))
-                        reporttimes = reporttimes[0:N]
-                        warnings.warn('Simulation did not converge at time ' + self._get_time(t) + '.')
-                        self.results.error_code = wntr.sim.results.ResultsStatus.error
+            N = int(np.floor(len(data)/(4*nnodes+8*nlinks)))
+            if N < nrptsteps:
+                t = reporttimes[N]
+                if convergence_error:
+                    logger.error('Simulation did not converge at time ' + self._get_time(t) + '.')
+                    raise RuntimeError('Simulation did not converge at time ' + self._get_time(t) + '.')
                 else:
-                    data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
-                    self.results.error_code = None
+                    data = data[0:N*(4*nnodes+8*nlinks)]
+                    data = np.reshape(data, (N, (4*nnodes+8*nlinks)))
+                    reporttimes = reporttimes[0:N]
+                    warnings.warn('Simulation did not converge at time ' + self._get_time(t) + '.')
+                    self.results.error_code = wntr.sim.results.ResultsStatus.error
+            else:
+                data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
+                self.results.error_code = None
 
-                df = pd.DataFrame(data.transpose(), index =index, columns = reporttimes)
-                df = df.transpose()
-                
-                self.results.node = {}
-                self.results.link = {}
-                self.results.network_name = self.inp_file
-                
-                # Node Results
-                self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
-                self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
-                self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
-
-                # Water Quality Results (node and link)
-                if self.quality_type is QualType.Chem:
-                    self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
-                elif self.quality_type is QualType.Age:
-                    self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
-                else:
-                    self.results.node['quality'] = df['quality']
-                    self.results.link['quality'] = df['linkquality']
-
-                # Link Results
-                self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
-                self.results.link['headloss'] = df['headloss']  # Unit is per 1000
-                self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
-                
-#                self.results.link['status'] = df['linkstatus']
-                status = np.array(df['linkstatus'])
-                if self.convert_status:
-                    status[status <= 2] = 0
-                    status[status == 3] = 1
-                    status[status >= 5] = 1
-                    status[status == 4] = 2
-                self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
-                
-                settings = np.array(df['linksetting'])
-                settings[:, linktype == EN.PRV] = to_si(self.flow_units, settings[:, linktype == EN.PRV], HydParam.Pressure)
-                settings[:, linktype == EN.PSV] = to_si(self.flow_units, settings[:, linktype == EN.PSV], HydParam.Pressure)
-                settings[:, linktype == EN.PBV] = to_si(self.flow_units, settings[:, linktype == EN.PBV], HydParam.Pressure)
-                settings[:, linktype == EN.FCV] = to_si(self.flow_units, settings[:, linktype == EN.FCV], HydParam.Flow)
-                self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
-                self.results.link['friction_factor'] = df['frictionfactor']
-                self.results.link['reaction_rate'] = df['reactionrate']
-                
+            df = pd.DataFrame(data.transpose(), index =index, columns = reporttimes)
+            df = df.transpose()
+            
+            self.results.node = {}
+            self.results.link = {}
+            self.results.network_name = self.inp_file
+            
+            # Node Results
+            self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
+            self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
+            self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
+    
+            # Water Quality Results (node and link)
+            if self.quality_type is QualType.Chem:
+                self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
+                self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+            elif self.quality_type is QualType.Age:
+                self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
+                self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+            else:
+                self.results.node['quality'] = df['quality']
+                self.results.link['quality'] = df['linkquality']
+    
+            # Link Results
+            self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
+            self.results.link['headloss'] = HydParam.HeadLoss._to_si(self.flow_units, df['headloss'])
+            self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
+            
+            status = np.array(df['linkstatus'])
+            if self.convert_status:
+                status[status <= 2] = 0
+                status[status == 3] = 1
+                status[status >= 5] = 1
+                status[status == 4] = 2
+            self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
+            
+            setting = np.array(df['linksetting'])
+            # pump setting is relative speed (unitless)
+            setting[:, linktype == EN.PIPE] = to_si(self.flow_units, setting[:, linktype == EN.PIPE], HydParam.RoughnessCoeff, 
+                                            darcy_weisbach=darcy_weisbach)
+            setting[:, linktype == EN.PRV] = to_si(self.flow_units, setting[:, linktype == EN.PRV], HydParam.Pressure)
+            setting[:, linktype == EN.PSV] = to_si(self.flow_units, setting[:, linktype == EN.PSV], HydParam.Pressure)
+            setting[:, linktype == EN.PBV] = to_si(self.flow_units, setting[:, linktype == EN.PBV], HydParam.Pressure)
+            setting[:, linktype == EN.FCV] = to_si(self.flow_units, setting[:, linktype == EN.FCV], HydParam.Flow)
+            self.results.link['setting'] = pd.DataFrame(data=setting, columns=linknames, index=reporttimes)
+            
+            self.results.link['friction_factor'] = df['frictionfactor']
+            self.results.link['reaction_rate'] = QualParam.ReactionRate._to_si(self.flow_units, df['reactionrate'],self.mass_units) 
+            
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks
             averages = np.fromfile(fin, dtype=np.dtype(ftype), count=4)
