@@ -146,13 +146,14 @@ class SimulationResults(object):
         Combine two results objects into a single, new result object.
 
         If the times overlap, then the results from the `other` object will take precedence 
-        over the values in the calling object. I.e., given ``C = A.append_results_from(B)``, 
+        over the values in the calling object. I.e., given ``A.append_results_from(B)``, 
         where ``A`` and ``B``
         are both `SimluationResults`, any results from ``A`` that relate to times equal to or
         greater than the starting time of results in ``B`` will be dropped.
 
-        Note, this operations cannot be performed "in-place" and will always return a new
-        object.
+        .. warning::
+        
+            This operations will be performed "in-place" and will change ``A``
 
         Parameters
         ----------
@@ -173,30 +174,34 @@ class SimulationResults(object):
             raise ValueError(
                 "operating on a results object requires both be SimulationResults"
             )
-        new = SimulationResults()
         start_time = other.node['head'].index.values[0]
-        keep = self.node['head'].index < start_time
+        keep = self.node['head'].index.values < start_time
         for key in self.link.keys():
             if key in other.link:
-                new.link[key] = self.link[key].loc[keep].append(other.link[key])
+                t2 = self.link[key].loc[keep].append(other.link[key])
+                self.link[key] = t2
             else:
                 temp = other.link['flowrate'] * pd.nan
-                new.link[key] = self.link[key].loc[keep].append(temp)
+                t2 = self.link[key].loc[keep].append(temp)
+                self.link[key] = t2
         for key in other.link.keys():
             if key not in self.link.keys():
                 temp = self.link['flowrate'] * pd.nan
-                new.link[key] = temp.loc[keep].append(other.link[key])
+                t2 = temp.loc[keep].append(other.link[key])
+                self.link[key] = t2
         for key in self.node.keys():
             if key in other.node:
-                new.node[key] = self.node[key].loc[keep].append(other.node[key])
+                t2 = self.node[key].loc[keep].append(other.node[key])
+                self.node[key] = t2
             else:
                 temp = other.node['head'] * pd.nan
-                new.node[key] = self.node[key].loc[keep].append(temp)
+                t2 = self.node[key].loc[keep].append(temp)
+                self.node[key] = t2
         for key in other.node.keys():
             if key not in self.node.keys():
                 temp = self.node['head'] * pd.nan
-                new.node[key] = temp.loc[keep].append(other.node[key])
-        return new
+                t2 = temp.loc[keep].append(other.node[key])
+                self.node[key] = t2
 
     def convert_units(
         self, flow_units="GPM", mass_units="mg", qual_param=None, return_copy=True
