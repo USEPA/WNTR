@@ -2,7 +2,7 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 import pandas as pd
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 import wntr
 
 testdir = dirname(abspath(str(__file__)))

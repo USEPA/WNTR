@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 from os.path import abspath, dirname, join
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
