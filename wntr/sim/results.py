@@ -3,9 +3,12 @@ import datetime
 import enum
 
 import pandas as pd
-from wntr.epanet.util import FlowUnits, HydParam, MassUnits, QualParam, from_si
 
 import numpy as np
+import copy
+import numpy as np
+from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam
+from wntr.epanet.util import from_si
 from wntr.network.elements import Pipe, Pump, PRValve, PSValve, PBValve, FCValve
 
 class ResultsStatus(enum.IntEnum):
@@ -64,146 +67,6 @@ class SimulationResults(object):
             if key in other.node:
                 new.node[key] = self.node[key] - other.node[key]
         return new
-
-    def __abs__(self):
-        new = SimulationResults()
-        new.link = dict()
-        new.node = dict()
-        new.network_name = "|{}[{}]|".format(
-            self.network_name, self.timestamp
-        )
-        for key in self.link.keys():
-            new.link[key] = abs(self.link[key])
-        for key in self.node.keys():
-            new.node[key] = abs(self.node[key])
-        return new
-
-    def __neg__(self):
-        new = SimulationResults()
-        new.link = dict()
-        new.node = dict()
-        new.network_name = "-{}[{}]".format(
-            self.network_name, self.timestamp
-        )
-        for key in self.link.keys():
-            new.link[key] = -self.link[key]
-        for key in self.node.keys():
-            new.node[key] = -self.node[key]
-        return new
-
-    def __pos__(self):
-        new = SimulationResults()
-        new.link = dict()
-        new.node = dict()
-        new.network_name = "+{}[{}]".format(
-            self.network_name, self.timestamp
-        )
-        for key in self.link.keys():
-            new.link[key] = +self.link[key]
-        for key in self.node.keys():
-            new.node[key] = +self.node[key]
-        return new
-
-    def __truediv__(self, other):
-        if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
-        new = SimulationResults()
-        new.link = dict()
-        new.node = dict()
-        new.network_name = "{}[{}] / {}[{}]".format(
-            self.network_name, self.timestamp, other.network_name, other.timestamp
-        )
-        for key in self.link.keys():
-            if key in other.link:
-                new.link[key] = self.link[key] / other.link[key]
-        for key in self.node.keys():
-            if key in other.node:
-                new.node[key] = self.node[key] / other.node[key]
-        return new
-
-    def __pow__(self, exp, mod=None):
-        new = SimulationResults()
-        new.link = dict()
-        new.node = dict()
-        new.network_name = "{}[{}] ** {}".format(
-            self.network_name, self.timestamp, exp
-        )
-        for key in self.link.keys():
-            new.link[key] = pow(self.link[key], exp, mod)
-        for key in self.node.keys():
-            new.node[key] = pow(self.node[key], exp, mod)
-        return new
-
-    def _adjust_time(self, ts):
-        ts = int(ts)
-        for key in self.link.keys():
-            self.link[key].index += ts
-        for key in self.node.keys():
-            self.node[key].index += ts
-
-    def append_results_from(self, other):
-        """
-        Combine two results objects into a single, new result object.
-
-        If the times overlap, then the results from the `other` object will take precedence 
-        over the values in the calling object. I.e., given ``A.append_results_from(B)``, 
-        where ``A`` and ``B``
-        are both `SimluationResults`, any results from ``A`` that relate to times equal to or
-        greater than the starting time of results in ``B`` will be dropped.
-
-        .. warning::
-        
-            This operations will be performed "in-place" and will change ``A``
-
-        Parameters
-        ----------
-        other : SimulationResults
-            Results objects from a different, and subsequent, simulation.
-
-        Returns
-        -------
-        SimulationResults
-            New object containing the combined results
-
-        Raises
-        ------
-        ValueError
-            [description]
-        """
-        if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
-        start_time = other.node['head'].index.values[0]
-        keep = self.node['head'].index.values < start_time
-        for key in self.link.keys():
-            if key in other.link:
-                t2 = self.link[key].loc[keep].append(other.link[key])
-                self.link[key] = t2
-            else:
-                temp = other.link['flowrate'] * pd.nan
-                t2 = self.link[key].loc[keep].append(temp)
-                self.link[key] = t2
-        for key in other.link.keys():
-            if key not in self.link.keys():
-                temp = self.link['flowrate'] * pd.nan
-                t2 = temp.loc[keep].append(other.link[key])
-                self.link[key] = t2
-        for key in self.node.keys():
-            if key in other.node:
-                t2 = self.node[key].loc[keep].append(other.node[key])
-                self.node[key] = t2
-            else:
-                temp = other.node['head'] * pd.nan
-                t2 = self.node[key].loc[keep].append(temp)
-                self.node[key] = t2
-        for key in other.node.keys():
-            if key not in self.node.keys():
-                temp = self.node['head'] * pd.nan
-                t2 = temp.loc[keep].append(other.node[key])
-                self.node[key] = t2
 
     def convert_units(self, wn, flow_units="GPM",  mass_units="mg", 
                       qual_param=None, return_copy=True):
