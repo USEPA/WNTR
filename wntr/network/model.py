@@ -1919,30 +1919,6 @@ class WaterNetworkModel(AbstractModel):
             if remove_controls:
                 self.remove_control(name)
         return to_delete
-
-    def _reset_final_conditions(self, results):
-        #### TODO: move reset conditions to /sim
-        end_time = results.node['demand'].index[-1]
-        
-        for name, node in self.nodes():
-            node._head = results.node['head'].at[end_time, name]
-            node._demand = results.node['demand'].at[end_time, name]
-            if isinstance(node, Tank):
-                node._prev_head = results.node['head'].at[end_time, name]
-
-        for name, link in self.links():
-            link._user_status = results.link['status'].at[end_time, name]
-            link._internal_status = results.link['status'].at[end_time, name]
-            link._flow = results.link['flowrate'].at[end_time, name]
-            link._prev_setting = results.link['setting'].at[end_time, name]
-            if isinstance(node, (Pipe, Valve)):
-                link.setting = results.link['setting'].at[end_time, name]
-
-        #self.options.time.start_clocktime = end_time
-        self.options.time.report_start = end_time
-        self.sim_time = end_time
-        
-        ## WNTRSimulator needs to use start_clocktime (and report_start?)
         
     def read_inpfile(self, filename):
         """

@@ -211,6 +211,7 @@ def initialize_results_dict(wn):
     link_res['flowrate'] = OrderedDict((name, list()) for name, obj in wn.links())
     link_res['velocity'] = OrderedDict((name, list()) for name, obj in wn.links())
     link_res['status'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['setting'] = OrderedDict((name, list()) for name, obj in wn.links())
 
     return node_res, link_res
 
@@ -248,11 +249,13 @@ def save_results(wn, node_res, link_res):
         link_res['flowrate'][name].append(link.flow)
         link_res['velocity'][name].append(abs(link.flow)*4.0 / (math.pi*link.diameter**2))
         link_res['status'][name].append(link.status)
+        link_res['setting'][name].append(0)
 
     for name, link in wn.head_pumps():
         link_res['flowrate'][name].append(link.flow)
         link_res['velocity'][name].append(0)
         link_res['status'][name].append(link.status)
+        link_res['setting'][name].append(1)
 
         A, B, C = link.get_head_curve_coefficients()
         if link.flow > (A/B)**(1.0/C):
@@ -271,11 +274,13 @@ def save_results(wn, node_res, link_res):
         link_res['flowrate'][name].append(link.flow)
         link_res['velocity'][name].append(0)
         link_res['status'][name].append(link.status)
+        link_res['setting'][name].append(1)
 
     for name, link in wn.valves():
         link_res['flowrate'][name].append(link.flow)
         link_res['velocity'][name].append(abs(link.flow)*4.0 / (math.pi*link.diameter**2))
         link_res['status'][name].append(link.status)
+        link_res['setting'][name].append(link.setting)
 
 
 def get_results(wn, results, node_res, link_res):
@@ -317,9 +322,11 @@ def store_results_in_network(wn, m):
     for name, link in wn.links():
         if link._is_isolated:
             link._flow = 0
-            link
         else:
             link._flow = m.flow[name].value
+
+    for name, link in wn.valves():
+        link._setting = m.valve_setting[name].value
 
     for name, node in wn.junctions():
         if node._is_isolated:
