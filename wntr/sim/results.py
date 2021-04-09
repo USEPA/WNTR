@@ -5,6 +5,8 @@ import enum
 import pandas as pd
 from wntr.epanet.util import FlowUnits, HydParam, MassUnits, QualParam, from_si
 
+import numpy as np
+from wntr.network.elements import Pipe, Pump, PRValve, PSValve, PBValve, FCValve
 
 class ResultsStatus(enum.IntEnum):
     converged = 1
@@ -203,9 +205,8 @@ class SimulationResults(object):
                 t2 = temp.loc[keep].append(other.node[key])
                 self.node[key] = t2
 
-    def convert_units(
-        self, flow_units="GPM", mass_units="mg", qual_param=None, return_copy=True
-    ):
+    def convert_units(self, wn, flow_units="GPM",  mass_units="mg", 
+                      qual_param=None, return_copy=True):
         """
         Convert simulation results to EPANET unit convensions.
         
@@ -213,19 +214,25 @@ class SimulationResults(object):
         
         Parameters
         ------------
-        flow_units : str
-            Flow unit used for conversion.  For example, GPM or LPS.
-            flow_unit must be defined in wntr.epanet.util.FlowUnits
+        wn : WaterNetworkModel object
+            Water network model, used to determine link type to convert link setting
+        
+        flow_units : str (optional)
+            Flow unit used for conversion. Must be defined in 
+            wntr.epanet.util.FlowUnits.  The default is "GPM"
+
+        mass_units : str (optional)
+            Mass unit unsed for conversion.  Must be defined in 
+            wntr.epanet.util.MassUnits. The default is "mg".
             
-        mass_units : str
-            Mass unit unsed for conversion.  For example, mg or g.
-            mass_unit must be defined in wntr.epanet.util.MassUnits
-            
-        qual_param : str
+        qual_param : str (optional)
             Quality parameter used for conversion, generally taken from wn.options.quality.parameter,
             Options include CONCENTRATION, AGE, TRACE or None.
             If qual_param is TRACE or None, no conversion is needed (unitless).
+            The default is None.
             
+        return_copy : bool (optional)
+            Return a copy of the results object.  The default is True.
         """
         if return_copy:
             results = copy.deepcopy(self)
@@ -240,73 +247,81 @@ class SimulationResults(object):
             mass_units = mass_units.lower()
             mass_units = MassUnits[mass_units]
 
-        if (
-            qual_param is not None
+        if (qual_param is not None
             and isinstance(qual_param, str)
-            and qual_param in ["CONCENTRATION", "AGE", "TRACE", "NONE"]
-        ):
+            and qual_param in ["CONCENTRATION", "AGE", "TRACE", "NONE"]):
             qual_param = qual_param.upper()
             # qual_param = QualParam[qual_param]
 
-        ## Nodes ##
+        ### Nodes 
         for key in results.node.keys():
             results.node[key].index = results.node[key].index / 3600
 
         results.node["demand"] = from_si(
-            flow_units, results.node["demand"], HydParam.Demand
-        )
+            flow_units, results.node["demand"], HydParam.Demand)
+        
         results.node["head"] = from_si(
-            flow_units, results.node["head"], HydParam.HydraulicHead
-        )
+            flow_units, results.node["head"], HydParam.HydraulicHead)
+        
         results.node["pressure"] = from_si(
-            flow_units, results.node["pressure"], HydParam.Pressure
-        )
+            flow_units, results.node["pressure"], HydParam.Pressure)
 
         if qual_param == "CHEMICAL":
             results.node["quality"] = from_si(
-                flow_units,
-                results.node["quality"],
-                QualParam.Concentration,
-                mass_units=mass_units,
-            )
+                flow_units, results.node["quality"], QualParam.Concentration, mass_units=mass_units)
         elif qual_param == "AGE":
             results.node["quality"] = from_si(
-                flow_units, results.node["quality"], QualParam.WaterAge
-            )
+                flow_units, results.node["quality"], QualParam.WaterAge)
         else:
             pass  # Trace or None, no conversion needed
 
-        ## Links ##
+        ### Links 
         for key in self.link.keys():
             results.link[key].index = results.link[key].index / 3600
 
         results.link["flowrate"] = from_si(
-            flow_units, results.link["flowrate"], HydParam.Flow
-        )
-        results.link["headloss"] = from_si(
-            flow_units, results.link["headloss"], HydParam.HeadLoss
-        )
+            flow_units, results.link["flowrate"], HydParam.Flow)
+        
         results.link["velocity"] = from_si(
-            flow_units, results.link["velocity"], HydParam.Velocity
-        )
+            flow_units, results.link["velocity"], HydParam.Velocity)
+        
+        results.link["headloss"] = from_si(
+            flow_units, results.link["headloss"], HydParam.HeadLoss)
+        
+        # setting is either roughness coefficient for pipes, pressure or flow
+        # for valves, and relative speed for pumps (unitless)
+        convert_roughness = [isinstance(link, Pipe) for name, link in wn.links()]
+        convert_pressure = [isinstance(link, (PRValve, PSValve, PBValve)) for name, link in wn.links()]
+        convert_flow = [isinstance(link, FCValve) for name, link in wn.links()]
+        
+        setting = np.array(results.link["setting"])
+        setting[:, convert_roughness] = from_si(
+            flow_units, setting[:, convert_roughness], HydParam.RoughnessCoeff, darcy_weisbach=(wn.options.hydraulic.headloss == 'D-W'))
+        setting[:, convert_pressure] = from_si(
+            flow_units, setting[:, convert_pressure], HydParam.Pressure)
+        setting[:, convert_flow] = from_si(
+            flow_units, setting[:, convert_flow], HydParam.Flow)
+        results.link["setting"] = setting
+        
+        try:
+            if qual_param == "CHEMICAL":
+                results.link["quality"] = from_si(
+                    flow_units, results.link["quality"], QualParam.Concentration, mass_units=mass_units)
+            elif qual_param == "AGE":
+                results.link["quality"] = from_si(
+                    flow_units, results.link["quality"], QualParam.WaterAge)
+            else:
+                pass  # Trace or None, no conversion needed
+        except:
+            pass
 
-        if qual_param == "CHEMICAL":
-            results.link["quality"] = from_si(
-                flow_units,
-                results.link["quality"],
-                QualParam.Concentration,
-                mass_units=mass_units,
-            )
-        elif qual_param == "AGE":
-            results.link["quality"] = from_si(
-                flow_units, results.link["quality"], QualParam.WaterAge
-            )
-        else:
-            pass  # Trace or None, no conversion needed
-
+        try:
+            results.link["reaction_rate"] = from_si(
+                flow_units, results.link["reaction_rate"], QualParam.ReactionRate, mass_units=mass_units)
+        except:
+            pass
+        
         # frictionfact no conversion needed
         # status no conversion needed
-        # setting requires valve type, convert with pressure or flow type, or change setting to pressure_setting and flow_setting.
-        # rxnrate, convert with BulkReactionCoeff? or WallReactionCoeff?
-
+        
         return results

@@ -142,4 +142,4 @@ class Test_Reset_Conditions(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=1)
+    unittest.main()
