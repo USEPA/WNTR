@@ -21,7 +21,7 @@ class Test_Reset_Conditions(unittest.TestCase):
 
         wn.options.time.duration = 100 * 3600
         sim = wntr.sim.EpanetSimulator(wn)
-        self.benchmarck_results = sim.run_sim(reset_intial_conditions=False)
+        self.benchmarck_results = sim.run_sim()
 
         plt.figure()
         ax = plt.gca()
@@ -41,15 +41,15 @@ class Test_Reset_Conditions(unittest.TestCase):
         sim = wntr.sim.EpanetSimulator(wn)
 
         wn.options.time.duration = 12 * 3600
-        results1 = sim.run_sim(reset_intial_conditions=False)
+        results1 = sim.run_sim()
         results1.node["pressure"].plot(ax=ax)
 
         wn.options.time.duration = 56 * 3600
-        results2 = sim.run_sim(reset_intial_conditions=False)
+        results2 = sim.run_sim()
         results2.node["pressure"].plot(ax=ax)
 
         wn.options.time.duration = 100 * 3600
-        results3 = sim.run_sim(reset_intial_conditions=False)
+        results3 = sim.run_sim()
         results3.node["pressure"].plot(ax=ax, title="EPANETsim_continue")
 
     def test_wntrsim_continue(self):
@@ -64,17 +64,17 @@ class Test_Reset_Conditions(unittest.TestCase):
             sim = wntr.sim.WNTRSimulator(wn)
 
             wn.options.time.duration = 12 * 3600
-            results1 = sim.run_sim(reset_intial_conditions=False)
+            results1 = sim.run_sim()
             results1.node["pressure"].plot(ax=ax)
 
             wn.options.time.duration = 56 * 3600
-            results2 = sim.run_sim(reset_intial_conditions=False)
+            results2 = sim.run_sim()
             results2.node["pressure"].plot(ax=ax)
 
             wn.options.time.duration = 100 * 3600
             wn.write_inpfile("Net3_epanet.inp")
 
-            results3 = sim.run_sim(reset_intial_conditions=False)
+            results3 = sim.run_sim()
             results3.node["pressure"].plot(ax=ax, title="WNTRSim_continue")
 
     def test_epanetsim_reset(self):
@@ -86,14 +86,14 @@ class Test_Reset_Conditions(unittest.TestCase):
         sim = wntr.sim.EpanetSimulator(wn)
 
         wn.options.time.duration = 100 * 3600
-        results1 = sim.run_sim(reset_intial_conditions=True)
+        results1 = sim.run_sim()
         results1.node["pressure"].plot(ax=ax, title="EPANETsim_reset1")
 
         plt.figure()
         ax = plt.gca()
 
         wn.options.time.duration = 100 * 3600
-        results2 = sim.run_sim(reset_intial_conditions=True)
+        results2 = sim.run_sim()
         results2.node["pressure"].plot(ax=ax, title="EPANETsim_reset2")
 
     def test_wntrsim_reset(self):
@@ -108,14 +108,14 @@ class Test_Reset_Conditions(unittest.TestCase):
             sim = wntr.sim.WNTRSimulator(wn)
 
             wn.options.time.duration = 100 * 3600
-            results1 = sim.run_sim(reset_intial_conditions=True)
+            results1 = sim.run_sim()
             results1.node["pressure"].plot(ax=ax, title="WNTRsim_reset1")
 
             plt.figure()
             ax = plt.gca()
 
             wn.options.time.duration = 100 * 3600
-            results2 = sim.run_sim(reset_intial_conditions=True)
+            results2 = sim.run_sim()
             results2.node["pressure"].plot(ax=ax, title="WNTRsim_reset2")
 
     # def test_both_continue(self):
@@ -127,19 +127,19 @@ class Test_Reset_Conditions(unittest.TestCase):
 
     #     sim = wntr.sim.WNTRSimulator(wn)
     #     wn.options.time.duration = 12*3600
-    #     results1 = sim.run_sim(reset_intial_conditions=False)
+    #     results1 = sim.run_sim()
     #     results1.node['pressure'].plot(ax=ax)
 
     #     sim = wntr.sim.EpanetSimulator(wn)
     #     wn.options.time.duration = 56*3600
-    #     results2 = sim.run_sim(reset_intial_conditions=False)
+    #     results2 = sim.run_sim()
     #     results2.node['pressure'].plot(ax=ax)
 
     #     sim = wntr.sim.WNTRSimulator(wn)
     #     wn.options.time.duration = 100*3600
-    #     results3 = sim.run_sim(reset_intial_conditions=False)
+    #     results3 = sim.run_sim()
     #     results3.node['pressure'].plot(ax=ax, title='Switch_combo')
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    unittest.main(verbosity=1)

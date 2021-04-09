@@ -1779,7 +1779,7 @@ class WaterNetworkModel(AbstractModel):
         for name, control in self.controls():
             control._reset()
     
-    def set_initial_conditions(self, results, idx=None, ts=None, remove_controls=True, warn=False):
+    def set_initial_conditions(self, results, ts=None, remove_controls=True, warn=False):
         """
         Set the initial conditions of the network based on prior simulation results.
 
@@ -1787,9 +1787,6 @@ class WaterNetworkModel(AbstractModel):
         ----------
         results : SimulationResults
             Results from a prior simulation
-        idx : int, optional
-            The report index from the results to use as initial conditions, by default None 
-            (which will use the final values)
         ts : int, optional
             The time value (in seconds) from the results to use to select initial conditions,
             by default None (which will use the final values)
@@ -1820,27 +1817,23 @@ class WaterNetworkModel(AbstractModel):
 
 
         """
-        if idx is None and ts is None:
+        if ts is None:
             end_time = results.node['demand'].index[-1]
-        elif idx is not None and ts is None:
-            end_time = results.node['demand'].index[idx]
-        elif ts is not None and idx is None:
+        else:
             ts = int(ts)
             if ts in results.node['demand'].index:
                 end_time = ts
             else:
                 raise IndexError('There is no time "{}" in the results'.format(ts))
-        else:
-            raise NameError('You cannot use both "idx" and "ts" as arguments')
         
         # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
         #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
 
-        pattern_start = end_time
-        clocktime_start = pattern_start
+        current_start = self.options.time.pattern_start
+        delta_t = end_time - current_start
         self.sim_time = end_time
-        self.options.time.pattern_start = (self.options.time.pattern_start + pattern_start)
-        self.options.time.start_clocktime = (self.options.time.start_clocktime + clocktime_start) % 86400
+        self.options.time.pattern_start = (self.options.time.pattern_start + delta_t)
+        self.options.time.start_clocktime = (self.options.time.start_clocktime + delta_t) % 86400
         self._prev_sim_time = None   #end_time - self.options.time.hydraulic_timestep
         self.sim_time = 0.0
         self._prev_sim_time = None
@@ -1915,7 +1908,7 @@ class WaterNetworkModel(AbstractModel):
         to_delete = []
         for name, control in self.controls():
             control._reset()
-            still_good = control._shift(end_time)
+            still_good = control._shift(delta_t)
             if not still_good:
                 to_delete.append(name)
          
