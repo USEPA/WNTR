@@ -28,7 +28,7 @@ class TestSimulationResults(unittest.TestCase):
     def test_convert_units_wntr(self):
         sim = wntr.sim.WNTRSimulator(self.wn)
         results = sim.run_sim()
-        
+        raise unittest.SkipTest('headloss not yet implemented in WNTR results')
         results_GPM = results.convert_units(self.wn, 'GPM')
         results_LPS = results.convert_units(self.wn, 'LPS')
 

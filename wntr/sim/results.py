@@ -19,6 +19,36 @@ class ResultsStatus(enum.IntEnum):
 class SimulationResults(object):
     """
     Water network simulation results class.
+
+    A small number of mathematical and statistical functions are also provided.
+    These functions are applied to all dataframes within the results object (or
+    between two results objects) by name, elementwise.
+
+    Assuming ``A`` and ``B`` are both results objects that have the same time
+    indices for the results and which describe the same water network physical
+    model (i.e., have the same nodes and links), then the following functions 
+    are defined:
+
+    ==================  ===========================================================
+    Example function    Description
+    ------------------  -----------------------------------------------------------
+    ``C = A + B``       Add the values from A and B for each property
+    ``C = A - B``       Subtract the property values in B from A
+    ``C = A / B``       Divide the property values in A by the values in B
+    ``C = A / n``       Divide the property values in A by n [int];
+                        note that this only makes sense if calculating an average
+    ``C = A ** p``      Raise the property values in A to the p-th power;
+                        note the syntax ``C = pow(A, p, mod)`` can also be used
+    ``C = abs(A)``      Take the absolute value of the property values in A
+    ``C = -A``          Take the negative of all property values in A
+    ``C = +A``          Take the positive of all property values in A
+    ==================  ===========================================================
+
+    As an example, to calculate the relative difference between the results of two
+    simulations, one could do: ``rel_dif = abs(A - B) / A`` (warning - this will operate
+    on link statuses as well, which may result in meaningless results for that 
+    parameter).
+
     """
 
     def __init__(self):
@@ -108,23 +138,34 @@ class SimulationResults(object):
         return new
 
     def __truediv__(self, other):
-        if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
-        new.network_name = "{}[{}] / {}[{}]".format(
-            self.network_name, self.timestamp, other.network_name, other.timestamp
-        )
-        for key in self.link.keys():
-            if key in other.link:
-                new.link[key] = self.link[key] / other.link[key]
-        for key in self.node.keys():
-            if key in other.node:
-                new.node[key] = self.node[key] / other.node[key]
-        return new
+        if isinstance(other, SimulationResults):
+            new.network_name = "{}[{}] / {}[{}]".format(
+                self.network_name, self.timestamp, other.network_name, other.timestamp
+            )
+            for key in self.link.keys():
+                if key in other.link:
+                    new.link[key] = self.link[key] / other.link[key]
+            for key in self.node.keys():
+                if key in other.node:
+                    new.node[key] = self.node[key] / other.node[key]
+            return new
+        elif isinstance(other, int):
+            new.network_name = "{}[{}] / {}".format(
+                self.network_name, self.timestamp, other
+            )
+            for key in self.link.keys():
+                new.link[key] = self.link[key] / other
+            for key in self.node.keys():
+                new.node[key] = self.node[key] / other
+            return new
+        else:
+            raise ValueError(
+                "operating on a results object requires divisor be a SimulationResults or a float"
+            )
+        
 
     def __pow__(self, exp, mod=None):
         new = SimulationResults()
@@ -139,7 +180,15 @@ class SimulationResults(object):
             new.node[key] = pow(self.node[key], exp, mod)
         return new
 
-    def _adjust_time(self, ts):
+    def _adjust_time(self, ts: int):
+        """
+        Adjust the time index for the results object by `ts`.
+
+        Parameters
+        ----------
+        ts : int
+            The number of seconds by which to adjust the result dataframe index
+        """
         ts = int(ts)
         for key in self.link.keys():
             self.link[key].index += ts
@@ -154,21 +203,22 @@ class SimulationResults(object):
         where ``A`` and ``B``
         are both `SimluationResults`, any results from ``A`` that relate to times equal to or
         greater than the starting time of results in ``B`` will be dropped.
+
         .. warning::
         
             This operations will be performed "in-place" and will change ``A``
+
+
         Parameters
         ----------
         other : SimulationResults
             Results objects from a different, and subsequent, simulation.
-        Returns
-        -------
-        SimulationResults
-            New object containing the combined results
+
         Raises
         ------
         ValueError
-            [description]
+            if `other` is the wrong type
+        
         """
         if not isinstance(other, SimulationResults):
             raise ValueError(
