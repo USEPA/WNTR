@@ -10,23 +10,6 @@ test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
-def ignore_warnings(test_func):
-    """
-    Decorator function to supress warnings when using a (test) function.
-
-    Source: "How to Suppress Python unittest Warnings". Tony Podlaski. Blog Post
-    URL: https://www.neuraldump.net/2017/06/how-to-suppress-python-unittest-warnings/
-    Accessed: 2021-04-07
-    """
-
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
-
-
 class TestValveSettingControls(unittest.TestCase):
     def test_status_open_when_setting_changes(self):
         wn = wntr.network.WaterNetworkModel()
@@ -140,7 +123,7 @@ class TestConditionalControls(unittest.TestCase):
     def tearDownClass(self):
         pass
 
-    @ignore_warnings
+    
     def test_close_link_by_tank_level(self):
         inp_file = join(test_datadir, "conditional_controls_1.inp")
         wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -263,11 +246,11 @@ class TestTankControls(unittest.TestCase):
         tank_level_dropped_flag = False
         tank_refilled_flag = False
         for t in results.time:
-            if results.node.at['pressure',t,'tank1'] <= 10.0:
-                self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
+            if results.node.loc['pressure',t,'tank1'] <= 10.0:
+                self.assertLessEqual(results.link.loc['flowrate',t,'pipe1'],0.0)
                 tank_level_dropped_flag = True
-            elif results.node.at['pressure',t,'tank1'] > 10.0:
-                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'],0.001)
+            elif results.node.loc['pressure',t,'tank1'] > 10.0:
+                self.assertGreaterEqual(results.link.loc['flowrate',t,'pipe1'],0.001)
                 if tank_level_dropped_flag:
                     tank_refilled_flag = True
         self.assertEqual(tank_level_dropped_flag, True)

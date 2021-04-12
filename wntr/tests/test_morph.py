@@ -12,25 +12,8 @@ datadir = join(testdir, "networks_for_testing")
 netdir = join(testdir, "..", "..", "examples", "networks")
 
 
-def ignore_warnings(test_func):
-    """
-    Decorator function to supress warnings when using a (test) function.
-
-    Source: "How to Suppress Python unittest Warnings". Tony Podlaski. Blog Post
-    URL: https://www.neuraldump.net/2017/06/how-to-suppress-python-unittest-warnings/
-    Accessed: 2021-04-07
-    """
-
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
-
 
 class TestMorph(unittest.TestCase):
-    @ignore_warnings
     def test_scale_node_coordinates(self):
 
         inp_file = join(netdir, "Net3.inp")
@@ -45,7 +28,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(coord[0] * 100, coord2[0])
         self.assertEqual(coord[1] * 100, coord2[1])
 
-    @ignore_warnings
     def test_translate_node_coordinates(self):
 
         inp_file = join(netdir, "Net3.inp")
@@ -60,7 +42,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(coord[0] + 5, coord2[0])
         self.assertEqual(coord[1] + 10, coord2[1])
 
-    @ignore_warnings
     def test_rotate_node_coordinates(self):
 
         wn = wntr.network.WaterNetworkModel()
@@ -73,7 +54,6 @@ class TestMorph(unittest.TestCase):
         self.assertAlmostEqual(np.sqrt(2), coord2[0], 6)
         self.assertAlmostEqual(np.sqrt(2), coord2[1], 6)
 
-    @ignore_warnings
     def test_UTM_to_longlat_to_UTM(self):
 
         wn = wntr.network.WaterNetworkModel()
@@ -95,7 +75,6 @@ class TestMorph(unittest.TestCase):
         self.assertAlmostEqual(351521.07, coord3[0], 1)  # easting
         self.assertAlmostEqual(3886097.33, coord3[1], 1)  # northing
 
-    @ignore_warnings
     def test_convert_node_coordinates_to_longlat(self):
 
         inp_file = join(netdir, "Net3.inp")
@@ -118,7 +97,6 @@ class TestMorph(unittest.TestCase):
             self.assertAlmostEqual(longlat_map[node_name][0], coord[0], 4)
             self.assertAlmostEqual(longlat_map[node_name][1], coord[1], 4)
 
-    @ignore_warnings
     def test_split_pipe(self):
 
         inp_file = join(datadir, "leaks.inp")
@@ -147,7 +125,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
         self.assertEqual(pipe.initial_status, pipeB.initial_status)
 
-    @ignore_warnings
     def test_break_pipe(self):
 
         inp_file = join(datadir, "leaks.inp")
@@ -180,7 +157,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
         self.assertEqual(pipe.initial_status, pipeB.initial_status)
 
-    @ignore_warnings
     def test_skeletonize(self):
 
         inp_file = join(datadir, "skeletonize.inp")
@@ -242,7 +218,6 @@ class TestMorph(unittest.TestCase):
                 expected_map_subset["64"] = []
                 self.assertEqual(dict(expected_map_subset, **skel_map), skel_map)
 
-    @ignore_warnings
     def test_skeletonize_with_controls(self):
 
         inp_file = join(datadir, "skeletonize.inp")
@@ -280,7 +255,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
         self.assertEqual(skel_wn.num_links, wn.num_links - 22)
 
-    @ignore_warnings
     def test_series_merge_properties(self):
 
         wn = wntr.network.WaterNetworkModel()
@@ -342,7 +316,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(link.minor_loss, 0.1)
         self.assertEqual(link.status, 1)  # open
 
-    @ignore_warnings
     def test_parallel_merge_properties(self):
 
         wn = wntr.network.WaterNetworkModel()
@@ -402,7 +375,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(link.minor_loss, 0)
         self.assertEqual(link.status, 1)  # open
 
-    @ignore_warnings
     def test_skeletonize_Net3(self):
 
         inp_file = join(netdir, "Net3.inp")

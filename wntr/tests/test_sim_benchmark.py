@@ -28,23 +28,6 @@ from scipy.optimize import fsolve
 testdir = dirname(abspath(str(__file__)))
 
 
-def ignore_warnings(test_func):
-    """
-    Decorator function to supress warnings when using a (test) function.
-
-    Source: "How to Suppress Python unittest Warnings". Tony Podlaski. Blog Post
-    URL: https://www.neuraldump.net/2017/06/how-to-suppress-python-unittest-warnings/
-    Accessed: 2021-04-07
-    """
-
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
-
-
 class Test_Benchmarks(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -123,7 +106,7 @@ class Test_Benchmarks(unittest.TestCase):
     def tearDownClass(self):
         pass
 
-    @ignore_warnings
+    
     def test_wntr_vs_ode_const_diam(self):
 
         # run the case as set up in the Setup method.
@@ -176,7 +159,7 @@ class Test_Benchmarks(unittest.TestCase):
                 t, Q, h2, inp["dt_max_wntr"], results, "constant_diameter"
             )
 
-    @ignore_warnings
+    
     def test_wntr_vs_ode_vcurve(self):
 
         self._prepare_pump_and_vol_curve()
@@ -231,7 +214,7 @@ class Test_Benchmarks(unittest.TestCase):
             + " value less than 0.3 w/r to solution of an exact differential equation.",
         )
 
-    @ignore_warnings
+    
     def test_wntr_vs_ode_tank_control(self):
 
         self._prepare_pump_and_vol_curve()

@@ -13,23 +13,6 @@ test_data_dir = join(testdir, "data_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
-def ignore_warnings(test_func):
-    """
-    Decorator function to supress warnings when using a (test) function.
-
-    Source: "How to Suppress Python unittest Warnings". Tony Podlaski. Blog Post
-    URL: https://www.neuraldump.net/2017/06/how-to-suppress-python-unittest-warnings/
-    Accessed: 2021-04-07
-    """
-
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
-
-
 class TestNetworkCreation(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -383,7 +366,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[1], 0.0)
         self.assertAlmostEqual(Y[2], 0.0)
 
-    @ignore_warnings
+    
     def test_3_pt_head_curve(self):
         q1 = 0.0
         h1 = 35.0
@@ -462,7 +445,7 @@ class TestNetworkMethods(unittest.TestCase):
             # self.wntr.graphics.curve.plot_pump_curve(pump)
             # savefig(pump_name + "_" + cname + ".png")
 
-    @ignore_warnings
+    
     def test_multi_pt_head_curve_expected_error(self):
         # now test two error conditions using bad datasets.
         wn = self.wntr.network.WaterNetworkModel()

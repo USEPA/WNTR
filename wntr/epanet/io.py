@@ -1728,7 +1728,7 @@ class InpFile(object):
                 elif key == 'VISCOSITY':
                     opts.hydraulic.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
-                    opts.hydraulic.diffusivity = float(words[1])
+                    opts.quality.diffusivity = float(words[1])
                 elif key == 'SPECIFIC':
                     opts.hydraulic.specific_gravity = float(words[2])
                 elif key == 'TRIALS':

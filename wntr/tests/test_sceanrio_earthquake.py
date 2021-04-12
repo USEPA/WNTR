@@ -12,25 +12,8 @@ datadir = join(testdir, "..", "..", "tests", "networks_for_testing")
 netdir = join(testdir, "..", "..", "examples", "networks")
 
 
-def ignore_warnings(test_func):
-    """
-    Decorator function to supress warnings when using a (test) function.
-
-    Source: "How to Suppress Python unittest Warnings". Tony Podlaski. Blog Post
-    URL: https://www.neuraldump.net/2017/06/how-to-suppress-python-unittest-warnings/
-    Accessed: 2021-04-07
-    """
-
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
-
-
 class TestScenario(unittest.TestCase):
-    @ignore_warnings
+    
     def test_distance_to_epicenter(self):
         inp_file = join(netdir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
