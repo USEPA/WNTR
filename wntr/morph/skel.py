@@ -286,7 +286,7 @@ class _Skeletonize(object):
                              diameter=props['diameter'], 
                              roughness=props['roughness'], 
                              minor_loss=props['minorloss'],
-                             status=props['status']) 
+                             initial_status=props['status']) 
             self.G.add_edge(neigh_junc_name0, 
                             neigh_junc_name1, 
                             dominant_pipe.name)
@@ -346,7 +346,7 @@ class _Skeletonize(object):
                                      diameter=props['diameter'], 
                                      roughness=props['roughness'], 
                                      minor_loss=props['minorloss'],
-                                     status=props['status']) 
+                                     initial_status=props['status']) 
                     self.G.add_edge(dominant_pipe.start_node_name, 
                                     dominant_pipe.end_node_name, 
                                     dominant_pipe.name)

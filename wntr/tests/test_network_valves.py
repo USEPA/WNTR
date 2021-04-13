@@ -36,7 +36,7 @@ class TestTCVs(unittest.TestCase):
             diameter=0.3048,
             valve_type="TCV",
             minor_loss=30.0,
-            setting=60.0,
+            initial_setting=60.0,
         )
 
         valve = wn.get_link("v1")
@@ -80,7 +80,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=18,
+            initial_setting=18,
         )
         wn.add_pipe(name="p3", start_node_name="t1", end_node_name="j2")
 
@@ -106,7 +106,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=10,
+            initial_setting=10,
         )
         wn.add_pipe(name="p3", start_node_name="t1", end_node_name="j2")
 
@@ -132,7 +132,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=15,
+            initial_setting=15,
         )
         wn.add_pipe(name="p3", start_node_name="t1", end_node_name="j2")
         wn.add_pipe(name="p4", start_node_name="r2", end_node_name="t1")
@@ -161,7 +161,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=15,
+            initial_setting=15,
         )
         wn.add_pipe(name="p3", start_node_name="t1", end_node_name="j2")
 
@@ -189,7 +189,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=15,
+            initial_setting=15,
         )
         wn.add_pipe(name="p3", start_node_name="t1", end_node_name="j2")
 
@@ -218,7 +218,7 @@ class TestPSVs(unittest.TestCase):
             diameter=0.3,
             valve_type="PSV",
             minor_loss=100.0,
-            setting=25,
+            initial_setting=25,
         )
         wn.add_pipe(name="p3", start_node_name="j2", end_node_name="t1")
         wn.add_pipe(name="p4", start_node_name="t1", end_node_name="t2")
@@ -277,7 +277,7 @@ class TestFCVs(unittest.TestCase):
             diameter=0.3048,
             valve_type="FCV",
             minor_loss=100.0,
-            setting=0.01,
+            initial_setting=0.01,
         )
 
         sim = wntr.sim.WNTRSimulator(wn)
@@ -324,7 +324,7 @@ class TestFCVs(unittest.TestCase):
             diameter=0.3048,
             valve_type="FCV",
             minor_loss=100.0,
-            setting=0.1,
+            initial_setting=0.1,
         )
 
         sim = wntr.sim.WNTRSimulator(wn)
@@ -387,7 +387,7 @@ class TestFCVs(unittest.TestCase):
             diameter=0.3048,
             valve_type="FCV",
             minor_loss=100.0,
-            setting=0.03,
+            initial_setting=0.03,
         )
 
         sim = wntr.sim.WNTRSimulator(wn)
