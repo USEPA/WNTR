@@ -200,7 +200,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction("j2")
         wn.add_junction("j3")
         wn.add_pipe("p2", "j1", "j3")
-        wn.add_pipe("p1", "j1", "j2", status=self.wntr.network.LinkStatus.cv)
+        wn.add_pipe("p1", "j1", "j2", initial_status=self.wntr.network.LinkStatus.cv)
         wn.remove_link("p1")
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ["p2"])
