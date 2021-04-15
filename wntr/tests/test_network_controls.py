@@ -17,7 +17,7 @@ class TestValveSettingControls(unittest.TestCase):
         wn.add_junction("j1", base_demand=0)
         wn.add_junction("j2", base_demand=0.05)
         wn.add_pipe("p1", "r1", "j1")
-        wn.add_valve("v1", "j1", "j2", valve_type="PRV", setting=2)
+        wn.add_valve("v1", "j1", "j2", valve_type="PRV", initial_setting=2)
         wn.options.time.duration = 3600 * 5
 
         action = wntr.network.ControlAction(

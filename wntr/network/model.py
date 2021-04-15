@@ -420,7 +420,7 @@ class WaterNetworkModel(AbstractModel):
         self._node_reg.add_reservoir(name, base_head, head_pattern, coordinates)
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', 
+                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', 
                  check_valve_flag=False):
         """
         Adds a pipe to the water network model
@@ -441,7 +441,7 @@ class WaterNetworkModel(AbstractModel):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        status : string, optional
+        initial_status : string, optional
             Pipe status. Options are 'Open' or 'Closed'.
         check_valve_flag : bool, optional
             True if the pipe has a check valve.
@@ -449,14 +449,14 @@ class WaterNetworkModel(AbstractModel):
         
         """
         self._link_reg.add_pipe(name, start_node_name, end_node_name, length, 
-                                diameter, roughness, minor_loss, status, 
+                                diameter, roughness, minor_loss, initial_status, 
                                 check_valve_flag)
         if check_valve_flag:
             self._check_valves.append(name)
 
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status=LinkStatus.Open):
         """
         Adds a pump to the water network model
 
@@ -476,13 +476,16 @@ class WaterNetworkModel(AbstractModel):
             Relative speed setting (1.0 is normal speed)
         pattern: str
             ID of pattern for speed setting
+        initial_status : LinkStatus
+            The initial status for the pump, default is Open.
         
         """
         self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, 
-                                pump_parameter, speed, pattern)
+                                pump_parameter, speed, pattern, initial_status)
     
     def add_valve(self, name, start_node_name, end_node_name,
-                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
+                 initial_setting=0.0, initial_status=LinkStatus.Active):
         """
         Adds a valve to the water network model
 
@@ -500,15 +503,16 @@ class WaterNetworkModel(AbstractModel):
             Type of valve. Options are 'PRV', etc.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        setting : float or string, optional
+        initial_setting : float or string, optional
             pressure setting for PRV, PSV, or PBV,
             flow setting for FCV,
             loss coefficient for TCV,
             name of headloss curve for GPV.
-        
+        initial_status: LinkStatus
+            The initial status of the valve, defaults to Active.
         """
         self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, 
-                                 valve_type, minor_loss, setting)
+                                 valve_type, minor_loss, initial_setting, initial_status)
 
     def add_pattern(self, name, pattern=None):
         """
@@ -2661,7 +2665,7 @@ class LinkRegistry(Registry):
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', check_valve_flag=False):
         """
         Adds a pipe to the water network model.
 
@@ -2681,7 +2685,7 @@ class LinkRegistry(Registry):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        status : string, optional
+        initial_status : string, optional
             Pipe status. Options are 'Open' or 'Closed'.
         check_valve_flag : bool, optional
             True if the pipe has a check valve.
@@ -2692,20 +2696,20 @@ class LinkRegistry(Registry):
         diameter = float(diameter)
         roughness = float(roughness)
         minor_loss = float(minor_loss)
-        if isinstance(status, str):
-            status = LinkStatus[status]
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
         pipe = Pipe(name, start_node_name, end_node_name, self)
         pipe.length = length
         pipe.diameter = diameter
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
-        pipe.initial_status = status
-        pipe._user_status = status
+        pipe.initial_status = initial_status
+        pipe._user_status = initial_status
         pipe.cv = check_valve_flag
         self[name] = pipe
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status=LinkStatus.Open):
         """
         Adds a pump to the water network model.
 
@@ -2725,8 +2729,12 @@ class LinkRegistry(Registry):
             Relative speed setting (1.0 is normal speed)
         pattern: str
             ID of pattern for speed setting
+        initial_status: LinkStatus
+            Initial pump status, defaults to Open.
         
         """
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
         if pump_type.upper() == 'POWER':
             pump = PowerPump(name, start_node_name, end_node_name, self)
             pump.power = pump_parameter
@@ -2739,6 +2747,7 @@ class LinkRegistry(Registry):
         else:
             raise ValueError('pump_type must be "POWER" or "HEAD"')
         pump.base_speed = speed
+        pump.initial_status = initial_status
         if isinstance(pattern, Pattern):
             pump.speed_pattern_name = pattern.name
         else:
@@ -2746,7 +2755,8 @@ class LinkRegistry(Registry):
         self[name] = pump
     
     def add_valve(self, name, start_node_name, end_node_name,
-                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
+                 initial_setting=0.0, initial_status=LinkStatus.Active):
         """
         Adds a valve to the water network model.
 
@@ -2764,13 +2774,16 @@ class LinkRegistry(Registry):
             Type of valve. Options are 'PRV', etc.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        setting : float or string, optional
+        initial_setting : float or string, optional
             pressure setting for PRV, PSV, or PBV,
             flow setting for FCV,
             loss coefficient for TCV,
             name of headloss curve for GPV.
-        
+        initial_status: LinkStatus
+            The initial valve status, defaults to Active.
         """
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
         start_node = self._node_reg[start_node_name]
         end_node = self._node_reg[end_node_name]
         if type(start_node)==Tank or type(end_node)==Tank:
@@ -2778,27 +2791,28 @@ class LinkRegistry(Registry):
         valve_type = valve_type.upper()
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self)
-            valve.headloss_curve_name = setting
+            valve.headloss_curve_name = initial_setting
+        valve.initial_status = initial_status
         valve.diameter = diameter
         valve.minor_loss = minor_loss
         self[name] = valve

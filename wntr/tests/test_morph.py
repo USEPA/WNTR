@@ -270,7 +270,7 @@ class TestMorph(unittest.TestCase):
             diameter=8,
             roughness=120,
             minor_loss=0.1,
-            status="OPEN",
+            initial_status="OPEN",
         )
         wn.add_pipe(
             "P23",
@@ -280,7 +280,7 @@ class TestMorph(unittest.TestCase):
             diameter=6,
             roughness=80,
             minor_loss=0.0,
-            status="OPEN",
+            initial_status="OPEN",
         )
 
         # Add a source
@@ -293,7 +293,7 @@ class TestMorph(unittest.TestCase):
             diameter=12,
             roughness=100,
             minor_loss=0.0,
-            status="OPEN",
+            initial_status="OPEN",
         )
 
         wn.options.time.duration = 0
@@ -330,7 +330,7 @@ class TestMorph(unittest.TestCase):
             diameter=250,
             roughness=120,
             minor_loss=0.1,
-            status="OPEN",
+            initial_status="OPEN",
         )
         wn.add_pipe(
             "P12b",
@@ -340,7 +340,7 @@ class TestMorph(unittest.TestCase):
             diameter=300,
             roughness=100,
             minor_loss=0,
-            status="OPEN",
+            initial_status="OPEN",
         )
         # Add a source
         wn.add_reservoir("R", base_head=125, coordinates=(0, 2))
@@ -352,7 +352,7 @@ class TestMorph(unittest.TestCase):
             diameter=450,
             roughness=100,
             minor_loss=0.0,
-            status="OPEN",
+            initial_status="OPEN",
         )
 
         wn.options.time.duration = 0
