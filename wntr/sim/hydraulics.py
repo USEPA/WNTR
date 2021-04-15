@@ -255,7 +255,7 @@ def save_results(wn, node_res, link_res):
         link_res['flowrate'][name].append(link.flow)
         link_res['velocity'][name].append(0)
         link_res['status'][name].append(link.status)
-        link_res['setting'][name].append(link.speed)
+        link_res['setting'][name].append(1)
         
         A, B, C = link.get_head_curve_coefficients()
         if link.flow > (A/B)**(1.0/C):
