@@ -744,6 +744,32 @@ class ValueCondition(ControlCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
+class FunctionCondition(ControlCondition):
+    """
+    A ControlCondition which calls a function to determine
+    if the control needs activated or not. If the function
+    returns True, then the control is activated.
+    """
+    def __init__(self, func, func_kwargs=None, requires=None):
+        super(FunctionCondition, self).__init__()
+        self._func = func
+        if func_kwargs is None:
+            self._func_kwargs = dict()
+        else:
+            self._func_kwargs = func_kwargs
+        if requires is None:
+            self._requires = OrderedSet()
+        else:
+            self._requires = OrderedSet(requires)
+
+    def evaluate(self):
+        return bool(self._func(**self._func_kwargs))
+
+    def requires(self):
+        return self._requires
+
+
 @DocInheritor({'requires', 'evaluate'})
 class TankLevelCondition(ValueCondition):
     """
