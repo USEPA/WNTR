@@ -351,7 +351,7 @@ class WaterNetworkModel(AbstractModel):
         base_demand : float
             Base demand at the junction.
         demand_pattern : string or Pattern
-            Name of the demand pattern or the actual Pattern object
+            Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
@@ -373,7 +373,7 @@ class WaterNetworkModel(AbstractModel):
         name : string
             Name of the tank.
         elevation : float
-            Elevation at the Tank.
+            Elevation at the tank.
         init_level : float
             Initial tank level.
         min_level : float
@@ -384,17 +384,12 @@ class WaterNetworkModel(AbstractModel):
             Tank diameter.
         min_vol : float
             Minimum tank volume.
-        vol_curve : str
-            Name of a volume curve, optional
+        vol_curve : str, optional
+            Name of a volume curve
         overflow : bool
-            Does this tank overflow (EpanetSimulator only)
+           Overflow indicator (Always False for the WNTRSimulator)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
-            
-        Raises
-        ------
-        ValueError
-            If `init_level` greater than `max_level` or less than `min_level`
             
         """
         self._node_reg.add_tank(name, elevation, init_level, min_level, 
@@ -411,8 +406,8 @@ class WaterNetworkModel(AbstractModel):
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string
-            Name of the head pattern (optional)
+        head_pattern : string, optional
+            Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         
@@ -421,7 +416,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
                  diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', 
-                 check_valve_flag=False):
+                 check_valve=False):
         """
         Adds a pipe to the water network model
 
@@ -441,22 +436,22 @@ class WaterNetworkModel(AbstractModel):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        initial_status : string, optional
-            Pipe status. Options are 'Open' or 'Closed'.
-        check_valve_flag : bool, optional
+        initial_status : string or LinkStatus, optional
+            Pipe initial status. Options are 'OPEN' or 'CLOSED'.
+        check_valve : bool, optional
             True if the pipe has a check valve.
             False if the pipe does not have a check valve.
         
         """
         self._link_reg.add_pipe(name, start_node_name, end_node_name, length, 
                                 diameter, roughness, minor_loss, initial_status, 
-                                check_valve_flag)
-        if check_valve_flag:
+                                check_valve)
+        if check_valve:
             self._check_valves.append(name)
 
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status=LinkStatus.Open):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status='OPEN'):
         """
         Adds a pump to the water network model
 
@@ -470,14 +465,15 @@ class WaterNetworkModel(AbstractModel):
              Name of the end node.
         pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or str object
-            Float value of power in KW. Head curve name.
+        pump_parameter : float or string
+            For a POWER pump, the pump power.
+            For a HEAD pump, the head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: str
-            ID of pattern for speed setting
-        initial_status : LinkStatus
-            The initial status for the pump, default is Open.
+        pattern: string
+            Name of the speed pattern
+        initial_status : string or LinkStatus
+            Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
         self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, 
@@ -485,7 +481,7 @@ class WaterNetworkModel(AbstractModel):
     
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
-                 initial_setting=0.0, initial_status=LinkStatus.Active):
+                 initial_setting=0.0, initial_status='ACTIVE'):
         """
         Adds a valve to the water network model
 
@@ -500,16 +496,17 @@ class WaterNetworkModel(AbstractModel):
         diameter : float, optional
             Diameter of the valve.
         valve_type : string, optional
-            Type of valve. Options are 'PRV', etc.
+            Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
         initial_setting : float or string, optional
-            pressure setting for PRV, PSV, or PBV,
-            flow setting for FCV,
-            loss coefficient for TCV,
-            name of headloss curve for GPV.
-        initial_status: LinkStatus
-            The initial status of the valve, defaults to Active.
+            Valve initial setting.
+            Pressure setting for PRV, PSV, or PBV. 
+            Flow setting for FCV. 
+            Loss coefficient for TCV.
+            Name of headloss curve for GPV.
+        initial_status: string or LinkStatus
+            Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'.
         """
         self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, 
                                  valve_type, minor_loss, initial_setting, initial_status)
@@ -804,7 +801,7 @@ class WaterNetworkModel(AbstractModel):
                 link = self.get_link(link_name)
                 link_has_cv = False # flow leaving the tank (start node = tank)
                 if isinstance(link, Pipe):
-                    if link.cv:
+                    if link.check_valve:
                         if link.end_node_name == tank_name:
                             continue
                         else:
@@ -851,7 +848,7 @@ class WaterNetworkModel(AbstractModel):
                 link = self.get_link(link_name)
                 link_has_cv = False # flow entering the tank (end node = tank)
                 if isinstance(link, Pipe):
-                    if link.cv:
+                    if link.check_valve:
                         if link.start_node_name == tank_name:
                             continue
                         else:
@@ -2040,6 +2037,9 @@ class PatternRegistry(Registry):
         ValueError
             If adding a pattern with `name` that already exists.
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(pattern, (list, Pattern)), "pattern must be a list or Pattern"
+                          
         if not isinstance(pattern, Pattern):
             pattern = Pattern(name, multipliers=pattern, time_options=self._options.time)            
         else: #elif pattern.time_options is None:
@@ -2086,8 +2086,11 @@ class CurveRegistry(Registry):
             self.set_curve_type(key, value.curve_type)
     
     def set_curve_type(self, key, curve_type):
-        """WARNING -- does not check to make sure key is typed before assigning it - you could end up
-        with a curve that is used for more than one type, which would be really weird"""
+        """
+        Sets curve type.
+        
+        WARNING -- this does not check to make sure key is typed before assigning it - 
+        you could end up with a curve that is used for more than one type"""
         if curve_type is None:
             return
         curve_type = curve_type.upper()
@@ -2115,6 +2118,10 @@ class CurveRegistry(Registry):
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(curve_type, str), "curve_type must be a string"
+        assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
+        
         curve = Curve(name, curve_type, xy_tuples_list)
         self[name] = curve
         
@@ -2355,23 +2362,32 @@ class NodeRegistry(Registry):
         base_demand : float
             Base demand at the junction.
         demand_pattern : string or Pattern
-            Name of the demand pattern or the actual Pattern object
+            Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         demand_category : str, optional
-            Add a category to the **base** demand
-        emitter_ceoff : float, optional
-            Add an emitter at this node with the specified coefficient
+            Category to the **base** demand
+        emitter_coeff : float, optional
+            Emitter coefficient
         initial_quality : float, optional
             Initial quality at this junction
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(base_demand, (int, float)), "base_demand must be a float"
+        assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
+        assert isinstance(elevation, (int, float)), "elevation must be a float"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
+        assert isinstance(emitter_coeff, (type(None), int, float)), "emitter_coeff must be a float"
+        assert isinstance(initial_quality, (type(None), int, float)), "initial_quality must be a float"
+        
         base_demand = float(base_demand)
         elevation = float(elevation)
+        
         junction = Junction(name, self)
         junction.elevation = elevation
-#        if base_demand:
         junction.add_demand(base_demand, demand_pattern, demand_category)
         self[name] = junction
         if coordinates is not None:
@@ -2393,7 +2409,7 @@ class NodeRegistry(Registry):
         name : string
             Name of the tank.
         elevation : float
-            Elevation at the Tank.
+            Elevation at the tank.
         init_level : float
             Initial tank level.
         min_level : float
@@ -2405,20 +2421,26 @@ class NodeRegistry(Registry):
             curve is None)
         min_vol : float
             Minimum tank volume (only used when the volume curve is None)
-        vol_curve : str, optional
+        vol_curve : string, optional
             Name of a volume curve. The volume curve overrides the tank diameter
             and minimum volume.
         overflow : bool, optional
-            Overflow indicator (allows "yes"/"no", True/False, 1/0; default False)
+            Overflow indicator (Always False for the WNTRSimulator)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
-        Raises
-        ------
-        ValueError
-            If `init_level` greater than `max_level` or less than `min_level`
-            
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(elevation, (int, float)), "elevation must be a float"
+        assert isinstance(init_level, (int, float)), "init_level must be a float"
+        assert isinstance(min_level, (int, float)), "min_level must be a float"
+        assert isinstance(max_level, (int, float)), "max_level must be a float"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(min_vol, (int, float)), "min_vol must be a float"
+        assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
+        assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        
         elevation = float(elevation)
         init_level = float(init_level)
         min_level = float(min_level)
@@ -2469,15 +2491,19 @@ class NodeRegistry(Registry):
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string
-            Name of the head pattern (optional)
+        head_pattern : string, optional
+            Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(base_head, (int, float)), "base_head must be float"
+        assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        
         base_head = float(base_head)
-        if head_pattern and not isinstance(head_pattern, six.string_types):
-            raise ValueError('Head pattern must be a string')
+
         reservoir = Reservoir(name, self)
         reservoir.base_head = base_head
         reservoir.head_pattern_name = head_pattern
@@ -2665,7 +2691,7 @@ class LinkRegistry(Registry):
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', check_valve_flag=False):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', check_valve=False):
         """
         Adds a pipe to the water network model.
 
@@ -2686,18 +2712,29 @@ class LinkRegistry(Registry):
         minor_loss : float, optional
             Pipe minor loss coefficient.
         initial_status : string, optional
-            Pipe status. Options are 'Open' or 'Closed'.
-        check_valve_flag : bool, optional
+            Pipe initial status. Options are 'OPEN' or 'CLOSED'.
+        check_valve : bool, optional
             True if the pipe has a check valve.
             False if the pipe does not have a check valve.
         
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(length, (int, float)), "length must be a float"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(roughness, (int, float)), "roughness must be a float"
+        assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        assert isinstance(check_valve, bool), "check_valve must be a Boolean"
+        
         length = float(length)
         diameter = float(diameter)
         roughness = float(roughness)
         minor_loss = float(minor_loss)
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
+            
         pipe = Pipe(name, start_node_name, end_node_name, self)
         pipe.length = length
         pipe.diameter = diameter
@@ -2705,11 +2742,11 @@ class LinkRegistry(Registry):
         pipe.minor_loss = minor_loss
         pipe.initial_status = initial_status
         pipe._user_status = initial_status
-        pipe.cv = check_valve_flag
+        pipe.check_valve = check_valve
         self[name] = pipe
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status=LinkStatus.Open):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status='OPEN'):
         """
         Adds a pump to the water network model.
 
@@ -2723,16 +2760,26 @@ class LinkRegistry(Registry):
              Name of the end node.
         pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or str object
-            Float value of power in KW. Head curve name.
+        pump_parameter : float or string
+            For a POWER pump, the pump power (float).
+            For a HEAD pump, the head curve name (string).
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: str
-            ID of pattern for speed setting
-        initial_status: LinkStatus
-            Initial pump status, defaults to Open.
+        pattern: string
+            Name of the speed pattern
+        initial_status: str or LinkStatus
+            Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(pump_type, str), "pump_type must be a string"
+        assert isinstance(pump_parameter, (int, float, str)), "pump_parameter must be a float or string"
+        assert isinstance(speed, (int, float)), "speed must be a float"
+        assert isinstance(pattern, (type(None), str)), "pattern must be a string"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
         if pump_type.upper() == 'POWER':
@@ -2740,23 +2787,17 @@ class LinkRegistry(Registry):
             pump.power = pump_parameter
         elif pump_type.upper() == 'HEAD':
             pump = HeadPump(name, start_node_name, end_node_name, self)
-            if not isinstance(pump_parameter, six.string_types):
-                pump.pump_curve_name = pump_parameter.name
-            else:
-                pump.pump_curve_name = pump_parameter
+            pump.pump_curve_name = pump_parameter
         else:
             raise ValueError('pump_type must be "POWER" or "HEAD"')
         pump.base_speed = speed
         pump.initial_status = initial_status
-        if isinstance(pattern, Pattern):
-            pump.speed_pattern_name = pattern.name
-        else:
-            pump.speed_pattern_name = pattern
+        pump.speed_pattern_name = pattern
         self[name] = pump
     
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
-                 initial_setting=0.0, initial_status=LinkStatus.Active):
+                 initial_setting=0.0, initial_status='ACTIVE'):
         """
         Adds a valve to the water network model.
 
@@ -2771,17 +2812,28 @@ class LinkRegistry(Registry):
         diameter : float, optional
             Diameter of the valve.
         valve_type : string, optional
-            Type of valve. Options are 'PRV', etc.
+            Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
         initial_setting : float or string, optional
-            pressure setting for PRV, PSV, or PBV,
-            flow setting for FCV,
-            loss coefficient for TCV,
-            name of headloss curve for GPV.
-        initial_status: LinkStatus
-            The initial valve status, defaults to Active.
+            Valve initial setting.
+            Pressure setting for PRV, PSV, or PBV. 
+            Flow setting for FCV. 
+            Loss coefficient for TCV.
+            Name of headloss curve for GPV.
+        initial_status: string or LinkStatus
+            Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'
+            
         """
+        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(valve_type, str), "valve_type must be a string"
+        assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
+        assert isinstance(initial_setting, (int, float, str)), "initial_setting must be a float or string"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
         start_node = self._node_reg[start_node_name]
@@ -2829,7 +2881,7 @@ class LinkRegistry(Registry):
             
         """
         for name in self._pipes:
-            if self._data[name].cv:
+            if self._data[name].check_valve:
                 yield name
 
     @property

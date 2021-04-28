@@ -692,18 +692,18 @@ class InpFile(object):
                 minor_loss = float(current[6])
                 if current[7].upper() == 'CV':
                     link_status = LinkStatus.Open
-                    check_valve_flag = True
+                    check_valve = True
                 else:
                     link_status = LinkStatus[current[7].upper()]
-                    check_valve_flag = False
+                    check_valve = False
             elif len(current) == 7:
                 minor_loss = float(current[6])
                 link_status = LinkStatus.Open
-                check_valve_flag = False
+                check_valve = False
             elif len(current) == 6:
                 minor_loss = 0.
                 link_status = LinkStatus.Open
-                check_valve_flag = False
+                check_valve = False
 
             self.wn.add_pipe(current[0],
                         current[1],
@@ -713,7 +713,7 @@ class InpFile(object):
                         float(current[5]),
                         minor_loss,
                         link_status,
-                        check_valve_flag)
+                        check_valve)
 
     def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode('ascii'))
@@ -732,7 +732,7 @@ class InpFile(object):
                  'mloss': pipe.minor_loss,
                  'status': str(pipe.initial_status),
                  'com': ';'}
-            if pipe.cv:
+            if pipe.check_valve:
                 E['status'] = 'CV'
             f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -765,7 +765,7 @@ class InpFile(object):
                 if current[i].upper() == 'HEAD':
 #                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'HEAD'
-                    value = create_curve(current[i+1])
+                    value = create_curve(current[i+1]).name
                 elif current[i].upper() == 'POWER':
 #                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'POWER'
@@ -775,7 +775,7 @@ class InpFile(object):
                     speed = float(current[i+1])
                 elif current[i].upper() == 'PATTERN':
 #                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
-                    pattern = self.wn.get_pattern(current[i+1])
+                    pattern = self.wn.get_pattern(current[i+1]).name
                 else:
                     raise RuntimeError('Pump keyword in inp file not recognized.')
 
