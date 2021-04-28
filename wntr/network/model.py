@@ -2838,9 +2838,27 @@ class LinkRegistry(Registry):
             initial_status = LinkStatus[initial_status]
         start_node = self._node_reg[start_node_name]
         end_node = self._node_reg[end_node_name]
-        if type(start_node)==Tank or type(end_node)==Tank:
-            logger.warning('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+        
         valve_type = valve_type.upper()
+        
+        # A PRV, PSV or FCV cannot be directly connected to a reservoir or tank (use a length of pipe to separate the two)
+        if valve_type in ['PRV', 'PSV', 'FCV']:
+            if type(start_node)==Tank or type(end_node)==Tank or type(start_node)==Reservoir or type(end_node)==Reservoir:
+                msg = '%ss cannot be directly connected to a tank.  Add a pipe to separate the valve from the tank.' % valve_type
+                logger.error(msg)   
+                raise RuntimeError(msg)
+            if type(start_node)==Reservoir or type(end_node)==Reservoir:
+                msg = '%ss cannot be directly connected to a reservoir.  Add a pipe to separate the valve from the reservoir.' % valve_type
+                logger.error(msg)   
+                raise RuntimeError(msg)
+        
+        # TODO check the following: PRVs cannot share the same downstream node or be linked in series
+            
+        # TODO check the following: Two PSVs cannot share the same upstream node or be linked in series
+        
+        # TODO check the following: A PSV cannot be connected to the downstream node of a PRV
+
+
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = initial_setting
