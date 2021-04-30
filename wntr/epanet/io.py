@@ -1121,14 +1121,24 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
 
-        # vnames = list(wn.valve_name_list)
-        # # lnames.sort()
-        # for valve_name in vnames:
-        #     valve = wn.links[valve_name]
-        #     valve_type = valve.valve_type
+        pnames = list(wn.pump_name_list)
+        for pump_name in pnames:
+            pump = wn.links[pump_name]
+            if pump.initial_status in (LinkStatus.Closed,):
+                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
+            else:
+                setting = pump.initial_setting
+                if type(setting) is float and setting != 1.0:
+                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        
+        vnames = list(wn.valve_name_list)
+        # lnames.sort()
+        for valve_name in vnames:
+            valve = wn.links[valve_name]
+            #valve_type = valve.valve_type
 
-        #     if valve.initial_status not in (LinkStatus.Opened, LinkStatus.Open, LinkStatus.Active):
-        #         f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
+            if valve.initial_status not in (LinkStatus.Active,): #LinkStatus.Opened, LinkStatus.Open,
+                f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
         #     if valve_type in ['PRV', 'PSV', 'PBV']:
         #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
         #     elif valve_type == 'FCV':
@@ -1139,16 +1149,7 @@ class InpFile(object):
         #         valve_set = None
         #     if valve_set is not None:
         #         f.write('{:10s} {:10.7g}\n'.format(valve_name, float(valve_set)).encode('ascii'))
-
-        pnames = list(wn.pump_name_list)
-        for pump_name in pnames:
-            pump = wn.links[pump_name]
-            if pump.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
-            else:
-                setting = pump.initial_setting
-                if type(setting) is float and setting != 1.0:
-                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
