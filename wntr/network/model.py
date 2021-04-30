@@ -35,7 +35,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _ClosePSVCondition, _OpenPSVCondition, \
     _ActivePSVCondition, _OpenFCVCondition, _ActiveFCVCondition, ControlAction, _InternalControlAction, Control, \
-    ControlManager, Comparison, Rule
+    ControlManager, Comparison, Rule, FunctionCondition
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -979,28 +979,6 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
 
-                upstream_link_closed_conditions = list()
-                for upstream_link_name in self.get_links_for_node(node_name=valve.start_node_name, flag='ALL'):
-                    if upstream_link_name == valve.name:
-                        continue
-                    upstream_link = self.get_link(upstream_link_name)
-                    _condition = ValueCondition(source_obj=upstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
-                    upstream_link_closed_conditions.append(_condition)
-                if len(upstream_link_closed_conditions) == 0:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-                else:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    for _cond in upstream_link_closed_conditions:
-                        condition = AndCondition(cond1=condition, cond2=_cond)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-
             elif valve.valve_type == 'PSV':
                 close_condition = _ClosePSVCondition(self, valve)
                 open_condition = _OpenPSVCondition(self, valve)
@@ -1018,28 +996,6 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
 
-                downstream_link_closed_conditions = list()
-                for downstream_link_name in self.get_links_for_node(node_name=valve.end_node_name, flag='ALL'):
-                    if downstream_link_name == valve.name:
-                        continue
-                    downstream_link = self.get_link(downstream_link_name)
-                    _condition = ValueCondition(source_obj=downstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
-                    downstream_link_closed_conditions.append(_condition)
-                if len(downstream_link_closed_conditions) == 0:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-                else:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    for _cond in downstream_link_closed_conditions:
-                        condition = AndCondition(cond1=condition, cond2=_cond)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-
             elif valve.valve_type == 'FCV':
                 open_condition = _OpenFCVCondition(self, valve)
                 active_condition = _ActiveFCVCondition(self, valve)
@@ -1052,49 +1008,15 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
 
-                downstream_link_closed_conditions = list()
-                for downstream_link_name in self.get_links_for_node(node_name=valve.end_node_name, flag='ALL'):
-                    if downstream_link_name == valve.name:
-                        continue
-                    downstream_link = self.get_link(downstream_link_name)
-                    _condition = ValueCondition(source_obj=downstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
-                    downstream_link_closed_conditions.append(_condition)
-                if len(downstream_link_closed_conditions) == 0:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-                else:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    for _cond in downstream_link_closed_conditions:
-                        condition = AndCondition(cond1=condition, cond2=_cond)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-
-                upstream_link_closed_conditions = list()
-                for upstream_link_name in self.get_links_for_node(node_name=valve.start_node_name, flag='ALL'):
-                    if upstream_link_name == valve.name:
-                        continue
-                    upstream_link = self.get_link(upstream_link_name)
-                    _condition = ValueCondition(source_obj=upstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
-                    upstream_link_closed_conditions.append(_condition)
-                if len(upstream_link_closed_conditions) == 0:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
-                else:
-                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
-                    for _cond in upstream_link_closed_conditions:
-                        condition = AndCondition(cond1=condition, cond2=_cond)
-                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-                    control._control_type = _ControlType.feasibility
-                    valve_controls.append(control)
+            active_condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq,
+                                              threshold=LinkStatus.Active)
+            upstream_source_condition = FunctionCondition(valve_source_checker, func_kwargs={'wn': self, 'valve': valve},
+                                                          requires=[valve])
+            condition = AndCondition(cond1=active_condition, cond2=upstream_source_condition)
+            action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+            control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+            control._control_type = _ControlType.feasibility
+            valve_controls.append(control)
 
         return valve_controls
 
@@ -1824,7 +1746,47 @@ class WaterNetworkModel(AbstractModel):
         if units is None:
             units = self._options.hydraulic.inpfile_units
         self._inpfile.write(filename, self, units=units, version=version, force_coordinates=force_coordinates)
-    
+
+
+def valve_source_checker(wn: WaterNetworkModel, valve: Valve):
+    """
+    This is a function to be used with a FunctionCondition to ensure PRVs are connected to at least one upstream
+    source, PSVs are connected to at least one downstream source, and FCVs are connected to at least one
+    upstream source and at least one downstream source. If these conditions are not satisifed, the valve
+    should be opened (the internal status).
+    """
+    graph = nx.Graph()
+    graph.add_nodes_from([n for n_name, n in wn.nodes()])
+    graph.add_edges_from([(l.start_node, l.end_node) for l_name, l in wn.links() if l.status != LinkStatus.Closed])
+    graph.remove_edge(valve.start_node, valve._end_node)
+    if valve.valve_type in {'PRV', 'FCV'}:
+        upstream_nodes = nx.algorithms.descendants(graph, valve.start_node)
+        has_upstream_source = False
+        for tank_name, tank in wn.tanks():
+            if tank in upstream_nodes:
+                has_upstream_source = True
+                break
+        for r_name, reservoir in wn.reservoirs():
+            if reservoir in upstream_nodes:
+                has_upstream_source = True
+                break
+        if not has_upstream_source:
+            return True
+    if valve.valve_type in {'PSV', 'FCV'}:
+        downstream_nodes = nx.algorithms.descendants(graph, valve.end_node)
+        has_downstream_source = False
+        for tank_name, tank in wn.tanks():
+            if tank in downstream_nodes:
+                has_downstream_source = True
+                break
+        for r_name, reservoir in wn.reservoirs():
+            if reservoir in downstream_nodes:
+                has_downstream_source = True
+                break
+        if not has_downstream_source:
+            return True
+    return False
+
    
 class PatternRegistry(Registry):
     """A registry for patterns."""
