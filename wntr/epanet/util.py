@@ -562,16 +562,13 @@ class HydParam(enum.Enum):
             HydParam.TankDiameter,
             HydParam.Elevation,
             HydParam.HydraulicHead,
-            HydParam.Length,
-            HydParam.HeadLoss]:
+            HydParam.Length]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft to m
-            if self in [HydParam.HeadLoss]: # unitless in SI
-                if flow_units.is_traditional:
-                    data = data * (1000 / 0.3048) # 1/1000 ft to to 1/m
-                else:
-                    data = data * 1000 # 1/1000 m to 1/m
-
+        
+        elif self in [HydParam.HeadLoss]:
+            data = data / 1000  # m/1000m or ft/1000ft to unitless
+            
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft/s to m/s
@@ -657,16 +654,13 @@ class HydParam(enum.Enum):
             HydParam.TankDiameter,
             HydParam.Elevation,
             HydParam.HydraulicHead,
-            HydParam.Length,
-            HydParam.HeadLoss]:
+            HydParam.Length]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft from m
-            if self in [HydParam.HeadLoss]: # unitless in SI
-                if flow_units.is_traditional:
-                    data = data / (1000 / 0.3048) # 1/1000 ft from to 1/m
-                else:
-                    data = data / 1000 # 1/1000 m from to 1/m
-
+                    
+        elif self in [HydParam.HeadLoss]:
+            data = data * 1000  # m/1000m or ft/1000ft from unitless
+            
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft/s from m/s

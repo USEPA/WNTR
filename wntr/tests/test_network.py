@@ -200,7 +200,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction("j2")
         wn.add_junction("j3")
         wn.add_pipe("p2", "j1", "j3")
-        wn.add_pipe("p1", "j1", "j2", initial_status=self.wntr.network.LinkStatus.cv)
+        wn.add_pipe("p1", "j1", "j2", initial_status=self.wntr.network.LinkStatus.CV)
         wn.remove_link("p1")
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ["p2"])
@@ -324,7 +324,7 @@ class TestNetworkMethods(unittest.TestCase):
         curve = wn.get_curve("curve1")
         wn.add_junction("j1")
         wn.add_junction("j2")
-        wn.add_pump("p1", "j1", "j2", "HEAD", curve)
+        wn.add_pump("p1", "j1", "j2", "HEAD", curve.name)
         link = wn.get_link("p1")
         a, b, c = link.get_head_curve_coefficients()
         q1 = 0.0
@@ -356,7 +356,7 @@ class TestNetworkMethods(unittest.TestCase):
         curve = wn.get_curve("curve1")
         wn.add_junction("j1")
         wn.add_junction("j2")
-        wn.add_pump("p1", "j1", "j2", "HEAD", curve)
+        wn.add_pump("p1", "j1", "j2", "HEAD", curve.name)
         link = wn.get_link("p1")
         a, b, c = link.get_head_curve_coefficients()
 
@@ -379,7 +379,7 @@ class TestNetworkMethods(unittest.TestCase):
         curve = wn.get_curve("curve1")
         wn.add_junction("j1")
         wn.add_junction("j2")
-        wn.add_pump("p1", "j1", "j2", "HEAD", curve)
+        wn.add_pump("p1", "j1", "j2", "HEAD", curve.name)
         link = wn.get_link("p1")
         a, b, c = link.get_head_curve_coefficients()
 

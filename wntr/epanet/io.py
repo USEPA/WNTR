@@ -692,18 +692,18 @@ class InpFile(object):
                 minor_loss = float(current[6])
                 if current[7].upper() == 'CV':
                     link_status = LinkStatus.Open
-                    check_valve_flag = True
+                    check_valve = True
                 else:
                     link_status = LinkStatus[current[7].upper()]
-                    check_valve_flag = False
+                    check_valve = False
             elif len(current) == 7:
                 minor_loss = float(current[6])
                 link_status = LinkStatus.Open
-                check_valve_flag = False
+                check_valve = False
             elif len(current) == 6:
                 minor_loss = 0.
                 link_status = LinkStatus.Open
-                check_valve_flag = False
+                check_valve = False
 
             self.wn.add_pipe(current[0],
                         current[1],
@@ -713,7 +713,7 @@ class InpFile(object):
                         float(current[5]),
                         minor_loss,
                         link_status,
-                        check_valve_flag)
+                        check_valve)
 
     def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode('ascii'))
@@ -732,7 +732,7 @@ class InpFile(object):
                  'mloss': pipe.minor_loss,
                  'status': str(pipe.initial_status),
                  'com': ';'}
-            if pipe.cv:
+            if pipe.check_valve:
                 E['status'] = 'CV'
             f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -765,7 +765,7 @@ class InpFile(object):
                 if current[i].upper() == 'HEAD':
 #                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'HEAD'
-                    value = create_curve(current[i+1])
+                    value = create_curve(current[i+1]).name
                 elif current[i].upper() == 'POWER':
 #                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'POWER'
@@ -775,7 +775,7 @@ class InpFile(object):
                     speed = float(current[i+1])
                 elif current[i].upper() == 'PATTERN':
 #                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
-                    pattern = self.wn.get_pattern(current[i+1])
+                    pattern = self.wn.get_pattern(current[i+1]).name
                 else:
                     raise RuntimeError('Pump keyword in inp file not recognized.')
 
@@ -1121,14 +1121,24 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
 
-        # vnames = list(wn.valve_name_list)
-        # # lnames.sort()
-        # for valve_name in vnames:
-        #     valve = wn.links[valve_name]
-        #     valve_type = valve.valve_type
+        pnames = list(wn.pump_name_list)
+        for pump_name in pnames:
+            pump = wn.links[pump_name]
+            if pump.initial_status in (LinkStatus.Closed,):
+                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
+            else:
+                setting = pump.initial_setting
+                if type(setting) is float and setting != 1.0:
+                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        
+        vnames = list(wn.valve_name_list)
+        # lnames.sort()
+        for valve_name in vnames:
+            valve = wn.links[valve_name]
+            #valve_type = valve.valve_type
 
-        #     if valve.initial_status not in (LinkStatus.Opened, LinkStatus.Open, LinkStatus.Active):
-        #         f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
+            if valve.initial_status not in (LinkStatus.Active,): #LinkStatus.Opened, LinkStatus.Open,
+                f.write('{:10s} {:10s}\n'.format(valve_name, LinkStatus(valve.initial_status).name).encode('ascii'))
         #     if valve_type in ['PRV', 'PSV', 'PBV']:
         #         valve_set = from_si(self.flow_units, valve.initial_setting, HydParam.Pressure)
         #     elif valve_type == 'FCV':
@@ -1139,16 +1149,7 @@ class InpFile(object):
         #         valve_set = None
         #     if valve_set is not None:
         #         f.write('{:10s} {:10.7g}\n'.format(valve_name, float(valve_set)).encode('ascii'))
-
-        pnames = list(wn.pump_name_list)
-        for pump_name in pnames:
-            pump = wn.links[pump_name]
-            if pump.initial_status in (LinkStatus.Closed,):
-                f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('ascii'))
-            else:
-                setting = pump.initial_setting
-                if type(setting) is float and setting != 1.0:
-                    f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('ascii'))
+        
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
@@ -2638,7 +2639,7 @@ class BinFile(object):
         pass
 
 #    @run_lineprofile()
-    def read(self, filename, convergence_error=False, darcy_weisbach=False):
+    def read(self, filename, convergence_error=False, darcy_weisbach=False, convert=True):
         """Read a binary file and create a results object.
 
         Parameters
@@ -2838,47 +2839,66 @@ class BinFile(object):
             self.results.link = {}
             self.results.network_name = self.inp_file
             
-            # Node Results
-            self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
-            self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
-            self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
-    
-            # Water Quality Results (node and link)
-            if self.quality_type is QualType.Chem:
-                self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
-            elif self.quality_type is QualType.Age:
-                self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+            if convert:
+                # Node Results
+                self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
+                self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
+                self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
+        
+                # Water Quality Results (node and link)
+                if self.quality_type is QualType.Chem:
+                    self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                elif self.quality_type is QualType.Age:
+                    self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
+                    self.results.link['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                else:
+                    self.results.node['quality'] = df['quality']
+                    self.results.link['quality'] = df['linkquality']
+        
+                # Link Results
+                self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
+                self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
+                
+                headloss = np.array(df['headloss'])
+                headloss[:, linktype < 2] = to_si(self.flow_units, headloss[:, linktype < 2], HydParam.HeadLoss) # Pipe or CV
+                headloss[:, linktype >= 2] = to_si(self.flow_units, headloss[:, linktype >= 2], HydParam.Length) # Pump or Valve
+                self.results.link["headloss"] = pd.DataFrame(data=headloss, columns=linknames, index=reporttimes)
+        
+                status = np.array(df['linkstatus'])
+                if self.convert_status:
+                    status[status <= 2] = 0
+                    status[status == 3] = 1
+                    status[status >= 5] = 1
+                    status[status == 4] = 2
+                self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
+                
+                setting = np.array(df['linksetting'])
+                # pump setting is relative speed (unitless)
+                setting[:, linktype == EN.PIPE] = to_si(self.flow_units, setting[:, linktype == EN.PIPE], HydParam.RoughnessCoeff, 
+                                                darcy_weisbach=darcy_weisbach)
+                setting[:, linktype == EN.PRV] = to_si(self.flow_units, setting[:, linktype == EN.PRV], HydParam.Pressure)
+                setting[:, linktype == EN.PSV] = to_si(self.flow_units, setting[:, linktype == EN.PSV], HydParam.Pressure)
+                setting[:, linktype == EN.PBV] = to_si(self.flow_units, setting[:, linktype == EN.PBV], HydParam.Pressure)
+                setting[:, linktype == EN.FCV] = to_si(self.flow_units, setting[:, linktype == EN.FCV], HydParam.Flow)
+                self.results.link['setting'] = pd.DataFrame(data=setting, columns=linknames, index=reporttimes)
+                
+                self.results.link['friction_factor'] = df['frictionfactor']
+                self.results.link['reaction_rate'] = QualParam.ReactionRate._to_si(self.flow_units, df['reactionrate'],self.mass_units) 
             else:
+                self.results.node['demand'] = df['demand']
+                self.results.node['head'] = df['head']
+                self.results.node['pressure'] = df['pressure']
                 self.results.node['quality'] = df['quality']
+                
+                self.results.link['flowrate'] = df['flow']
+                self.results.link['headloss'] = df['headloss']
+                self.results.link['velocity'] = df['velocity']
                 self.results.link['quality'] = df['linkquality']
-    
-            # Link Results
-            self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
-            self.results.link['headloss'] = HydParam.HeadLoss._to_si(self.flow_units, df['headloss'])
-            self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
-            
-            status = np.array(df['linkstatus'])
-            if self.convert_status:
-                status[status <= 2] = 0
-                status[status == 3] = 1
-                status[status >= 5] = 1
-                status[status == 4] = 2
-            self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
-            
-            setting = np.array(df['linksetting'])
-            # pump setting is relative speed (unitless)
-            setting[:, linktype == EN.PIPE] = to_si(self.flow_units, setting[:, linktype == EN.PIPE], HydParam.RoughnessCoeff, 
-                                            darcy_weisbach=darcy_weisbach)
-            setting[:, linktype == EN.PRV] = to_si(self.flow_units, setting[:, linktype == EN.PRV], HydParam.Pressure)
-            setting[:, linktype == EN.PSV] = to_si(self.flow_units, setting[:, linktype == EN.PSV], HydParam.Pressure)
-            setting[:, linktype == EN.PBV] = to_si(self.flow_units, setting[:, linktype == EN.PBV], HydParam.Pressure)
-            setting[:, linktype == EN.FCV] = to_si(self.flow_units, setting[:, linktype == EN.FCV], HydParam.Flow)
-            self.results.link['setting'] = pd.DataFrame(data=setting, columns=linknames, index=reporttimes)
-            
-            self.results.link['friction_factor'] = df['frictionfactor']
-            self.results.link['reaction_rate'] = QualParam.ReactionRate._to_si(self.flow_units, df['reactionrate'],self.mass_units) 
+                self.results.link['status'] = df['linkstatus']
+                self.results.link['setting'] = df['linksetting']
+                self.results.link['friction_factor'] = df['frictionfactor']
+                self.results.link['reaction_rate'] = df['reactionrate']
             
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks

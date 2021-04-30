@@ -9,7 +9,7 @@ import copy
 import numpy as np
 from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam
 from wntr.epanet.util import from_si
-from wntr.network.elements import Pipe, Pump, PRValve, PSValve, PBValve, FCValve
+from wntr.network.elements import Pipe, Pump, Valve, PRValve, PSValve, PBValve, FCValve
 
 class ResultsStatus(enum.IntEnum):
     converged = 1
@@ -333,15 +333,25 @@ class SimulationResults(object):
         results.link["velocity"] = from_si(
             flow_units, results.link["velocity"], HydParam.Velocity)
         
-        results.link["headloss"] = from_si(
-            flow_units, results.link["headloss"], HydParam.HeadLoss)
-        
+        columns = results.link["headloss"].columns
+        index = results.link["headloss"].index
+        headloss = np.array(results.link["headloss"])
+        convert_headloss = [isinstance(link, Pipe) for name, link in wn.links()]
+        convert_length = [isinstance(link, (Pump, Valve)) for name, link in wn.links()]
+        headloss[:, convert_headloss] = from_si(flow_units, headloss[:, convert_headloss], HydParam.HeadLoss)
+        headloss[:, convert_length] = from_si(flow_units, headloss[:, convert_length], HydParam.Length)
+        results.link["headloss"] = pd.DataFrame(headloss, index=index, columns=columns)
+        #results.link["headloss"] = from_si(
+        #    flow_units, results.link["headloss"], HydParam.HeadLoss)
+         
         # setting is either roughness coefficient for pipes, pressure or flow
         # for valves, and relative speed for pumps (unitless)
         convert_roughness = [isinstance(link, Pipe) for name, link in wn.links()]
         convert_pressure = [isinstance(link, (PRValve, PSValve, PBValve)) for name, link in wn.links()]
         convert_flow = [isinstance(link, FCValve) for name, link in wn.links()]
         
+        columns = results.link["setting"].columns
+        index = results.link["setting"].index
         setting = np.array(results.link["setting"])
         setting[:, convert_roughness] = from_si(
             flow_units, setting[:, convert_roughness], HydParam.RoughnessCoeff, darcy_weisbach=(wn.options.hydraulic.headloss == 'D-W'))
@@ -349,7 +359,7 @@ class SimulationResults(object):
             flow_units, setting[:, convert_pressure], HydParam.Pressure)
         setting[:, convert_flow] = from_si(
             flow_units, setting[:, convert_flow], HydParam.Flow)
-        results.link["setting"] = setting
+        results.link["setting"] = pd.DataFrame(setting, index=index, columns=columns)
         
         try:
             if qual_param == "CHEMICAL":
