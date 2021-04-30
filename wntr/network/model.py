@@ -2119,7 +2119,7 @@ class CurveRegistry(Registry):
             List of X-Y coordinate tuples on the curve.
         """
         assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(curve_type, str), "curve_type must be a string"
+        assert isinstance(curve_type, (type(None), str)), "curve_type must be a string"
         assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
         
         curve = Curve(name, curve_type, xy_tuples_list)
@@ -2857,8 +2857,7 @@ class LinkRegistry(Registry):
         # TODO check the following: Two PSVs cannot share the same upstream node or be linked in series
         
         # TODO check the following: A PSV cannot be connected to the downstream node of a PRV
-
-
+        
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = initial_setting
