@@ -333,17 +333,20 @@ class SimulationResults(object):
         results.link["velocity"] = from_si(
             flow_units, results.link["velocity"], HydParam.Velocity)
         
-        columns = results.link["headloss"].columns
-        index = results.link["headloss"].index
-        headloss = np.array(results.link["headloss"])
-        convert_headloss = [isinstance(link, Pipe) for name, link in wn.links()]
-        convert_length = [isinstance(link, (Pump, Valve)) for name, link in wn.links()]
-        headloss[:, convert_headloss] = from_si(flow_units, headloss[:, convert_headloss], HydParam.HeadLoss)
-        headloss[:, convert_length] = from_si(flow_units, headloss[:, convert_length], HydParam.Length)
-        results.link["headloss"] = pd.DataFrame(headloss, index=index, columns=columns)
-        #results.link["headloss"] = from_si(
-        #    flow_units, results.link["headloss"], HydParam.HeadLoss)
-         
+        try:
+            columns = results.link["headloss"].columns
+            index = results.link["headloss"].index
+            headloss = np.array(results.link["headloss"])
+            convert_headloss = [isinstance(link, Pipe) for name, link in wn.links()]
+            convert_length = [isinstance(link, (Pump, Valve)) for name, link in wn.links()]
+            headloss[:, convert_headloss] = from_si(flow_units, headloss[:, convert_headloss], HydParam.HeadLoss)
+            headloss[:, convert_length] = from_si(flow_units, headloss[:, convert_length], HydParam.Length)
+            results.link["headloss"] = pd.DataFrame(headloss, index=index, columns=columns)
+            #results.link["headloss"] = from_si(
+            #    flow_units, results.link["headloss"], HydParam.HeadLoss)
+        except:
+            pass # right now, the WNTRSimulator does not save headloss
+            
         # setting is either roughness coefficient for pipes, pressure or flow
         # for valves, and relative speed for pumps (unitless)
         convert_roughness = [isinstance(link, Pipe) for name, link in wn.links()]

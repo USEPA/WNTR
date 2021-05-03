@@ -308,29 +308,29 @@ def get_results(wn, results, node_res, link_res):
                                             columns=link_names)
     results.link = link_res
     
-    # Add headloss
-    headloss = pd.DataFrame(data=None, index=results.time, columns=link_names)
-    for name, link in wn.links():
-        start_node = link.start_node_name
-        end_node = link.end_node_name
-        start_head = results.node['head'].loc[:,start_node]
-        end_head = results.node['head'].loc[:,end_node]
-        if isinstance(link, Pipe):
-            # Unit headloss for pipes
-            headloss.loc[:,name] = abs(end_head - start_head)/link.length
-        elif isinstance(link, Pump):
-            # Negative of head gain for pumps 
-            head_gain = -(end_head - start_head)
-            head_gain[head_gain > 0] = 0
-            headloss.loc[:,name] = head_gain
-        else:
-            # Total head loss for valves
-            headloss.loc[:,name] = (end_head - start_head)
+    # Add headloss to results.link -- removed for now, this is slow
+    #headloss = pd.DataFrame(data=None, index=results.time, columns=link_names)
+    # for name, link in wn.links():
+    #     start_node = link.start_node_name
+    #     end_node = link.end_node_name
+    #     start_head = results.node['head'].loc[:,start_node]
+    #     end_head = results.node['head'].loc[:,end_node]
+    #     if isinstance(link, Pipe):
+    #         # Unit headloss for pipes
+    #         headloss.loc[:,name] = abs(end_head - start_head)/link.length
+    #     elif isinstance(link, Pump):
+    #         # Negative of head gain for pumps 
+    #         head_gain = -(end_head - start_head)
+    #         head_gain[head_gain > 0] = 0
+    #         headloss.loc[:,name] = head_gain
+    #     else:
+    #         # Total head loss for valves
+    #         headloss.loc[:,name] = (end_head - start_head)
             
-        # Headloss is 0 if the link is closed
-        headloss.loc[results.link['status'].loc[:,name] == 0,name] = 0
+    #     # Headloss is 0 if the link is closed
+    #     headloss.loc[results.link['status'].loc[:,name] == 0,name] = 0
         
-    results.link['headloss'] = headloss
+    #results.link['headloss'] = headloss
 
 def store_results_in_network(wn, m):
     """
