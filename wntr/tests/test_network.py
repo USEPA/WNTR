@@ -300,7 +300,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_pipe("p2", "j1", "t1")
         wn.add_pipe("p3", "r1", "j1")
         wn.add_pump("pump1", "r2", "t2")
-        wn.add_valve("v1", "t1", "j2")
+        wn.add_valve("v1", "j3", "j2")
         link_list = [name for name, link in wn.links()]
         link_list.sort()
         self.assertEqual(link_list, ["p1", "p2", "p3", "pump1", "v1"])
