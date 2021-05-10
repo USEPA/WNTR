@@ -2018,6 +2018,9 @@ class Rule(ControlBase):
         """
         return self._control_type
 
+    def _shift(self, step):
+        return self._condition._shift(step)
+    
     def requires(self):
         req = self._condition.requires()
         for action in self._then_actions:
