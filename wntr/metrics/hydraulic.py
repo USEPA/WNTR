@@ -270,7 +270,7 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
     
     return todini
 
-def modified_resilience_index(head, pressure, demand, Pstar, per_junction=False):
+def modified_resilience_index(head, pressure, elevation, Pstar, demand=None, per_junction=True):
     """
     Compute the modified resilience index, equations from [JaSr08]_.
 
@@ -288,16 +288,19 @@ def modified_resilience_index(head, pressure, demand, Pstar, per_junction=False)
         A pandas Dataframe containing node pressure 
         (index = times, columns = junction names).
         
+    elevation : pandas Series
+        Junction elevation (which can be obtained using `wn.query_node_attribute('elevation')`)
+        
+    Pstar : float
+        Pressure threshold.
+    
     demand : pandas DataFrame
         A pandas Dataframe containing node demand 
         (index = times, columns = junction names).
-    
-    Pstar : float
-        Pressure threshold.
-        
+
     per_junction : bool (optional)
         If True, compute the modified resilience index per junction.
-        If False, compute the modified resilience index summed over all junctions.
+        If False, compute the modified resilience index over all junctions.
         
     Returns
     -------
@@ -305,13 +308,13 @@ def modified_resilience_index(head, pressure, demand, Pstar, per_junction=False)
         Modified resilience index time-series. If per_junction=True, columns=junction names.
     """
 
-    Pout = demand*head
-    elevation = head - pressure
-    Pexp = demand*(Pstar+elevation)
-
     if per_junction:
+        Pout = head
+        Pexp = Pstar+elevation
         mri = (Pout - Pexp)/Pexp
     else:
+        Pout = demand*head
+        Pexp = demand*(Pstar+elevation)
         mri = (Pout.sum(axis=1) - Pexp.sum(axis=1))/Pexp.sum(axis=1)
     
     return mri
