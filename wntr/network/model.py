@@ -2038,7 +2038,7 @@ class PatternRegistry(Registry):
             If adding a pattern with `name` that already exists.
         """
         assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(pattern, (list, Pattern)), "pattern must be a list or Pattern"
+        assert isinstance(pattern, (list, np.ndarray, Pattern)), "pattern must be a list or Pattern"
                           
         if not isinstance(pattern, Pattern):
             pattern = Pattern(name, multipliers=pattern, time_options=self._options.time)            
