@@ -2093,7 +2093,7 @@ class Pattern(object):
         if nmult == 1: return self._multipliers[0]
         if self._time_options is None:
             raise RuntimeError('Pattern->time_options cannot be None at runtime')
-        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
+        step = int(time//self._time_options.pattern_timestep)
         if self.wrap:                      return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:    return 0.0
         return self._multipliers[step]
