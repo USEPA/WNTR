@@ -54,6 +54,10 @@ def create_hydraulic_model(wn, HW_approx='default'):
     param.leak_area_param.build(m, wn, model_updater)
     param.leak_poly_coeffs_param.build(m, wn, model_updater)
     param.elevation_param.build(m, wn, model_updater)
+    if wn.options.hydraulic.headloss == 'C-M':
+        raise NotImplementedError('C-M headloss is not currently supported in the WNTRSimulator')
+    if wn.options.hydraulic.headloss == 'D-W':
+        raise NotImplementedError('D-W headloss is not currently supported in the WNTRSimulator')
     param.hw_resistance_param.build(m, wn, model_updater)
     param.minor_loss_param.build(m, wn, model_updater)
     param.tcv_resistance_param.build(m, wn, model_updater)
