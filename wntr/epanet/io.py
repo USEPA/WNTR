@@ -1157,100 +1157,12 @@ class InpFile(object):
     def _read_controls(self):
         control_count = 0
         for lnum, line in self.sections['[CONTROLS]']:
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            link_name = current[1]
-            link = self.wn.get_link(link_name)
-            if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
-                node_name = current[5]
-            current = [i.upper() for i in current]
-            current[1] = link_name # don't capitalize the link name
-
-            # Create the control action object
-
-            status = current[2].upper()
-            if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
-                setting = LinkStatus[status].value
-                action_obj = wntr.network.ControlAction(link, 'status', setting)
-            else:
-                if isinstance(link, wntr.network.Pump):
-                    action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
-                elif isinstance(link, wntr.network.Valve):
-                    if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
-                        setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
-                    elif link.valve_type == 'FCV':
-                        setting = to_si(self.flow_units, float(current[2]), HydParam.Flow)
-                    elif link.valve_type == 'TCV':
-                        setting = float(current[2])
-                    elif link.valve_type == 'GPV':
-                        setting = current[2]
-                    else:
-                        raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
-                    action_obj = wntr.network.ControlAction(link, 'setting', setting)
-                else:
-                    raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
-                                        'the link status. Control: {0}'.format(line)))
-
-            # Create the control object
             control_count += 1
             control_name = 'control '+str(control_count)
-            if 'TIME' not in current and 'CLOCKTIME' not in current:
-                threshold = None
-                if 'IF' in current:
-                    node = self.wn.get_node(node_name)
-                    if current[6] == 'ABOVE':
-                        oper = np.greater_equal
-                    elif current[6] == 'BELOW':
-                        oper = np.less_equal
-                    else:
-                        raise RuntimeError("The following control is not recognized: " + line)
-                    # OKAY - we are adding in the elevation. This is A PROBLEM
-                    # IN THE INP WRITER. Now that we know, we can fix it, but
-                    # if this changes, it will affect multiple pieces, just an
-                    # FYI.
-                    if node.node_type == 'Junction':
-                        threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Pressure)# + node.elevation
-                        control_obj = Control._conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
-                    elif node.node_type == 'Tank':
-                        threshold = to_si(self.flow_units, 
-                                          float(current[7]), HydParam.HydraulicHead)# + node.elevation
-                        control_obj = Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
-                else:
-                    raise RuntimeError("The following control is not recognized: " + line)
-#                control_name = ''
-#                for i in range(len(current)-1):
-#                    control_name = control_name + '/' + current[i]
-#                control_name = control_name + '/' + str(round(threshold, 2))
-            else:
-                if 'CLOCKTIME' not in current:  # at time
-                    if 'TIME' not in current:
-                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
-
-                    if ':' in current[5]:
-                        run_at_time = int(_str_time_to_sec(current[5]))
-                    else:
-                        run_at_time = int(float(current[5])*3600)
-                    control_obj = Control._time_control(self.wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
-#                    control_name = ''
-#                    for i in range(len(current)-1):
-#                        control_name = control_name + '/' + current[i]
-#                    control_name = control_name + '/' + str(run_at_time)
-                else:  # at clocktime
-                    if len(current) < 7:
-                        if ':' in current[5]:
-                            run_at_time = int(_str_time_to_sec(current[5]))
-                        else:
-                            run_at_time = int(float(current[5])*3600)
-                    else:
-                        run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
-#                    control_name = ''
-#                    for i in range(len(current)-1):
-#                        control_name = control_name + '/' + current[i]
-#                    control_name = control_name + '/' + str(run_at_time)
+            control_obj = _read_control_line(line, self.wn, self.flow_units, control_name)
+            if control_obj is None:
+                continue
+            
             if control_name in self.wn.control_name_list:
                 warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
                 logger.warning('Control already exists: "{}"'.format(control_name))
@@ -3089,6 +3001,118 @@ def _clean_line(wn, sec, line):  # pragma: no cover
 
     return line
 
+
+def _read_control_line(line, wn, flow_units, control_name):
+    """
+    Parameters
+    ----------
+    line: str
+    wn: wntr.network.WaterNetworkModel
+    flow_units: str
+    control_name: str
+
+    Returns
+    -------
+    control_obj: Control
+	
+    """
+    line = line.split(';')[0]
+    current = line.split()
+    if current == []:
+        return
+    link_name = current[1]
+    link = wn.get_link(link_name)
+    if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
+        node_name = current[5]
+    current = [i.upper() for i in current]
+    current[1] = link_name # don't capitalize the link name
+
+    # Create the control action object
+
+    status = current[2].upper()
+    if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
+        setting = LinkStatus[status].value
+        action_obj = wntr.network.ControlAction(link, 'status', setting)
+    else:
+        if isinstance(link, wntr.network.Pump):
+            action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
+        elif isinstance(link, wntr.network.Valve):
+            if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
+                setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
+            elif link.valve_type == 'FCV':
+                setting = to_si(flow_units, float(current[2]), HydParam.Flow)
+            elif link.valve_type == 'TCV':
+                setting = float(current[2])
+            elif link.valve_type == 'GPV':
+                setting = current[2]
+            else:
+                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
+            action_obj = wntr.network.ControlAction(link, 'setting', setting)
+        else:
+            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
+                                'the link status. Control: {0}'.format(line)))
+
+    # Create the control object
+    #control_count += 1
+    #control_name = 'control '+str(control_count)
+    if 'TIME' not in current and 'CLOCKTIME' not in current:
+        threshold = None
+        if 'IF' in current:
+            node = wn.get_node(node_name)
+            if current[6] == 'ABOVE':
+                oper = np.greater_equal
+            elif current[6] == 'BELOW':
+                oper = np.less_equal
+            else:
+                raise RuntimeError("The following control is not recognized: " + line)
+            # OKAY - we are adding in the elevation. This is A PROBLEM
+            # IN THE INP WRITER. Now that we know, we can fix it, but
+            # if this changes, it will affect multiple pieces, just an
+            # FYI.
+            if node.node_type == 'Junction':
+                threshold = to_si(flow_units,
+                                  float(current[7]), HydParam.Pressure)# + node.elevation
+                control_obj = Control._conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
+            elif node.node_type == 'Tank':
+                threshold = to_si(flow_units, 
+                                  float(current[7]), HydParam.HydraulicHead)# + node.elevation
+                control_obj = Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
+        else:
+            raise RuntimeError("The following control is not recognized: " + line)
+#                control_name = ''
+#                for i in range(len(current)-1):
+#                    control_name = control_name + '/' + current[i]
+#                control_name = control_name + '/' + str(round(threshold, 2))
+    else:
+        if 'CLOCKTIME' not in current:  # at time
+            if 'TIME' not in current:
+                raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+
+            if ':' in current[5]:
+                run_at_time = int(_str_time_to_sec(current[5]))
+            else:
+                run_at_time = int(float(current[5])*3600)
+            control_obj = Control._time_control(wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
+        else:  # at clocktime
+            if len(current) < 7:
+                if ':' in current[5]:
+                    run_at_time = int(_str_time_to_sec(current[5]))
+                else:
+                    run_at_time = int(float(current[5])*3600)
+            else:
+                run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+            control_obj = Control._time_control(wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
+    return control_obj
+
+
 def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_section=5, 
                     htmldiff_file='diff.html'):   # pragma: no cover
     """
@@ -3212,3 +3236,4 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_sectio
     g.close()
     
     return n
+
