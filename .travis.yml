@@ -26,6 +26,12 @@ matrix:
       services:
       - xvfb
       sudo: true
+    - python: 3.9
+      dist: xenial
+      env: CONDA_ENV=py39
+      services:
+      - xvfb
+      sudo: true
 addons:
     apt:
         packages:
