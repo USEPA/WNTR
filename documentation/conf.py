@@ -257,13 +257,13 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-'preamble':  '''%
-  \usepackage[nottoc]{tocbibind}
-  \pagestyle{plain}
-  \pagenumbering{gobble}
-  \\raggedright
-  \\bibliographystyle{ieeetr}
-''',
+#'preamble':  '''%
+#  \usepackage[nottoc]{tocbibind}
+#  \pagestyle{plain}
+#  \pagenumbering{gobble}
+#  \\raggedright
+#  \\bibliographystyle{ieeetr}
+#''',
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
