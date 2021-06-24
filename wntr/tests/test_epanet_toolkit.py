@@ -1,5 +1,5 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists
 
 import wntr.epanet.toolkit
 
@@ -48,7 +48,16 @@ class TestEpanetToolkit(unittest.TestCase):
         assert(link_index == 2) 
         link_val = enData.ENgetlinkvalue(link_index, 0) # DIAMETER = 0
         assert(link_val == 14) 
-         
+    
+    def test_ENsaveinpfile(self):
+        enData = wntr.epanet.toolkit.ENepanet()
+        enData.inpfile = join(datadir, "Net1.inp")
+        enData.ENopen(enData.inpfile, "temp.rpt")
+        
+        enData.ENsaveinpfile("Net1_toolkit.inp") 
+        file_exists = exists("Net1_toolkit.inp")
+        assert file_exists
+        
     def test_runepanet(self):
         inpfile = join(datadir, "Net1.inp")
         wntr.epanet.toolkit.runepanet(inpfile)
