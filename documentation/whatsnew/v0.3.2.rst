@@ -1,0 +1,21 @@
+.. _whatsnew_032:
+
+v0.3.2 (main branch)
+---------------------------------------------------
+
+* Updates to the results object
+
+  * Added headloss and status to the results link DataFrame
+  * Added methods on the results object to run basic computation
+
+* Added slots to options
+
+* Removed custom handlers from the bin filer reader
+
+* The following network component attributes have changed:
+  
+  * Pipe `check_valve_flag` and `cv` attributes were merged and renamed `check_valve`
+  * Pipe, Valve, and Pump `status` now refers to the current simulation status, the user can set the initial status using `initial_status`
+  * Valve `setting` now refers to the current simulation setting, the user can set the initial setting using `initial_setting`
+ 
+* Updated all tests to use unittest

@@ -256,25 +256,6 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     def _reset(self):
         pass
 
-    def _shift(self, value):
-        """
-        Shift any SimTimeConditions within larger condition rules by value seconds (backward).
-
-        I.e., if a control is scheduled at simulation time 7200 and you shift by 3600, the new
-        control threshold with be sim time 3600.
-
-        Parameters
-        ----------
-        value : float
-            seconds to subtract from threshold
-
-        Returns
-        -------
-        bool
-            is this still a valid control?
-        """
-        return True
-
     @abc.abstractmethod
     def requires(self):
         """
@@ -604,13 +585,6 @@ class SimTimeCondition(ControlCondition):
         if self._relation != other._relation:
             return False
         return True
-
-    def _shift(self, value):
-        self._threshold -= value
-        if self._threshold >= 0:
-            return True
-        self._threshold = 0
-        return False
 
     @property
     def name(self):
@@ -993,11 +967,6 @@ class OrCondition(ControlCondition):
         self._condition_1._reset()
         self._condition_2._reset()
 
-    def _shift(self, value):
-        success1 = self._condition_1._shift(value)
-        success2 = self._condition_2._shift(value)
-        return success1 or success2
-
     def _compare(self, other):
         """
         Parameters
@@ -1063,11 +1032,6 @@ class AndCondition(ControlCondition):
     def _reset(self):
         self._condition_1._reset()
         self._condition_2._reset()
-
-    def _shift(self, value):
-        success1 = self._condition_1._shift(value)
-        success2 = self._condition_2._shift(value)
-        return success1 or success2
 
     def _compare(self, other):
         """
@@ -2017,9 +1981,6 @@ class Rule(ControlBase):
         control_type: _ControlType
         """
         return self._control_type
-
-    def _shift(self, step):
-        return self._condition._shift(step)
     
     def requires(self):
         req = self._condition.requires()
@@ -2125,9 +2086,6 @@ class Control(Rule):
         else:
             self._control_type = _ControlType.postsolve
         
-    def _shift(self, step):
-        return self._condition._shift(step)
-
     @classmethod
     def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """

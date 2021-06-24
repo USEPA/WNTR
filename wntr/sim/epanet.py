@@ -61,7 +61,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
-                version=2.2, stop_criteria=None, convergence_error=False):
+                version=2.2, convergence_error=False):
 
         """
         Run the EPANET simulator.
@@ -104,93 +104,27 @@ class EpanetSimulator(WaterNetworkSimulator):
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
         
-        if (stop_criteria is None) or (stop_criteria.shape[0] == 0):
-            stop_criteria_met = True
-            if hydfile is None:
-                hydfile = file_prefix + '.hyd'
-            enData.ENopen(inpfile, rptfile, outfile)
-            if use_hyd:
-                enData.ENusehydfile(hydfile)
-                logger.debug('Loaded hydraulics')
-            else:
-                enData.ENsolveH()
-                logger.debug('Solved hydraulics')
-            if save_hyd:
-                enData.ENsavehydfile(hydfile)
-                logger.debug('Saved hydraulics')
-            enData.ENsolveQ()
-            logger.debug('Solved quality')
-            enData.ENreport()
-            logger.debug('Ran quality')
-            enData.ENclose()
-            logger.debug('Completed run')
-            #os.sys.stderr.write('Finished Closing\n')
-            # if (stop_criteria is not None) and (stop_criteria.shape[0] != 0):
-        else: # Right now this just runs hydraulics
-            file_prefix += '_step'
-            inpfile = file_prefix + '.inp'
-            self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
-            enData = wntr.epanet.toolkit.ENepanet(version=version)
-            rptfile = file_prefix + '.rpt'
-            outfile = file_prefix + '.bin'
-
-            enData.ENopen(inpfile, rptfile, outfile)
-            for i in stop_criteria.index:
-                link_name = stop_criteria.at[i,'link']
-                stop_criteria.loc[i,'_link_index'] = enData.ENgetlinkindex(link_name)
-            enData.ENopenH()
-            enData.ENinitH(0)
-            t = 0
-            stop_criteria_met = False
-            while True:
-                ret = enData.ENrunH()
-                for i in stop_criteria.index:
-                    link_name, attribute, operation, value, link_index = stop_criteria.loc[i,:]
-                    link_attribute = enData.ENgetlinkvalue(int(link_index), int(attribute))
-                    if operation(link_attribute, int(value)): # if this isn't status, we should not convert to int
-                        stop_criteria_met = True
-                        #results.error_code = wntr.sim.results.ResultsStatus.error
-                        warnings.warn('Simulation stoped based on stop criteria at time ' + str(t) + '. ') 
-                        logger.warning('Simulation stoped based on stop criteria at time ' + str(t) + '. ' ) 
-                        break # break out of for loop
-                if stop_criteria_met:
-                    break # break out of while loop
-                
-                tstep = enData.ENnextH()
-                t = t + tstep
-                if (tstep <= 0):
-                    continue_sim = False
-                    break
-            enData.ENcloseH()
-            enData.ENclose()
-
-            self._wn.options.time.duration = t
-            self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
-            enData = wntr.epanet.toolkit.ENepanet(version=version)
-
-            stop_criteria_met = True
-            if hydfile is None:
-                hydfile = file_prefix + '.hyd'
-            enData.ENopen(inpfile, rptfile, outfile)
-            if use_hyd:
-                enData.ENusehydfile(hydfile)
-                logger.debug('Loaded hydraulics')
-            else:
-                enData.ENsolveH()
-                logger.debug('Solved hydraulics')
-            if save_hyd:
-                enData.ENsavehydfile(hydfile)
-                logger.debug('Saved hydraulics')
-            enData.ENsolveQ()
-            logger.debug('Solved quality')
-            enData.ENreport()
-            logger.debug('Ran quality')
-            enData.ENclose()
-            logger.debug('Completed run')
-
-            del stop_criteria['_link_index']
+        if hydfile is None:
+            hydfile = file_prefix + '.hyd'
+        enData.ENopen(inpfile, rptfile, outfile)
+        if use_hyd:
+            enData.ENusehydfile(hydfile)
+            logger.debug('Loaded hydraulics')
+        else:
+            enData.ENsolveH()
+            logger.debug('Solved hydraulics')
+        if save_hyd:
+            enData.ENsavehydfile(hydfile)
+            logger.debug('Saved hydraulics')
+        enData.ENsolveQ()
+        logger.debug('Solved quality')
+        enData.ENreport()
+        logger.debug('Ran quality')
+        enData.ENclose()
+        logger.debug('Completed run')
+        #os.sys.stderr.write('Finished Closing\n')
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
-        results._adjust_time(self._wn.options.time.pattern_start)
+
         return results
 
