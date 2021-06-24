@@ -29,9 +29,8 @@ class TestEpanetToolkit(unittest.TestCase):
         inpfile = join(datadir, "Net1.inp")
         wntr.epanet.toolkit.runepanet(inpfile)
         
-        binfile = join(testdir, "temp.bin")
         reader = wntr.epanet.io.BinFile()
-        results = reader.read(binfile)
+        results = reader.read("temp.bin")
         
         assert(isinstance(results, wntr.sim.results.SimulationResults))
 
