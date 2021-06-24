@@ -8,6 +8,7 @@ datadir = join(testdir, "..", "..", "examples", "networks")
 
 
 class TestEpanetToolkit(unittest.TestCase):
+    
     def test_isOpen(self):
         enData = wntr.epanet.toolkit.ENepanet()
         enData.inpfile = join(datadir, "Net1.inp")
@@ -23,7 +24,16 @@ class TestEpanetToolkit(unittest.TestCase):
         self.assertEqual(11, nNodes)
         nLinks = enData.ENgetcount(wntr.epanet.util.EN.LINKCOUNT)
         self.assertEqual(13, nLinks)
-
+        
+    def test_runepanet(self):
+        inpfile = join(datadir, "Net1.inp")
+        wntr.epanet.toolkit.runepanet(inpfile)
+        
+        binfile = join(testdir, "temp.bin")
+        reader = wntr.epanet.io.BinFile()
+        results = reader.read(binfile)
+        
+        assert(isinstance(results, wntr.sim.results.SimulationResults))
 
 if __name__ == "__main__":
     unittest.main()
