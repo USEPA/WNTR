@@ -660,8 +660,6 @@ class InpFile(object):
         # nnames.sort()
         for tank_name in nnames:
             tank = wn.nodes[tank_name]
-            if tank.init_level < tank.min_level:
-                tank.init_level = tank.min_level
             E = {'name': tank_name,
                  'elev': from_si(self.flow_units, tank.elevation, HydParam.Elevation),
                  'initlev': from_si(self.flow_units, tank.init_level, HydParam.HydraulicHead),
@@ -679,8 +677,6 @@ class InpFile(object):
                     E['overflow'] = 'YES'
                     if tank.vol_curve is None:
                         E['curve'] = '*'
-            if E['initlev'] > E['maxlev']:
-                E['initlev'] = E['maxlev']
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
