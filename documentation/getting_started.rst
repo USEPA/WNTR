@@ -11,7 +11,7 @@ To start using WNTR, open a Python console and import the package::
 
 	import wntr	
 
-WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/master/examples/getting_started.py>`_, shown below that uses the `EPANET Example Network 3 (Net3) INP file <https://github.com/USEPA/WNTR/blob/master/examples/networks/Net3.inp>`_.
+WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/main/examples/getting_started.py>`_, shown below that uses the `EPANET Example Network 3 (Net3) INP file <https://github.com/USEPA/WNTR/blob/main/examples/networks/Net3.inp>`_.
 This example demonstrates how to:
 
 * Import WNTR
@@ -31,7 +31,7 @@ Additional examples are included throughout the WNTR documentation. The examples
 that a user has experience using EPANET (https://www.epa.gov/water-research/epanet) and Python (https://www.python.org/), including the ability to install and use additional Python packages, such as those listed in :ref:`requirements` and :ref:`optional_dependencies`.
 
 
-Several EPANET INP files and example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/master/examples>`_.
+Several EPANET INP files and example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/main/examples>`_.
 Example networks range from a simple 9 node network to a 3,000 node network.
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at
@@ -42,12 +42,12 @@ Additional examples
 
 WNTR comes with additional examples that illustrate advanced use cases, including:
 
-* `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_: 
+* `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_: 
   This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.
-* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/master/examples/pipe_criticality.py>`_: 
+* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_: 
   This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
-* `Fire flow example <https://github.com/USEPA/WNTR/blob/master/examples/fire_flow.py>`_: 
+* `Fire flow example <https://github.com/USEPA/WNTR/blob/main/examples/fire_flow.py>`_: 
   This example runs hydraulic simulations with and without fire fighting flow demand.
-* `Sensor placement example <https://github.com/USEPA/WNTR/blob/master/examples/sensor_placement.py>`_: 
+* `Sensor placement example <https://github.com/USEPA/WNTR/blob/main/examples/sensor_placement.py>`_: 
   This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 
   Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.
