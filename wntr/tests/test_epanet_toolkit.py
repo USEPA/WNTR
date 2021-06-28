@@ -60,12 +60,32 @@ class TestEpanetToolkit(unittest.TestCase):
         
     def test_runepanet(self):
         inpfile = join(datadir, "Net1.inp")
-        wntr.epanet.toolkit.runepanet(inpfile)
-        
+        wntr.epanet.toolkit.runepanet(inpfile, "test_runepanet.rpt", "test_runepanet.bin")
+                 
         reader = wntr.epanet.io.BinFile()
-        results = reader.read("temp.bin")
+        results = reader.read("test_runepanet.bin")
         
         assert(isinstance(results, wntr.sim.results.SimulationResults))
+        assert(results.node['pressure'].shape == (25,11))
+        
+    def test_runepanet_step(self):
+        enData = wntr.epanet.toolkit.ENepanet()
+        enData.inpfile = join(datadir, "Net1.inp")
+        enData.ENopen(enData.inpfile, "test_runepanet_step.rpt", "test_runepanet_step.bin")
+        
+        enData.ENopenH()
+        enData.ENinitH(0)
+        t = 0
+        while True:
+            enData.ENrunH()
+            tstep = enData.ENnextH()
+            t = t + tstep
+            if (tstep <= 0):
+                break
+        
+        enData.ENcloseH()
+
+        assert (t == 86400)
 
 if __name__ == "__main__":
     unittest.main()
