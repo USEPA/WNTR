@@ -1875,11 +1875,11 @@ class InpFile(object):
             if current == []:
                 continue
             if (current[0].upper() == 'DURATION'):
-                opts.time.duration = _str_time_to_sec(current[1])
+                opts.time.duration = int(float(current[1]) * 3600) if _is_number(current[1]) else int(_str_time_to_sec(current[1]))
             elif (current[0].upper() == 'HYDRAULIC'):
-                opts.time.hydraulic_timestep = _str_time_to_sec(current[2])
+                opts.time.hydraulic_timestep = int(float(current[2]) * 3600) if _is_number(current[2]) else int(_str_time_to_sec(current[2]))
             elif (current[0].upper() == 'QUALITY'):
-                opts.time.quality_timestep = _str_time_to_sec(current[2])
+                opts.time.quality_timestep = int(float(current[2]) * 3600) if _is_number(current[2]) else int(_str_time_to_sec(current[2]))
             elif (current[1].upper() == 'CLOCKTIME'):
                 if len(current) > 3:
                     time_format = current[3].upper()
@@ -1893,7 +1893,7 @@ class InpFile(object):
             else:
                 # Other time options: RULE TIMESTEP, PATTERN TIMESTEP, REPORT TIMESTEP, REPORT START
                 key_string = current[0] + '_' + current[1]
-                setattr(opts.time, key_string.lower(), _str_time_to_sec(current[2]))
+                setattr(opts.time, key_string.lower(), int(float(current[2]) * 3600) if _is_number(current[2]) else int(_str_time_to_sec(current[2])))
 
     def _write_times(self, f, wn):
         f.write('[TIMES]\n'.encode('ascii'))
