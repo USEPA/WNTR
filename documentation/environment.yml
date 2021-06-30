@@ -8,3 +8,4 @@ dependencies:
     - matplotlib
     - sphinx
     - numpydoc
+    - docutils<0.17
