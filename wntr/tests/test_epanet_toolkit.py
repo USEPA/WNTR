@@ -28,6 +28,9 @@ class TestEpanetToolkit(unittest.TestCase):
         elev1 = enData.ENgetnodevalue(2,wntr.epanet.util.EN.ELEVATION)
         self.assertEqual(710.0, elev0)
         self.assertEqual(715.0, elev1)
+        enData.ENsetlinkvalue(2, wntr.epanet.util.EN.DIAMETER, 0.125)
+        diam1 = enData.ENgetlinkvalue(2,wntr.epanet.util.EN.DIAMETER)
+        self.assertEqual(0.125, diam1)
 
 if __name__ == "__main__":
     unittest.main()
