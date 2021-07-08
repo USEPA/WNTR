@@ -23,7 +23,11 @@ class TestEpanetToolkit(unittest.TestCase):
         self.assertEqual(11, nNodes)
         nLinks = enData.ENgetcount(wntr.epanet.util.EN.LINKCOUNT)
         self.assertEqual(13, nLinks)
-
+        elev0 = enData.ENgetnodevalue(2,wntr.epanet.util.EN.ELEVATION)
+        enData.ENsetnodevalue(2, wntr.epanet.util.EN.ELEVATION, 715.0)
+        elev1 = enData.ENgetnodevalue(2,wntr.epanet.util.EN.ELEVATION)
+        self.assertEqual(710.0, elev0)
+        self.assertEqual(715.0, elev1)
 
 if __name__ == "__main__":
     unittest.main()
