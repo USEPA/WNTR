@@ -1,6 +1,6 @@
 name: wntr
 dependencies:
-    - python=3.7
+    - python=3.8
     - numpy
     - scipy
     - networkx
@@ -8,3 +8,4 @@ dependencies:
     - matplotlib
     - sphinx
     - numpydoc
+    - docutils<0.17
