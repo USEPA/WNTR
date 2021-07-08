@@ -1159,6 +1159,7 @@ class InpFile(object):
         for lnum, line in self.sections['[CONTROLS]']:
             control_count += 1
             control_name = 'control '+str(control_count)
+            
             control_obj = _read_control_line(line, self.wn, self.flow_units, control_name)
             if control_obj is None:
                 continue
@@ -3060,9 +3061,9 @@ def _read_control_line(line, wn, flow_units, control_name):
         if 'IF' in current:
             node = wn.get_node(node_name)
             if current[6] == 'ABOVE':
-                oper = np.greater_equal
+                oper = np.greater
             elif current[6] == 'BELOW':
-                oper = np.less_equal
+                oper = np.less
             else:
                 raise RuntimeError("The following control is not recognized: " + line)
             # OKAY - we are adding in the elevation. This is A PROBLEM

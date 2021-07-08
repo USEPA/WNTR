@@ -3,41 +3,61 @@
 v0.3.1 (master branch)
 ---------------------------------------------------
 
-* The `run_sim` method for the EpanetSimulator now includes the option to define convergence error behavior.
+* The ``run_sim`` method for the EpanetSimulator now includes the option to define convergence error behavior.
   
-  * If the simulation does not converge and `convergence_error` is True, an error is raised. 
-  * If the simulation does not converge and `convergence_error` is False, partial results are returned, a warning is issued, and results object `error_code` is set to 0.
+  * If the simulation does not converge and ``convergence_error`` is True, an error is raised. 
+  * If the simulation does not converge and ``convergence_error`` is False, partial results are returned, a warning is issued, and results object ``error_code`` is set to 0.
   
-  The default setting for `convergence_error` when using the EpanetSimulator is False.
+  The default setting for ``convergence_error`` when using the EpanetSimulator is False.
   
-* The default setting for `convergence_error` in the WNTRSimulator was changed to False.
+* The default setting for ``convergence_error`` in the WNTRSimulator was changed to False.
   
-* Updated the `add_outage` method on pumps so it can be used with the EpanetSimulator.  
-  Added a `remove_outage` method on pumps.
+* Updated the ``add_outage`` method on pumps so it can be used with the EpanetSimulator.  
+  Added a ``remove_outage`` method on pumps.
  
-* Added a `convert_controls_to_rules` method on the water network model.  In some instances, mixing controls and rules has unexpected consequences.  
+* Added a ``convert_controls_to_rules`` method on the water network model.  In some instances, mixing controls and rules has unexpected consequences.  
   By converting all controls to rules, the user can specify the priority for each rule. 
 
-* Updated the `expected_demand` and `average_expected_demand` metrics to optionally specify a demand category.  
+* Updated the ``expected_demand`` and ``average_expected_demand`` metrics to optionally specify a demand category.  
   
-* Added a function to compute valve segment attributes from a valve layer (`valve_segment_attributes`).  This includes 
+* Added a function to compute valve segment attributes from a valve layer (``valve_segment_attributes``).  This includes 
   the number of valves surrounding each valve,
   the increase in segment demand if a given valve is removed, and 
   the increase in segment pipe length if a given valve is removed. 
   
-* Added graphics options to plot valve layers and valve segment attributes (`plot_valve_layer`).
-  Removed options in `plot_network` that plot valve layers.  
+* Added graphics options to plot valve layers and valve segment attributes (``plot_valve_layer``).
+  Removed options in ``plot_network`` that plot valve layers.  
   
-* Added a function to generate a randomly ordered colormap (`random_colormap`).  Updated `custom_colormap` so that the number of bins is not an optional argument.
+* Added a function to generate a randomly ordered colormap (``random_colormap``).  Updated ``custom_colormap`` so that the number of bins is not an optional argument.
 
-* Changed `plot_network` to return a matplotlib axes object rather than networkx nodes and edges objects. 
+* Added ``pressure_exponent`` to junction properties. This allows the user to define pressure exponents that vary throughout the network (used only by the WNTRSimualtor).
+  Similar attributes exist to define minimum and required pressure on each junction.
+  By default, each junction's pressure exponent is set to None and the global value in the hydraulic options are used to define the PDD constraint for that junction. 
+
+* Updated controls to create speed rules for pumps.
+
+* Changed ``plot_network`` to return a matplotlib axes object rather than networkx nodes and edges objects. 
   This helps use the axes to layer additional data (such as valve segment attributes).
+
+* The ``pump_cost`` function was updated to use pump energy, instead of recomputing those values.
+
+* Bug fix in the ``pump_energy`` calculation and added additional tests.  The function, which was returning power in Watts, now returns energy in Joules. 
+
+* Bug fix for value controls read in from EPANET INP files.  Key words ABOVE and BELOW had been assigned to >= and <=, respectively.  This was changed to > and <, respectively.
+
+* Bug fix for plotting directed networks with a colorbar
+
+* Bug fix for patterns, pattern start was doubly counted in the ``at`` method.
+
+* Added NotImplementedError for D-W and C-M headloss when using the WNTRSimualtor.
 
 * Suppressed the OptimizeWarning from scipy.optimize that often occurs when fitting a pump curve.  
   This is not an error.
 
-* Bug fix in the pump energy calculation and added additional tests.  The function, which was returning power in Watts, now returns energy in Joules. 
+* Updated network component attributes that store simulation results to be read-only.
 
-* Pump cost function was updated to use pump energy, instead of recomputing those values.
+* Changed results object names for friction factor (``friction_factor``), link quality (``quality``), and reaction rate (``reaction_rate``) to match names used in EPANET.
 
 * Updated API documentation to include a table of class properties for each network class (Junction, Tank, Pipe, etc.).
+
+* Added support for Python 3.9
