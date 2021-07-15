@@ -5,7 +5,7 @@ v0.3.2 (main branch)
 
 * Updated the results object
 
-  * Added ``headloss`` and ``status`` to the results link DataFrame
+  * Added ``headloss`` and ``setting`` to the results link DataFrame
   * Added methods on the results object to run basic computation such as add, subtract, divide, power, and abs
 
 * Added slots to water network model options, ``wn.options``, to define available option names.
@@ -20,4 +20,10 @@ v0.3.2 (main branch)
   * Pipe, Valve, and Pump ``status`` now refers to the current simulation status and is read-only, the user can set the initial status using ``initial_status``
   * Valve ``setting`` now refers to the current simulation setting and is read-only, the user can set the initial setting using ``initial_setting``
  
-* Updated all tests to use unittest
+* Added a metric to compute pump energy
+
+* Updated the WNTRSimulator to use `wn.options.time.start_clocktime`.
+
+* Updated documentation example that creates a weighted graph.
+
+* Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.
