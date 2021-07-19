@@ -5,7 +5,7 @@ v0.3.2 (main branch)
 
 * Updated the results object
 
-  * Added ``headloss`` and ``setting`` to the results link DataFrame
+  * Added ``setting`` to the WNTRSimulator results link DataFrame
   * Added methods on the results object to run basic computation such as add, subtract, divide, power, and abs
 
 * Added slots to water network model options, ``wn.options``, to define available option names.
@@ -21,6 +21,8 @@ v0.3.2 (main branch)
   * Valve ``setting`` now refers to the current simulation setting and is read-only, the user can set the initial setting using ``initial_setting``
  
 * Added a metric to compute pump energy
+
+* Added type checking for input into `wn.add_*` methods.
 
 * Updated the WNTRSimulator to use `wn.options.time.start_clocktime`.
 
