@@ -119,7 +119,7 @@ def _lcml(*list):
   return reduce(_lcm, *list)
 
 def water_service_availability(expected_demand, demand):
-    """
+    r"""
     Compute water service availability (WSA) at junctions, defined as follows:
         
     .. math:: WSA = \dfrac{demand}{expected\_demand}

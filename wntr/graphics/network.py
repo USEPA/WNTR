@@ -159,7 +159,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             add_node_colorbar = False
         
         if node_cmap is None:
-            node_cmap = plt.cm.Spectral_r
+            node_cmap = plt.get_cmap('Spectral_r')
         elif isinstance(node_cmap, list):
             if len(node_cmap) == 1:
                 node_cmap = node_cmap*2
@@ -181,7 +181,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             add_link_colorbar = False
 
         if link_cmap is None:
-            link_cmap = plt.cm.Spectral_r
+            link_cmap = plt.get_cmap('Spectral_r')
         elif isinstance(link_cmap, list):
             if len(link_cmap) == 1:
                 link_cmap = link_cmap*2
@@ -228,8 +228,16 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
         clb.ax.set_title(node_colorbar_label, fontsize=10)
     if add_link_colorbar and link_attribute:
-        clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+        if directed:
+            vmin = min(map(abs,link_attribute.values()))
+            vmax = max(map(abs,link_attribute.values())) 
+            sm = plt.cm.ScalarMappable(cmap=link_cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+            sm.set_array([])
+            clb = plt.colorbar(sm, shrink=0.5, pad=0.05, ax=ax)
+        else:
+            clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
         clb.ax.set_title(link_colorbar_label, fontsize=10)
+        
     ax.axis('off')
     
     if filename:

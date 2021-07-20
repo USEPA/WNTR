@@ -198,17 +198,17 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
         # add new pipe and change original length
         wn2.add_pipe(new_pipe_name, j1, end_node.name,
                      original_length*(1-split_at_point), pipe.diameter, 
-                     pipe.roughness, pipe.minor_loss, pipe.status, pipe.cv)
+                     pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
         pipe.length = original_length*split_at_point
     else: # add pipe at start
         pipe.start_node = wn2.get_node(j0) 
         # add new pipe and change original length
         wn2.add_pipe(new_pipe_name, start_node.name, j1, 
                      original_length*split_at_point, pipe.diameter, 
-                     pipe.roughness, pipe.minor_loss, pipe.status, pipe.cv)
+                     pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
         pipe.length = original_length*(1-split_at_point)
         
-    if pipe.cv:
+    if pipe.check_valve:
         logger.warn('You are splitting a pipe with a check valve. The new \
                     pipe will not have a check valve.')
     
