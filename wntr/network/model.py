@@ -1896,7 +1896,7 @@ class PatternRegistry(Registry):
         ValueError
             If adding a pattern with `name` that already exists.
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(pattern, (list, np.ndarray, Pattern)), "pattern must be a list or Pattern"
                           
         if not isinstance(pattern, Pattern):
@@ -1977,7 +1977,7 @@ class CurveRegistry(Registry):
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(curve_type, (type(None), str)), "curve_type must be a string"
         assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
         
@@ -2233,7 +2233,7 @@ class NodeRegistry(Registry):
         initial_quality : float, optional
             Initial quality at this junction
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(base_demand, (int, float)), "base_demand must be a float"
         assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
         assert isinstance(elevation, (int, float)), "elevation must be a float"
@@ -2289,7 +2289,7 @@ class NodeRegistry(Registry):
             X-Y coordinates of the node location.
             
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(elevation, (int, float)), "elevation must be a float"
         assert isinstance(init_level, (int, float)), "init_level must be a float"
         assert isinstance(min_level, (int, float)), "min_level must be a float"
@@ -2356,7 +2356,7 @@ class NodeRegistry(Registry):
             X-Y coordinates of the node location.
         
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(base_head, (int, float)), "base_head must be float"
         assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
         assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
@@ -2577,9 +2577,9 @@ class LinkRegistry(Registry):
             False if the pipe does not have a check valve.
         
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(length, (int, float)), "length must be a float"
         assert isinstance(diameter, (int, float)), "diameter must be a float"
         assert isinstance(roughness, (int, float)), "roughness must be a float"
@@ -2630,9 +2630,9 @@ class LinkRegistry(Registry):
             Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(pump_type, str), "pump_type must be a string"
         assert isinstance(pump_parameter, (int, float, str)), "pump_parameter must be a float or string"
         assert isinstance(speed, (int, float)), "speed must be a float"
@@ -2684,9 +2684,9 @@ class LinkRegistry(Registry):
             Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'
             
         """
-        assert isinstance(name, str) and len(name) <= 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(start_node_name, str) and len(start_node_name) <= 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(end_node_name, str) and len(end_node_name) <= 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(diameter, (int, float)), "diameter must be a float"
         assert isinstance(valve_type, str), "valve_type must be a string"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
