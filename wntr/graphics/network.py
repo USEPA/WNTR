@@ -159,7 +159,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             add_node_colorbar = False
         
         if node_cmap is None:
-            node_cmap = plt.cm.Spectral_r
+            node_cmap = plt.get_cmap('Spectral_r')
         elif isinstance(node_cmap, list):
             if len(node_cmap) == 1:
                 node_cmap = node_cmap*2
@@ -181,7 +181,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             add_link_colorbar = False
 
         if link_cmap is None:
-            link_cmap = plt.cm.Spectral_r
+            link_cmap = plt.get_cmap('Spectral_r')
         elif isinstance(link_cmap, list):
             if len(link_cmap) == 1:
                 link_cmap = link_cmap*2

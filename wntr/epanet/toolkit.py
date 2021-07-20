@@ -12,24 +12,30 @@ Programmers Toolkit DLLs.
     ENgetwarning
 
 """
-import ctypes, os, sys
-from ctypes import byref
+import ctypes
+import os
 import os.path
-from pkg_resources import resource_filename
 import platform
-epanet_toolkit = 'wntr.epanet.toolkit'
+import sys
+from ctypes import byref
 
-if os.name in ['nt','dos']:
-    libepanet = resource_filename(__name__,'Windows/epanet2.dll')
-elif sys.platform in ['darwin']:
-    libepanet = resource_filename(__name__,'Darwin/libepanet.dylib')
+from pkg_resources import resource_filename
+
+epanet_toolkit = "wntr.epanet.toolkit"
+
+if os.name in ["nt", "dos"]:
+    libepanet = resource_filename(__name__, "Windows/epanet2.dll")
+elif sys.platform in ["darwin"]:
+    libepanet = resource_filename(__name__, "Darwin/libepanet.dylib")
 else:
-    libepanet = resource_filename(__name__,'Linux/libepanet2.so')
+    libepanet = resource_filename(__name__, "Linux/libepanet2.so")
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # import warnings
+
 
 class EpanetException(Exception):
     pass
@@ -37,29 +43,48 @@ class EpanetException(Exception):
 
 def ENgetwarning(code, sec=-1):
     if sec >= 0:
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        header = 'At %3d:%.2d:%.2d, '%(hours,mm,sec)
+        hours = int(sec / 3600.0)
+        sec -= hours * 3600
+        mm = int(sec / 60.0)
+        sec -= mm * 60
+        header = "At %3d:%.2d:%.2d, " % (hours, mm, sec)
     else:
-        header = ''
+        header = ""
     if code == 1:
-        return header+'System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials'
+        return (
+            header
+            + "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
+        )
     elif code == 2:
-        return header+'System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed'
+        return (
+            header
+            + "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
+        )
     elif code == 3:
-        return header+'System disconnected - one or more nodes with positive demands were disconnected for all supply sources'
+        return (
+            header
+            + "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
+        )
     elif code == 4:
-        return header+'Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow'
+        return (
+            header
+            + "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
+        )
     elif code == 5:
-        return header+'Vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open'
+        return (
+            header
+            + "Vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
+        )
     elif code == 6:
-        return header+'System has negative pressures - negative pressures occurred at one or more junctions with positive demand'
+        return (
+            header
+            + "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
+        )
     else:
-        return header+'Unknown warning: %d'%code
+        return header + "Unknown warning: %d" % code
 
-def runepanet(inpfile):
+
+def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
     
     Parameters
@@ -69,10 +94,13 @@ def runepanet(inpfile):
 
     """
     file_prefix, file_ext = os.path.splitext(inpfile)
+    if rptfile is None:
+        rptfile = file_prefix + ".rpt"
+    if binfile is None:
+        binfile = file_prefix + ".bin"
+    
     enData = ENepanet()
-    rptfile = file_prefix + '.rpt'
-    outfile = file_prefix + '.bin'
-    enData.ENopen(inpfile, rptfile, outfile)
+    enData.ENopen(inpfile, rptfile, binfile)
     enData.ENsolveH()
     enData.ENsolveQ()
     try:
@@ -82,7 +110,7 @@ def runepanet(inpfile):
     enData.ENclose()
 
 
-class ENepanet():
+class ENepanet:
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
 
@@ -98,7 +126,7 @@ class ENepanet():
         EPANET version to use (either 2.0 or 2.2)
     
     """
-    
+
     ENlib = None
     """The variable that holds the ctypes Library object"""
 
@@ -114,44 +142,49 @@ class ENepanet():
     Errflag = False
     """A fatal error occurred at some point during EPANET execution"""
 
-    inpfile = 'temp.inp'
+    inpfile = "temp.inp"
     """The name of the EPANET input file"""
 
-    rptfile = 'temp.rpt'
+    rptfile = "temp.rpt"
     """The report file to generate"""
 
-    binfile = 'temp.bin'
+    binfile = "temp.bin"
     """The optional binary output file"""
 
     fileLoaded = False
 
-    def __init__(self, inpfile='', rptfile='', binfile='', version=2.2):
+    def __init__(self, inpfile="", rptfile="", binfile="", version=2.2):
 
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
 
-
         if float(version) == 2.0:
-            libnames = ['epanet2_x86','epanet2','epanet']
-            if '64' in platform.machine():
-                libnames.insert(0, 'epanet2_amd64')
+            libnames = ["epanet2_x86", "epanet2", "epanet"]
+            if "64" in platform.machine():
+                libnames.insert(0, "epanet2_amd64")
         elif float(version) == 2.2:
-            libnames = ['epanet22', 'epanet22_win32']
-            if '64' in platform.machine():
-                libnames.insert(0, 'epanet22_amd64')
+            libnames = ["epanet22", "epanet22_win32"]
+            if "64" in platform.machine():
+                libnames.insert(0, "epanet22_amd64")
         for lib in libnames:
             try:
-                if os.name in ['nt','dos']:
-                    libepanet = resource_filename(epanet_toolkit,'Windows/%s.dll' % lib)
+                if os.name in ["nt", "dos"]:
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Windows/%s.dll" % lib
+                    )
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                elif sys.platform in ['darwin']:
-                    libepanet = resource_filename(epanet_toolkit,'Darwin/lib%s.dylib' % lib)
+                elif sys.platform in ["darwin"]:
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
+                    )
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(epanet_toolkit,'Linux/lib%s.so' % lib)
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Linux/lib%s.so" % lib
+                    )
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                return # OK!
+                return  # OK!
             except Exception as E1:
                 if lib == libnames[-1]:
                     raise E1
@@ -164,17 +197,18 @@ class ENepanet():
 
     def _error(self):
         """Print the error text the corresponds to the error code returned"""
-        if not self.errcode: return
-        #errtxt = self.ENlib.ENgeterror(self.errcode)
-        logger.error("EPANET error: %d",self.errcode)
+        if not self.errcode:
+            return
+        # errtxt = self.ENlib.ENgeterror(self.errcode)
+        logger.error("EPANET error: %d", self.errcode)
         if self.errcode >= 100:
             self.Errflag = True
             self.errcodelist.append(self.errcode)
-            raise EpanetException('EPANET Error {}'.format(self.errcode))
+            raise EpanetException("EPANET Error {}".format(self.errcode))
         else:
             self.Warnflag = True
             # warnings.warn(ENgetwarning(self.errcode))
-            self.errcodelist.append(ENgetwarning(self.errcode,self.cur_time))
+            self.errcodelist.append(ENgetwarning(self.errcode, self.cur_time))
         return
 
     def ENopen(self, inpfile=None, rptfile=None, binfile=None):
@@ -191,15 +225,19 @@ class ENepanet():
             Binary output file to create (default to constructor value)
             
         """
-        if self.fileLoaded: self.ENclose()
+        if self.fileLoaded:
+            self.ENclose()
         if self.fileLoaded:
             raise RuntimeError("File is loaded and cannot be closed")
-        if inpfile is None: inpfile = self.inpfile
-        if rptfile is None: rptfile = self.rptfile
-        if binfile is None: binfile = self.binfile
-        inpfile = inpfile.encode('ascii')
-        rptfile = rptfile.encode('ascii')
-        binfile = binfile.encode('ascii')
+        if inpfile is None:
+            inpfile = self.inpfile
+        if rptfile is None:
+            rptfile = self.rptfile
+        if binfile is None:
+            binfile = self.binfile
+        inpfile = inpfile.encode("ascii")
+        rptfile = rptfile.encode("ascii")
+        binfile = binfile.encode("ascii")
         self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
         self._error()
         if self.errcode < 100:
@@ -262,7 +300,8 @@ class ENepanet():
         
         Returns
         --------
-        Current simulation time (seconds)
+        int
+            Current simulation time (seconds)
         
         """
         lT = ctypes.c_long()
@@ -280,7 +319,8 @@ class ENepanet():
         
         Returns
         ---------
-         Time (seconds) until next hydraulic event (0 marks end of simulation period)
+        int
+            Time (seconds) until next hydraulic event (0 marks end of simulation period)
          
         """
         lTstep = ctypes.c_long()
@@ -300,10 +340,10 @@ class ENepanet():
         Parameters
         -------------
         filename : str
-            Name of file
+            Name of hydraulics file to output
             
         """
-        self.errcode = self.ENlib.ENsavehydfile(filename.encode('ascii'))
+        self.errcode = self.ENlib.ENsavehydfile(filename.encode("ascii"))
         self._error()
         return
 
@@ -313,10 +353,10 @@ class ENepanet():
         Parameters
         -------------
         filename : str
-            Name of file
+            Name of hydraulics file to use
             
         """
-        self.errcode = self.ENlib.ENusehydfile(filename.encode('ascii'))
+        self.errcode = self.ENlib.ENusehydfile(filename.encode("ascii"))
         self._error()
         return
 
@@ -337,7 +377,7 @@ class ENepanet():
 
         Parameters
         -------------
-         iSaveflag : int
+        iSaveflag : int
              EN_SAVE (1) if results saved to file, EN_NOSAVE (0) if not
              
         """
@@ -354,7 +394,8 @@ class ENepanet():
         
         Returns
         -------
-        Current simulation time (seconds)
+        int
+            Current simulation time (seconds)
          
         """
         lT = ctypes.c_long()
@@ -371,7 +412,8 @@ class ENepanet():
         
         Returns
         --------
-        Time (seconds) until next hydraulic event (0 marks end of simulation period)
+        int
+            Time (seconds) until next hydraulic event (0 marks end of simulation period)
          
         """
         lTstep = ctypes.c_long()
@@ -401,7 +443,8 @@ class ENepanet():
 
         Returns
         ---------
-        Number of components in network
+        int
+            Number of components in network
         
         """
         iCount = ctypes.c_int()
@@ -436,12 +479,13 @@ class ENepanet():
         
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetnodeindex(sId.encode('ascii'), byref(iIndex))
+        self.errcode = self.ENlib.ENgetnodeindex(sId.encode("ascii"), byref(iIndex))
         self._error()
         return iIndex.value
 
     def ENgetnodevalue(self, iIndex, iCode):
-        """Retrieves parameter value for a node
+        """
+        Retrieves parameter value for a node
 
         Parameters
         -------------
@@ -474,7 +518,7 @@ class ENepanet():
 
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetlinkindex(sId.encode('ascii'), byref(iIndex))
+        self.errcode = self.ENlib.ENgetlinkindex(sId.encode("ascii"), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -498,7 +542,6 @@ class ENepanet():
         self._error()
         return fValue.value
 
-
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
 
@@ -509,11 +552,9 @@ class ENepanet():
 
         """
 
-        inpfile = inpfile.encode('ascii')
+        inpfile = inpfile.encode("ascii")
         self.errcode = self.ENlib.ENsaveinpfile(inpfile)
         self._error()
 
         return
 
-
-    

@@ -1,101 +1,123 @@
-from nose.tools import *
+import unittest
 from os.path import abspath, dirname, join
+
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'networks_for_testing')
-netdir = join(testdir,'..','..','examples','networks')
+datadir = join(testdir, "networks_for_testing")
+netdir = join(testdir, "..", "..", "examples", "networks")
 
 
-"""
-Compare the following results to WST impact files using TSG file
-121          SETPOINT      100000          0                86400
-"""
-def test_mass_consumed():
-    inp_file = join(netdir,'Net3.inp')
+class TestHealthImpactsMetric(unittest.TestCase):
+    """
+    Compare the following results to WST impact files using TSG file
+    121          SETPOINT      100000          0                86400
+    """
 
-    wn = wntr.network.WaterNetworkModel(inp_file)
+    def test_mass_consumed(self):
+        inp_file = join(netdir, "Net3.inp")
 
-    wn.options.quality.parameter = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
-    wn.add_pattern(newpat.name, newpat)
-    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+        wn = wntr.network.WaterNetworkModel(inp_file)
 
-    sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(version=2.0)
+        wn.options.quality.parameter = "CHEMICAL"
+        newpat = wntr.network.elements.Pattern.binary_pattern(
+            "NewPattern",
+            0,
+            24 * 3600,
+            wn.options.time.pattern_timestep,
+            wn.options.time.duration,
+        )
+        wn.add_pattern(newpat.name, newpat)
+        wn.add_source("Source1", "121", "SETPOINT", 100, "NewPattern")
 
-    demand = results.node['demand'].loc[:,wn.junction_name_list]
-    quality = results.node['quality'].loc[:,wn.junction_name_list]
-    
-    MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
-    MC_timeseries = MC.sum(axis=1)
-    MC_cumsum = MC_timeseries.cumsum()
-    #MC_timeseries.to_csv('MC.txt')
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim(version=2.0)
 
-    expected = float(39069900000/1000000) # hour 2
-    error = abs((MC_cumsum[2*3600] - expected)/expected)
-    assert_less(error, 0.01) # 1% error
+        demand = results.node["demand"].loc[:, wn.junction_name_list]
+        quality = results.node["quality"].loc[:, wn.junction_name_list]
 
-    expected = float(1509440000000/1000000) # hour 12
-    error = abs((MC_cumsum[12*3600] - expected)/expected)
-    assert_less(error, 0.01) # 1% error
+        MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
+        MC_timeseries = MC.sum(axis=1)
+        MC_cumsum = MC_timeseries.cumsum()
+        # MC_timeseries.to_csv('MC.txt')
 
-def test_volume_consumed():
+        expected = float(39069900000 / 1000000)  # hour 2
+        error = abs((MC_cumsum[2 * 3600] - expected) / expected)
+        self.assertLess(error, 0.01)  # 1% error
 
-    inp_file = join(netdir,'Net3.inp')
+        expected = float(1509440000000 / 1000000)  # hour 12
+        error = abs((MC_cumsum[12 * 3600] - expected) / expected)
+        self.assertLess(error, 0.01)  # 1% error
 
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    
-    wn.options.quality.parameter = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
-    wn.add_pattern(newpat.name, newpat)
-    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+    def test_volume_consumed(self):
 
-    sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(version=2.0)
+        inp_file = join(netdir, "Net3.inp")
 
-    demand = results.node['demand'].loc[:,wn.junction_name_list]
-    quality = results.node['quality'].loc[:,wn.junction_name_list]
-    
-    VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 0)
-    VC_timeseries = VC.sum(axis=1)
-    VC_cumsum = VC_timeseries.cumsum()
-    #VC_timeseries.to_csv('VC.txt')
+        wn = wntr.network.WaterNetworkModel(inp_file)
 
-    expected = float(156760/264.172) # hour 2, convert gallons to m3
-    error = abs((VC_cumsum[2*3600] - expected)/expected)
-    assert_less(error, 0.02) # 2% error
+        wn.options.quality.parameter = "CHEMICAL"
+        newpat = wntr.network.elements.Pattern.binary_pattern(
+            "NewPattern",
+            0,
+            24 * 3600,
+            wn.options.time.pattern_timestep,
+            wn.options.time.duration,
+        )
+        wn.add_pattern(newpat.name, newpat)
+        wn.add_source("Source1", "121", "SETPOINT", 100, "NewPattern")
 
-    expected = float(4867920/264.172) # hour 12, convert gallons to m3
-    error = abs((VC_cumsum[12*3600] - expected)/expected)
-    assert_less(error, 0.01) # 1% error
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim(version=2.0)
 
-def test_extent_contaminated():
+        demand = results.node["demand"].loc[:, wn.junction_name_list]
+        quality = results.node["quality"].loc[:, wn.junction_name_list]
 
-    inp_file = join(netdir,'Net3.inp')
+        VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 0)
+        VC_timeseries = VC.sum(axis=1)
+        VC_cumsum = VC_timeseries.cumsum()
+        # VC_timeseries.to_csv('VC.txt')
 
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    
-    wn.options.quality.parameter = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
-    wn.add_pattern(newpat.name, newpat)
-    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+        expected = float(156760 / 264.172)  # hour 2, convert gallons to m3
+        error = abs((VC_cumsum[2 * 3600] - expected) / expected)
+        self.assertLess(error, 0.02)  # 2% error
 
-    sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(version=2.0)
-    
-    quality = results.node['quality']
-    flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
-    
-    EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0)
+        expected = float(4867920 / 264.172)  # hour 12, convert gallons to m3
+        error = abs((VC_cumsum[12 * 3600] - expected) / expected)
+        self.assertLess(error, 0.01)  # 1% error
 
-    expected = float(80749.9*0.3048) # hour 2
-    error = abs((EC[2*3600] - expected)/expected)
-    assert_less(error, 0.01) # 1% error
+    def test_extent_contaminated(self):
 
-    expected = float(135554*0.3048) # hour 12
-    error = abs((EC[12*3600] - expected)/expected)
-    assert_less(error, 0.01) # 1% error
+        inp_file = join(netdir, "Net3.inp")
 
-if __name__ == '__main__':
-    test_extent_contaminated()
+        wn = wntr.network.WaterNetworkModel(inp_file)
+
+        wn.options.quality.parameter = "CHEMICAL"
+        newpat = wntr.network.elements.Pattern.binary_pattern(
+            "NewPattern",
+            0,
+            24 * 3600,
+            wn.options.time.pattern_timestep,
+            wn.options.time.duration,
+        )
+        wn.add_pattern(newpat.name, newpat)
+        wn.add_source("Source1", "121", "SETPOINT", 100, "NewPattern")
+
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim(version=2.0)
+
+        quality = results.node["quality"]
+        flowrate = results.link["flowrate"].loc[:, wn.pipe_name_list]
+
+        EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0)
+
+        expected = float(80749.9 * 0.3048)  # hour 2
+        error = abs((EC[2 * 3600] - expected) / expected)
+        self.assertLess(error, 0.01)  # 1% error
+
+        expected = float(135554 * 0.3048)  # hour 12
+        error = abs((EC[12 * 3600] - expected) / expected)
+        self.assertLess(error, 0.01)  # 1% error
+
+
+if __name__ == "__main__":
+    unittest.main()
