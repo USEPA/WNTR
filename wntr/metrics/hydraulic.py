@@ -230,43 +230,6 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
 
     todini = (Pout.sum(axis=1) - Pexp.sum(axis=1))/  \
         (Pin_res.sum(axis=1) + Pin_pump.sum(axis=1) - Pexp.sum(axis=1))
-            
-    
-    """
-    POut = {}
-    PExp = {}
-    PInRes = {}
-    PInPump = {}
-
-    time = head.index
-    
-    for name in wn.junction_name_list:
-        h = np.array(head.loc[:,name]) # m
-        p = np.array(pressure.loc[:,name])
-        e = h - p # m
-        q = np.array(demand.loc[:,name]) # m3/s
-        POut[name] = q*h
-        PExp[name] = q*(Pstar+e)
-
-    for name, node in wn.nodes(wntr.network.Reservoir):
-        H = np.array(head.loc[:,name]) # m
-        Q = np.array(demand.loc[:,name]) # m3/s
-        PInRes[name] = -Q*H # switch sign on Q.
-
-    for name, link in wn.links(wntr.network.Pump):
-        start_node = link.start_node_name
-        end_node = link.end_node_name
-        h_start = np.array(head.loc[:,start_node]) # (m)
-        h_end = np.array(head.loc[:,end_node]) # (m)
-        h = h_start - h_end # (m)
-        q = np.array(flowrate.loc[:,name]) # (m^3/s)
-        PInPump[name] = q*(abs(h)) # assumes that pumps always add energy to the system
-
-    todini = (sum(POut.values()) - sum(PExp.values()))/  \
-        (sum(PInRes.values()) + sum(PInPump.values()) - sum(PExp.values()))
-
-    todini = pd.Series(data = todini.tolist(), index = time)
-    """
     
     return todini
 
@@ -275,8 +238,9 @@ def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junct
     Compute the modified resilience index, equations from [JaSr08]_.
 
     The modified resilience index is the total surplus power available at 
-    demand nodes as a percentage of the total minimum required power at demand 
-    nodes. The metric can also be computed on a per junction basis.
+    demand junctions as a percentage of the total minimum required power at 
+    demand junctions. The metric can be computed as a timeseries for each 
+    junction or as a system average timeseries.
 
     Parameters
     ----------
