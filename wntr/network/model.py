@@ -135,14 +135,6 @@ class WaterNetworkModel(AbstractModel):
                 return False
         return True
     
-    def _sec_to_string(self, sec):
-        """Convert seconds to a time tuple"""
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
-    
     @property
     def _shifted_time(self):
         """
