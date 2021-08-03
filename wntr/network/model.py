@@ -1757,7 +1757,7 @@ def valve_source_checker(wn: WaterNetworkModel, valve: Valve):
     graph = nx.Graph()
     graph.add_nodes_from([n for n_name, n in wn.nodes()])
     graph.add_edges_from([(l.start_node, l.end_node) for l_name, l in wn.links() if l.status != LinkStatus.Closed])
-    graph.remove_edge(valve.start_node, valve._end_node)
+    graph.remove_edge(valve.start_node, valve.end_node)
     if valve.valve_type in {'PRV', 'FCV'}:
         upstream_nodes = nx.algorithms.descendants(graph, valve.start_node)
         has_upstream_source = False
