@@ -854,7 +854,7 @@ class Pipe(Link):
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
                        self.start_node, self.end_node, self.length, self.diameter, 
-                       self.roughness, self.minor_loss, self.cv, str(self.status))
+                       self.roughness, self.minor_loss, self.check_valve, str(self.status))
     
     def _compare(self, other):
         if not super(Pipe, self)._compare(other):
@@ -863,7 +863,7 @@ class Pipe(Link):
            abs(self.diameter      - other.diameter)<1e-9   and \
            abs(self.roughness     - other.roughness)<1e-9  and \
            abs(self.minor_loss    - other.minor_loss)<1e-9 and \
-           self.cv               == other.cv                and \
+           self.check_valve  == other.check_valve                and \
            self.bulk_coeff   == other.bulk_coeff    and \
            self.wall_coeff   == other.wall_coeff:
             return True
@@ -1449,9 +1449,9 @@ class PowerPump(Pump):
         """float : the fixed power value"""
         return self._base_power
     @power.setter
-    def power(self, kW):
+    def power(self, value):
         self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
-        self._base_power = kW
+        self._base_power = value
 
 
 class Valve(Link):
@@ -2093,7 +2093,7 @@ class Pattern(object):
         if nmult == 1: return self._multipliers[0]
         if self._time_options is None:
             raise RuntimeError('Pattern->time_options cannot be None at runtime')
-        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
+        step = int(time//self._time_options.pattern_timestep)
         if self.wrap:                      return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:    return 0.0
         return self._multipliers[step]

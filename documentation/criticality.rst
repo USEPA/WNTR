@@ -30,5 +30,5 @@ The pipe, pump, or segment is closed in the case of pipe, pump, and segment crit
 Demand at hydrants is increased in the case of fire flow criticality.
 Summary metrics are collected for each simulation to determine the relative impact of each simulation.
 
-The `pipe criticality example <https://github.com/USEPA/WNTR/blob/master/examples/pipe_criticality.py>`_ 
+The `pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_ 
 runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  

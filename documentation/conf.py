@@ -135,7 +135,7 @@ todo_include_todos = True
 #html_theme = 'sphinx_rtd_theme'
 
 def setup(app):
-  app.add_stylesheet( "wntr.css" )
+  app.add_css_file( "wntr.css")
   
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
@@ -147,8 +147,8 @@ else:
     html_theme = 'default'
 #    html_context = {
 #        'css_files': ['_static/wntr.css'],
-#    }
-
+#    }  
+    
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -257,13 +257,13 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-'preamble':  '''%
-  \usepackage[nottoc]{tocbibind}
-  \pagestyle{plain}
-  \pagenumbering{gobble}
-  \\raggedright
-  \\bibliographystyle{ieeetr}
-''',
+#'preamble':  '''%
+#  \usepackage[nottoc]{tocbibind}
+#  \pagestyle{plain}
+#  \pagenumbering{gobble}
+#  \\raggedright
+#  \\bibliographystyle{ieeetr}
+#''',
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',

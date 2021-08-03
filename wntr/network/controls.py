@@ -34,7 +34,8 @@ import six
 from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
@@ -152,7 +153,8 @@ class Comparison(enum.Enum):
     @property
     def func(self):
         """The function call to use for this comparison"""
-        return self.value[1]
+        value = getattr(self, '_value_')
+        return value[1]
     __call__ = func
 
     @property
@@ -414,6 +416,8 @@ class TimeOfDayCondition(ControlCondition):
         the time specified.
     first_day : float, default=0
         Start rule on day `first_day`, with the first day of simulation as day 0
+
+    TODO:  WE ARE NOT TESTING THIS!!!!
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
@@ -428,7 +432,7 @@ class TimeOfDayCondition(ControlCondition):
         self._first_day = first_day
         self._repeat = repeat
         self._backtrack = 0
-        if model is not None and not self._repeat and self._threshold < model._start_clocktime and first_day < 1:
+        if model is not None and not self._repeat and self._threshold < model.options.time.start_clocktime and first_day < 1:
             self._first_day = 1
 
     def _compare(self, other):
@@ -1645,6 +1649,7 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
 
     def __init__(self):
         super(BaseControlAction, self).__init__()
+        self._value = None
 
     @abc.abstractmethod
     def run_control_action(self):
@@ -1843,6 +1848,14 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     reaches 6 AM, the ControlAction would be "turn the pump on", and the ControlCondition would be "when the simulation
     reaches 6 AM".
     """
+
+    def __init__(self):
+        super().__init__()
+        self._control_type = None
+        self._condition = None
+        self._priority = None
+
+
     @abc.abstractmethod
     def is_control_action_required(self):
         """
@@ -1994,7 +2007,7 @@ class Rule(ControlBase):
         control_type: _ControlType
         """
         return self._control_type
-
+    
     def requires(self):
         req = self._condition.requires()
         for action in self._then_actions:
@@ -2098,7 +2111,7 @@ class Control(Rule):
             self._control_type = _ControlType.presolve
         else:
             self._control_type = _ControlType.postsolve
-
+        
     @classmethod
     def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """

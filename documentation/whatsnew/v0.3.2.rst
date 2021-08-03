@@ -1,0 +1,28 @@
+.. _whatsnew_032:
+
+v0.3.2 (main branch)
+---------------------------------------------------
+
+* Changed the following network component attributes:
+  
+  * Pipe ``check_valve_flag`` and ``cv`` attributes were merged and renamed ``check_valve``
+  * Pipe, Valve, and Pump ``status`` now refers to the current simulation status and is read-only, the user can set the initial status using ``initial_status``
+  * Valve ``setting`` now refers to the current simulation setting and is read-only, the user can set the initial setting using ``initial_setting``
+
+* Added slots to water network model options, ``wn.options``, to define available option names.
+  This update helps eliminate the use of incorrect or deprecated options.
+  The user can still create custom options under ``wn.options.user``. 
+
+* Removed custom handlers from the EPANET bin filer reader.  
+
+* Added a metric to compute pump energy
+
+* Added type checking for input into `wn.add_*` methods.
+
+* Updated the WNTRSimulator link results to include ``setting``.
+
+* Updated the WNTRSimulator to use `wn.options.time.start_clocktime`.
+
+* Updated documentation example that creates a weighted graph.
+
+* Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.

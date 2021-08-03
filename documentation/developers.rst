@@ -76,7 +76,7 @@ Software developers interested in contributing to the project are encouraged to
 create a `Fork` of the project and submit a `Pull Request` using GitHub.  
 Pull requests will be reviewed by the core development team.  
 
-Pull requests can be made to the **master** or **dev** (development) branch.  
+Pull requests can be made to the **main** or **dev** (development) branch.  
 Developers can discuss new features and the appropriate branch for contributing 
 by opening a new issue on https://github.com/USEPA/WNTR/issues.  
 
