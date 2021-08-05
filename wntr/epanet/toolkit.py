@@ -84,7 +84,7 @@ def ENgetwarning(code, sec=-1):
         return header + "Unknown warning: %d" % code
 
 
-def runepanet(inpfile):
+def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
     
     Parameters
@@ -94,10 +94,13 @@ def runepanet(inpfile):
 
     """
     file_prefix, file_ext = os.path.splitext(inpfile)
+    if rptfile is None:
+        rptfile = file_prefix + ".rpt"
+    if binfile is None:
+        binfile = file_prefix + ".bin"
+    
     enData = ENepanet()
-    rptfile = file_prefix + ".rpt"
-    outfile = file_prefix + ".bin"
-    enData.ENopen(inpfile, rptfile, outfile)
+    enData.ENopen(inpfile, rptfile, binfile)
     enData.ENsolveH()
     enData.ENsolveQ()
     try:

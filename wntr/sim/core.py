@@ -794,7 +794,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
                 backup_solver_options=None, convergence_error=False, HW_approx='default',
-                stop_criteria=None, diagnostics=False):
+                diagnostics=False):
 
         """
         Run an extended period simulation (hydraulics only).
@@ -958,27 +958,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._wn.sim_time += self._hydraulic_timestep
             overstep = float(self._wn.sim_time) % self._hydraulic_timestep
             self._wn.sim_time -= overstep
-            
-            stop_criteria_met = False
-            if stop_criteria is not None:
-                for i in stop_criteria.index:
-                    link_name, attribute, operation, value = stop_criteria.loc[i,:]
-                    link_attribute = getattr(self._wn.get_link(link_name), attribute)
-                    if operation(link_attribute, value):
-                        stop_criteria_met = True
-                        results.error_code = wntr.sim.results.ResultsStatus.error
-                        warnings.warn('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ') 
-                        logger.warning('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ' ) 
-                        break # break out of for loop
-                if stop_criteria_met:
-                    break # break out of while loop
-                
+
             if self._wn.sim_time > self._wn.options.time.duration:
                 break
 
         wntr.sim.hydraulics.get_results(self._wn, results, node_res, link_res)
-        results._adjust_time(self._wn.options.time.pattern_start)
-        self._wn.reset_initial_values()
         
         return results
 

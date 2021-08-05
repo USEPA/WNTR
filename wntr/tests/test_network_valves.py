@@ -1,6 +1,4 @@
 import unittest
-from unittest import SkipTest
-
 import wntr
 
 
@@ -51,8 +49,6 @@ class TestTCVs(unittest.TestCase):
         wn.options.hydraulic.demand_model = "DDA"
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
-
-        # raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -283,8 +279,6 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
 
-        # raise SkipTest # EPANET seg faults
-
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
@@ -329,8 +323,6 @@ class TestFCVs(unittest.TestCase):
 
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
-
-        # raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -392,8 +384,6 @@ class TestFCVs(unittest.TestCase):
 
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
-
-        # raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()

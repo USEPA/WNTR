@@ -660,8 +660,6 @@ class InpFile(object):
         # nnames.sort()
         for tank_name in nnames:
             tank = wn.nodes[tank_name]
-            if tank.init_level < tank.min_level:
-                tank.init_level = tank.min_level
             E = {'name': tank_name,
                  'elev': from_si(self.flow_units, tank.elevation, HydParam.Elevation),
                  'initlev': from_si(self.flow_units, tank.init_level, HydParam.HydraulicHead),
@@ -679,8 +677,6 @@ class InpFile(object):
                     E['overflow'] = 'YES'
                     if tank.vol_curve is None:
                         E['curve'] = '*'
-            if E['initlev'] > E['maxlev']:
-                E['initlev'] = E['maxlev']
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1157,11 +1153,13 @@ class InpFile(object):
     def _read_controls(self):
         control_count = 0
         for lnum, line in self.sections['[CONTROLS]']:
+
             control_count += 1
             control_name = 'control '+str(control_count)
             
             control_obj = _read_control_line(line, self.wn, self.flow_units, control_name)
             if control_obj is None:
+                control_count -= 1 # control was not found 
                 continue
             
             if control_name in self.wn.control_name_list:
@@ -1829,28 +1827,28 @@ class InpFile(object):
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
         time = wn.options.time
 
-        hrs, mm, sec = time.seconds_to_tuple(time.duration)
+        hrs, mm, sec = _sec_to_string(time.duration)
         f.write(time_entry.format('DURATION', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.hydraulic_timestep)
+        hrs, mm, sec = _sec_to_string(time.hydraulic_timestep)
         f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.quality_timestep)
+        hrs, mm, sec = _sec_to_string(time.quality_timestep)
         f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.pattern_timestep)
+        hrs, mm, sec = _sec_to_string(time.pattern_timestep)
         f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.pattern_start)
+        hrs, mm, sec = _sec_to_string(time.pattern_start)
         f.write(time_entry.format('PATTERN START', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.report_timestep)
+        hrs, mm, sec = _sec_to_string(time.report_timestep)
         f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.report_start)
+        hrs, mm, sec = _sec_to_string(time.report_start)
         f.write(time_entry.format('REPORT START', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.start_clocktime)
+        hrs, mm, sec = _sec_to_string(time.start_clocktime)
         if hrs < 12:
             time_format = ' AM'
         else:
@@ -1858,7 +1856,7 @@ class InpFile(object):
             time_format = ' PM'
         f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format).encode('ascii'))
 
-        hrs, mm, sec = time.seconds_to_tuple(time.rule_timestep)
+        hrs, mm, sec = _sec_to_string(time.rule_timestep)
 
         f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(entry.format('STATISTIC', wn.options.time.statistic).encode('ascii'))
