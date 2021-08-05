@@ -24,6 +24,28 @@ class TestNetworkGraphs(unittest.TestCase):
         self.assertEqual(G.nodes["111"]["weight"], 10 * 0.3048)
         self.assertEqual(G["159"]["161"]["177"]["weight"], 2000 * 0.3048)
 
+    def test_weighted_graph_modify_direction(self):
+        inp_file = join(netdir, "Net3.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file) 
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim()
+        flowrate = results.link['flowrate'].iloc[-1,:]
+        G = wn.get_graph(link_weight=flowrate, modify_direction=True)
+        
+        # Positive flow, flowrate == graph weight
+        name = '173'
+        pipe = wn.get_link(name)
+
+        self.assertEqual(flowrate[name],
+                         G.edges[pipe.start_node_name, pipe.end_node_name, name]['weight'])
+        
+        # Negative flow, -flowrate == graph weight
+        name = '109'
+        pipe = wn.get_link(name)
+        
+        self.assertEqual(-flowrate[name],
+                         G.edges[pipe.end_node_name, pipe.start_node_name, name]['weight'])
+
     def test_terminal_nodes(self):
         inp_file = join(netdir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)

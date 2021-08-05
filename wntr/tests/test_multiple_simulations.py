@@ -100,19 +100,17 @@ class TestStopStartSim(unittest.TestCase):
         self.wn.options.time.duration = 10 * 3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
-        self.wn.set_initial_conditions(self.res2)
         self.wn.options.time.duration = 24*3600
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        # node_res = {}
-        # link_res = {}
-        # for key in self.res2.node.keys():
-        #     node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
-        # for key in self.res2.link.keys():
-        #     link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
-        self.res2.append_results_from(self.res3)
-        # self.res2.node = node_res
-        # self.res2.link = link_res
+        node_res = {}
+        link_res = {}
+        for key in self.res2.node.keys(): 
+            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
+        for key in self.res2.link.keys():
+            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
+        self.res2.node = node_res
+        self.res2.link = link_res
 
     @classmethod
     def tearDownClass(self):
@@ -192,21 +190,20 @@ class TestPickle(unittest.TestCase):
         f = open("temp.pickle", "rb")
         wn2 = pickle.load(f)
         f.close()
-        wn2.set_initial_conditions(self.res2)
+        #wn2.set_initial_conditions(self.res2)
         wn2.options.time.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(wn2)
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
-        self.res2.append_results_from(self.res3)
 
-        # node_res = {}
-        # link_res = {}
-        # for key in self.res2.node.keys():
-        #     node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
-        # for key in self.res2.link.keys():
-        #     link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
+        node_res = {}
+        link_res = {}
+        for key in self.res2.node.keys():
+            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
+        for key in self.res2.link.keys():
+            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
     
-        # self.res2.node = node_res
-        # self.res2.link = link_res
+        self.res2.node = node_res
+        self.res2.link = link_res
 
     @classmethod
     def tearDownClass(self):
