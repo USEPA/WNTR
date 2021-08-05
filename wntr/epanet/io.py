@@ -670,6 +670,10 @@ class InpFile(object):
                  'curve': '',
                  'overflow': '',
                  'com': ';'}
+            if tank.init_level < tank.min_level:
+                E['initlev'] = tank.min_level + abs(tank.init_level - tank.min_level)
+            if tank.init_level > tank.max_level:
+                E['initlev'] = tank.max_level - abs(tank.init_level - tank.max_level)
             if tank.vol_curve is not None:
                 E['curve'] = tank.vol_curve.name
             if version ==2.2:
