@@ -474,9 +474,9 @@ class _Diagnostics(object): # pragma: no cover
 class _ValveSourceChecker(Observer):
     def __init__(self, wn):
         self.wn = wn
-        self.graph = nx.Graph()
+        self.graph = nx.MultiGraph()
         self.graph.add_nodes_from([n for n_name, n in wn.nodes()])
-        self.graph.add_edges_from([(l.start_node, l.end_node) for l_name, l in wn.links() if l.status != LinkStatus.Closed])
+        self.graph.add_edges_from([(l.start_node, l.end_node, l) for l_name, l in wn.links() if l.status != LinkStatus.Closed])
         self._previous_values = dict()
 
     def update(self, action: BaseControlAction):
@@ -484,9 +484,9 @@ class _ValveSourceChecker(Observer):
         val = getattr(obj, attr)
         if val != self._previous_values[(obj, attr)]:
             if val == wntr.network.LinkStatus.Closed:
-                self.graph.remove_edge(obj.start_node, obj.end_node)
+                self.graph.remove_edge(obj.start_node, obj.end_node, obj)
             else:
-                self.graph.add_edge(obj.start_node, obj.end_node)
+                self.graph.add_edge(obj.start_node, obj.end_node, obj)
 
         self._previous_values[(obj, attr)] = val
 
@@ -504,7 +504,7 @@ class _ValveSourceChecker(Observer):
         upstream source and at least one downstream source. If these conditions are not satisifed, the valve
         should be opened (the internal status).
         """
-        self.graph.remove_edge(valve.start_node, valve.end_node)
+        self.graph.remove_edge(valve.start_node, valve.end_node, valve)
         res = False
         if valve.valve_type in {'PRV', 'FCV'}:
             upstream_nodes = nx.algorithms.descendants(self.graph, valve.start_node)
@@ -532,7 +532,7 @@ class _ValveSourceChecker(Observer):
                     break
             if not has_downstream_source:
                 res = True
-        self.graph.add_edge(valve.start_node, valve.end_node)
+        self.graph.add_edge(valve.start_node, valve.end_node, valve)
         return res
 
 
