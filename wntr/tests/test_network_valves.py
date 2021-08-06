@@ -1,5 +1,10 @@
 import unittest
 import wntr
+from os.path import abspath, dirname, join
+
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir, "networks_for_testing")
 
 
 class TestTCVs(unittest.TestCase):
@@ -409,3 +414,34 @@ class TestFCVs(unittest.TestCase):
             abs(results1.link["flowrate"].loc[7200, "v1"] - 0.0293480847031), 1e-5
         )
 
+
+class TestValveIsolation(unittest.TestCase):
+    def test_psv_open(self):
+        wn = wntr.network.WaterNetworkModel(inp_file_name=join(test_datadir, 'psv_open_no_downstream_sources.inp'))
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertTrue((results.link['status'].loc[:, 'VALVE'] == wntr.network.LinkStatus.Opened).all())
+
+    def test_prv_open(self):
+        wn = wntr.network.WaterNetworkModel(inp_file_name=join(test_datadir, 'prv_open_no_upstream_sources.inp'))
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertTrue((results.link['status'].loc[:, 'VALVE'] == wntr.network.LinkStatus.Opened).all())
+
+    def test_prv_closed(self):
+        wn = wntr.network.WaterNetworkModel(inp_file_name=join(test_datadir, 'prv_closed_no_upstream_sources.inp'))
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertTrue((results.link['status'].loc[:, 'VALVE'] == wntr.network.LinkStatus.Closed).all())
+
+    def test_fcv_open_no_downstream_sources(self):
+        wn = wntr.network.WaterNetworkModel(inp_file_name=join(test_datadir, 'fcv_open_no_downstream_sources.inp'))
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertTrue((results.link['status'].loc[:, 'VALVE'] == wntr.network.LinkStatus.Opened).all())
+
+    def test_fcv_open_no_upstream_sources(self):
+        wn = wntr.network.WaterNetworkModel(inp_file_name=join(test_datadir, 'fcv_open_no_upstream_sources.inp'))
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertTrue((results.link['status'].loc[:, 'VALVE'] == wntr.network.LinkStatus.Opened).all())
