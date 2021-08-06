@@ -1855,7 +1855,6 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
         self._condition = None
         self._priority = None
 
-
     @abc.abstractmethod
     def is_control_action_required(self):
         """
@@ -2082,7 +2081,7 @@ class Control(Rule):
     """
     A class for controls.
     """
-    def __init__(self, condition, then_action, priority=ControlPriority.medium, name=None):
+    def __init__(self, condition, then_action: BaseControlAction, priority=ControlPriority.medium, name=None):
         """
         Parameters
         ----------
@@ -2090,7 +2089,7 @@ class Control(Rule):
             The condition that should be used to determine when the actions need to be activated. When the condition
             evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
             are activated.
-        then_action: ControlAction
+        then_action: BaseControlAction
             The action that should be activated when the condition evaluates to True.
         priority: ControlPriority
             The priority of the control. Default is ControlPriority.medium
