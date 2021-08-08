@@ -289,10 +289,10 @@ water network model.
     >>> wn.add_junction('node2', base_demand=0.02, demand_pattern='pat2', elevation=50, 
     ...     coordinates=(1,3))
     >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, 
-    ...    roughness=100, minor_loss=0.0, status='OPEN')
+    ...    roughness=100, minor_loss=0.0, initial_status='OPEN')
     >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
     >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
-    ...     minor_loss=0.0, status='OPEN')
+    ...     minor_loss=0.0, initial_status='OPEN')
     >>> ax = wntr.graphics.plot_network(wn)
 
 .. doctest::

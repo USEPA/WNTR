@@ -15,31 +15,24 @@ model.
 
 """
 import logging
-import six
-
 import sys
+from collections import OrderedDict
 from collections.abc import MutableSequence
 
-import numpy as np
 import networkx as nx
+import numpy as np
 import pandas as pd
-
-from .options import Options
-from .base import Link, Registry, LinkStatus, AbstractModel
-from .elements import Junction, Reservoir, Tank
-from .elements import Pipe, Pump, HeadPump, PowerPump
-from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
-from .elements import Pattern, TimeSeries, Demands, Curve, Source
-from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
-    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
-    _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
-    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _ClosePSVCondition, _OpenPSVCondition, \
-    _ActivePSVCondition, _OpenFCVCondition, _ActiveFCVCondition, ControlAction, _InternalControlAction, Control, \
-    ControlManager, Comparison, Rule, FunctionCondition
-from collections import OrderedDict
+import six
+import wntr.epanet
 from wntr.utils.ordered_set import OrderedSet
 
-import wntr.epanet
+from .base import AbstractModel, Link, LinkStatus, Registry
+from .controls import Control, Rule
+from .elements import (Curve, Demands, FCValve, GPValve, HeadPump, Junction,
+                       Pattern, PBValve, Pipe, PowerPump, PRValve, PSValve,
+                       Pump, Reservoir, Source, Tank, TCValve, TimeSeries,
+                       Valve)
+from .options import Options
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +66,7 @@ class WaterNetworkModel(AbstractModel):
         self._pattern_reg._finalize_(self)
         self._curve_reg._finalize_(self)
 
-        # Name of pipes that are check valves
-        self._check_valves = []
-
         # NetworkX Graph to store the pipe connectivity and node coordinates
-
-        self._Htol = 0.0001524  # Head tolerance in meters.
-        self._Qtol = 2.83168e-6  # Flow tolerance in m^3/s.
 
         self._labels = None
 
@@ -130,14 +117,6 @@ class WaterNetworkModel(AbstractModel):
             if not control._compare(other.get_control(name)):
                 return False
         return True
-    
-    def _sec_to_string(self, sec):
-        """Convert seconds to a time tuple"""
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
     
     @property
     def _shifted_time(self):
@@ -347,7 +326,7 @@ class WaterNetworkModel(AbstractModel):
         base_demand : float
             Base demand at the junction.
         demand_pattern : string or Pattern
-            Name of the demand pattern or the actual Pattern object
+            Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
@@ -369,7 +348,7 @@ class WaterNetworkModel(AbstractModel):
         name : string
             Name of the tank.
         elevation : float
-            Elevation at the Tank.
+            Elevation at the tank.
         init_level : float
             Initial tank level.
         min_level : float
@@ -380,17 +359,12 @@ class WaterNetworkModel(AbstractModel):
             Tank diameter.
         min_vol : float
             Minimum tank volume.
-        vol_curve : str
-            Name of a volume curve, optional
+        vol_curve : str, optional
+            Name of a volume curve
         overflow : bool
-            Does this tank overflow (EpanetSimulator only)
+           Overflow indicator (Always False for the WNTRSimulator)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
-            
-        Raises
-        ------
-        ValueError
-            If `init_level` greater than `max_level` or less than `min_level`
             
         """
         self._node_reg.add_tank(name, elevation, init_level, min_level, 
@@ -407,8 +381,8 @@ class WaterNetworkModel(AbstractModel):
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string
-            Name of the head pattern (optional)
+        head_pattern : string, optional
+            Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         
@@ -416,8 +390,8 @@ class WaterNetworkModel(AbstractModel):
         self._node_reg.add_reservoir(name, base_head, head_pattern, coordinates)
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', 
-                 check_valve_flag=False):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', 
+                 check_valve=False):
         """
         Adds a pipe to the water network model
 
@@ -437,22 +411,19 @@ class WaterNetworkModel(AbstractModel):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        status : string, optional
-            Pipe status. Options are 'Open' or 'Closed'.
-        check_valve_flag : bool, optional
+        initial_status : string or LinkStatus, optional
+            Pipe initial status. Options are 'OPEN' or 'CLOSED'.
+        check_valve : bool, optional
             True if the pipe has a check valve.
             False if the pipe does not have a check valve.
         
         """
         self._link_reg.add_pipe(name, start_node_name, end_node_name, length, 
-                                diameter, roughness, minor_loss, status, 
-                                check_valve_flag)
-        if check_valve_flag:
-            self._check_valves.append(name)
-
+                                diameter, roughness, minor_loss, initial_status, 
+                                check_valve)
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status='OPEN'):
         """
         Adds a pump to the water network model
 
@@ -466,19 +437,23 @@ class WaterNetworkModel(AbstractModel):
              Name of the end node.
         pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or str object
-            Float value of power in KW. Head curve name.
+        pump_parameter : float or string
+            For a POWER pump, the pump power.
+            For a HEAD pump, the head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: str
-            ID of pattern for speed setting
+        pattern: string
+            Name of the speed pattern
+        initial_status : string or LinkStatus
+            Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
         self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, 
-                                pump_parameter, speed, pattern)
+                                pump_parameter, speed, pattern, initial_status)
     
     def add_valve(self, name, start_node_name, end_node_name,
-                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
+                 initial_setting=0.0, initial_status='ACTIVE'):
         """
         Adds a valve to the water network model
 
@@ -493,18 +468,20 @@ class WaterNetworkModel(AbstractModel):
         diameter : float, optional
             Diameter of the valve.
         valve_type : string, optional
-            Type of valve. Options are 'PRV', etc.
+            Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        setting : float or string, optional
-            pressure setting for PRV, PSV, or PBV,
-            flow setting for FCV,
-            loss coefficient for TCV,
-            name of headloss curve for GPV.
-        
+        initial_setting : float or string, optional
+            Valve initial setting.
+            Pressure setting for PRV, PSV, or PBV. 
+            Flow setting for FCV. 
+            Loss coefficient for TCV.
+            Name of headloss curve for GPV.
+        initial_status: string or LinkStatus
+            Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'.
         """
         self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, 
-                                 valve_type, minor_loss, setting)
+                                 valve_type, minor_loss, initial_setting, initial_status)
 
     def add_pattern(self, name, pattern=None):
         """
@@ -779,247 +756,6 @@ class WaterNetworkModel(AbstractModel):
         """
         return self._controls[name]
     
-    ### # 
-    ### Get controls from the model (move?)
-    def _get_all_tank_controls(self):
-
-        tank_controls = []
-
-        for tank_name, tank in self.nodes(Tank):
-
-            # add the tank controls
-            all_links = self.get_links_for_node(tank_name, 'ALL')
-
-            # First take care of the min level
-            min_head = tank.min_level+tank.elevation
-            for link_name in all_links:
-                link = self.get_link(link_name)
-                link_has_cv = False # flow leaving the tank (start node = tank)
-                if isinstance(link, Pipe):
-                    if link.cv:
-                        if link.end_node_name == tank_name:
-                            continue
-                        else:
-                            link_has_cv = True
-                elif isinstance(link, Pump):
-                    if link.end_node_name == tank_name:
-                        continue
-                    else:
-                        link_has_cv = True
-
-                close_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Closed, 'status')
-                open_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Open, 'status')
-
-                close_condition = ValueCondition(tank, 'head', Comparison.le, min_head)
-                close_control_1 = Control(condition=close_condition, then_action=close_control_action,
-                                          priority=ControlPriority.medium)
-                close_control_1._control_type = _ControlType.pre_and_postsolve
-                tank_controls.append(close_control_1)
-
-                if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.ge, min_head+self._Htol)
-                    open_control_1 = Control(condition=open_condition_1, then_action=open_control_action,
-                                             priority=ControlPriority.low)
-                    open_control_1._control_type = _ControlType.postsolve
-                    tank_controls.append(open_control_1)
-
-                    if link.start_node is tank:
-                        other_node = link.end_node
-                    elif link.end_node is tank:
-                        other_node = link.start_node
-                    else:
-                        raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head+self._Htol)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
-                    open_control_2 = Control(condition=open_condition_2, then_action=open_control_action,
-                                             priority=ControlPriority.high)
-                    open_control_2._control_type = _ControlType.postsolve
-                    tank_controls.append(open_control_2)
-
-            # Now take care of the max level
-            max_head = tank.max_level+tank.elevation
-            for link_name in all_links:
-                link = self.get_link(link_name)
-                link_has_cv = False # flow entering the tank (end node = tank)
-                if isinstance(link, Pipe):
-                    if link.cv:
-                        if link.start_node_name == tank_name:
-                            continue
-                        else:
-                            link_has_cv = True 
-                if isinstance(link, Pump):
-                    if link.start_node_name == tank_name:
-                        continue
-                    else:
-                        link_has_cv = True
-
-                close_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Closed, 'status')
-                open_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Open, 'status')
-
-                close_condition = ValueCondition(tank, 'head', Comparison.ge, max_head)
-                close_control = Control(condition=close_condition, then_action=close_control_action,
-                                        priority=ControlPriority.medium)
-                close_control._control_type = _ControlType.pre_and_postsolve
-                tank_controls.append(close_control)
-
-                if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.le, max_head - self._Htol)
-                    open_control_1 = Control(condition=open_condition_1, then_action=open_control_action,
-                                             priority=ControlPriority.low)
-                    open_control_1._control_type = _ControlType.postsolve
-                    tank_controls.append(open_control_1)
-
-                    if link.start_node is tank:
-                        other_node = link.end_node
-                    elif link.end_node is tank:
-                        other_node = link.start_node
-                    else:
-                        raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head-self._Htol)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
-                    open_control_2 = Control(condition=open_condition_2, then_action=open_control_action,
-                                             priority=ControlPriority.high)
-                    open_control_2._control_type = _ControlType.postsolve
-                    tank_controls.append(open_control_2)
-
-        return tank_controls
-
-    def _get_cv_controls(self):
-        cv_controls = []
-        for pipe_name in self._check_valves:
-            pipe = self.get_link(pipe_name)
-            open_condition = _OpenCVCondition(self, pipe)
-            close_condition = _CloseCVCondition(self, pipe)
-            open_action = _InternalControlAction(pipe, '_internal_status', LinkStatus.Open, 'status')
-            close_action = _InternalControlAction(pipe, '_internal_status', LinkStatus.Closed, 'status')
-            open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
-            close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
-            open_control._control_type = _ControlType.postsolve
-            close_control._control_type = _ControlType.postsolve
-            cv_controls.append(open_control)
-            cv_controls.append(close_control)
-
-        return cv_controls
-    
-    def _get_pump_controls(self):
-        pump_controls = []
-
-        for control_name, control in self.controls():
-            for action in control.actions():
-                target_obj, target_attr = action.target()
-                if target_attr == 'base_speed':
-                    if not isinstance(target_obj, Pump):
-                        raise ValueError('base_speed can only be changed on pumps; ' + str(control))
-                    new_status = LinkStatus.Open
-                    new_action = ControlAction(target_obj, 'status', new_status)
-                    condition = control.condition
-                    new_control = type(control)(condition, new_action, priority=control.priority)
-                    pump_controls.append(new_control)
-
-        for pump_name, pump in self.pumps():
-            close_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Closed, 'status')
-            open_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Open, 'status')
-
-            if pump.pump_type == 'HEAD':
-                close_condition = _CloseHeadPumpCondition(self, pump)
-                open_condition = _OpenHeadPumpCondition(self, pump)
-            elif pump.pump_type == 'POWER':
-                close_condition = _ClosePowerPumpCondition(self, pump)
-                open_condition = _OpenPowerPumpCondition(self, pump)
-            else:
-                raise ValueError('Unrecognized pump pump_type: {0}'.format(pump.pump_type))
-
-            close_control = Control(condition=close_condition, then_action=close_control_action, priority=ControlPriority.very_high)
-            open_control = Control(condition=open_condition, then_action=open_control_action, priority=ControlPriority.very_low)
-
-            close_control._control_type = _ControlType.postsolve
-            open_control._control_type = _ControlType.postsolve
-
-            pump_controls.append(close_control)
-            pump_controls.append(open_control)
-
-        return pump_controls
-
-    def _get_valve_controls(self):
-        valve_controls = []
-
-        for control_name, control in self.controls():
-            for action in control.actions():
-                target_obj, target_attr = action.target()
-                if target_attr == 'setting':
-                    if isinstance(target_obj, Valve):
-                        new_status = LinkStatus.Active
-                    elif isinstance(target_obj, Pump):
-                        raise ValueError('Cannot control settings on pumps; use "base_speed"; ' + str(control))
-                    else:
-                        raise ValueError('Settings can only be changed on valves: ' + str(control))
-                    new_action = ControlAction(target_obj, 'status', new_status)
-                    condition = control.condition
-                    new_control = type(control)(condition, new_action, priority=control.priority)
-                    valve_controls.append(new_control)
-
-        for valve_name, valve in self.valves():
-
-            if valve.valve_type == 'PRV':
-                close_condition = _ClosePRVCondition(self, valve)
-                open_condition = _OpenPRVCondition(self, valve)
-                active_condition = _ActivePRVCondition(self, valve)
-                close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
-                open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
-                close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
-                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
-                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
-                close_control._control_type = _ControlType.postsolve
-                open_control._control_type = _ControlType.postsolve
-                active_control._control_type = _ControlType.postsolve
-                valve_controls.append(close_control)
-                valve_controls.append(open_control)
-                valve_controls.append(active_control)
-
-            elif valve.valve_type == 'PSV':
-                close_condition = _ClosePSVCondition(self, valve)
-                open_condition = _OpenPSVCondition(self, valve)
-                active_condition = _ActivePSVCondition(self, valve)
-                close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
-                open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
-                close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
-                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
-                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
-                close_control._control_type = _ControlType.postsolve
-                open_control._control_type = _ControlType.postsolve
-                active_control._control_type = _ControlType.postsolve
-                valve_controls.append(close_control)
-                valve_controls.append(open_control)
-                valve_controls.append(active_control)
-
-            elif valve.valve_type == 'FCV':
-                open_condition = _OpenFCVCondition(self, valve)
-                active_condition = _ActiveFCVCondition(self, valve)
-                open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-                active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
-                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
-                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
-                open_control._control_type = _ControlType.postsolve
-                active_control._control_type = _ControlType.postsolve
-                valve_controls.append(open_control)
-                valve_controls.append(active_control)
-
-            active_condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq,
-                                              threshold=LinkStatus.Active)
-            upstream_source_condition = FunctionCondition(valve_source_checker, func_kwargs={'wn': self, 'valve': valve},
-                                                          requires=[valve])
-            condition = AndCondition(cond1=active_condition, cond2=upstream_source_condition)
-            action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-            control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
-            control._control_type = _ControlType.feasibility
-            valve_controls.append(control)
-
-        return valve_controls
-
     ### #
     ### Name lists
     @property
@@ -1636,18 +1372,19 @@ class WaterNetworkModel(AbstractModel):
                 rule = Rule(cond, act, priority=priority)
                 self.add_control(name.replace(' ', '_')+'_Rule', rule)
                 self.remove_control(name)
-                
-        
+
     def reset_initial_values(self):
         """
         Resets all initial values in the network
         """
+        #### TODO: move reset conditions to /sim
         self.sim_time = 0.0
         self._prev_sim_time = None
 
         for name, node in self.nodes(Junction):
             node._head = None
             node._demand = None
+            node._pressure = None
             node._leak_demand = None
             node._leak_status = False
             node._is_isolated = False
@@ -1676,6 +1413,7 @@ class WaterNetworkModel(AbstractModel):
 
         for name, link in self.links(Pump):
             link._user_status = link.initial_status
+            link._setting = link.initial_setting
             link._internal_status = LinkStatus.Active
             link._is_isolated = False
             link._flow = None
@@ -1694,7 +1432,7 @@ class WaterNetworkModel(AbstractModel):
 
         for name, control in self.controls():
             control._reset()
-
+    
     def read_inpfile(self, filename):
         """
         Defines water network model components from an EPANET INP file
@@ -1748,50 +1486,10 @@ class WaterNetworkModel(AbstractModel):
         self._inpfile.write(filename, self, units=units, version=version, force_coordinates=force_coordinates)
 
 
-def valve_source_checker(wn: WaterNetworkModel, valve: Valve):
-    """
-    This is a function to be used with a FunctionCondition to ensure PRVs are connected to at least one upstream
-    source, PSVs are connected to at least one downstream source, and FCVs are connected to at least one
-    upstream source and at least one downstream source. If these conditions are not satisifed, the valve
-    should be opened (the internal status).
-    """
-    graph = nx.Graph()
-    graph.add_nodes_from([n for n_name, n in wn.nodes()])
-    graph.add_edges_from([(l.start_node, l.end_node) for l_name, l in wn.links() if l.status != LinkStatus.Closed])
-    graph.remove_edge(valve.start_node, valve._end_node)
-    if valve.valve_type in {'PRV', 'FCV'}:
-        upstream_nodes = nx.algorithms.descendants(graph, valve.start_node)
-        has_upstream_source = False
-        for tank_name, tank in wn.tanks():
-            if tank in upstream_nodes:
-                has_upstream_source = True
-                break
-        for r_name, reservoir in wn.reservoirs():
-            if reservoir in upstream_nodes:
-                has_upstream_source = True
-                break
-        if not has_upstream_source:
-            return True
-    if valve.valve_type in {'PSV', 'FCV'}:
-        downstream_nodes = nx.algorithms.descendants(graph, valve.end_node)
-        has_downstream_source = False
-        for tank_name, tank in wn.tanks():
-            if tank in downstream_nodes:
-                has_downstream_source = True
-                break
-        for r_name, reservoir in wn.reservoirs():
-            if reservoir in downstream_nodes:
-                has_downstream_source = True
-                break
-        if not has_downstream_source:
-            return True
-    return False
-
-   
 class PatternRegistry(Registry):
     """A registry for patterns."""
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._pattern_reg = None
 
     class DefaultPattern(object):
@@ -1851,6 +1549,9 @@ class PatternRegistry(Registry):
         ValueError
             If adding a pattern with `name` that already exists.
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(pattern, (list, np.ndarray, Pattern)), "pattern must be a list or Pattern"
+                          
         if not isinstance(pattern, Pattern):
             pattern = Pattern(name, multipliers=pattern, time_options=self._options.time)            
         else: #elif pattern.time_options is None:
@@ -1886,7 +1587,7 @@ class CurveRegistry(Registry):
         self._volume_curves = OrderedSet()
 
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._curve_reg = None
 
     def __setitem__(self, key, value):
@@ -1897,8 +1598,11 @@ class CurveRegistry(Registry):
             self.set_curve_type(key, value.curve_type)
     
     def set_curve_type(self, key, curve_type):
-        """WARNING -- does not check to make sure key is typed before assigning it - you could end up
-        with a curve that is used for more than one type, which would be really weird"""
+        """
+        Sets curve type.
+        
+        WARNING -- this does not check to make sure key is typed before assigning it - 
+        you could end up with a curve that is used for more than one type"""
         if curve_type is None:
             return
         curve_type = curve_type.upper()
@@ -1926,6 +1630,10 @@ class CurveRegistry(Registry):
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(curve_type, (type(None), str)), "curve_type must be a string"
+        assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
+        
         curve = Curve(name, curve_type, xy_tuples_list)
         self[name] = curve
         
@@ -2050,7 +1758,7 @@ class CurveRegistry(Registry):
 class SourceRegistry(Registry):
     """A registry for sources."""
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._sources = None
 
     def __delitem__(self, key):
@@ -2080,7 +1788,7 @@ class NodeRegistry(Registry):
         self._tanks = OrderedSet()
     
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._node_reg = None
     
     def __setitem__(self, key, value):
@@ -2166,23 +1874,32 @@ class NodeRegistry(Registry):
         base_demand : float
             Base demand at the junction.
         demand_pattern : string or Pattern
-            Name of the demand pattern or the actual Pattern object
+            Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         demand_category : str, optional
-            Add a category to the **base** demand
-        emitter_ceoff : float, optional
-            Add an emitter at this node with the specified coefficient
+            Category to the **base** demand
+        emitter_coeff : float, optional
+            Emitter coefficient
         initial_quality : float, optional
             Initial quality at this junction
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(base_demand, (int, float)), "base_demand must be a float"
+        assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
+        assert isinstance(elevation, (int, float)), "elevation must be a float"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
+        assert isinstance(emitter_coeff, (type(None), int, float)), "emitter_coeff must be a float"
+        assert isinstance(initial_quality, (type(None), int, float)), "initial_quality must be a float"
+        
         base_demand = float(base_demand)
         elevation = float(elevation)
+        
         junction = Junction(name, self)
         junction.elevation = elevation
-#        if base_demand:
         junction.add_demand(base_demand, demand_pattern, demand_category)
         self[name] = junction
         if coordinates is not None:
@@ -2204,7 +1921,7 @@ class NodeRegistry(Registry):
         name : string
             Name of the tank.
         elevation : float
-            Elevation at the Tank.
+            Elevation at the tank.
         init_level : float
             Initial tank level.
         min_level : float
@@ -2216,20 +1933,26 @@ class NodeRegistry(Registry):
             curve is None)
         min_vol : float
             Minimum tank volume (only used when the volume curve is None)
-        vol_curve : str, optional
+        vol_curve : string, optional
             Name of a volume curve. The volume curve overrides the tank diameter
             and minimum volume.
         overflow : bool, optional
-            Overflow indicator (allows "yes"/"no", True/False, 1/0; default False)
+            Overflow indicator (Always False for the WNTRSimulator)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
-        Raises
-        ------
-        ValueError
-            If `init_level` greater than `max_level` or less than `min_level`
-            
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(elevation, (int, float)), "elevation must be a float"
+        assert isinstance(init_level, (int, float)), "init_level must be a float"
+        assert isinstance(min_level, (int, float)), "min_level must be a float"
+        assert isinstance(max_level, (int, float)), "max_level must be a float"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(min_vol, (int, float)), "min_vol must be a float"
+        assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
+        assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        
         elevation = float(elevation)
         init_level = float(init_level)
         min_level = float(min_level)
@@ -2249,13 +1972,13 @@ class NodeRegistry(Registry):
                                  str(self._curve_reg.volume_curve_names))
             vcurve = np.array(self._curve_reg[vol_curve].points)
             if min_level < vcurve[0,0]:
-                raise ValueError('The volume curve ' + vol_curve + ' has a minimum value ({0:5.2f}) \n' +
+                raise ValueError(('The volume curve ' + vol_curve + ' has a minimum value ({0:5.2f}) \n' +
                                  'greater than the minimum level for tank "' + name + '" ({1:5.2f})\n' +
-                                 'please correct the user input.'.format(vcurve[0,0],min_level))
+                                 'please correct the user input.').format(vcurve[0,0],min_level))
             elif max_level > vcurve[-1,0]:
-                raise ValueError('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
+                raise ValueError(('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
                                  'less than the maximum level for tank "' + name + '" ({1:5.2f})\n' +
-                                 'please correct the user input.'.format(vcurve[-1,0],max_level))
+                                 'please correct the user input.').format(vcurve[-1,0],max_level))
 
         tank = Tank(name, self)
         tank.elevation = elevation
@@ -2280,15 +2003,19 @@ class NodeRegistry(Registry):
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string
-            Name of the head pattern (optional)
+        head_pattern : string, optional
+            Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(base_head, (int, float)), "base_head must be float"
+        assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
+        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        
         base_head = float(base_head)
-        if head_pattern and not isinstance(head_pattern, six.string_types):
-            raise ValueError('Head pattern must be a string')
+
         reservoir = Reservoir(name, self)
         reservoir.base_head = base_head
         reservoir.head_pattern_name = head_pattern
@@ -2386,7 +2113,7 @@ class LinkRegistry(Registry):
         self._valves = OrderedSet()
     
     def _finalize_(self, model):
-        super(self.__class__, self)._finalize_(model)
+        super()._finalize_(model)
         self._link_reg = None
 
     def __setitem__(self, key, value):
@@ -2476,7 +2203,7 @@ class LinkRegistry(Registry):
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', check_valve=False):
         """
         Adds a pipe to the water network model.
 
@@ -2496,31 +2223,42 @@ class LinkRegistry(Registry):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        status : string, optional
-            Pipe status. Options are 'Open' or 'Closed'.
-        check_valve_flag : bool, optional
+        initial_status : string, optional
+            Pipe initial status. Options are 'OPEN' or 'CLOSED'.
+        check_valve : bool, optional
             True if the pipe has a check valve.
             False if the pipe does not have a check valve.
         
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(length, (int, float)), "length must be a float"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(roughness, (int, float)), "roughness must be a float"
+        assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        assert isinstance(check_valve, bool), "check_valve must be a Boolean"
+        
         length = float(length)
         diameter = float(diameter)
         roughness = float(roughness)
         minor_loss = float(minor_loss)
-        if isinstance(status, str):
-            status = LinkStatus[status]
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
+            
         pipe = Pipe(name, start_node_name, end_node_name, self)
         pipe.length = length
         pipe.diameter = diameter
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
-        pipe.initial_status = status
-        pipe._user_status = status
-        pipe.cv = check_valve_flag
+        pipe.initial_status = initial_status
+        pipe._user_status = initial_status
+        pipe.check_valve = check_valve
         self[name] = pipe
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
-                 pump_parameter=50.0, speed=1.0, pattern=None):
+                 pump_parameter=50.0, speed=1.0, pattern=None, initial_status='OPEN'):
         """
         Adds a pump to the water network model.
 
@@ -2534,34 +2272,44 @@ class LinkRegistry(Registry):
              Name of the end node.
         pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or str object
-            Float value of power in KW. Head curve name.
+        pump_parameter : float or string
+            For a POWER pump, the pump power (float).
+            For a HEAD pump, the head curve name (string).
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: str
-            ID of pattern for speed setting
+        pattern: string
+            Name of the speed pattern
+        initial_status: str or LinkStatus
+            Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(pump_type, str), "pump_type must be a string"
+        assert isinstance(pump_parameter, (int, float, str)), "pump_parameter must be a float or string"
+        assert isinstance(speed, (int, float)), "speed must be a float"
+        assert isinstance(pattern, (type(None), str)), "pattern must be a string"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
         if pump_type.upper() == 'POWER':
             pump = PowerPump(name, start_node_name, end_node_name, self)
             pump.power = pump_parameter
         elif pump_type.upper() == 'HEAD':
             pump = HeadPump(name, start_node_name, end_node_name, self)
-            if not isinstance(pump_parameter, six.string_types):
-                pump.pump_curve_name = pump_parameter.name
-            else:
-                pump.pump_curve_name = pump_parameter
+            pump.pump_curve_name = pump_parameter
         else:
             raise ValueError('pump_type must be "POWER" or "HEAD"')
         pump.base_speed = speed
-        if isinstance(pattern, Pattern):
-            pump.speed_pattern_name = pattern.name
-        else:
-            pump.speed_pattern_name = pattern
+        pump.initial_status = initial_status
+        pump.speed_pattern_name = pattern
         self[name] = pump
     
     def add_valve(self, name, start_node_name, end_node_name,
-                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, 
+                 initial_setting=0.0, initial_status='ACTIVE'):
         """
         Adds a valve to the water network model.
 
@@ -2576,44 +2324,76 @@ class LinkRegistry(Registry):
         diameter : float, optional
             Diameter of the valve.
         valve_type : string, optional
-            Type of valve. Options are 'PRV', etc.
+            Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        setting : float or string, optional
-            pressure setting for PRV, PSV, or PBV,
-            flow setting for FCV,
-            loss coefficient for TCV,
-            name of headloss curve for GPV.
-        
+        initial_setting : float or string, optional
+            Valve initial setting.
+            Pressure setting for PRV, PSV, or PBV. 
+            Flow setting for FCV. 
+            Loss coefficient for TCV.
+            Name of headloss curve for GPV.
+        initial_status: string or LinkStatus
+            Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'
+            
         """
+        assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(start_node_name, str) and len(start_node_name) < 32 and start_node_name.find(' ') == -1, "start_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(' ') == -1, "end_node_name must be a string with less than 32 characters and contain no spaces"
+        assert isinstance(diameter, (int, float)), "diameter must be a float"
+        assert isinstance(valve_type, str), "valve_type must be a string"
+        assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
+        assert isinstance(initial_setting, (int, float, str)), "initial_setting must be a float or string"
+        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        
+        if isinstance(initial_status, str):
+            initial_status = LinkStatus[initial_status]
         start_node = self._node_reg[start_node_name]
         end_node = self._node_reg[end_node_name]
-        if type(start_node)==Tank or type(end_node)==Tank:
-            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+        
         valve_type = valve_type.upper()
+        
+        # A PRV, PSV or FCV cannot be directly connected to a reservoir or tank (use a length of pipe to separate the two)
+        if valve_type in ['PRV', 'PSV', 'FCV']:
+            if type(start_node)==Tank or type(end_node)==Tank or type(start_node)==Reservoir or type(end_node)==Reservoir:
+                msg = '%ss cannot be directly connected to a tank.  Add a pipe to separate the valve from the tank.' % valve_type
+                logger.error(msg)   
+                raise RuntimeError(msg)
+            if type(start_node)==Reservoir or type(end_node)==Reservoir:
+                msg = '%ss cannot be directly connected to a reservoir.  Add a pipe to separate the valve from the reservoir.' % valve_type
+                logger.error(msg)   
+                raise RuntimeError(msg)
+        
+        # TODO check the following: PRVs cannot share the same downstream node or be linked in series
+            
+        # TODO check the following: Two PSVs cannot share the same upstream node or be linked in series
+        
+        # TODO check the following: A PSV cannot be connected to the downstream node of a PRV
+        
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-            valve._setting = setting
+            valve.initial_setting = initial_setting
+            valve._setting = initial_setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self)
-            valve.headloss_curve_name = setting
+            valve.headloss_curve_name = initial_setting
+        valve.initial_status = initial_status
         valve.diameter = diameter
         valve.minor_loss = minor_loss
         self[name] = valve
@@ -2630,7 +2410,7 @@ class LinkRegistry(Registry):
             
         """
         for name in self._pipes:
-            if self._data[name].cv:
+            if self._data[name].check_valve:
                 yield name
 
     @property

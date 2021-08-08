@@ -8,9 +8,10 @@ The wntr.network.options module includes simulation options.
     with EPANET nomenclature. This change is not backwards compatible, particularly 
     when trying to use pickle files with older options.
 
-.. rubric:: Contents
+.. rubric:: Classes
 
 .. autosummary::
+    :nosignatures:
 
     Options
     TimeOptions
@@ -113,54 +114,53 @@ class TimeOptions(_OptionsBase):
     Parameters
     ----------
     duration : int
-        Simulation duration (seconds). Defaults to 0.
+        Simulation duration (seconds), by default 0.
 
     hydraulic_timestep : int
-        Hydraulic timestep (seconds). Defaults to 3600 (one hour).
+        Hydraulic timestep (seconds), by default 3600 (one hour).
 
     quality_timestep : int
-        Water quality timestep (seconds). Defaults to 360 (five minutes).
+        Water quality timestep (seconds), by default 360 (five minutes).
 
     rule_timestep : int
-        Rule timestep (seconds). Defaults to 360 (five minutes).
+        Rule timestep (seconds), by default 360 (five minutes).
 
     pattern_timestep : int
-        Pattern timestep (seconds). Defaults to 3600 (one hour).
+        Pattern timestep (seconds), by default 3600 (one hour).
 
     pattern_start : int
         Time offset (in seconds) to find the starting pattern step; changes 
         where in pattern the pattern starts out, *not* what time the pattern 
-        starts. Defaults to 0.
+        starts, by default 0.
 
     report_timestep : int
-        Reporting timestep (seconds). Defaults to 3600 (one hour).
+        Reporting timestep (seconds), by default 3600 (one hour).
 
     report_start : int
-        Start time of the report (in seconds) from the start of the simulation. Default 0.
+        Start time of the report (in seconds) from the start of the simulation, by default 0.
 
     start_clocktime : int
-        Time of day (in seconds from midnight) at which the simulation begins. Default 0 (midnight).
+        Time of day (in seconds from midnight) at which the simulation begins, by default 0 (midnight).
 
     statistic: str
         Provide statistics rather than time series report in the report file.
-        Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
-        EPANET User Manual). Defaults to NONE.
+        Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
+        EPANET User Manual). Defaults to "NONE".
     
-
     """
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')
     _pattern3 = re.compile(r'^(\d+)$')
     def __init__(self,
-                duration: float = 0.0,
-                hydraulic_timestep: float=3600.0,
-                quality_timestep: float=360.0,
-                rule_timestep: float=360.0,
-                pattern_timestep: float=3600.0,
-                pattern_start: float=0.0,
-                report_timestep: float=3600.0,
-                report_start: float=0.0,
-                start_clocktime: float=0.0,
+                duration: int = 0,
+                hydraulic_timestep: int=3600,
+                quality_timestep: int=360,
+                rule_timestep: int=360,
+                pattern_timestep: int=3600,
+                pattern_start: int=0,
+                report_timestep: int=3600,
+                report_start: int=0,
+                start_clocktime: int=0,
                 statistic: str='NONE'):
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
@@ -182,113 +182,12 @@ class TimeOptions(_OptionsBase):
             try:
                 value = float(value)
             except ValueError:
-                raise ValueError('%s must be a number', name)
+                raise ValueError('%s must be a number'%name)
+        elif name not in ['duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
+                            'pattern_timestep', 'pattern_start', 'report_timestep', 'report_start',
+                            'start_clocktime', 'statistic']:
+            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         self.__dict__[name] = value
-
-    @classmethod
-    def seconds_to_tuple(cls, sec):
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
-
-    @classmethod
-    def time_str_to_seconds(cls, s):
-        """
-        Converts time format to seconds.
-
-        Parameters
-        ----------
-        s : string
-            Time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
-
-
-        Returns
-        -------
-        Integer value of time in seconds.
-        """
-        time_tuple = cls._pattern1.search(s)
-        if bool(time_tuple):
-            return (int(time_tuple.groups()[0])*60*60 +
-                    int(time_tuple.groups()[1])*60 +
-                    int(round(float(time_tuple.groups()[2]))))
-        else:
-            time_tuple = cls._pattern2.search(s)
-            if bool(time_tuple):
-                return (int(time_tuple.groups()[0])*60*60 +
-                        int(time_tuple.groups()[1])*60)
-            else:
-                time_tuple = cls._pattern3.search(s)
-                if bool(time_tuple):
-                    return int(time_tuple.groups()[0])*60*60
-                else:
-                    raise RuntimeError("Time format not recognized. ")
-
-    @classmethod
-    def clock_str_to_seconds(cls, s, am_pm):
-        """
-        Converts clocktime format to seconds.
-
-
-        Parameters
-        ----------
-        s : string
-            Time string. Options are 'HH:MM:SS', 'HH:MM', HH'
-
-        am : string
-            options are AM or PM
-
-
-        Returns
-        -------
-        Integer value of time in seconds
-
-        """
-        if am_pm.upper() == 'AM':
-            am = True
-        elif am_pm.upper() == 'PM':
-            am = False
-        else:
-            raise RuntimeError('am_pm option not recognized; options are AM or PM')
-
-        time_tuple = cls._pattern1.search(s)
-        if bool(time_tuple):
-            time_sec = (int(time_tuple.groups()[0])*60*60 +
-                        int(time_tuple.groups()[1])*60 +
-                        int(round(float(time_tuple.groups()[2]))))
-            if s.startswith('12'):
-                time_sec -= 3600*12
-            if not am:
-                if time_sec >= 3600*12:
-                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                time_sec += 3600*12
-            return time_sec
-        else:
-            time_tuple = cls._pattern2.search(s)
-            if bool(time_tuple):
-                time_sec = (int(time_tuple.groups()[0])*60*60 +
-                            int(time_tuple.groups()[1])*60)
-                if s.startswith('12'):
-                    time_sec -= 3600*12
-                if not am:
-                    if time_sec >= 3600 * 12:
-                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                    time_sec += 3600*12
-                return time_sec
-            else:
-                time_tuple = cls._pattern3.search(s)
-                if bool(time_tuple):
-                    time_sec = int(time_tuple.groups()[0])*60*60
-                    if s.startswith('12'):
-                        time_sec -= 3600*12
-                    if not am:
-                        if time_sec >= 3600 * 12:
-                            raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                        time_sec += 3600*12
-                    return time_sec
-                else:
-                    raise RuntimeError("Time format not recognized. ")
 
 
 class GraphicsOptions(_OptionsBase):
@@ -307,14 +206,13 @@ class GraphicsOptions(_OptionsBase):
         EPANET will make the image match the full extent of node coordinates (set to `None`).
 
     units : str
-        Units for backdrop image dimensions. Must be one of FEET, METERS, DEGREES or NONE. 
-        Default is NONE.
+        Units for backdrop image dimensions. Must be one of FEET, METERS, DEGREES or NONE, by default "NONE".
 
     offset : 2-tuple or list
-        Offset for the network in order (X, Y). Default is None (no offset).
+        Offset for the network in order (X, Y), by default ``None`` (no offset).
 
     image_filename : string
-        Filename where image is located. Default is None.
+        Filename where image is located, by default ``None``.
 
     map_filename : string
         Filename used to store node coordinates in (node, x, y) format. This option is
@@ -349,6 +247,8 @@ class GraphicsOptions(_OptionsBase):
             value = str(value).upper()
             if value not in ['FEET','METERS','DEGREES','NONE']:
                 raise ValueError('Backdrop units must be one of FEET, METERS, DEGREES, or NONE')
+        elif name not in ['dimensions', 'units', 'offset', 'image_filename', 'map_filename']:
+            raise AttributeError('%s is not a valid attribute of GraphicsOptions'%name)
         self.__dict__[name] = value
 
 
@@ -361,21 +261,21 @@ class HydraulicOptions(_OptionsBase):
     Parameters
     ----------
     headloss : str
-        Formula to use for computing head loss through a pipe. Options are H-W, 
-        D-W, and C-M. Default is `H-W`.
+        Formula to use for computing head loss through a pipe. Options are "H-W", 
+        "D-W", and "C-M", by default "H-W".
 
     hydraulics : str
         Indicates if a hydraulics file should be read in or saved; options are 
-        None, USE and SAVE. Defaults to ``None``.
+        ``None``, "USE" and "SAVE", by default ``None``.
 
     hydraulics_filename : str
-        Filename to use if ``hydraulics = 'SAVE'``. Defaults to ``None``.
+        Filename to use if ``hydraulics is not None``, by default ``None``.
 
     viscosity : float
-        Kinematic viscosity of the fluid. Defaults to 1.0.
+        Kinematic viscosity of the fluid, by default 1.0.
 
     specific_gravity : float
-        Specific gravity of the fluid. Defaults to 1.0.
+        Specific gravity of the fluid, by default 1.0.
 
     pattern : str
         Name of the default pattern for junction demands. By default,
@@ -385,58 +285,58 @@ class HydraulicOptions(_OptionsBase):
 
     demand_multiplier : float
         The demand multiplier adjusts the values of baseline demands for all 
-        junctions. Defaults to 1.0.
+        junctions, by default 1.0.
 
     emitter_exponent : float
-        The exponent used when computing flow from an emitter. Defaults to 0.5.
+        The exponent used when computing flow from an emitter, by default 0.5.
 
     minimum_pressure : float
-        (EPANET 2.2 only) The global minimum nodal pressure. Defaults to 0.0.
+        (EPANET 2.2 only) The global minimum nodal pressure, by default 0.0.
 
     required_pressure: float
-        (EPANET 2.2 only) The required nodal pressure. Defaults to 0.07 (m H2O)
+        (EPANET 2.2 only) The required nodal pressure, by default 0.07 (m H2O)
 
     pressure_exponent: float
-        (EPANET 2.2 only) The pressure exponent. Defaults to 0.5.
+        (EPANET 2.2 only) The pressure exponent, by default 0.5.
 
     trials : int
-        Maximum number of trials used to solve network hydraulics. Defaults to 200.
+        Maximum number of trials used to solve network hydraulics, by default 200.
 
     accuracy : float
-        Convergence criteria for hydraulic solutions. Defaults to 0.001.
+        Convergence criteria for hydraulic solutions, by default 0.001.
 
     headerror : float
         (EPANET 2.2 only) Augments the `accuracy` option by adjusting the head 
-        error convergence limit. Defaults to 0 (off).
+        error convergence limit, by default 0 (off).
 
     flowchange : float
         (EPANET 2.2 only) Augments the `accuracy` option by adjusting the flow 
-        change convergence limit. Defaults to 0 (off).
+        change convergence limit, by default 0 (off).
 
     unbalanced : str
         Indicate what happens if a hydraulic solution cannot be reached.  
-        Options are STOP and CONTINUE. Defaults to STOP.
+        Options are "STOP" and "CONTINUE", by default "STOP".
 
     unbalanced_value : int
-        Number of additional trials if unbalanced = CONTINUE. Default is None.
+        Number of additional trials if ``unbalanced == "CONTINUE"``, by default ``None``.
 
     checkfreq : int
-        Number of solution trials that pass between status checks. Default is 2.
+        Number of solution trials that pass between status checks, by default 2.
 
     maxcheck : int
-        Number of solution trials that pass between status check. Default is 10.
+        Number of solution trials that pass between status check, by default 10.
 
     damplimit : float
-        Accuracy value at which solution damping begins. Default is 0 (no damping).
+        Accuracy value at which solution damping begins, by default 0 (no damping).
 
     demand_model : str
-        Demand model for EPANET 2.2; acceptable values are DD and PDD. Default is DD.
+        Demand model for EPANET 2.2; acceptable values are "DD" and "PDD", by default "DD".
         EPANET 2.0 only contains demand driven analysis, and will issue a warning 
         if this option is not set to DD.
 
     inpfile_units : str
-        Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
-        LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
+        Units for the INP file; options are "CFS", "GPM", "MGD", "IMGD", "AFD", "LPS", 
+        "LPM", "MLD", "CMH", and "CMD". This **only** changes the units used in generating
         the INP file -- it has **no impact** on the units used in WNTR, which are 
         **always** SI units (m, kg, s).
     
@@ -528,6 +428,12 @@ class HydraulicOptions(_OptionsBase):
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number', name)
+        if name not in ['headloss', 'hydraulics', 'hydraulics_filename', 'viscosity', 'specific_gravity',
+                        'pattern', 'demand_multiplier', 'demand_model', 'minimum_pressure', 'required_pressure',
+                        'pressure_exponent', 'emitter_exponent', 'trials', 'accuracy', 'unbalanced', 
+                        'unbalanced_value', 'checkfreq', 'maxcheck', 'damplimit', 'headerror',
+                        'flowchange', 'inpfile_units']:
+            raise AttributeError('%s is not a valid attribute of HydraulicOptions'%name)
         self.__dict__[name] = value
 
 
@@ -539,29 +445,29 @@ class ReactionOptions(_OptionsBase):
     Parameters
     ----------
     bulk_order : float
-        Order of reaction occurring in the bulk fluid. Defaults to 1.0.
+        Order of reaction occurring in the bulk fluid, by default 1.0.
 
     wall_order : float
-        Order of reaction occurring at the pipe wall; must be either 0 or 1. Defaults to 1.0.
+        Order of reaction occurring at the pipe wall; must be either 0 or 1, by default 1.0.
 
     tank_order : float
-        Order of reaction occurring in the tanks. Defaults to 1.0.
+        Order of reaction occurring in the tanks, by default 1.0.
 
     bulk_coeff : float
-        Global reaction coefficient for bulk fluid and tanks. Defaults to 0.0.
+        Global reaction coefficient for bulk fluid and tanks, by default 0.0.
 
     wall_coeff : float
-        Global reaction coefficient for pipe walls. Defaults 0.0.
+        Global reaction coefficient for pipe walls, by default 0.0.
 
     limiting_potential : float
         Specifies that reaction rates are proportional to the difference 
         between the current concentration and some limiting potential value, 
-        Defaults to None (off).
+        by default ``None`` (off).
 
     roughness_correl : float
         Makes all default pipe wall reaction coefficients related to pipe 
-        roughness, according to functions as defined in EPANET. Defaults
-        to None (off).
+        roughness, according to functions as defined in EPANET, by default 
+        ``None`` (off).
         
 
     .. note::
@@ -598,6 +504,9 @@ class ReactionOptions(_OptionsBase):
                 value = _float_or_None(value)
             except ValueError:
                 raise ValueError('%s must be a number or None', name)
+        if name not in ['bulk_order', 'wall_order', 'tank_order', 'bulk_coeff',
+                        'wall_coeff', 'limiting_potential', 'roughness_correl']:
+            raise AttributeError('%s is not a valid attribute of ReactionOptions'%name)
         self.__dict__[name] = value
 
 
@@ -609,20 +518,20 @@ class QualityOptions(_OptionsBase):
     Parameters
     ----------
     parameter : str
-        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
-        TRACE. Defaults to None.
+        Type of water quality analysis.  Options are "NONE", "CHEMICAL", "AGE", and 
+        "TRACE", by default ``None``.
 
     trace_node : str
-        Trace node name if quality = TRACE. Defaults to None.
+        Trace node name if ``quality == "TRACE"``, by default ``None``.
 
     chemical : str
-        Chemical name for 'chemical' analysis. Defaults to "CHEMICAL" if appropriate.
+        Chemical name for "CHEMICAL" analysis, by default "CHEMICAL" if appropriate.
 
     diffusivity : float
-        Molecular diffusivity of the chemical. Defaults to 1.0.
+        Molecular diffusivity of the chemical, by default 1.0.
 
     tolerance : float
-        Water quality solver tolerance. Defaults to 0.01.
+        Water quality solver tolerance, by default 0.01.
 
     inpfile_units : str
         Units for quality analysis if the parameter is set to CHEMICAL. 
@@ -652,6 +561,9 @@ class QualityOptions(_OptionsBase):
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number or None', name)
+        if name not in ['parameter', 'trace_node', 'chemical_name', 'diffusivity',
+                        'tolerance', 'inpfile_units']:
+            raise AttributeError('%s is not a valid attribute of QualityOptions'%name)
         self.__dict__[name] = value
 
 
@@ -663,19 +575,19 @@ class EnergyOptions(_OptionsBase):
     Parameters
     ----------
     global_price : float
-        Global average cost per Joule. Defaults to 0.
+        Global average cost per Joule, by default 0.
 
     global_pattern : str
-        ID label of time pattern describing how energy price varies with time.
-        Defaults to None.
+        ID label of time pattern describing how energy price varies with
+        time, by default ``None``.
 
     global_efficiency : float
-        Global pump efficiency as percent; i.e., 75.0 means 75%.
-        Defaults to None.
+        Global pump efficiency as percent; i.e., 75.0 means 75%,
+        by default ``None``.
 
     demand_charge : float
-        Added cost per maximum kW usage during the simulation period.
-        Defaults to None.
+        Added cost per maximum kW usage during the simulation period,
+        by default ``None``.
 
     
     """
@@ -689,6 +601,11 @@ class EnergyOptions(_OptionsBase):
         self.global_efficiency = global_efficiency
         self.demand_charge = demand_charge
 
+    def __setattr__(self, name, value):
+        if name not in ['global_price', 'global_pattern', 'global_efficiency', 'demand_charge']:
+            raise AttributeError('%s is not a valid attribute of EnergyOptions'%name)
+        self.__dict__[name] = value
+
 
 class ReportOptions(_OptionsBase):
     """
@@ -700,14 +617,14 @@ class ReportOptions(_OptionsBase):
     Parameters
     ----------
     report_filename : str
-        Provides the filename to use for outputting an EPANET report file.
-        By default, this will be the prefix plus ".rpt".
+        Provides the filename to use for outputting an EPANET report file,
+        by default this will be the prefix plus ".rpt".
 
     status : str
-        Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
+        Output solver status ("YES", "NO", "FULL"). "FULL" is only useful for debugging
 
     summary : str
-        Output summary information ('YES' or 'NO')
+        Output summary information ("YES" or "NO")
 
     energy : str
         Output energy information
@@ -744,6 +661,12 @@ class ReportOptions(_OptionsBase):
         self.links = links
         self.report_params = report_params if report_params is not None else _new_report_params()
         self.param_opts = param_opts if param_opts is not None else _new_param_opts()
+    
+    def __setattr__(self, name, value):
+        if name not in ['pagesize', 'report_filename', 'status', 'summary', 'energy', 'nodes',
+                        'links', 'report_params', 'param_opts']:
+            raise AttributeError('%s is not a valid attribute of ReportOptions'%name)
+        self.__dict__[name] = value
 
 
 class UserOptions(_OptionsBase):

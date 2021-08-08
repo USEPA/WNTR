@@ -1,0 +1,169 @@
+[TITLE]
+ EPANET Example Network 1
+A simple example of modeling chlorine decay. Both bulk and
+wall reactions are included. 
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern         
+ J1              	710         	0           	                	;
+ J2              	710         	100         	1               	;
+ J3              	700         	150         	1               	;
+ J4              	700         	150         	1               	;
+ J5              	695         	100         	1               	;
+ J23             	700         	0           	                	;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+ RES             	800         	                	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve        	Overflow
+ TANK            	800         	25          	0           	350          	50          	0           	                	;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ P1              	RES             	J1              	1000        	12          	100         	0           	Open  	;
+ P2              	J2              	J3              	1000        	12          	100         	0           	Open	;
+ P3              	J4              	J5              	1000        	10          	100         	0           	Open  	;
+ P4              	J5              	TANK            	1000        	12          	100         	0           	Closed  	;
+ P2a             	J2              	J23             	1000        	12          	100         	0           	Open  	;
+ P2b             	J23             	J3              	1000        	12          	100         	0           	Open  	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+ PUMP            	J1              	J2              	HEAD 1	;
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+ VALVE           	J3              	J4              	12          	PSV 	75          	0           	;
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+; PUMP            	Closed
+; VALVE                  Open
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+ 1               	1.0         	1.2         	1.4         	1.6         	1.4         	1.2         
+ 1               	1.0         	0.8         	0.6         	0.4         	0.6         	0.8         
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+;PUMP: PUMP: PUMP: PUMP: PUMP: PUMP: PUMP: PUMP: Pump Curve for Pump 9
+ 1               	1500        	250         
+
+[CONTROLS]
+
+
+
+
+
+
+
+[RULES]
+
+
+
+
+
+
+
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+ J2              	0.5
+ J3              	0.5
+ J4              	0.5
+ J5              	0.5
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+
+[REACTIONS]
+ Order Bulk            	1
+ Order Tank            	1
+ Order Wall            	1
+ Global Bulk           	-.5
+ Global Wall           	-1
+ Limiting Potential    	0.0
+ Roughness Correlation 	0.0
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	24:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	0:05 
+ Pattern Timestep   	2:00 
+ Pattern Start      	0:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	12 am
+ Statistic          	NONE
+
+[REPORT]
+ Status             	Full
+ Summary            	No
+ Page               	0
+
+[OPTIONS]
+ Units              	GPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord           	Y-Coord
+J1              	10.000            	70.000            
+J2              	20.000            	70.000            
+J3              	30.000            	70.000            
+J4              	40.000            	70.000            
+J5              	50.000            	70.000            
+J23             	25.000            	75.000            
+RES             	0.000             	70.000            
+TANK            	60.000            	70.000            
+
+[VERTICES]
+;Link            	X-Coord           	Y-Coord
+
+[LABELS]
+;X-Coord             Y-Coord             Label & Anchor Node
+
+[BACKDROP]
+  DIMENSIONS  	7.000             	6.000             	73.000            	94.000            
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]

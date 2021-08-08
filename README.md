@@ -1,9 +1,9 @@
 ![WNTR](documentation/figures/logo.png)
 =======================================
 
-![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/USEPA/WNTR/badge.svg?branch=master)](https://coveralls.io/github/USEPA/WNTR?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=stable)](https://wntr.readthedocs.io/en/stable/?badge=stable)
+[![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml)
+[![Coverage Status](https://coveralls.io/repos/github/USEPA/WNTR/badge.svg?branch=main)](https://coveralls.io/github/USEPA/WNTR?branch=main)
+[![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=latest)](https://wntr.readthedocs.io/en/latest/?badge=latest)
 
 The Water Network Tool for Resilience (WNTR) is a Python package designed to simulate and 
 analyze resilience of water distribution networks. The software includes capability to:
