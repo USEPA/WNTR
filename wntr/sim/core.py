@@ -472,6 +472,9 @@ class _Diagnostics(object): # pragma: no cover
 
 
 def _check_upstream_sources(graph, wn, valve):
+    if valve.status != LinkStatus.Active:
+        return False
+
     graph.remove_edge(valve.start_node, valve.end_node, valve)
     res = False
 
@@ -493,6 +496,9 @@ def _check_upstream_sources(graph, wn, valve):
 
 
 def _check_downstream_sources(graph, wn, valve):
+    if valve.status != LinkStatus.Active:
+        return False
+
     graph.remove_edge(valve.start_node, valve.end_node, valve)
     res = False
 
@@ -945,16 +951,17 @@ class WNTRSimulator(WaterNetworkSimulator):
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
 
-            active_condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq,
-                                              threshold=LinkStatus.Active)
-            upstream_source_condition = FunctionCondition(self._valve_source_checker.should_valve_be_opened,
-                                                          func_kwargs={'valve': valve},
-                                                          requires=[valve])
-            condition = AndCondition(cond1=active_condition, cond2=upstream_source_condition)
-            action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
-            control = Control(condition=condition, then_action=action, priority=ControlPriority.very_high)
-            control._control_type = _ControlType.feasibility
-            valve_controls.append(control)
+            if valve.valve_type in {'PSV', 'PRV', 'FCV'}:
+                active_condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq,
+                                                  threshold=LinkStatus.Active)
+                upstream_source_condition = FunctionCondition(self._valve_source_checker.should_valve_be_opened,
+                                                              func_kwargs={'valve': valve},
+                                                              requires=[valve])
+                condition = AndCondition(cond1=active_condition, cond2=upstream_source_condition)
+                action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                control = Control(condition=condition, then_action=action, priority=ControlPriority.very_high)
+                control._control_type = _ControlType.feasibility
+                valve_controls.append(control)
 
         return valve_controls
 

@@ -161,7 +161,8 @@ class TimeOptions(_OptionsBase):
                 report_timestep: int=3600,
                 report_start: int=0,
                 start_clocktime: int=0,
-                statistic: str='NONE'):
+                statistic: str='NONE',
+                pattern_interpolation: bool = False):
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
@@ -172,20 +173,21 @@ class TimeOptions(_OptionsBase):
         self.report_start = report_start
         self.start_clocktime = start_clocktime
         self.statistic = statistic
+        self.pattern_interpolation = pattern_interpolation
 
     def __setattr__(self, name, value):
         if name == 'statistic':
             value = str.upper(value)
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
                 raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
-        elif name not in ['report_timestep']:
+        elif name not in {'report_timestep', 'pattern_interpolation'}:
             try:
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number'%name)
-        elif name not in ['duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
+        elif name not in {'duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
                             'pattern_timestep', 'pattern_start', 'report_timestep', 'report_start',
-                            'start_clocktime', 'statistic']:
+                            'start_clocktime', 'statistic', 'pattern_interpolation'}:
             raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         self.__dict__[name] = value
 
