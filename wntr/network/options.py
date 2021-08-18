@@ -146,7 +146,25 @@ class TimeOptions(_OptionsBase):
         Provide statistics rather than time series report in the report file.
         Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
         EPANET User Manual). Defaults to "NONE".
-    
+
+    pattern_interpolation: bool Only used by the
+        WNTRSimulator. Defaults to False. If True, interpolation will
+        be used determine pattern values between pattern timesteps. If
+        False, patterns cause step-like behavior where the pattern
+        value corresponding to the most recent pattern timestep is
+        used until the next pattern timestep. For example, given the
+        pattern [1, 1.2, 1.6], a pattern timestep of 1 hour, and a
+        pattern_interpolation value of False, a value of 1 is used at
+        0 hours and every time strictly less than 1 hour. A value of
+        1.2 is used at hour 1 and every time strictly less than 2
+        hours. With a pattern_interpolation value of True, a value of
+        1 is used at 0 hours and a value of 1.2 is used at 1
+        hour. However, at an intermediat time such as 0.5 hours,
+        interpolation is used, resulting in a value of 1.1. Using
+        interpolation with a shorter hydraulic_timestep can make
+        problems with large changes in patterns (e.g., large changes
+        in demand) easier to solve.
+
     """
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')

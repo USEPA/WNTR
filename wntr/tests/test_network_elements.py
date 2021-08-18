@@ -111,6 +111,19 @@ class TestElements(unittest.TestCase):
             np.all(np.abs(pattern5a.multipliers - pattern5b.multipliers) < 1.0e-10)
         )
 
+    def test_pattern_interpolation(self):
+        timing = TimeOptions()
+        timing.pattern_interpolation = True
+        p = elements.Pattern('p1', multipliers=[1, 1.2, 1.6], time_options=timing)
+        self.assertAlmostEqual(p.at(0), 1)
+        self.assertAlmostEqual(p.at(3600), 1.2)
+        self.assertAlmostEqual(p.at(7200), 1.6)
+        self.assertAlmostEqual(p.at(1800), 1.1)
+        self.assertAlmostEqual(p.at(5400), 1.4)
+        self.assertAlmostEqual(p.at(2250), 0.2/3600*2250 + 1)
+        self.assertAlmostEqual(p.at(9000), 1.3)
+        self.assertAlmostEqual(p.at(12600), 1.1)
+
     def test_TimeSeries(self):
         wn = wntr.network.WaterNetworkModel()
 
