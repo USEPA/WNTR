@@ -1,5 +1,6 @@
 import datetime
 import enum
+import numpy as np
 
 
 class ResultsStatus(enum.IntEnum):
@@ -20,20 +21,25 @@ class SimulationResults(object):
     model (i.e., have the same nodes and links), then the following functions 
     are defined:
 
-    ==================  ===========================================================
+    ==================  ============================================================
     Example function    Description
-    ------------------  -----------------------------------------------------------
+    ------------------  ------------------------------------------------------------
     ``C = A + B``       Add the values from A and B for each property
     ``C = A - B``       Subtract the property values in B from A
     ``C = A / B``       Divide the property values in A by the values in B
     ``C = A / n``       Divide the property values in A by n [int];
                         note that this only makes sense if calculating an average
-    ``C = A ** p``      Raise the property values in A to the p-th power;
+    ``C = pow(A, p)``   Raise the property values in A to the p-th power;
                         note the syntax ``C = pow(A, p, mod)`` can also be used
     ``C = abs(A)``      Take the absolute value of the property values in A
     ``C = -A``          Take the negative of all property values in A
     ``C = +A``          Take the positive of all property values in A
-    ==================  ===========================================================
+    ``C = A.max()``     Get the maximum value for each property for node/link
+    ``C = A.min()``     Get the minimum value for each property for node/link
+    ``n = A.len()``     Get the number of timesteps within A
+    ``C = A.sqrt()``    Take the element-wise square root for all properties
+    ``C = A.sum()``     Take the sum of each property across time for each node/link
+    ==================  ============================================================
 
     As an example, to calculate the relative difference between the results of two
     simulations, one could do: ``rel_dif = abs(A - B) / A`` (warning - this will operate
@@ -52,9 +58,7 @@ class SimulationResults(object):
 
     def __add__(self, other):
         if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
+            raise ValueError("operating on a results object requires both be SimulationResults")
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
@@ -71,9 +75,7 @@ class SimulationResults(object):
 
     def __sub__(self, other):
         if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
+            raise ValueError("operating on a results object requires both be SimulationResults")
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
@@ -92,9 +94,7 @@ class SimulationResults(object):
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
-        new.network_name = "|{}[{}]|".format(
-            self.network_name, self.timestamp
-        )
+        new.network_name = "|{}[{}]|".format(self.network_name, self.timestamp)
         for key in self.link.keys():
             new.link[key] = abs(self.link[key])
         for key in self.node.keys():
@@ -105,22 +105,75 @@ class SimulationResults(object):
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
-        new.network_name = "-{}[{}]".format(
-            self.network_name, self.timestamp
-        )
+        new.network_name = "-{}[{}]".format(self.network_name, self.timestamp)
         for key in self.link.keys():
             new.link[key] = -self.link[key]
         for key in self.node.keys():
             new.node[key] = -self.node[key]
         return new
 
+    def min(self):
+        """Min operates on each axis separately, therefore it needs to be a function.
+        The built-in ``min`` function will not work."""
+        new = SimulationResults()
+        new.link = dict()
+        new.node = dict()
+        new.network_name = "min({}[{}])".format(self.network_name, self.timestamp)
+        for key in self.link.keys():
+            new.link[key] = self.link[key].min(axis=0)
+        for key in self.node.keys():
+            new.node[key] = self.node[key].min(axis=0)
+        return new
+
+    def max(self):
+        """Max operates on each axis separately, therefore it needs to be a function.
+        The built-in ``max`` function will not work."""
+        new = SimulationResults()
+        new.link = dict()
+        new.node = dict()
+        new.network_name = "max({}[{}])".format(self.network_name, self.timestamp)
+        for key in self.link.keys():
+            new.link[key] = self.link[key].max(axis=0)
+        for key in self.node.keys():
+            new.node[key] = self.node[key].max(axis=0)
+        return new
+
+    def len(self):
+        """This is not an iterator, but there is still a meaning to calling its length.
+        However, this means that ``len`` must be a function called from the object, not
+        the builtin function."""
+        for key in self.link.keys():
+            return len(self.link[key])
+
+    def sqrt(self):
+        """Element-wise square root of all values."""
+        new = SimulationResults()
+        new.link = dict()
+        new.node = dict()
+        new.network_name = "sqrt({}[{}])".format(self.network_name, self.timestamp)
+        for key in self.link.keys():
+            new.link[key] = np.sqrt(self.link[key])
+        for key in self.node.keys():
+            new.node[key] = np.sqrt(self.node[key])
+        return new
+
+    def sum(self):
+        """Sum across time for each node/link for each property."""
+        new = SimulationResults()
+        new.link = dict()
+        new.node = dict()
+        new.network_name = "sum({}[{}])".format(self.network_name, self.timestamp)
+        for key in self.link.keys():
+            new.link[key] = self.link[key].sum(axis=0)
+        for key in self.node.keys():
+            new.node[key] = self.node[key].sum(axis=0)
+        return new
+
     def __pos__(self):
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
-        new.network_name = "+{}[{}]".format(
-            self.network_name, self.timestamp
-        )
+        new.network_name = "+{}[{}]".format(self.network_name, self.timestamp)
         for key in self.link.keys():
             new.link[key] = +self.link[key]
         for key in self.node.keys():
@@ -143,9 +196,7 @@ class SimulationResults(object):
                     new.node[key] = self.node[key] / other.node[key]
             return new
         elif isinstance(other, int):
-            new.network_name = "{}[{}] / {}".format(
-                self.network_name, self.timestamp, other
-            )
+            new.network_name = "{}[{}] / {}".format(self.network_name, self.timestamp, other)
             for key in self.link.keys():
                 new.link[key] = self.link[key] / other
             for key in self.node.keys():
@@ -155,15 +206,12 @@ class SimulationResults(object):
             raise ValueError(
                 "operating on a results object requires divisor be a SimulationResults or a float"
             )
-        
 
     def __pow__(self, exp, mod=None):
         new = SimulationResults()
         new.link = dict()
         new.node = dict()
-        new.network_name = "{}[{}] ** {}".format(
-            self.network_name, self.timestamp, exp
-        )
+        new.network_name = "{}[{}] ** {}".format(self.network_name, self.timestamp, exp)
         for key in self.link.keys():
             new.link[key] = pow(self.link[key], exp, mod)
         for key in self.node.keys():
@@ -213,22 +261,20 @@ class SimulationResults(object):
         
         """
         if not isinstance(other, SimulationResults):
-            raise ValueError(
-                "operating on a results object requires both be SimulationResults"
-            )
-        start_time = other.node['head'].index.values[0]
-        keep = self.node['head'].index.values < start_time
+            raise ValueError("operating on a results object requires both be SimulationResults")
+        start_time = other.node["head"].index.values[0]
+        keep = self.node["head"].index.values < start_time
         for key in self.link.keys():
             if key in other.link:
                 t2 = self.link[key].loc[keep].append(other.link[key])
                 self.link[key] = t2
             else:
-                temp = other.link['flowrate'] * pd.nan
+                temp = other.link["flowrate"] * np.nan
                 t2 = self.link[key].loc[keep].append(temp)
                 self.link[key] = t2
         for key in other.link.keys():
             if key not in self.link.keys():
-                temp = self.link['flowrate'] * pd.nan
+                temp = self.link["flowrate"] * np.nan
                 t2 = temp.loc[keep].append(other.link[key])
                 self.link[key] = t2
         for key in self.node.keys():
@@ -236,12 +282,12 @@ class SimulationResults(object):
                 t2 = self.node[key].loc[keep].append(other.node[key])
                 self.node[key] = t2
             else:
-                temp = other.node['head'] * pd.nan
+                temp = other.node["head"] * np.nan
                 t2 = self.node[key].loc[keep].append(temp)
                 self.node[key] = t2
         for key in other.node.keys():
             if key not in self.node.keys():
-                temp = self.node['head'] * pd.nan
+                temp = self.node["head"] * np.nan
                 t2 = temp.loc[keep].append(other.node[key])
                 self.node[key] = t2
 
