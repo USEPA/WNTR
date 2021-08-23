@@ -13,6 +13,15 @@ v0.3.2 (main branch)
   This update helps eliminate the use of incorrect or deprecated options.
   The user can still create custom options under ``wn.options.user``. 
 
+* Added a ``FunctionCondition`` which calls a function to determine if a control needs activated or not. 
+  If the function returns True, then the control is activated.  
+  This class is used internally to check if valves are connected to an upstream or downstream source (reservoir or tank).
+  The class can also be used directly to define custom controls. 
+    
+* Added the ability to use pattern interpolation when running the WNTRSimulator (``wn.options.time.pattern_interpolation``)  
+  Interpolation with a shorter hydraulic timestep can make problems with large changes in patterns (e.g., large changes in demand) easier to solve.
+  By default, the same step-like behavior from EPANET is used.
+   
 * Removed custom handlers from the EPANET bin filer reader.  
 
 * Added a metric to compute pump energy
