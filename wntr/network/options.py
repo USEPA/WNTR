@@ -147,8 +147,8 @@ class TimeOptions(_OptionsBase):
         Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
         EPANET User Manual). Defaults to "NONE".
 
-    pattern_interpolation: bool Only used by the
-        WNTRSimulator. Defaults to False. If True, interpolation will
+    pattern_interpolation: bool 
+        **Only used by the WNTRSimulator**. Defaults to False. If True, interpolation will
         be used determine pattern values between pattern timesteps. If
         False, patterns cause step-like behavior where the pattern
         value corresponding to the most recent pattern timestep is
