@@ -1774,8 +1774,12 @@ class InpFile(object):
                 f.write('{:20s} {:.2f}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
 
                 required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
-                f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
-
+                if required_pressure >= 0.1: # EPANET lower limit on required pressure = 0.1 (in psi or m)
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+                else:
+                    warnings.warn('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    logger.warning('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', 0.1).encode('ascii'))
                 f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
         
         if wn.options.hydraulic.inpfile_pressure_units is not None:
