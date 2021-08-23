@@ -360,6 +360,8 @@ class HydraulicOptions(_OptionsBase):
         the INP file -- it has **no impact** on the units used in WNTR, which are 
         **always** SI units (m, kg, s).
     
+    inpfile_pressure_units: str
+        Pressure units for the INP file, by default None (uses pressure units from inpfile_units)
 
     """
     def __init__(self,
@@ -384,7 +386,8 @@ class HydraulicOptions(_OptionsBase):
                  damplimit: int = 0,
                  headerror: float = 0,
                  flowchange: float = 0,
-                 inpfile_units: str = 'GPM'):
+                 inpfile_units: str = 'GPM',
+                 inpfile_pressure_units: str = None):
         self.headloss = headloss
         self.hydraulics = hydraulics
         self.hydraulics_filename = hydraulics_filename
@@ -407,6 +410,7 @@ class HydraulicOptions(_OptionsBase):
         self.headerror = headerror
         self.flowchange = flowchange
         self.inpfile_units = inpfile_units
+        self.inpfile_pressure_units = inpfile_pressure_units
 
     def __setattr__(self, name, value):
         if name == 'headloss':
@@ -433,6 +437,8 @@ class HydraulicOptions(_OptionsBase):
             value = str.upper(value)
             if value not in ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD']:
                 raise ValueError('inpfile_units = "%s" is not a valid EPANET unit code', value)
+        elif name == 'inpfile_pressure_units' and isinstance(value, str):
+            value = str.upper(value)
         elif name == 'unbalanced_value':
             try:
                 value = _int_or_None(value)
@@ -443,7 +449,7 @@ class HydraulicOptions(_OptionsBase):
                 value = int(value)
             except ValueError:
                 raise ValueError('%s must be an integer', name)
-        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units']:
+        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units', 'inpfile_pressure_units']:
             try:
                 value = float(value)
             except ValueError:
@@ -452,7 +458,7 @@ class HydraulicOptions(_OptionsBase):
                         'pattern', 'demand_multiplier', 'demand_model', 'minimum_pressure', 'required_pressure',
                         'pressure_exponent', 'emitter_exponent', 'trials', 'accuracy', 'unbalanced', 
                         'unbalanced_value', 'checkfreq', 'maxcheck', 'damplimit', 'headerror',
-                        'flowchange', 'inpfile_units']:
+                        'flowchange', 'inpfile_units', 'inpfile_pressure_units']:
             raise AttributeError('%s is not a valid attribute of HydraulicOptions'%name)
         self.__dict__[name] = value
 

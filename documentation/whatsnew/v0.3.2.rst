@@ -32,6 +32,12 @@ v0.3.2 (main branch)
 
 * Updated the WNTRSimulator to use `wn.options.time.start_clocktime`.
 
+* Updated Net 1, Net 2, and Net 3 network model files to match EPANET versions.  
+  The network files were updated to include a tank overflow entry and 3 digit coordinates.
+  Hydraulic, water quality, and reporting timestep were also updated in Net 3.
+  
+* Bug fix in io to differentiate between PRESSURE EXPONENT and PRESSURE hydraulic options.
+  
 * Updated documentation example that creates a weighted graph.
 
 * Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.
