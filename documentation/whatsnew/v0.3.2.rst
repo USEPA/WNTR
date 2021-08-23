@@ -38,6 +38,10 @@ v0.3.2 (main branch)
   
 * Bug fix in io to differentiate between PRESSURE EXPONENT and PRESSURE hydraulic options.
   
+* Bug fix to enforce EPANET lower limit for required pressure (0.1 in psi or m).  
+  If the user sets a lower limit below 0.1 m, the value of 0.1 m is used in the INP file and a warning is issued.
+  Note, the lower limit is also the default value in EPANET (and therefore the default for ``wn.options.hydraulic.required_pressure``).
+
 * Updated documentation example that creates a weighted graph.
 
 * Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.
