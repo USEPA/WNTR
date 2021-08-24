@@ -146,7 +146,25 @@ class TimeOptions(_OptionsBase):
         Provide statistics rather than time series report in the report file.
         Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
         EPANET User Manual). Defaults to "NONE".
-    
+
+    pattern_interpolation: bool Only used by the
+        WNTRSimulator. Defaults to False. If True, interpolation will
+        be used determine pattern values between pattern timesteps. If
+        False, patterns cause step-like behavior where the pattern
+        value corresponding to the most recent pattern timestep is
+        used until the next pattern timestep. For example, given the
+        pattern [1, 1.2, 1.6], a pattern timestep of 1 hour, and a
+        pattern_interpolation value of False, a value of 1 is used at
+        0 hours and every time strictly less than 1 hour. A value of
+        1.2 is used at hour 1 and every time strictly less than 2
+        hours. With a pattern_interpolation value of True, a value of
+        1 is used at 0 hours and a value of 1.2 is used at 1
+        hour. However, at an intermediat time such as 0.5 hours,
+        interpolation is used, resulting in a value of 1.1. Using
+        interpolation with a shorter hydraulic_timestep can make
+        problems with large changes in patterns (e.g., large changes
+        in demand) easier to solve.
+
     """
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -161,7 +179,8 @@ class TimeOptions(_OptionsBase):
                 report_timestep: int=3600,
                 report_start: int=0,
                 start_clocktime: int=0,
-                statistic: str='NONE'):
+                statistic: str='NONE',
+                pattern_interpolation: bool = False):
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
@@ -172,127 +191,23 @@ class TimeOptions(_OptionsBase):
         self.report_start = report_start
         self.start_clocktime = start_clocktime
         self.statistic = statistic
+        self.pattern_interpolation = pattern_interpolation
 
     def __setattr__(self, name, value):
         if name == 'statistic':
             value = str.upper(value)
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
                 raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
-        elif name not in ['report_timestep']:
+        elif name not in {'report_timestep', 'pattern_interpolation'}:
             try:
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number'%name)
-        elif name not in ['duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
+        elif name not in {'duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
                             'pattern_timestep', 'pattern_start', 'report_timestep', 'report_start',
-                            'start_clocktime', 'statistic']:
+                            'start_clocktime', 'statistic', 'pattern_interpolation'}:
             raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         self.__dict__[name] = value
-
-    @classmethod
-    def seconds_to_tuple(cls, sec):
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
-
-    @classmethod
-    def time_str_to_seconds(cls, s):
-        """
-        Converts time format to seconds.
-
-        Parameters
-        ----------
-        s : string
-            Time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
-
-
-        Returns
-        -------
-        Integer value of time in seconds.
-        """
-        time_tuple = cls._pattern1.search(s)
-        if bool(time_tuple):
-            return (int(time_tuple.groups()[0])*60*60 +
-                    int(time_tuple.groups()[1])*60 +
-                    int(round(float(time_tuple.groups()[2]))))
-        else:
-            time_tuple = cls._pattern2.search(s)
-            if bool(time_tuple):
-                return (int(time_tuple.groups()[0])*60*60 +
-                        int(time_tuple.groups()[1])*60)
-            else:
-                time_tuple = cls._pattern3.search(s)
-                if bool(time_tuple):
-                    return int(time_tuple.groups()[0])*60*60
-                else:
-                    raise RuntimeError("Time format not recognized. ")
-
-    @classmethod
-    def clock_str_to_seconds(cls, s, am_pm):
-        """
-        Converts clocktime format to seconds.
-
-
-        Parameters
-        ----------
-        s : string
-            Time string. Options are 'HH:MM:SS', 'HH:MM', HH'
-
-        am : string
-            options are AM or PM
-
-
-        Returns
-        -------
-        Integer value of time in seconds
-
-        """
-        if am_pm.upper() == 'AM':
-            am = True
-        elif am_pm.upper() == 'PM':
-            am = False
-        else:
-            raise RuntimeError('am_pm option not recognized; options are AM or PM')
-
-        time_tuple = cls._pattern1.search(s)
-        if bool(time_tuple):
-            time_sec = (int(time_tuple.groups()[0])*60*60 +
-                        int(time_tuple.groups()[1])*60 +
-                        int(round(float(time_tuple.groups()[2]))))
-            if s.startswith('12'):
-                time_sec -= 3600*12
-            if not am:
-                if time_sec >= 3600*12:
-                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                time_sec += 3600*12
-            return time_sec
-        else:
-            time_tuple = cls._pattern2.search(s)
-            if bool(time_tuple):
-                time_sec = (int(time_tuple.groups()[0])*60*60 +
-                            int(time_tuple.groups()[1])*60)
-                if s.startswith('12'):
-                    time_sec -= 3600*12
-                if not am:
-                    if time_sec >= 3600 * 12:
-                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                    time_sec += 3600*12
-                return time_sec
-            else:
-                time_tuple = cls._pattern3.search(s)
-                if bool(time_tuple):
-                    time_sec = int(time_tuple.groups()[0])*60*60
-                    if s.startswith('12'):
-                        time_sec -= 3600*12
-                    if not am:
-                        if time_sec >= 3600 * 12:
-                            raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
-                        time_sec += 3600*12
-                    return time_sec
-                else:
-                    raise RuntimeError("Time format not recognized. ")
 
 
 class GraphicsOptions(_OptionsBase):

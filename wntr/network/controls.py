@@ -39,6 +39,7 @@ from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
+from typing import Hashable, Dict, Any, Tuple, MutableSet
 
 logger = logging.getLogger(__name__)
 
@@ -746,6 +747,32 @@ class ValueCondition(ControlCondition):
             thresh_value = 0.0
         state = relation(np.round(cur_value,10), np.round(thresh_value,10))
         return bool(state)
+
+
+@DocInheritor({'requires', 'evaluate', 'name'})
+class FunctionCondition(ControlCondition):
+    """
+    A ControlCondition which calls a function to determine
+    if the control needs activated or not. If the function
+    returns True, then the control is activated.
+    """
+    def __init__(self, func, func_kwargs=None, requires=None):
+        super(FunctionCondition, self).__init__()
+        self._func = func
+        if func_kwargs is None:
+            self._func_kwargs = dict()
+        else:
+            self._func_kwargs = func_kwargs
+        if requires is None:
+            self._requires = OrderedSet()
+        else:
+            self._requires = OrderedSet(requires)
+
+    def evaluate(self):
+        return bool(self._func(**self._func_kwargs))
+
+    def requires(self):
+        return self._requires
 
 
 @DocInheritor({'requires', 'evaluate'})
@@ -1829,7 +1856,6 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
         self._condition = None
         self._priority = None
 
-
     @abc.abstractmethod
     def is_control_action_required(self):
         """
@@ -2056,7 +2082,7 @@ class Control(Rule):
     """
     A class for controls.
     """
-    def __init__(self, condition, then_action, priority=ControlPriority.medium, name=None):
+    def __init__(self, condition, then_action: BaseControlAction, priority=ControlPriority.medium, name=None):
         """
         Parameters
         ----------
@@ -2064,7 +2090,7 @@ class Control(Rule):
             The condition that should be used to determine when the actions need to be activated. When the condition
             evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
             are activated.
-        then_action: ControlAction
+        then_action: BaseControlAction
             The action that should be activated when the condition evaluates to True.
         priority: ControlPriority
             The priority of the control. Default is ControlPriority.medium
@@ -2155,19 +2181,35 @@ class Control(Rule):
         return control
 
 
-class ControlManager(Observer):
-    """
-    A class for managing controls and identifying changes made by those controls.
-    """
+class ControlChangeTracker(Observer):
     def __init__(self):
-        self._controls = OrderedSet()
-        """OrderedSet of ControlBase"""
+        self._actions = dict()
+        self._previous_values: Dict[Any, Dict[Tuple[Any, str], Any]] = dict()  # {key: {(obj, attr): value}}
+        self._changed: Dict[Any, MutableSet[Tuple[Any, str]]] = dict()  # {key: set of (obj, attr) that has been changed from _previous_values}
 
-        self._previous_values = OrderedDict()  # {(obj, attr): value}
-        self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
+    def clear_all_reference_points(self):
+        self._previous_values = dict()
+        self._changed = dict()
 
-    def __iter__(self):
-        return iter(self._controls)
+    def _set_reference_point(self, key):
+        self._previous_values[key] = dict()
+        self._changed[key] = OrderedSet()
+
+        for action in self._actions.keys():
+            obj, attr = action.target()
+            self._previous_values[key][(obj, attr)] = getattr(obj, attr)
+
+    def set_reference_point(self, key):
+        if key in self._previous_values:
+            raise ValueError(f'The ControlChangeTracker already has reference point {key}')
+        self._set_reference_point(key)
+
+    def reset_reference_point(self, key):
+        self._set_reference_point(key)
+
+    def remove_reference_point(self, key):
+        del self._previous_values[key]
+        del self._changed[key]
 
     def update(self, subject):
         """
@@ -2177,11 +2219,13 @@ class ControlManager(Observer):
         -----------
         subject: BaseControlAction
         """
-        obj, attr = subject.target()
-        if getattr(obj, attr) == self._previous_values[(obj, attr)]:
-            self._changed.discard((obj, attr))
-        else:
-            self._changed.add((obj, attr))
+        obj_attr = subject.target()
+        val = getattr(*obj_attr)
+        for ref_point in self._previous_values.keys():
+            if val == self._previous_values[ref_point][obj_attr]:
+                self._changed[ref_point].discard(obj_attr)
+            else:
+                self._changed[ref_point].add(obj_attr)
 
     def register_control(self, control):
         """
@@ -2191,25 +2235,15 @@ class ControlManager(Observer):
         ----------
         control: ControlBase
         """
-        self._controls.add(control)
+        if len(self._previous_values) != 0:
+            raise RuntimeError('Please call clear_reference_points() before registering more controls')
         for action in control.actions():
+            if action not in self._actions:
+                self._actions[action] = OrderedSet()
+            self._actions[action].add(control)
             action.subscribe(self)
-            obj, attr = action.target()
-            self._previous_values[(obj, attr)] = getattr(obj, attr)
 
-    def reset(self):
-        """
-        Reset the _previous_values. This should be called before activating any control actions so that changes made
-        by the control actions can be tracked.
-        """
-        self._changed = OrderedSet()
-        self._previous_values = OrderedDict()
-        for control in self._controls:
-            for action in control.actions():
-                obj, attr = action.target()
-                self._previous_values[(obj, attr)] = getattr(obj, attr)
-
-    def changes_made(self):
+    def changes_made(self, ref_point):
         """
         Specifies if changes were made.
 
@@ -2217,9 +2251,9 @@ class ControlManager(Observer):
         -------
         changes: bool
         """
-        return len(self._changed) > 0
+        return len(self._changed[ref_point]) > 0
 
-    def get_changes(self):
+    def get_changes(self, ref_point):
         """
         A generator for iterating over the objects, attributes that were changed.
 
@@ -2228,7 +2262,7 @@ class ControlManager(Observer):
         changes: tuple
             (object, attr)
         """
-        for obj, attr in self._changed:
+        for obj, attr in self._changed[ref_point]:
             yield obj, attr
 
     def deregister(self, control):
@@ -2239,12 +2273,45 @@ class ControlManager(Observer):
         ----------
         control: ControlBase
         """
-        self._controls.remove(control)
         for action in control.actions():
-            action.unsubscribe(self)
-            obj, attr = action.target()
-            self._previous_values.pop((obj, attr))
-            self._changed.discard((obj, attr))
+            self._actions[action].discard(control)
+            if len(self._actions[action]) == 0:
+                action.unsubscribe(self)
+                del self._actions[action]
+
+                obj_attr = action.target()
+                for ref_point in self._previous_values.keys():
+                    self._previous_values[ref_point].pop(obj_attr)
+                    self._changed[ref_point].discard(obj_attr)
+
+
+class ControlChecker(object):
+    def __init__(self):
+        self._controls = OrderedSet()
+        """OrderedSet of ControlBase"""
+
+    def __iter__(self):
+        return iter(self._controls)
+
+    def register_control(self, control):
+        """
+        Register a control with the ControlManager
+
+        Parameters
+        ----------
+        control: ControlBase
+        """
+        self._controls.add(control)
+
+    def deregister(self, control):
+        """
+        Deregister a control with the ControlManager
+
+        Parameters
+        ----------
+        control: ControlBase
+        """
+        self._controls.remove(control)
 
     def check(self):
         """
