@@ -1162,6 +1162,7 @@ class InpFile(object):
             
             control_obj = _read_control_line(line, self.wn, self.flow_units, control_name)
             if control_obj is None:
+                control_count -= 1 # control was not found 
                 continue
             
             if control_name in self.wn.control_name_list:
