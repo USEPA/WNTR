@@ -1915,9 +1915,9 @@ class InpFile(object):
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.report.report_params[current[0].lower()][1] = True
+                    self.wn.options.report.report_params[current[0].lower()] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.report.report_params[current[0].lower()][1] = False
+                    self.wn.options.report.report_params[current[0].lower()] = False
                 else:
                     self.wn.options.report.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 

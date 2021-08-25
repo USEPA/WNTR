@@ -102,7 +102,7 @@ def create_hydraulic_model(wn, HW_approx='default'):
     return m, model_updater
 
 
-def update_model_for_controls(m, wn, model_updater, control_manager):
+def update_model_for_controls(m, wn, model_updater, change_tracker):
     """
 
     Parameters
@@ -110,11 +110,11 @@ def update_model_for_controls(m, wn, model_updater, control_manager):
     m: wntr.aml.Model
     wn: wntr.network.WaterNetworkModel
     model_updater: wntr.models.utils.ModelUpdater
-    control_manager: wntr.network.controls.ControlManager
+    change_tracker: wntr.network.controls.ControlChangeTracker
     """
-    for obj, attr in control_manager.get_changes():
+    for obj, attr in change_tracker.get_changes(ref_point='model'):
         model_updater.update(m, wn, obj, attr)
-    # TODO: update model for isolated junctions and links
+    change_tracker.reset_reference_point(key='model')
 
 
 def update_model_for_isolated_junctions_and_links(m, wn, model_updater, prev_isolated_junctions, prev_isolated_links,
