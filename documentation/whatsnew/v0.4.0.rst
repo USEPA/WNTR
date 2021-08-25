@@ -1,6 +1,6 @@
-.. _whatsnew_032:
+.. _whatsnew_040:
 
-v0.3.2 (main branch)
+v0.4.0 (main branch)
 ---------------------------------------------------
 
 * Changed the following network component attributes:
@@ -30,7 +30,7 @@ v0.3.2 (main branch)
 
 * Updated the WNTRSimulator link results to include ``setting``.
 
-* Updated the WNTRSimulator to use `wn.options.time.start_clocktime`.
+* Updated the WNTRSimulator to use ``wn.options.time.start_clocktime`` and ``wn.options.time.pattern_start``.
 
 * Updated Net 1, Net 2, and Net 3 network model files to match EPANET versions.  
   The network files were updated to include a tank overflow entry and 3 digit coordinates.
@@ -41,6 +41,8 @@ v0.3.2 (main branch)
 * Bug fix to enforce EPANET lower limit for required pressure (0.1 in psi or m).  
   If the user sets a lower limit below 0.1 m, the value of 0.1 m is used in the INP file and a warning is issued.
   Note, the lower limit is also the default value in EPANET (and therefore the default for ``wn.options.hydraulic.required_pressure``).
+
+* Bug fix for private attribute associated with power outage controls.
 
 * Updated documentation example that creates a weighted graph.
 
