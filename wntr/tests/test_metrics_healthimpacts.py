@@ -18,6 +18,9 @@ class TestHealthImpactsMetric(unittest.TestCase):
         inp_file = join(netdir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
 
         wn.options.quality.parameter = "CHEMICAL"
         newpat = wntr.network.elements.Pattern.binary_pattern(
@@ -54,7 +57,10 @@ class TestHealthImpactsMetric(unittest.TestCase):
         inp_file = join(netdir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         newpat = wntr.network.elements.Pattern.binary_pattern(
             "NewPattern",
@@ -90,7 +96,10 @@ class TestHealthImpactsMetric(unittest.TestCase):
         inp_file = join(netdir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         newpat = wntr.network.elements.Pattern.binary_pattern(
             "NewPattern",

@@ -20,7 +20,10 @@ class TestWaterQualitySimulations(unittest.TestCase):
         inp_file = join(datadir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         wn.add_pattern(
             "NewPattern", [1]
@@ -42,7 +45,10 @@ class TestWaterQualitySimulations(unittest.TestCase):
         inp_file = join(datadir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         wn.add_pattern(
             "NewPattern", [1]
@@ -63,7 +69,10 @@ class TestWaterQualitySimulations(unittest.TestCase):
         inp_file = join(datadir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         wn.add_pattern(
             "NewPattern", [1.0]
@@ -84,7 +93,10 @@ class TestWaterQualitySimulations(unittest.TestCase):
         inp_file = join(datadir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "CHEMICAL"
         wn.add_pattern(
             "NewPattern", [1.0]
@@ -106,7 +118,10 @@ class TestWaterQualitySimulations(unittest.TestCase):
         inp_file = join(datadir, "Net3.inp")
 
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "AGE"
         # WQ = wntr.scenario.Waterquality('AGE')
 
@@ -124,8 +139,12 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_trace_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
-
+        
         wn = wntr.network.WaterNetworkModel(inp_file)
+        wn.options.time.hydraulic_timestep = 15*60
+        wn.options.time.quality_timestep = 15*60
+        wn.options.time.report_timestep = 15*60
+        
         wn.options.quality.parameter = "TRACE"
         wn.options.quality.trace_node = "121"
         # WQ = wntr.scenario.Waterquality('TRACE', ['121'])
@@ -143,9 +162,4 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    # test_setpoint_waterquality_simulation()
-    # test_flowpaced_waterquality_simulation()
-    # test_mass_waterquality_simulation()
-    # test_conc_waterquality_simulation()
-    # test_age_waterquality_simulation()
-    # test_trace_waterquality_simulation()
+
