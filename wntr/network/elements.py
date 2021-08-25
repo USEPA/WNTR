@@ -1112,7 +1112,7 @@ class Pump(Link):
         """
         from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
         
-        self._power_outage = True
+        self._power_outage = LinkStatus.Closed
         
         # Outage
         act = ControlAction(self, 'status', LinkStatus.Closed)
@@ -1141,7 +1141,7 @@ class Pump(Link):
         wn : :class:`~wntr.network.model.WaterNetworkModel`
            Water network model
         """
-        self._power_outage = False
+        self._power_outage = LinkStatus.Open
         
         wn._discard_control(self._outage_rule_name)
         wn._discard_control(self._after_outage_rule_name)
