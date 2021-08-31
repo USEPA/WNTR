@@ -1015,7 +1015,6 @@ class Pump(Link):
         self._efficiency = None
         self._energy_price = None 
         self._energy_pattern = None
-        self._power_outage = LinkStatus.Open
         self._outage_rule_name = name+'_outage'
         self._after_outage_rule_name = name+'_after_outage'
 
@@ -1052,8 +1051,6 @@ class Pump(Link):
     def status(self):
         """LinkStatus : the current status of the pump"""
         if self._internal_status == LinkStatus.Closed:
-            return LinkStatus.Closed
-        elif self._power_outage == LinkStatus.Closed:
             return LinkStatus.Closed
         else:
             return self._user_status
@@ -1112,8 +1109,6 @@ class Pump(Link):
         """
         from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
         
-        self._power_outage = LinkStatus.Closed
-        
         # Outage
         act = ControlAction(self, 'status', LinkStatus.Closed)
         cond1 = SimTimeCondition(wn, 'Above' , start_time)
@@ -1141,7 +1136,6 @@ class Pump(Link):
         wn : :class:`~wntr.network.model.WaterNetworkModel`
            Water network model
         """
-        self._power_outage = LinkStatus.Open
         
         wn._discard_control(self._outage_rule_name)
         wn._discard_control(self._after_outage_rule_name)

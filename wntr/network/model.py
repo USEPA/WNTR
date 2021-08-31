@@ -1766,7 +1766,6 @@ class WaterNetworkModel(AbstractModel):
             link._flow = None
             if isinstance(link, PowerPump):
                 link.power = link._base_power
-            link._power_outage = LinkStatus.Open
             link._prev_setting = None
 
         for name, link in self.links(Valve):
@@ -1891,7 +1890,6 @@ class WaterNetworkModel(AbstractModel):
             link._flow = None
             if isinstance(link, PowerPump):
                 link.power = link._base_power
-            link._power_outage = LinkStatus.Open
             link._prev_setting = None
 
         for name, link in self.links(Valve):
