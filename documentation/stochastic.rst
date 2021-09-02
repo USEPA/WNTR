@@ -34,7 +34,7 @@ based on the failure probability of each pipe.
     >>> selected_pipes = np.random.choice(pipe_names, N, replace=False, 
     ...     p=failure_probability)
 				     
-A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_ provided with WNTR runs multiple realizations 
+A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_ provided with WNTR runs multiple realizations 
 of a pipe leak scenario where the location and duration are drawn from probability 
 distributions.
 

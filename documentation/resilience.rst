@@ -212,8 +212,8 @@ use NetworkX directly, while others use metrics included in WNTR.
       >>> sim = wntr.sim.EpanetSimulator(wn)
       >>> results = sim.run_sim()
       
-      >>> flowrate = results.link['flowrate']
-      >>> G = wn.get_graph(link_weight=flowrate)
+      >>> flowrate = results.link['flowrate'].iloc[-1,:] # flowrate from the last timestep
+      >>> G = wn.get_graph(link_weight=flowrate, modify_direction=True)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
 * Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valvelayer`)

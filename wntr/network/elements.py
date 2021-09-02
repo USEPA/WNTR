@@ -2083,13 +2083,30 @@ class Pattern(object):
             Time in seconds        
         """
         nmult = len(self._multipliers)
-        if nmult == 0: return 1.0
-        if nmult == 1: return self._multipliers[0]
+        if nmult == 0:
+            return 1.0
+        if nmult == 1:
+            return self._multipliers[0]
         if self._time_options is None:
             raise RuntimeError('Pattern->time_options cannot be None at runtime')
         step = int(time//self._time_options.pattern_timestep)
-        if self.wrap:                      return self._multipliers[int(step%nmult)]
-        elif step < 0 or step >= nmult:    return 0.0
+        if self.wrap:
+            ndx = int(step%nmult)
+            last_mult = self._multipliers[ndx]
+            if self._time_options.pattern_interpolation:
+                if ndx + 1 == nmult:
+                    next_mult = self._multipliers[0]
+                else:
+                    next_mult = self._multipliers[ndx + 1]
+                last_time = step * self._time_options.pattern_timestep
+                next_time = (step + 1) * self._time_options.pattern_timestep
+                slope = (next_mult - last_mult) / (next_time - last_time)
+                intercept = next_mult - slope * next_time
+                return slope * time + intercept
+            else:
+                return last_mult
+        elif step < 0 or step >= nmult:
+            return 0.0
         return self._multipliers[step]
     
 
