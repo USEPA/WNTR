@@ -1478,15 +1478,10 @@ class WaterNetworkModel(AbstractModel):
                 end_time = ts
             else:
                 raise IndexError('There is no time "{}" in the results'.format(ts))
-        
-        # TODO take the last two timesteps and reopen any pipes connected to 
-        # tanks that have been closed between those timesteps.
-
+                
         # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
         #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
 
-        self.options.time.pattern_start = (self.options.time.pattern_start + end_time)
-        self.options.time.start_clocktime = (self.options.time.start_clocktime + end_time) % 86400
         self.sim_time = 0.0
         self._prev_sim_time = None
 
