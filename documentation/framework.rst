@@ -142,7 +142,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, and emitter exponent from the [OPTIONS] section
 * Pump speed in the [PUMPS] section
-* Pattern start, report start, start clocktime, and statistics in the [TIMES] section
+* Pattern start, report start, and statistics in the [TIMES] section
 * PBV and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**
@@ -169,4 +169,10 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   These attributes are only used for pressure dependent demand simulation with the WNTRSimulator.  
   If the junction attributes are set to None (the default value), then the required pressure, minimum pressure, and pressure exponent defined in the global hydraulic options (`wn.options.hydraulic`) are used for that junction.
   Pressure dependent demand simulation using the EpanetSimulator always uses values in the global hydraulic options.
- 
+* **Pattern Interpolation**: The WNTRSimulator can include pattern interpolation by setting
+  :py:class:`wn.options.time.pattern_interpolation
+  <wntr.network.options.TimeOptions>`.  If True, 
+  interpolation is used to determine pattern values between pattern
+  timesteps. If False, the step-like behavior from EPANET is used. 
+  Interpolation with a shorter hydraulic timestep can make problems with large changes in patterns (e.g., large changes in demand) easier to solve.
+  The default is False.

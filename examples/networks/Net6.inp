@@ -1,29 +1,31 @@
-; This file has been modified to avoid circular flow that
-; occurred due to the original file.
-; The following lines were added (lines 7494 and 7495
-;Link LINK-1843 Open If Node TANK-3326 Above 29.5
-;Link LINK-1843 Closed If Node TANK-3326 Below 18
-
-; Net6 modified by Arpan Seth:
-;   1. Pump curves 29 and 30 are converted to 3 point curves.
-;      - commented out the following lines:
-;      	 - CURVE-29 280 0
-;	 - CURVE-30 280 0
-;
-; Combined tanks 3328 and 3329 to prevent stability problems.
-; These two tanks are identical and should always have the same level.
-; However, with timesteps that are two large, explicit euler is unstable,
-; and the two tanks oscillate (triggered by roundoff error). Each
-; tank has a diameter of 120.6. When replacing the two with a single
-; tank, the diameter should be 170.55415562219525. Link-1834
-; was originally connected to TANK-3329.
-;
-; Combined tanks 3338 and 3339 to prevent stability problems.
-; See above comment. Each tank has a diameter of 119.1. When replacing
-; the two with a single tank, the diameter should be 168.43283527863562.
-; LINK-3185 was originally connected to TANK-3339.
-
 [TITLE]
+Network model used in Watson, J.P., Murray, R. and Hart, W.E., 2009. 
+Formulation and optimization of robust sensor placement problems for 
+drinking water contamination warning systems. Journal of 
+Infrastructure Systems, 15(4), pp.330-339.
+
+UPDATE: Controls modified to avoid circular flow
+The following lines were added:
+  Link LINK-1843 Open If Node TANK-3326 Above 29.5
+  Link LINK-1843 Closed If Node TANK-3326 Below 18
+
+UPDATE: Pump curves 29 and 30 were converted to 3 point curves.
+Commented out the following lines:
+  CURVE-29 280 0
+  CURVE-30 280 0
+
+UPDATE: Combined tanks 3328 and 3329 to prevent stability problems.
+These two tanks are identical and should always have the same level.
+However, with timesteps that are large, explicit euler is unstable,
+and the two tanks oscillate (triggered by roundoff error). Each
+tank has a diameter of 120.6. When replacing the two with a single
+tank, the diameter should be 170.55415562219525. Link-1834
+was originally connected to TANK-3329.
+
+UPDATE: Combined tanks 3338 and 3339 to prevent stability problems.
+See above comment. Each tank has a diameter of 119.1. When replacing
+the two with a single tank, the diameter should be 168.43283527863562.
+LINK-3185 was originally connected to TANK-3339.
 
 [JUNCTIONS]
 JUNCTION-0 25 0 PATTERN-2

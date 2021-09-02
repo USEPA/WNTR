@@ -10,4 +10,4 @@ from .layer import generate_valve_layer
 from .options import Options
 from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
-    OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
+    OrCondition, AndCondition, ControlAction, Control, ControlChecker, ControlChangeTracker, Rule

@@ -84,7 +84,7 @@ def ENgetwarning(code, sec=-1):
         return header + "Unknown warning: %d" % code
 
 
-def runepanet(inpfile):
+def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
     
     Parameters
@@ -94,10 +94,13 @@ def runepanet(inpfile):
 
     """
     file_prefix, file_ext = os.path.splitext(inpfile)
+    if rptfile is None:
+        rptfile = file_prefix + ".rpt"
+    if binfile is None:
+        binfile = file_prefix + ".bin"
+    
     enData = ENepanet()
-    rptfile = file_prefix + ".rpt"
-    outfile = file_prefix + ".bin"
-    enData.ENopen(inpfile, rptfile, outfile)
+    enData.ENopen(inpfile, rptfile, binfile)
     enData.ENsolveH()
     enData.ENsolveQ()
     try:
@@ -167,19 +170,13 @@ class ENepanet:
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Windows/%s.dll" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Linux/lib%s.so" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 return  # OK!
             except Exception as E1:
@@ -538,6 +535,42 @@ class ENepanet:
         self.errcode = self.ENlib.ENgetlinkvalue(iIndex, iCode, byref(fValue))
         self._error()
         return fValue.value
+
+    def ENsetlinkvalue(self, iIndex, iCode, fValue):
+        """
+        [summary]
+
+        Parameters
+        ----------
+        iIndex : [type]
+            [description]
+        iCode : [type]
+            [description]
+        fValue : [type]
+            [description]
+        """
+        self.errcode = self.ENlib.ENsetlinkvalue(
+            ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+        )
+        self._error()
+
+    def ENsetnodevalue(self, iIndex, iCode, fValue):
+        """
+        [summary]
+
+        Parameters
+        ----------
+        iIndex : [type]
+            [description]
+        iCode : [type]
+            [description]
+        fValue : [type]
+            [description]
+        """
+        self.errcode = self.ENlib.ENsetnodevalue(
+            ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+        )
+        self._error()
 
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
