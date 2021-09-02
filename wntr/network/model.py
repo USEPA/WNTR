@@ -1829,12 +1829,8 @@ class WaterNetworkModel(AbstractModel):
         # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
         #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
 
-        current_start = self.options.time.pattern_start
-        delta_t = end_time - current_start
-        self.sim_time = end_time
-        self.options.time.pattern_start = (self.options.time.pattern_start + delta_t)
-        self.options.time.start_clocktime = (self.options.time.start_clocktime + delta_t) % 86400
-        self._prev_sim_time = None   #end_time - self.options.time.hydraulic_timestep
+        self.options.time.pattern_start = (self.options.time.pattern_start + end_time)
+        self.options.time.start_clocktime = (self.options.time.start_clocktime + end_time) % 86400
         self.sim_time = 0.0
         self._prev_sim_time = None
 
@@ -1907,7 +1903,7 @@ class WaterNetworkModel(AbstractModel):
         to_delete = []
         for name, control in self.controls():
             control._reset()
-            still_good = control._shift(delta_t)
+            still_good = control._shift(end_time)
             if not still_good:
                 to_delete.append(name)
          
