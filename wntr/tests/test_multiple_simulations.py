@@ -104,9 +104,11 @@ class TestStopStartSim(unittest.TestCase):
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
         self.wn.set_initial_conditions(self.res2)
+        self.wn.options.time.pattern_start = self.wn.options.time.pattern_start + 10 * 3600
         self.wn.options.time.duration = 14 * 3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
+        self.res3._adjust_time(10*3600)
         # node_res = {}
         # link_res = {}
         # for key in self.res2.node.keys(): 
@@ -183,9 +185,12 @@ class TestStopStartEpanetSim(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.res2 = sim.run_sim()
         self.wn2.set_initial_conditions(self.res2)
+        self.wn2.options.time.pattern_start = self.wn2.options.time.pattern_start + 11 * 3600
         self.wn2.options.time.duration = 13 * 3600
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.res3 = sim.run_sim()
+        self.res3._adjust_time(11*3600)
+        
         self.res2.append_results_from(self.res3)
         self.res4 = abs(self.res1 - self.res2).max()
 
@@ -270,9 +275,10 @@ class TestPickle(unittest.TestCase):
         self.wn2 = parser.read(inp_file)
         self.wn2.options.time.hydraulic_timestep = 3600
         self.wn2.options.time.duration = 10 * 3600
-        sim = self.wntr.sim.WNTRSimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn2)
         self.res2 = sim.run_sim(solver_options={"TOL": 1e-8})
         self.wn2.set_initial_conditions(self.res2, 36000)
+        self.wn2.options.time.pattern_start = self.wn2.options.time.pattern_start + 10 * 3600
         f = open("temp.pickle", "wb")
         pickle.dump(self.wn2, f)
         f.close()
@@ -282,6 +288,8 @@ class TestPickle(unittest.TestCase):
         self.wn2.options.time.duration = 14*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn2)
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
+        self.res3._adjust_time(10*3600)
+        
         self.res2.append_results_from(self.res3)
         self.res4 = abs(self.res1 - self.res2).max()
 
