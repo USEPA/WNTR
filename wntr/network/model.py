@@ -1419,7 +1419,6 @@ class WaterNetworkModel(AbstractModel):
             link._flow = None
             if isinstance(link, PowerPump):
                 link.power = link._base_power
-            link._power_outage = LinkStatus.Open
             link._prev_setting = None
 
         for name, link in self.links(Valve):
@@ -1479,19 +1478,10 @@ class WaterNetworkModel(AbstractModel):
                 end_time = ts
             else:
                 raise IndexError('There is no time "{}" in the results'.format(ts))
-        
-        # TODO take the last two timesteps and reopen any pipes connected to 
-        # tanks that have been closed between those timesteps.
-
+                
         # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
         #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
 
-        current_start = self.options.time.pattern_start
-        delta_t = end_time - current_start
-        self.sim_time = end_time
-        self.options.time.pattern_start = (self.options.time.pattern_start + delta_t)
-        self.options.time.start_clocktime = (self.options.time.start_clocktime + delta_t) % 86400
-        self._prev_sim_time = None   #end_time - self.options.time.hydraulic_timestep
         self.sim_time = 0.0
         self._prev_sim_time = None
 
@@ -1547,7 +1537,6 @@ class WaterNetworkModel(AbstractModel):
             link._flow = None
             if isinstance(link, PowerPump):
                 link.power = link._base_power
-            link._power_outage = LinkStatus.Open
             link._prev_setting = None
 
         for name, link in self.links(Valve):
@@ -1565,7 +1554,7 @@ class WaterNetworkModel(AbstractModel):
         to_delete = []
         for name, control in self.controls():
             control._reset()
-            still_good = control._shift(delta_t)
+            still_good = control._shift(end_time)
             if not still_good:
                 to_delete.append(name)
          

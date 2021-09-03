@@ -1372,7 +1372,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 break
 
         wntr.sim.hydraulics.get_results(self._wn, results, node_res, link_res)
-        results._adjust_time(self._wn.options.time.pattern_start)
+
         self._wn.reset_initial_values()
         
         return results
