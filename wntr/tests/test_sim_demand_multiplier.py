@@ -39,11 +39,11 @@ class TestPatternStart(unittest.TestCase):
         diff_demand_3 = abs(epa_demand_3 - wntr_demand_3).sum().sum()
         self.assertLess(diff_demand_3, 1e-5)
         
-        #epa_demand_0.index = epa_demand_0.index + 3*3600
+        epa_demand_3.index = epa_demand_3.index + 3*3600
         diff_epa_shifted = abs(epa_demand_0 - epa_demand_3).sum().sum()
         self.assertLess(diff_epa_shifted, 1e-5)
         
-        #wntr_demand_0.index = wntr_demand_0.index + 3*3600
+        wntr_demand_3.index = wntr_demand_3.index + 3*3600
         diff_wntr_shifted = abs(wntr_demand_0 - wntr_demand_3).sum().sum()
         self.assertLess(diff_wntr_shifted, 1e-5)
         
