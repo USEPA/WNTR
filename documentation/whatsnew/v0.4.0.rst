@@ -1,6 +1,6 @@
 .. _whatsnew_040:
 
-v0.4.0 (main branch)
+v0.4.0 (August 26, 2021)
 ---------------------------------------------------
 
 * Changed the following network component attributes:
@@ -30,7 +30,7 @@ v0.4.0 (main branch)
 
 * Updated the WNTRSimulator link results to include ``setting``.
 
-* Updated the WNTRSimulator to use ``wn.options.time.start_clocktime`` and ``wn.options.time.pattern_start``.
+* Updated the WNTRSimulator to use ``wn.options.time.start_clocktime``.
 
 * Updated Net 1, Net 2, and Net 3 network model files to match EPANET versions.  
   The network files were updated to include a tank overflow entry and 3 digit coordinates.
