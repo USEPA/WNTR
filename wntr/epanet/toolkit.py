@@ -572,6 +572,11 @@ class ENepanet:
         )
         self._error()
 
+    def ENsettimeparam(self, eParam, lValue):
+        self.errcode = self.ENlib.ENsettimeparam(
+            ctypes.c_int(eParam), ctypes.c_long(lValue)
+        )
+
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
 

@@ -1,5 +1,7 @@
 from wntr.sim.core import WaterNetworkSimulator
 import wntr.epanet.io
+from wntr.epanet.util import EN
+from wntr.network.base import LinkStatus
 import warnings
 import logging
 
@@ -57,6 +59,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         WaterNetworkSimulator.__init__(self, wn)
         self.reader = reader
         self.prep_time_before_main_loop = 0.0
+        self._en = None
+        self._t = 0
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
@@ -194,3 +198,119 @@ class EpanetSimulator(WaterNetworkSimulator):
         
         return results
 
+    def _step_get_sensors(self):
+        enData = self._en
+        if enData is None:
+            raise RuntimeError('EpanetSimulator step_sim not initialized before use')
+        node_ret = dict()
+        link_ret = dict()
+        for name, attr, lid, aid in self.__link_sensors:
+            value = enData.ENgetlinkvalue(lid, aid)
+            if attr not in link_ret:
+                link_ret[attr] = dict()
+            link_ret[attr][name] = value
+        for name, attr, nid, aid in self.__node_sensors:
+            value = enData.ENgetnodevalue(nid, aid)
+            if attr not in node_ret:
+                node_ret[attr] = dict()
+            node_ret[attr][name] = value
+        return_data = dict(node=node_ret, link=link_ret)
+        return return_data
+
+    def step_init(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
+                version=2.2, stop_criteria=None, convergence_error=False, node_sensors=None,
+                link_sensors=None):
+        file_prefix += '_step'
+        inpfile = file_prefix + '.inp'
+        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
+        enData = wntr.epanet.toolkit.ENepanet(version=version)
+        rptfile = file_prefix + '.rpt'
+        outfile = file_prefix + '.bin'
+        enData.ENopen(inpfile, rptfile, outfile)
+        self._en = enData
+        enData.ENopenH()
+        enData.ENinitH(1)
+        # enData.ENinitQ(0)
+        enData.ENrunH()
+        self._t = 0
+        self.__node_sensors = []
+        self.__link_sensors = []
+        
+        logger.debug('Initialized step run')
+        
+        if link_sensors is not None:
+            for name, attr in link_sensors:
+                if name == '*':
+                    for link_name in self._wn.link_name_list:
+                        lid = enData.ENgetlinkindex(link_name)
+                        aid = EN[attr.upper()]
+                        self.__link_sensors.append((link_name, attr, lid, aid,))
+                else:
+                    lid = enData.ENgetlinkindex(name)
+                    aid = EN[attr.upper()]
+                    self.__link_sensors.append((name, attr, lid, aid))
+        if node_sensors is not None:
+            for name, attr in node_sensors:
+                if name == '*':
+                    for node_name in self._wn.node_name_list:
+                        nid = enData.ENgetnodeindex(node_name)
+                        aid = EN[attr.upper()]
+                        self.__node_sensors.append((node_name, attr, nid, aid))
+                else:
+                    nid = enData.ENgetnodeindex(name)
+                    aid = EN[attr.upper()]
+                    self.__node_sensors.append((name, attr, nid, aid))
+
+        return_data = self._step_get_sensors()
+        return self._t, return_data
+
+    def step_sim(self, set_values=None, return_values=None):
+        enData = self._en
+        if enData is None:
+            raise RuntimeError('EpanetSimulator step_sim not initialized before use')
+
+        tstep = enData.ENnextH()
+        self._t = self._t + tstep
+        if (tstep <= 0):
+            self._t = -1
+            return self._t, None
+        if set_values is not None:
+            for name, attr, value in set_values:
+                lid = enData.ENgetlinkindex(name)
+                if isinstance(attr, (str,)):
+                    aid = EN[attr.upper()]
+                else:
+                    aid = int(attr)
+                val = float(value)
+                enData.ENsetlinkvalue(lid, aid, val)
+        enData.ENrunH()
+        logger.debug('Ran 1 step')
+        return_data = self._step_get_sensors()
+        if set_values is not None:
+            for name, attr, value in set_values:
+                lid = enData.ENgetlinkindex(name)
+                if isinstance(attr, (str,)):
+                    aid = EN[attr.upper()]
+                else:
+                    aid = int(attr)
+                val = float(value)
+                enData.ENsetlinkvalue(lid, aid, val)
+        return self._t, return_data
+
+    def step_kill(self):
+        enData = self._en
+        if enData is None:
+            raise RuntimeError('EpanetSimulator step_sim not initialized before use')
+        enData.ENsettimeparam(EN.DURATION, self._t)
+
+    def step_end(self):
+        enData = self._en
+        if enData is None:
+            raise RuntimeError('EpanetSimulator step_sim not initialized before use')
+        enData.ENcloseH()
+        enData.ENsolveQ()
+        logger.debug('Solved quality')
+        enData.ENreport()
+        logger.debug('Ran quality')
+        enData.ENclose()
+        logger.debug('Completed step run')
