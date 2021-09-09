@@ -1249,62 +1249,13 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_rules(self):
-        if len(self.sections['[RULES]']) > 0:
-            rules = []
-            rule = None
-            in_if = False
-            in_then = False
-            in_else = False
-            for lnum, line in self.sections['[RULES]']:
-                line = line.split(';')[0]
-                words = line.split()
-                if words == []:
-                    continue
-                if len(words) == 0:
-                    continue
-                if words[0].upper() == 'RULE':
-                    if rule is not None:
-                        rules.append(rule)
-                    rule = _EpanetRule(words[1], self.flow_units, self.mass_units)
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                elif words[0].upper() == 'IF':
-                    in_if = True
-                    in_then = False
-                    in_else = False
-                    rule.add_if(line)
-                elif words[0].upper() == 'THEN':
-                    in_if = False
-                    in_then = True
-                    in_else = False
-                    rule.add_then(line)
-                elif words[0].upper() == 'ELSE':
-                    in_if = False
-                    in_then = False
-                    in_else = True
-                    rule.add_else(line)
-                elif words[0].upper() == 'PRIORITY':
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                    rule.set_priority(words[1])
-                elif in_if:
-                    rule.add_if(line)
-                elif in_then:
-                    rule.add_then(line)
-                elif in_else:
-                    rule.add_else(line)
-                else:
-                    continue
-            if rule is not None:
-                rules.append(rule)
-            for rule in rules:
-                ctrl = rule.generate_control(self.wn)
-                self.wn.add_control(ctrl.name, ctrl)
-                logger.debug('Added %s', str(ctrl))
-            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        rules = _EpanetRule.parse_rules_lines(self.sections['[RULES]'], self.flow_units, self.mass_units)
+        for rule in rules:
+            ctrl = rule.generate_control(self.wn)
+            self.wn.add_control(ctrl.name, ctrl)
+            logger.debug('Added %s', str(ctrl))
+        # wn._en_rules = '\n'.join(self.sections['[RULES]'])
+        #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
@@ -2151,6 +2102,76 @@ class _EpanetRule(object):
         self._else_clauses = []
         self.priority = 0
 
+    @classmethod
+    def parse_rules_lines(cls, lines, flow_units=FlowUnits.SI, mass_units=MassUnits.mg) -> list:
+        rules = list()
+        rule = None
+        in_if = False
+        in_then = False
+        in_else = False
+        new_lines = list()
+        new_line = list()
+        for line in lines:
+            if isinstance(line, (tuple, list)):
+                line = line[1]
+            line = line.split(';')[0]
+            words = line.strip().split()
+            for word in words:
+                if word.upper() in ['RULE', 'IF', 'THEN', 'ELSE', 'AND', 'OR', 'PRIORITY']:
+                    if len(new_line) > 0:
+                        text = ' '.join(new_line)
+                        new_lines.append(text)
+                        new_line = list()
+                new_line.append(word)
+        if len(new_line) > 0:
+            text = ' '.join(new_line)
+            new_lines.append(text)
+
+        for line in new_lines:
+            words = line.split()
+            if words == []:
+                continue
+            if len(words) == 0:
+                continue
+            if words[0].upper() == 'RULE':
+                if rule is not None:
+                    rules.append(rule)
+                rule = _EpanetRule(words[1], flow_units, mass_units)
+                in_if = False
+                in_then = False
+                in_else = False
+            elif words[0].upper() == 'IF':
+                in_if = True
+                in_then = False
+                in_else = False
+                rule.add_if(line)
+            elif words[0].upper() == 'THEN':
+                in_if = False
+                in_then = True
+                in_else = False
+                rule.add_then(line)
+            elif words[0].upper() == 'ELSE':
+                in_if = False
+                in_then = False
+                in_else = True
+                rule.add_else(line)
+            elif words[0].upper() == 'PRIORITY':
+                in_if = False
+                in_then = False
+                in_else = False
+                rule.set_priority(words[1])
+            elif in_if:
+                rule.add_if(line)
+            elif in_then:
+                rule.add_then(line)
+            elif in_else:
+                rule.add_else(line)
+            else:
+                continue
+        if rule is not None:
+            rules.append(rule)
+        return rules
+
     def from_if_then_else(self, control):
         """Create a rule from a Rule object"""
         if isinstance(control, Rule):
@@ -2318,14 +2339,14 @@ class _EpanetRule(object):
     def __str__(self):
         if self.priority >= 0:
             if len(self._else_clauses) > 0:
-                return 'RULE {}\n{}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
+                return 'RULE {}\n{}\n{}\n{}\n PRIORITY {}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
             else:
-                return 'RULE {}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
+                return 'RULE {}\n{}\n{}\n PRIORITY {}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
         else:
             if len(self._else_clauses) > 0:
-                return 'RULE {}\n{}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
+                return 'RULE {}\n{}\n{}\n{}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
             else:
-                return 'RULE {}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
+                return 'RULE {}\n{}\n{}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
 
     def generate_control(self, model):
         condition_list = []
