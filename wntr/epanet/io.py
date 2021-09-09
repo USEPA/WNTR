@@ -1558,7 +1558,7 @@ class InpFile(object):
             if words is not None and len(words) > 0:
                 if len(words) < 2:
                     edata['key'] = words[0]
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                    raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
@@ -1615,7 +1615,14 @@ class InpFile(object):
                     required_pressure = to_si(self.flow_units, float(words[2]), HydParam.Pressure)
                     opts.hydraulic.required_pressure = required_pressure
                 elif key == 'PRESSURE':
-                    opts.hydraulic.pressure_exponent = float(words[2])
+                    if len(words) > 2:
+                        if words[1].upper() == 'EXPONENT':
+                            opts.hydraulic.pressure_exponent = float(words[2])
+                        else:
+                            edata['key'] = ' '.join(words)
+                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                    else:
+                        opts.hydraulic.inpfile_pressure_units = words[1]
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
@@ -1626,16 +1633,16 @@ class InpFile(object):
                             opts.hydraulic.demand_model = words[2]
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
                         edata['key'] = ' '.join(words)
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
                         opts.hydraulic.emitter_exponent = float(words[2])
                     else:
                         edata['key'] = 'EMITTER EXPONENT'
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'TOLERANCE':
                     opts.quality.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
@@ -1650,11 +1657,11 @@ class InpFile(object):
                     if len(words) == 2:
                         edata['key'] = words[0]
                         setattr(opts, words[0].lower(), float(words[1]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
+                        logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
                     elif len(words) == 3:
                         edata['key'] = words[0] + ' ' + words[1]
                         setattr(opts, words[0].lower() + '_' + words[1].lower(), float(words[2]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
+                        logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
         if (type(opts.time.report_timestep) == float or
                 type(opts.time.report_timestep) == int):
             if opts.time.report_timestep < opts.time.hydraulic_timestep:
@@ -1718,10 +1725,17 @@ class InpFile(object):
                 f.write('{:20s} {:.2f}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
 
                 required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
-                f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
-
+                if required_pressure >= 0.1: # EPANET lower limit on required pressure = 0.1 (in psi or m)
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+                else:
+                    warnings.warn('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    logger.warning('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', 0.1).encode('ascii'))
                 f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
-
+        
+        if wn.options.hydraulic.inpfile_pressure_units is not None:
+            f.write(entry_string.format('PRESSURE', wn.options.hydraulic.inpfile_pressure_units).encode('ascii'))
+            
         # EPANET 2.0+ OPTIONS
         f.write(entry_float.format('EMITTER EXPONENT',  wn.options.hydraulic.emitter_exponent).encode('ascii'))
 

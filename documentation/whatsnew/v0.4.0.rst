@@ -1,0 +1,47 @@
+.. _whatsnew_040:
+
+v0.4.0 (August 26, 2021)
+---------------------------------------------------
+
+* Changed the following network component attributes:
+  
+  * Pipe ``check_valve_flag`` and ``cv`` attributes were merged and renamed ``check_valve``
+  * Pipe, Valve, and Pump ``status`` now refers to the current simulation status and is read-only, the user can set the initial status using ``initial_status``
+  * Valve ``setting`` now refers to the current simulation setting and is read-only, the user can set the initial setting using ``initial_setting``
+
+* Added slots to water network model options, ``wn.options``, to define available option names.
+  This update helps eliminate the use of incorrect or deprecated options.
+  The user can still create custom options under ``wn.options.user``. 
+
+* Added a ``FunctionCondition`` which calls a function to determine if a control needs activated or not. 
+  If the function returns True, then the control is activated.  
+  This class is used internally to check if valves are connected to an upstream or downstream source (reservoir or tank).
+  The class can also be used directly to define custom controls. 
+    
+* Added the ability to use pattern interpolation when running the WNTRSimulator (``wn.options.time.pattern_interpolation``)  
+  Interpolation with a shorter hydraulic timestep can make problems with large changes in patterns (e.g., large changes in demand) easier to solve.
+  By default, the same step-like behavior from EPANET is used.
+   
+* Removed custom handlers from the EPANET bin filer reader.  
+
+* Added a metric to compute pump energy
+
+* Added type checking for input into `wn.add_*` methods.
+
+* Updated the WNTRSimulator link results to include ``setting``.
+
+* Updated the WNTRSimulator to use ``wn.options.time.start_clocktime``.
+
+* Updated Net 1, Net 2, and Net 3 network model files to match EPANET versions.  
+  The network files were updated to include a tank overflow entry and 3 digit coordinates.
+  Hydraulic, water quality, and reporting timestep were also updated in Net 3.
+  
+* Bug fix in io to differentiate between PRESSURE EXPONENT and PRESSURE hydraulic options.
+  
+* Bug fix to enforce EPANET lower limit for required pressure (0.1 in psi or m).  
+  If the user sets a lower limit below 0.1 m, the value of 0.1 m is used in the INP file and a warning is issued.
+  Note, the lower limit is also the default value in EPANET (and therefore the default for ``wn.options.hydraulic.required_pressure``).
+
+* Updated documentation example that creates a weighted graph.
+
+* Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.

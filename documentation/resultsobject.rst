@@ -110,11 +110,11 @@ DataFrames can be sliced to extract specific information. For example, to access
 
     >>> pressure_at_node123 = pressure.loc[:,'123']
     >>> print(pressure_at_node123.head()) 
-    0       47.08
-    900     47.13
-    1800    47.18
-    2700    47.23
-    3600    47.94
+    0        47.08
+    3600     47.95
+    7200     48.75
+    10800    49.13
+    14400    50.38
     Name: 123, dtype: float32
 	
 To access the pressure at time 3600 over all nodes (values displayed to 2 decimal places):
@@ -127,8 +127,8 @@ To access the pressure at time 3600 over all nodes (values displayed to 2 decima
     10    28.25
     15    28.89
     20     9.10
-    35    41.52
-    40     4.18
+    35    41.51
+    40     4.19
     Name: 3600, dtype: float32
 	
 Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
