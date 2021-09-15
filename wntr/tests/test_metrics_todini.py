@@ -122,12 +122,8 @@ class TestMRIMetric(unittest.TestCase):
         mri = wntr.metrics.modified_resilience_index(pressure, elevation, Pstar, demand, False)
         mri_nzd = wntr.metrics.modified_resilience_index(pressure.loc[:,nzd_nodes], elevation[nzd_nodes], Pstar, demand.loc[:,nzd_nodes], False)
 
-        expected_demand = wntr.metrics.hydraulic.expected_demand(self.wn)
-        wsa_per_junction = wntr.metrics.hydraulic.water_service_availability(expected_demand, demand)
-        wsa_per_junction_nzd = wntr.metrics.hydraulic.water_service_availability(expected_demand.loc[:,nzd_nodes], demand.loc[:,nzd_nodes])
-
         # import matplotlib.pylab as plt
-
+        
         # fig, axes = plt.subplots(2,1, figsize=(5,10))
         # pressure.plot(title='Pressure at junctions', legend=False, ax=axes[0])
         # pressure.loc[:,nzd_nodes].plot(title='Pressure at NZD junctions', legend=False, ax=axes[1])
@@ -140,11 +136,9 @@ class TestMRIMetric(unittest.TestCase):
         # mri.plot(title='MRI system average', legend=False, ax=axes[0])
         # mri_nzd.plot(title='MRI system average at NZD junctions', legend=False, ax=axes[1])
         
-        # fig, axes = plt.subplots(2,1, figsize=(5,10))
-        # wsa_per_junction.plot(title='WSA at junctions', legend=False, ax=axes[0])
-        # wsa_per_junction_nzd.plot(title='WSA at NZD junctions', legend=False, ax=axes[1])
-        
         assert_series_equal(mri, mri_nzd, check_dtype=False) # system mri over all junctions = system average over demand junctions
+        assert_frame_equal(mri_per_junction.loc[:,nzd_nodes], mri_per_junction_nzd, check_dtype=False) 
+        
         self.assertEqual(mri_per_junction_nzd.min().min(), 0) # the min is 0 because Pstar is the min required pressure
         self.assertLess(mri_per_junction_nzd.max().max(), 1) # for this example, mri per junction is < 1
         
