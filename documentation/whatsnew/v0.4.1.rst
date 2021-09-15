@@ -4,3 +4,5 @@ v0.4.1 (main)
 ---------------------------------------------------
 
 * Updated the WNTRSimulator to use ``wn.options.time.pattern_start``.
+
+* Removed private attribute on pumps associated with power outage controls which is no longer needed.

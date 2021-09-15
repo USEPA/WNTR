@@ -42,8 +42,6 @@ v0.4.0 (August 26, 2021)
   If the user sets a lower limit below 0.1 m, the value of 0.1 m is used in the INP file and a warning is issued.
   Note, the lower limit is also the default value in EPANET (and therefore the default for ``wn.options.hydraulic.required_pressure``).
 
-* Bug fix for private attribute associated with power outage controls.
-
 * Updated documentation example that creates a weighted graph.
 
 * Updated all tests to use unittest. Removed Travis CI testing framework, all tests are run through GitHub Actions.
