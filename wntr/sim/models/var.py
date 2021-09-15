@@ -22,9 +22,11 @@ def demand_var(m, wn, index_over=None):
         index_over = wn.junction_name_list
 
     demand_multiplier = wn.options.hydraulic.demand_multiplier
+    pattern_start = wn.options.time.pattern_start
+    
     for node_name in index_over:
         node = wn.get_node(node_name)
-        m.demand[node_name] = aml.Var(node.demand_timeseries_list.at(wn.sim_time, multiplier=demand_multiplier))
+        m.demand[node_name] = aml.Var(node.demand_timeseries_list.at(wn.sim_time+pattern_start, multiplier=demand_multiplier))
 
 
 def flow_var(m, wn, index_over=None):
