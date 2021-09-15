@@ -173,7 +173,7 @@ def water_service_availability(expected_demand, demand):
     
     return wsa
 
-def todini_index(head, pressure, demand, flowrate, wn, Pstar, mode=1):
+def todini_index(head, pressure, demand, flowrate, wn, Pstar):
     """
     Compute Todini index, equations from [Todi00]_.
 
@@ -255,7 +255,7 @@ def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junct
         Pressure threshold.
     
     demand : pandas DataFrame
-        A pandas Dataframe containing node demand 
+        A pandas Dataframe containing node demand (only needed if per_junction=False)
         (index = times, columns = junction names).
 
     per_junction : bool (optional)
@@ -267,12 +267,19 @@ def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junct
     pandas Series or DataFrame
         Modified resilience index time-series. If per_junction=True, columns=junction names.
     """
-
+    assert isinstance(pressure, pd.DataFrame), "pressure must be a pandas DataFrame"
+    assert isinstance(elevation, pd.Series), "elevation must be a pandas Series"
+    assert isinstance(Pstar, (float, int)), "Pstar must be a float"
+    assert isinstance(per_junction, bool), "per_junction must be a Boolean"
+    if per_junction == False:
+        assert isinstance(demand, pd.DataFrame), "demand must be a pandas DataFrame when per_junction=False"
+    
     if per_junction:
         Pout = (pressure + elevation)
         Pexp =(Pstar + elevation)
         mri = (Pout - Pexp)/Pexp
     else:
+        
         Pout = demand*(pressure + elevation)
         Pexp = demand*(Pstar + elevation)
         mri = (Pout.sum(axis=1) - Pexp.sum(axis=1))/Pexp.sum(axis=1)
@@ -300,6 +307,9 @@ def tank_capacity(pressure, wn):
         Tank capacity (index = times, columns = tank names)
     """
     
+    assert isinstance(pressure, pd.DataFrame), "pressure must be a pandas DataFrame"
+    assert isinstance(wn, wntr.network.WaterNetworkModel), "wn must be a wntr WaterNetworkModel"
+
     tank_capacity = pd.DataFrame(index=pressure.index, columns=pressure.columns)
     
     for name in wn.tank_name_list:
