@@ -19,7 +19,10 @@ class TestPumpNet3(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.energy.global_efficiency = 75  # 75%
         self.wn.options.energy.global_price = 3.61e-8  # $/J; equal to $0.13/kW-h
-
+        self.wn.options.time.hydraulic_timestep = 15*60
+        self.wn.options.time.quality_timestep = 15*60
+        self.wn.options.time.report_timestep = 15*60
+        
     @classmethod
     def tearDownClass(self):
         pass
