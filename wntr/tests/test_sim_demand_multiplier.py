@@ -8,9 +8,46 @@ testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
+class TestPatternStart(unittest.TestCase):
 
+    def test_pattern_start(self):
+
+        inp_file = join(ex_datadir, "Net1.inp")
+
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn.options.time.pattern_start = 0
+
+        sim = wntr.sim.EpanetSimulator(wn)
+        epa_demand_0 = sim.run_sim().node['demand'].loc[:,wn.junction_name_list]
+
+        sim = wntr.sim.WNTRSimulator(wn)
+        wntr_demand_0 = sim.run_sim().node['demand'].loc[:,wn.junction_name_list]
+
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn.options.time.pattern_start = 3*3600
+
+        sim = wntr.sim.EpanetSimulator(wn)
+        epa_demand_3 = sim.run_sim().node['demand'].loc[:,wn.junction_name_list]
+
+        sim = wntr.sim.WNTRSimulator(wn)
+        wntr_demand_3 = sim.run_sim().node['demand'].loc[:,wn.junction_name_list]
+
+        diff_demand_0 = abs(epa_demand_0 - wntr_demand_0).sum().sum()
+        self.assertLess(diff_demand_0, 1e-5)
+
+        diff_demand_3 = abs(epa_demand_3 - wntr_demand_3).sum().sum()
+        self.assertLess(diff_demand_3, 1e-5)
+
+        epa_demand_3.index = epa_demand_3.index + 3*3600
+        diff_epa_shifted = abs(epa_demand_0 - epa_demand_3).sum().sum()
+        self.assertLess(diff_epa_shifted, 1e-5)
+
+        wntr_demand_3.index = wntr_demand_3.index + 3*3600
+        diff_wntr_shifted = abs(wntr_demand_0 - wntr_demand_3).sum().sum()
+        self.assertLess(diff_wntr_shifted, 1e-5)
 
 class TestDemandMultiplier(unittest.TestCase):
+    
     def test_demand_multiplier(self):
 
         node_name = "147"
