@@ -54,16 +54,16 @@ class TestEpanetToolkit(unittest.TestCase):
         enData.inpfile = join(datadir, "Net1.inp")
         enData.ENopen(enData.inpfile, "temp.rpt")
         
-        enData.ENsaveinpfile("Net1_toolkit.inp") 
-        file_exists = exists("Net1_toolkit.inp")
+        enData.ENsaveinpfile("temp_Net1_toolkit.inp") 
+        file_exists = exists("temp_Net1_toolkit.inp")
         assert file_exists
         
     def test_runepanet(self):
         inpfile = join(datadir, "Net1.inp")
-        wntr.epanet.toolkit.runepanet(inpfile, "test_runepanet.rpt", "test_runepanet.bin")
+        wntr.epanet.toolkit.runepanet(inpfile, "temp_runepanet.rpt", "temp_runepanet.bin")
                  
         reader = wntr.epanet.io.BinFile()
-        results = reader.read("test_runepanet.bin")
+        results = reader.read("temp_runepanet.bin")
         
         assert(isinstance(results, wntr.sim.results.SimulationResults))
         assert(results.node['pressure'].shape == (25,11))
@@ -71,7 +71,7 @@ class TestEpanetToolkit(unittest.TestCase):
     def test_runepanet_step(self):
         enData = wntr.epanet.toolkit.ENepanet()
         enData.inpfile = join(datadir, "Net1.inp")
-        enData.ENopen(enData.inpfile, "test_runepanet_step.rpt", "test_runepanet_step.bin")
+        enData.ENopen(enData.inpfile, "temp_runepanet_step.rpt", "temp_runepanet_step.bin")
         
         enData.ENopenH()
         enData.ENinitH(0)
