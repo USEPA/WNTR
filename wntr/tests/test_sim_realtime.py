@@ -46,7 +46,7 @@ class Test_Reset_Conditions(unittest.TestCase):
 522000,P10-RIC/STATUS,1
 572400,P10-RIC/STATUS,0
 """
-        with open("step_test.in", 'w') as ctrlin:
+        with open("temp.in", 'w') as ctrlin:
             ctrlin.write(self.commands)
         
         # note that TANKLEVEL does not work well - use tank heads
