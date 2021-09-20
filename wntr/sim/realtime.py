@@ -45,7 +45,7 @@ class RealtimeProvider:
     def proc_sensors(self, t: int, values: dict):
         with open(self._outfile, "a") as out:
             for k, v in values.items():
-                # out.write("{},{},{}\n".format(t,k,v))
+                out.write("{},{},{}\n".format(t,k,v))
                 self._current[k] = v
 
     def proc_controllers(self, t: int) -> dict:
@@ -264,16 +264,16 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
             raise RuntimeError("EpanetSimulator step_sim not initialized before use")
 
         while True:
-            values = self.get_sensor_values()
-            self.transmit(self._t, values)
+            # values = self.get_sensor_values()
+            # self.transmit(self._t, values)
             values = self.receive(self._t)
             self.set_sensor_values(values)
             enData.ENrunH()
             enData.ENrunQ()
             values = self.get_sensor_values()
             self.transmit(self._t, values)
-            values = self.receive(self._t)
-            self.set_sensor_values(values)
+            # values = self.receive(self._t)
+            # self.set_sensor_values(values)
             logger.debug("Ran 1 step")
             if self._t >= until or self.stop(self._t):
                 enData.ENsettimeparam(EN.DURATION, self._t)

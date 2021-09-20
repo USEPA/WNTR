@@ -21,6 +21,7 @@ class Test_Reset_Conditions(unittest.TestCase):
         self.inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(self.inp_file)
         self.wn = wn
+        wn.options.quality.trace_node = "River"
         wn.options.time.duration = 100 * 3600
         wn.options.time.hydraulic_timestep = 60
         sim = wntr.sim.EpanetSimulator(wn)
@@ -58,6 +59,7 @@ class Test_Reset_Conditions(unittest.TestCase):
             ("T3-LI/PV", "3", "head"),
             ("J123-FI/PV", "123", "demand"),
             ("J125-FI/PV", "125", "demand"),
+            ("J125-QUAL", "125", "quality"),
         ]
         self.linksens = [
             ("P10-FI/PV", "10", "flow"),
