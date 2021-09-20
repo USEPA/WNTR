@@ -1,0 +1,70 @@
+@startuml
+title
+//Simple// <color:white>..........⟵..........⟶..........</color> //Complex//
+
+end title
+
+:**START**
+Generate a water 
+network model;
+
+fork 
+  :Modify the
+  network structure
+  and operations;
+  :Save the modified
+  network as an 
+  EPANET INP file;
+fork again
+:Compute 
+topographic 
+metrics;
+:Modify the 
+network 
+structure;
+:Recompute 
+topographic 
+metrics;
+fork again
+:Run a hydraulic and 
+water quality 
+simulation;
+:Compute resilience 
+metrics;
+:Add a disruptive 
+incident and recovery 
+action based on 
+historical data;
+:Rerun the hydraulic 
+and water quality 
+simulation;
+:Recompute resilience 
+metrics;
+fork again
+:Define fragility curves 
+for failure and 
+available resources 
+for recovery;
+repeat 
+:Simulate 
+environmental change 
+from a disaster;
+:Add a disruptive 
+incident and recovery 
+action based on 
+fragility curves and 
+available resources;
+:Run a hydraulic and 
+water quality 
+simulation;
+:Compute resilience 
+metrics;
+repeat while (for multiple
+stochastic 
+simulations) is ( )
+  end fork
+
+:**END**
+Analyze results and
+generate graphics;
+@enduml
