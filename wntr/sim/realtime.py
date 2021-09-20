@@ -226,7 +226,10 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
         self._en = enData
         enData.ENopenH()
         enData.ENinitH(1)
+        enData.ENopenQ()
+        enData.ENinitQ(1)
         enData.ENrunH()
+        enData.ENrunQ()
         self._t = 0
 
         logger.debug("Initialized realtime run")
@@ -252,6 +255,7 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
         values = self.receive(self._t)
         self.set_sensor_values(values)
         tstep = enData.ENnextH()
+        qstep = enData.ENnextQ()
         self._t = self._t + tstep
 
     def run_sim(self, until=np.inf):
@@ -265,6 +269,7 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
             values = self.receive(self._t)
             self.set_sensor_values(values)
             enData.ENrunH()
+            enData.ENrunQ()
             values = self.get_sensor_values()
             self.transmit(self._t, values)
             values = self.receive(self._t)
@@ -273,6 +278,7 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
             if self._t >= until or self.stop(self._t):
                 enData.ENsettimeparam(EN.DURATION, self._t)
             tstep = enData.ENnextH()
+            qstep = enData.ENnextQ()
             if tstep <= 0:
                 self._t = 0
                 break
@@ -283,7 +289,7 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
         if enData is None:
             raise RuntimeError("EpanetSimulator step_sim not initialized before use")
         enData.ENcloseH()
-        enData.ENsolveQ()
+        enData.ENcloseQ()
         logger.debug("Solved quality")
         enData.ENreport()
         logger.debug("Ran quality")

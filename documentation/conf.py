@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.plantuml',
 ]
 
 napoleon_use_rtype = False
@@ -126,6 +127,10 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# Plantuml
+plantuml = 'java -jar /Users/dbhart/plantuml.jar'
+
 
 
 # -- Options for HTML output ----------------------------------------------
