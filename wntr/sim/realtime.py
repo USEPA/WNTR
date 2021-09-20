@@ -270,8 +270,6 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
             self.set_sensor_values(values)
             enData.ENrunH()
             enData.ENrunQ()
-            values = self.get_sensor_values()
-            self.transmit(self._t, values)
             # values = self.receive(self._t)
             # self.set_sensor_values(values)
             logger.debug("Ran 1 step")
@@ -279,6 +277,8 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
                 enData.ENsettimeparam(EN.DURATION, self._t)
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
+            values = self.get_sensor_values()
+            self.transmit(self._t, values)
             if tstep <= 0:
                 self._t = 0
                 break

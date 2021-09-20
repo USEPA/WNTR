@@ -21,11 +21,14 @@ class Test_Reset_Conditions(unittest.TestCase):
         self.inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(self.inp_file)
         self.wn = wn
-        wn.options.quality.trace_node = "River"
+        wn.options.quality.parameter = "AGE"
+        wn.options.quality.trace_node = None
         wn.options.time.duration = 100 * 3600
-        wn.options.time.hydraulic_timestep = 60
+        wn.options.time.hydraulic_timestep = 15
+        wn.options.time.quality_timestep = 5
+        wn.options.time.report_timestep = 60
         sim = wntr.sim.EpanetSimulator(wn)
-        self.benchmarck_results = sim.run_sim()
+        self.benchmark = sim.run_sim()
         for control_name in wn.control_name_list:
             wn.remove_control(control_name)
         self.commands = """3600,P10-RIC/STATUS,1
@@ -46,6 +49,7 @@ class Test_Reset_Conditions(unittest.TestCase):
         with open("step_test.in", 'w') as ctrlin:
             ctrlin.write(self.commands)
         
+        # note that TANKLEVEL does not work well - use tank heads
         self.controls = [
             [ "T1-LI/PV", np.less, 149, "P335-RIC/STATUS", 1],
             [ "T1-LI/PV", np.greater, 151, "P335-RIC/STATUS", 0],
@@ -53,6 +57,7 @@ class Test_Reset_Conditions(unittest.TestCase):
             [ "T1-LI/PV", np.greater, 151, "MOV330/STATUS", 1],
         ]
 
+        # note that TANKLEVEL does not work well - use tank heads
         self.nodesens = [
             ("T1-LI/PV", "1", "head"),
             ("T2-LI/PV", "2", "head"),
@@ -80,8 +85,8 @@ class Test_Reset_Conditions(unittest.TestCase):
     def test_epanet_basic(self):
         sim = rt.EpanetStepwiseSimulator(self.wn)
         prov = rt.RealtimeProvider(timelimit=self.wn.options.time.duration,
-            outfile="step_test.out",
-            infile="step_test.in",
+            outfile="temp.out",
+            infile="temp.in",
             controls=self.controls)
         for sensor in self.nodesens:
             sim.add_sensor_instrument(sensor[0], 'node', sensor[1], sensor[2])
@@ -90,7 +95,7 @@ class Test_Reset_Conditions(unittest.TestCase):
         for controller in self.controllers:
             sim.add_controller_instrument(controller[0], controller[1], controller[2])
         
-        sim.initialize(transmit=prov.proc_sensors, receive=prov.proc_controllers, stop=prov.check_time, file_prefix="step_test")
+        sim.initialize(transmit=prov.proc_sensors, receive=prov.proc_controllers, stop=prov.check_time, file_prefix="temp")
         sim.run_sim()
         res = sim.close()
         
