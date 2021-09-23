@@ -23,11 +23,11 @@ def mass_contaminant_consumed(demand, quality, detection_limit=0):
     Parameters
     ----------
     demand : pandas DataFrame
-        A pandas Dataframe containing demand 
+        A pandas DataFrame containing junction demand
         (index = times, columns = junction names).
     
     quality : pandas DataFrame
-        A pandas Dataframe containing water quality 
+        A pandas DataFrame containing junctions water quality
         (index = times, columns = junction names).
     
     detection_limit : float
@@ -51,11 +51,11 @@ def volume_contaminant_consumed(demand, quality, detection_limit=0):
     Parameters
     ----------
     demand : pandas DataFrame
-        A pandas Dataframe containing demand 
+        A pandas DataFrame containing junctions demand
         (index = times, columns = junction names).
     
     quality : pandas DataFrame
-        A pandas Dataframe containing water quality 
+        A pandas DataFrame containing junctions water quality
         (index = times, columns = junction names).
     
     detection_limit : float
@@ -80,11 +80,11 @@ def extent_contaminant(quality, flowrate, wn, detection_limit=0):
     Parameters
     ----------
     quality : pandas DataFrame
-        A pandas Dataframe containing water quality 
+        A pandas DataFrame containing node water quality
         (index = times, columns = node names).
     
     flowrate : pandas DataFrame
-        A pandas Dataframe containing flowrate 
+        A pandas DataFrame containing pipe flowrate
         (index = times, columns = pipe names).
         
     wn : wntr WaterNetworkModel
@@ -96,7 +96,7 @@ def extent_contaminant(quality, flowrate, wn, detection_limit=0):
     
     Returns
     -------
-    A pandas Series with extent of contaminantion (m)
+    A pandas Series with extent of contamination (m)
     """
     pipe_names = wn.pipe_name_list
     link_length = []

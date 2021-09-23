@@ -286,11 +286,21 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           This method can be used to compute the fraction of delivered volume, from [OsKS02]_.
 										  
    Todini index                           The Todini index [Todi00]_ is related to the capability of a system to overcome 
-                                          failures while still meeting demands and pressures at the nodes. The 
+                                          failures while still meeting demands and pressures at nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
-                                          power at each node and measures relative energy redundancy. 
+                                          power at each node. 
                                           The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini_index` method.
 
+   Modified resilience index              The modified resilience index [JaSr08]_ is similar to the Todini index, but is only computed at junctions.
+                                          The metric defines resilience at a specific time as a measure of surplus 
+                                          power at each junction or as a system average.
+										  The modified resilience index can be computed using the :class:`~wntr.metrics.hydraulic.modified_resilience_index` method.
+
+   Tank capacity                          Tank capacity is the ratio of current water volume stored in tanks to the maximum volume of water that can be stored.
+                                          This metric is measured at each tank as a function of time and ranges between 0 and 1. 
+										  A value of 1 indicates that tank storage is maximized, while a value of 0 means there is no water stored in the tank. 
+										  Tank capacity can be computed using the :class:`~wntr.metrics.hydraulic.tank_capacity` method.
+   
    Entropy                                Entropy [AwGB90]_ is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
                                           flow in the pipes and entropy can be used to measure alternate flow paths
@@ -510,9 +520,10 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Greenhouse gas emissions can be computed 
                                           using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.
 
-   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` and 
+   Pump operating power, energy and       The power, energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy`, 
+   cost                                   :class:`~wntr.metrics.economic.pump_energy` and 
                                           :class:`~wntr.metrics.economic.pump_cost` methods. These
-                                          use the flowrates and pressures from simulation results to compute pump energy and cost.
+                                          use the flowrates and pressures from simulation results to compute pump power, energy and cost.
    =====================================  ================================================================================================================================================
 
 The following examples compute economic metrics, including:

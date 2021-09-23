@@ -7,7 +7,9 @@ The wntr.metrics.economic module contains economic metrics.
 
     annual_network_cost
     annual_ghg_emissions
+    pump_power
     pump_energy
+    pump_cost
 
 
 """
@@ -29,7 +31,10 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
     
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn : wntr WaterNetworkModel
+        Water network model. The water network model is needed to 
+        define tank volume, pipe and valve diameter, and pump power conditions.
+    
     tank_cost : pandas Series, optional
         Annual tank cost indexed by volume 
         (default values below, from [SOKZ12]_).
@@ -207,12 +212,16 @@ def annual_ghg_emissions(wn, pipe_ghg=None):
     
     Parameters
     ----------
+    wn : wntr WaterNetworkModel
+        Water network model. The water network model is needed to 
+        define pipe diameter.
+    
     pipe_ghg : pandas Series, optional
         Annual GHG emissions indexed by pipe diameter
         (default values below, from [SOKZ12]_).
         
         =============  ================================
-        Diameter (mm)  Annualised EE (kg-CO2-e/m/yr)
+        Diameter (mm)  Annualized EE (kg-CO2-e/m/yr)
         =============  ================================
         102             5.90
         152             9.71
@@ -265,7 +274,7 @@ def pump_power(flowrate, head, wn):
     Parameters
     ----------
     flowrate : pandas DataFrame
-        A pandas Dataframe containing pump flowrates 
+        A pandas DataFrame containing pump flowrates 
         (index = times, columns = pump names).
     
     head : pandas DataFrame
@@ -325,7 +334,7 @@ def pump_energy(flowrate, head, wn):
     Parameters
     ----------
     flowrate : pandas DataFrame
-        A pandas Dataframe containing pump flowrates 
+        A pandas DataFrame containing pump flowrates 
         (index = times, columns = pump names).
     
     head : pandas DataFrame

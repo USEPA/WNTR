@@ -32,6 +32,8 @@ References
 
 .. [ICC12] International Code Council. (2011). 2012 International Fire Code, Appendix B - Fire-Flow Requirements for Buildings. Country Club Hills, IL: International Code Council, ISBN: 978-1-60983-046-5.
 
+.. [JaSr08] Jayaram, N. and Srinivasan, K. (2008). Performance-based optimal design and rehabilitation of water distribution networks using life cycle costing. Water resources research, 44(1).
+
 .. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2012). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
 .. [Lamb01] Lambert, A. (2001). What do we know about pressure-leakage relationships in distribution systems. Proceedings of the IWA Specialised Conference ‘System Approach to Leakage Control and Water Distribution Systems Management’, Brno, Czech Republic, 2001, May 16-18, 89-96.

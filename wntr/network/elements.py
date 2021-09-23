@@ -1108,7 +1108,7 @@ class Pump(Link):
             For example, the pump opens based on the level of a specific tank.
         """
         from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
-        
+
         # Outage
         act = ControlAction(self, 'status', LinkStatus.Closed)
         cond1 = SimTimeCondition(wn, 'Above' , start_time)
