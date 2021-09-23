@@ -9,6 +9,8 @@ The wntr.metrics.hydraulic module contains hydraulic metrics.
     average_expected_demand
     water_service_availability
     todini_index
+    modified_resilience_index
+    tank_capacity
     entropy
 
 """
@@ -33,7 +35,9 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
     Parameters
     -----------
     wn : wntr WaterNetworkModel
-        Water network model
+        Water network model. The water network model is needed to 
+        get demand timeseries at junctions and options related to 
+        duration, timestep, and demand multiplier.
         
     start_time : int (optional)
         Start time in seconds, if None then value is set to 0
@@ -79,7 +83,9 @@ def average_expected_demand(wn, category=None):
     Parameters
     -----------
     wn : wntr WaterNetworkModel
-        Water network model
+        Water network model. The water network model is needed to 
+        get demand timeseries at junctions and options related to 
+        duration, timestep, and demand multiplier.
     
     category : str (optional)
         Demand category name.  If None, all demand categories are used.
@@ -158,10 +164,10 @@ def water_service_availability(expected_demand, demand):
     Parameters
     ----------
     expected_demand : pandas DataFrame or pandas Series (see note above)
-        Expected demand.  
+        Expected demand at junctions 
     
     demand : pandas DataFrame or pandas Series (see note above)
-        Actual demand (generally from a PDD hydraulic simulation)
+        Actual demand (generally from a PDD hydraulic simulation) at junctions
 
     Returns
     -------
@@ -185,19 +191,19 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar):
     Parameters
     ----------
     head : pandas DataFrame
-        A pandas Dataframe containing node head 
+        A pandas DataFrame containing node head 
         (index = times, columns = node names).
         
     pressure : pandas DataFrame
-        A pandas Dataframe containing node pressure 
+        A pandas DataFrame containing node pressure 
         (index = times, columns = node names).
         
     demand : pandas DataFrame
-        A pandas Dataframe containing node demand 
+        A pandas DataFrame containing node demand 
         (index = times, columns = node names).
         
     flowrate : pandas DataFrame
-        A pandas Dataframe containing pump flowrates 
+        A pandas DataFrame containing pump flowrates 
         (index = times, columns = pump names).
 
     wn : wntr WaterNetworkModel
@@ -245,17 +251,18 @@ def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junct
     Parameters
     ----------
     pressure : pandas DataFrame
-        A pandas Dataframe containing node pressure 
+        A pandas DataFrame containing junction pressure 
         (index = times, columns = junction names).
         
     elevation : pandas Series
         Junction elevation (which can be obtained using `wn.query_node_attribute('elevation')`)
+        (index = junction names)
         
     Pstar : float
         Pressure threshold.
     
     demand : pandas DataFrame
-        A pandas Dataframe containing node demand (only needed if per_junction=False)
+        A pandas DataFrame containing junction demand (only needed if per_junction=False)
         (index = times, columns = junction names).
 
     per_junction : bool (optional)
@@ -269,10 +276,12 @@ def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junct
     """
     assert isinstance(pressure, pd.DataFrame), "pressure must be a pandas DataFrame"
     assert isinstance(elevation, pd.Series), "elevation must be a pandas Series"
+    assert sorted(pressure.columns) == sorted(elevation.index), "The columns in pressure must be the same as the index in elevation"
     assert isinstance(Pstar, (float, int)), "Pstar must be a float"
     assert isinstance(per_junction, bool), "per_junction must be a Boolean"
     if per_junction == False:
         assert isinstance(demand, pd.DataFrame), "demand must be a pandas DataFrame when per_junction=False"
+        assert sorted(pressure.columns) == sorted(demand.columns), "The columns in pressure must be the same as the columns in demand"
     
     if per_junction:
         Pout = (pressure + elevation)
@@ -294,7 +303,7 @@ def tank_capacity(pressure, wn):
     Parameters
     ----------
     pressure : pandas DataFrame
-        A pandas Dataframe containing tank water level (pressure) 
+        A pandas DataFrame containing tank water level (pressure) 
         (index = times, columns = tank names).
         
     wn : wntr WaterNetworkModel
