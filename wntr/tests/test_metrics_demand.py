@@ -87,6 +87,28 @@ class TestMetricsDemand(unittest.TestCase):
         )
         assert_series_equal(wsa, expected, check_dtype=False)
 
+class TestTankCapacity(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(self):
+        inp_file = join(net3dir, "Net3.inp")
+        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn.options.time.duration = 2*24*3600 # 2 days
+        sim = wntr.sim.WNTRSimulator(self.wn)
+        self.results = sim.run_sim()
+    
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_tank_capacity(self):
+        
+        pressure = self.results.node["pressure"].loc[:,self.wn.tank_name_list]
+        tank_capacity = wntr.metrics.tank_capacity(pressure, self.wn)
 
+        self.assertLess(tank_capacity.max().max(), 1)
+        self.assertGreater(tank_capacity.min().min(), 0.4) # for this example, tanks capcity is > 0.4
+    
+    
 if __name__ == "__main__":
     unittest.main()
