@@ -14,7 +14,7 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 ### These tests need to be updated to be real tests, not graphics and use additional networks
 
 
-class Test_Reset_Conditions(unittest.TestCase):
+class Test_RealtimeSimulation(unittest.TestCase):
     @classmethod
     def setUpClass(self):
 
@@ -83,7 +83,7 @@ class Test_Reset_Conditions(unittest.TestCase):
         pass
 
     def test_epanet_basic(self):
-        sim = rt.EpanetStepwiseSimulator(self.wn)
+        sim = rt.EpanetSimulator_RT(self.wn)
         prov = rt.RealtimeProvider(timelimit=self.wn.options.time.duration,
             outfile="temp.out",
             infile="temp.in",

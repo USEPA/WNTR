@@ -60,28 +60,31 @@ sim.stop := comm.get_term_signal
 </code>
 and then run timestep 0;
 |d|
-:Run simulation;
+:Run simulation
+i.e., simulate hydraulic state of system;
 -> <code>
-time_limit
+'time_limit
 </code>;
 |w|
 repeat 
 ':Advance time;
-:Run model;
-:Read model data;
+:Run one simulation timestep;
+:Read timestep results;
 ':Send current values;
 -> <code>
 (t, values)
 </code>;
 |c|
-:Relay sensor values to RTU<
+:Relay sensor values to RTU
+i.e., WNTR values -> network messages<
 |w|
-:Check for new data;
+:Check for new control data;
 -> <code>
 (t)
 </code>;
 |c|
-:Get commands from RTU>
+:Get commands from RTU
+i.e., network traffic -> WNTR commands>
 -> <code>
 values
 </code>;
@@ -92,7 +95,10 @@ values
 (t)
 </code>;
 |c|
-:Look for term signal>
+:Look for stop signal from cyber provider
+(optional) wait to synchronize
+my clock with real world or some 
+timing delay>
 -> <code>
 signal
 </code>;

@@ -64,7 +64,7 @@ class RealtimeProvider:
         return True if t >= self._timelimit else False
 
 
-class StepwiseSimulator(WaterNetworkSimulator):
+class AbstractRealtimeSimulator(WaterNetworkSimulator):
     @abstractmethod
     def initialize(self, transmit, receive, stop, **kwargs):
         """
@@ -103,7 +103,7 @@ class StepwiseSimulator(WaterNetworkSimulator):
         pass
 
 
-class EpanetStepwiseSimulator(StepwiseSimulator):
+class EpanetSimulator_RT(AbstractRealtimeSimulator):
     """
     A real-time simulator to provide a system model for use with other models.
 
@@ -266,22 +266,40 @@ class EpanetStepwiseSimulator(StepwiseSimulator):
         while True:
             # values = self.get_sensor_values()
             # self.transmit(self._t, values)
+
+            # Query the SCADA/RTU provider for new status/setting values from outside world
             values = self.receive(self._t)
+            
+            # Set those values in EPANET
             self.set_sensor_values(values)
+            
+            # Run hydraulic TS and quality TS
             enData.ENrunH()
             enData.ENrunQ()
-            # values = self.receive(self._t)
-            # self.set_sensor_values(values)
+
+            ## values = self.receive(self._t)
+            ## self.set_sensor_values(values)
+            
             logger.debug("Ran 1 step")
+            
+            # Check for time limits or for a KILL signal from the Cyber Simulation software 
             if self._t >= until or self.stop(self._t):
                 enData.ENsettimeparam(EN.DURATION, self._t)
+
+            # Move EPANET forward in time    
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
+
+            # Get current values from EPANET
             values = self.get_sensor_values()
+
+            # Send data to SCADA/RTU provider to send onward to outside world
             self.transmit(self._t, values)
             if tstep <= 0:
                 self._t = 0
                 break
+
+            # Update time
             self._t = self._t + tstep
 
     def close(self):
