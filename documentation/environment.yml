@@ -9,3 +9,4 @@ dependencies:
     - sphinx
     - numpydoc
     - docutils<0.17
+    - sphinxcontrib-plantuml
