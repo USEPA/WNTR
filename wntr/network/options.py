@@ -199,12 +199,12 @@ class TimeOptions(_OptionsBase):
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
                 raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
         elif name in {'hydraulic_timestep', 'quality_timestep', 'rule_timestep', 
-                        'pattern_timestep', 'report_timestep'}:
+                        'pattern_timestep'}:
             try:
                 value = max(1, int(value))
             except ValueError:
                 raise ValueError('%s must be an integer >= 1'%name)
-        elif name not in {'duration', 'pattern_start', 'report_start',
+        elif name not in {'duration', 'pattern_start', 'report_start', 'report_timestep',
                             'start_clocktime', 'pattern_interpolation'}:
             raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         elif name not in {'report_timestep', 'pattern_interpolation'}:
