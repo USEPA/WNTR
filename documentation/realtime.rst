@@ -217,116 +217,105 @@ this method later.
 
     @startuml
     title 
-    One possible workflow for a main process
-    to use WNTR with cyber or energy simulations
+    Example realtime workflow with a custom driver script
 
     end title
-    |c| Communications Interface \n SCADA/Cyber Provider
-    |d| Main Process
-    |w| WNTR Simulator
+    |c| User's ICS-WNTR link class
+    |d| User's custom driver script
+    |w| WNTR RealtimeSimulator class
     |d|
     start
-    :Load configuration
-    and network model;
-    -> <code>
-    config, wn
-    </code>;
-    fork 
+    :Load configuration, ""config""
+    and WDS network model, ""wn"";
+    :Delete any rules or controls in the 
+    ""wn"" model so that all control is 
+    external.;
+    :Create link object ""myicslink"";
     |c|
-    -> <code>
-    (config)
-    </code>;
-    :Create and configure 
-    communicator;
-    -> <code>
-    comm
-    </code>;
-    fork again
-    |w|
-    -> <code>
-    (wn)
-    </code>;
-    :Create simulator;  
-    -> <code>
-    sim
-    </code>;
+    :""_init_(*args, **kwargs)"";
     |d|
-    end fork
-    |d|
-    while (Sensors to configure?)
-    -> yes
-    <code>
-    (config.sensor)
-    </code>;
+    :Create WNTR simulator, ""sim"";
     |w|
-    :Map SCADA to wn;
+    :""_init_(wn, **kwargs)"";
+    |d|
+    while (sensors to configure?) is (yes)
+    :call ""sim.add_sensor_instrument(**kwargs)""
+    or ""sim.add_controller_instrument(**kwargs)"";
+    |w|
+    :maps ICS entries to ""wn"" model elements;
     endwhile
-    -> no;
+    ->no;
     |d|
-    :Initialize simulator;
-    -> <code>
-    comm
-    </code>;
+    :Initialize simulator
+    ""sim.initialize(**kwargs)"";
     |w| 
-    :Map internal simulator commands to 
+    :Maps internal simulator commands to 
     functions on communicator. E.g.:
-    <code>
-    sim.transmit := comm.send_scada_messages
-    sim.receive := comm.get_scada_messages
-    sim.stop := comm.get_term_signal
-    </code>
-    and then run timestep 0;
+    ""self.transmit := myicslink.some_function_1""
+    ""self.receive := myicslink.some_function_2""
+    ""self.stop := myicslink.some_other_function"";
+    :run hydraulic timestep for ""ts = 0"";
     |d|
-    :Run simulation;
-    -> <code>
-    time_limit
-    </code>;
+    :Run WNTR simulation
+    ""sim.run_sim(limit=?, cleanup=True)"";
     |w|
     repeat 
-    ':Advance time;
-    :Run model;
-    :Read model data;
-    ':Send current values;
-    -> <code>
-    (t, values)
-    </code>;
+    :Ask ISC link for new data
+    ""ics_values = self.receive(ts)"";
+    -> pass sim time as an integer;
     |c|
-    :Relay sensor values to RTU<
+    :Get commands from ICS; e.g.,
+    from network traffic messages or
+    from some user-coded control rules>
+    -> return values in a dictionary;
     |w|
-    :Check for new data;
-    -> <code>
-    (t)
-    </code>;
+    :Set new statuses in simulator
+    ""self._set_sensor_values(ics_values)"";
+    :Run one simulation timestep and
+    calculate new hydraulic/water quality
+    values for the simulation, 
+    advance timestep ""ts"";
+    :Get the data from the new simulation state 
+    ""new_values = self._get_sensor_values()"";
+    :Send the data to the ICS link
+    ""self.transmit(ts, new_values)"";
+    -> pass values in a dictionary;
     |c|
-    :Get commands from RTU>
-    -> <code>
-    values
-    </code>;
+    :Relay sensor values to ICS; e.g.,
+    as network messages or
+    by writing to a database or file<
+    -> no return value;
     |w|
-    :Set new values in model;
-    ':Check for terminate signal;
-    -> <code>
-    (t)
-    </code>;
+    :Check for terminate signal
+    ""done = self.stop(ts)"";
+    -> pass sim time as integer;
     |c|
-    :Look for term signal>
-    -> <code>
-    signal
-    </code>;
+    :Execute user's custom code to do clock 
+    synchronization and/or look for a 
+    termination/kill signal from the 
+    outside ICS simulator.
+    return ""True"" if it is time to stop>
+    -> return a boolean;
     |w|
     :Check runtime limits;
-    repeat while (Terminate signal received
-    or limit reached?) is (no)
-    ->yes;
+    repeat while (""ts < limit and not done""?) is (yes)
+    ->no;
+    if (cleanup) is (always yes for this example) then
+    :end simulation completely;
+    else 
+    -[hidden]->
+    endif
     |d|
-    :Close simulator;
+    :Close simulator
+    ""results = sim.close()"";
     |w|
-    :Read results, close DLLs;
-    -> <code>
-    results
-    </code>;
+    :Close all DLLs, write report;
+    :Create a WNTR results object
+    and return it to the user's driver;
+    -> return ""wntr.sim.Results"" object;
     |d|
-    :Final output;
+    :Do custom postprocessing as 
+    written by the user;
     stop
 
     @enduml
