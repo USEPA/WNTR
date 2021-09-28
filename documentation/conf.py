@@ -129,8 +129,10 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 
 # Plantuml
-plantuml = 'java -jar /Users/dbhart/plantuml.jar'
-
+if os.environ.get("READTHEDOCS") != None:
+    plantuml = 'java -Djava.awt.headless=true -jar /usr/share/plantuml/plantuml.jar'
+else:
+    plantuml = 'java -jar ~/plantuml.jar'
 
 
 # -- Options for HTML output ----------------------------------------------
