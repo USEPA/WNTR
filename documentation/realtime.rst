@@ -4,24 +4,24 @@
 
 .. _realtime_simulation:
 
-Realtime simulation
+Real-time simulation
 ===============================
 
-Realtime simulations are intended for use with external simulation
+Real-time simulations are intended for use with external simulation
 software, such as cyber security simulations or linked energy/water
 simulations. In these scenarios, WNTR is being used to provide the 
 "ground truth" for the physical system state. In other words, WNTR
 is being modified by external commands, not by the typical internal
 rules or controls that are included in the WaterNetworkModel.
 
-One item to note is that "realtime" does not necessarily require the
-model to be run at wallclock rate. It merely indicates that WNTR is
+One item to note is that "real-time" does not necessarily require the
+model to be run at wall-clock rate. It merely indicates that WNTR is
 running each hydraulic step with a call to an external function to
 determine when to proceed, which allows this external function to 
 synchronize WNTR's simulation clock with a different simulation's 
 clock.
 
-The main issue to consider in the realtime paradigm is that most of
+The main issue to consider in the real-time paradigm is that most of
 the work is "someone else's problem"; i.e., WNTR does not provide 
 a class that will communicate with a simulated industrial control
 system, the user must code that piece themselves. Likewise, in the
@@ -31,7 +31,7 @@ the WDS.
 
 Take the following example - as part of a cyber attack simulation, 
 a researcher wants to use WNTR as the hydraulic simulator. Using the
-realtime WNTR module, the researcher can write a class that will 
+real-time WNTR module, the researcher can write a class that will 
 read commands from some source, a database e.g., and WNTR will 
 respond with the system state if those commands were given. If the 
 attack is supposed to disrupt those commands, then it is the database
@@ -52,7 +52,7 @@ to the electrical grid simulation the current power usage by
 pumps in the WDS, allowing for a more dynamic coupling between the
 electrical and hydraulic models.
 
-WNTR realtime API
+WNTR real-time API
 -----------------
 
 First, let us assume that the user has written a connection class
@@ -83,7 +83,7 @@ For example:
 .. code:: python
 
     wn = WaterNetworkModel("myWDSmodel.inp")
-    sim = RealtimeSimulator(wn)
+    sim = EpanetSimulator_RT(wn)
     sim.add_sensor_instrument('MyTankPressure', 'node', '1', 'pressure')
     sim.add_controller_instrument('MyPumpStatus', 'link', '1', 'status')
 
@@ -103,7 +103,7 @@ to proivide three functions:
   new values they should now be set to at the new timestep; this
   function should read values from the ICS
 * a function that will return a boolean value indicating whether
-  the realtime simulator has finished
+  the real-time simulator has finished
 
 For the ``UserICSLink`` example, let us define the following functions:
 
@@ -143,7 +143,7 @@ passed to the ICS link class is the number of seconds since the WNTR
 simulation start. It is up to the ICS link to convert that value to 
 clocktime or the external model time.
 
-Running the realtime simulation
+Running the real-time simulation
 -------------------------------
 
 The ``run_sim()`` command is simpler in the ReatlimeSimulator than in 
@@ -162,7 +162,7 @@ two arguments,
   option is needed to handle the two methods of linking the simulators
   described below.
 
-Running the realtime simulator starts the following loop:
+Running the real-time simulator starts the following loop:
 
 .. uml::
 
@@ -196,7 +196,7 @@ Running the realtime simulator starts the following loop:
 Linking the simulators
 ----------------------
 
-There are two possible approaches to using the WNTR realtime simulator
+There are two possible approaches to using the WNTR real-time simulator
 in conjunction with an external simulation. One approach is to write 
 a separate driver process, i.e., a ``__main__()`` function script, that
 configures the ICS link and WNTR RealtimeSimulator classes and then 
@@ -205,7 +205,7 @@ simulator and the ICS link uses files, a database, or network communications
 to interact with the other simulation. This is the most likely scenario.
 
 The second approach is to have the other simulation create the WNTR 
-realtime simulator as a persistent object and then call ``run_sim``
+real-time simulator as a persistent object and then call ``run_sim``
 repeatedly as needed. In this case, the ICS link is probably going to be
 reading/writing to some object in memory. The synchronization function will
 need to be somewhat more involved, but an example will be presented for
@@ -217,7 +217,7 @@ this method later.
 
     @startuml
     title 
-    Example realtime workflow with a custom driver script
+    Example real-time workflow with a custom driver script
 
     end title
     |c| User's ICS-WNTR link class
@@ -251,9 +251,9 @@ this method later.
     |w| 
     :Maps internal simulator commands to 
     functions on communicator. E.g.:
-    ""self.transmit := myicslink.some_function_1""
-    ""self.receive := myicslink.some_function_2""
-    ""self.stop := myicslink.some_other_function"";
+    ""self.transmit = myicslink.some_function_1""
+    ""self.receive = myicslink.f2""
+    ""self.stop = some_other_function"";
     :run hydraulic timestep for ""ts = 0"";
     |d|
     :Run WNTR simulation
@@ -300,7 +300,7 @@ this method later.
     :Check runtime limits;
     repeat while (""ts < limit and not done""?) is (yes)
     ->no;
-    if (cleanup) is (always yes for this example) then
+    if (cleanup?) is (always yes for this example) then
     :end simulation completely;
     else 
     -[hidden]->
