@@ -1,0 +1,89 @@
+  Page 1                                    Mon Sep 27 20:15:58 2021
+
+  ******************************************************************
+  *                           E P A N E T                          *
+  *                   Hydraulic and Water Quality                  *
+  *                   Analysis for Pipe Networks                   *
+  *                         Version 2.2                            *
+  ******************************************************************
+  
+  Analysis begun Mon Sep 27 20:15:58 2021
+
+   
+  Hydraulic Status:
+  -----------------------------------------------------------------------
+     0:00:00: Balanced after 4 trials
+     0:00:00: Reservoir 9 is emptying
+     0:00:00: Tank 2 is filling at 120.00 ft
+   
+     1:00:00: Balanced after 2 trials
+   
+     2:00:00: Balanced after 3 trials
+   
+     3:00:00: Balanced after 2 trials
+   
+     4:00:00: Balanced after 3 trials
+   
+     5:00:00: Balanced after 2 trials
+   
+     6:00:00: Balanced after 2 trials
+   
+     7:00:00: Balanced after 1 trials
+   
+     8:00:00: Balanced after 2 trials
+   
+     9:00:00: Balanced after 2 trials
+   
+    10:00:00: Balanced after 2 trials
+   
+    11:00:00: Balanced after 2 trials
+   
+    12:00:00: Balanced after 3 trials
+   
+    12:32:34: Pump 9 changed by Tank 2 control
+    12:32:34: Balanced after 4 trials
+    12:32:34: Reservoir 9 is closed
+    12:32:34: Tank 2 is emptying at 140.00 ft
+    12:32:34: Pump 9 changed from open to closed
+   
+    13:00:00: Balanced after 1 trials
+   
+    14:00:00: Balanced after 2 trials
+   
+    15:00:00: Balanced after 1 trials
+   
+    16:00:00: Balanced after 2 trials
+   
+    17:00:00: Balanced after 1 trials
+   
+    18:00:00: Balanced after 2 trials
+   
+    19:00:00: Balanced after 1 trials
+   
+    20:00:00: Balanced after 2 trials
+   
+    21:00:00: Balanced after 1 trials
+   
+    22:00:00: Balanced after 2 trials
+   
+    22:41:30: Pump 9 changed by Tank 2 control
+    22:41:30: Balanced after 15 trials
+    22:41:30: Reservoir 9 is emptying
+    22:41:30: Tank 2 is filling at 110.00 ft
+    22:41:30: Pump 9 changed from closed to open
+   
+    23:00:00: Balanced after 2 trials
+   
+    24:00:00: Balanced after 3 trials
+   
+  Water Quality Mass Balance (mg)
+  ================================
+  Initial Mass:       7.47582e+06
+  Mass Inflow:        5.73534e+06
+  Mass Outflow:       3.22693e+06
+  Mass Reacted:       5.27198e+06
+  Final Mass:         4.71226e+06
+  Mass Ratio:         1.00000
+  ================================
+
+  Analysis ended Mon Sep 27 20:15:58 2021

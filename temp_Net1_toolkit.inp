@@ -1,0 +1,183 @@
+[TITLE]
+ EPANET Example Network 1
+A simple example of modeling chlorine decay. Both bulk and
+wall reactions are included. 
+
+[JUNCTIONS]
+ 10                                  710.0000
+ 11                                  710.0000
+ 12                                  700.0000
+ 13                                  695.0000
+ 21                                  700.0000
+ 22                                  695.0000
+ 23                                  690.0000
+ 31                                  700.0000
+ 32                                  710.0000
+
+[RESERVOIRS]
+ 9                                   800.0000                                
+
+[TANKS]
+ 2                                   850.0000     120.0000     100.0000     150.0000      50.5000  200296.1666                                
+
+[PIPES]
+ 10                              10                              11                                10530.0000      18.0000     100.0000       0.0000       
+ 11                              11                              12                                 5280.0000      14.0000     100.0000       0.0000       
+ 12                              12                              13                                 5280.0000      10.0000     100.0000       0.0000       
+ 21                              21                              22                                 5280.0000      10.0000     100.0000       0.0000       
+ 22                              22                              23                                 5280.0000      12.0000     100.0000       0.0000       
+ 31                              31                              32                                 5280.0000       6.0000     100.0000       0.0000       
+ 110                             2                               12                                  200.0000      18.0000     100.0000       0.0000       
+ 111                             11                              21                                 5280.0000      10.0000     100.0000       0.0000       
+ 112                             12                              22                                 5280.0000      12.0000     100.0000       0.0000       
+ 113                             13                              23                                 5280.0000       8.0000     100.0000       0.0000       
+ 121                             21                              31                                 5280.0000       8.0000     100.0000       0.0000       
+ 122                             22                              32                                 5280.0000       6.0000     100.0000       0.0000       
+
+[PUMPS]
+ 9                               9                               10                               HEAD 1
+
+[VALVES]
+
+[DEMANDS]
+ 10                                    0.000000  1                              
+ 11                                  150.000000  1                              
+ 12                                  150.000000  1                              
+ 13                                  100.000000  1                              
+ 21                                  150.000000  1                              
+ 22                                  200.000000  1                              
+ 23                                  150.000000  1                              
+ 31                                  100.000000  1                              
+ 32                                  100.000000  1                              
+
+[EMITTERS]
+
+[STATUS]
+
+[PATTERNS]
+;Demand Pattern
+ 1                                     1.0000       1.2000       1.4000       1.6000       1.4000       1.2000
+ 1                                     1.0000       0.8000       0.6000       0.4000       0.6000       0.8000
+
+[CURVES]
+;PUMP: Pump Curve for Pump 9
+ 1                                  1500.0000     250.0000
+
+[CONTROLS]
+ LINK 9 1.0000 IF NODE 2 BELOW 110.0000
+ LINK 9 0.0000 IF NODE 2 ABOVE 140.0000
+
+[RULES]
+
+[QUALITY]
+ 10                                    0.500000
+ 11                                    0.500000
+ 12                                    0.500000
+ 13                                    0.500000
+ 21                                    0.500000
+ 22                                    0.500000
+ 23                                    0.500000
+ 31                                    0.500000
+ 32                                    0.500000
+ 9                                     1.000000
+ 2                                     1.000000
+
+[SOURCES]
+
+[MIXING]
+ 2                               MIXED          1.0000
+
+[REACTIONS]
+ ORDER  BULK            1.00
+ ORDER  WALL            1
+ ORDER  TANK            1.00
+ GLOBAL BULK            -0.500000
+ GLOBAL WALL            -1.000000
+
+[ENERGY]
+ GLOBAL EFFIC        75.0000
+ DEMAND CHARGE       0.0000
+
+[TIMES]
+ DURATION            24:00:00
+ HYDRAULIC TIMESTEP  1:00:00
+ QUALITY TIMESTEP    0:05:00
+ REPORT TIMESTEP     1:00:00
+ REPORT START        0:00:00
+ PATTERN TIMESTEP    2:00:00
+ PATTERN START       0:00:00
+ RULE TIMESTEP       0:06:00
+ START CLOCKTIME     0:00:00
+ STATISTIC           NONE
+
+[OPTIONS]
+ UNITS               GPM
+ PRESSURE            PSI
+ HEADLOSS            H-W
+ UNBALANCED          CONTINUE 10
+ QUALITY             Chlorine mg/L
+ DEMAND MULTIPLIER   1.0000
+ EMITTER EXPONENT    0.5000
+ VISCOSITY           1.000000
+ DIFFUSIVITY         1.000000
+ SPECIFIC GRAVITY    1.000000
+ TRIALS              40
+ ACCURACY            0.00100000
+ TOLERANCE           0.01000000
+ CHECKFREQ           2
+ MAXCHECK            10
+ DAMPLIMIT           0.00000000
+
+[REPORT]
+ PAGESIZE            0
+ STATUS              YES
+ SUMMARY             NO
+ ENERGY              NO
+ MESSAGES            YES
+ NODES               NONE
+ LINKS               NONE
+ Elevation           NO
+ Demand              PRECISION 2
+ Head                PRECISION 2
+ Pressure            PRECISION 2
+ Quality             PRECISION 2
+ Length              NO
+ Diameter            NO
+ Flow                PRECISION 2
+ Velocity            PRECISION 2
+ Headloss            PRECISION 2
+ Quality             NO
+ State               NO
+ Setting             NO
+ Reaction            NO
+
+[COORDINATES]
+ 10                                   20.000000      70.000000
+ 11                                   30.000000      70.000000
+ 12                                   50.000000      70.000000
+ 13                                   70.000000      70.000000
+ 21                                   30.000000      40.000000
+ 22                                   50.000000      40.000000
+ 23                                   70.000000      40.000000
+ 31                                   30.000000      10.000000
+ 32                                   50.000000      10.000000
+ 9                                    10.000000      70.000000
+ 2                                    50.000000      90.000000
+
+[VERTICES]
+
+[TAGS]
+
+[LABELS]
+;X-Coord             Y-Coord             Label & Anchor Node
+6.990             	73.630            	"Source"	
+13.480            	68.130            	"Pump"	
+43.850            	91.210            	"Tank"	
+
+[BACKDROP]
+  DIMENSIONS  	7.000             	6.000             	73.000            	94.000            
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]
