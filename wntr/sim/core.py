@@ -1357,9 +1357,9 @@ class WNTRSimulator(WaterNetworkSimulator):
             stop_criteria_met = []
             if stop_criteria is not None:
                 for i in stop_criteria.index:
-                    link_name, attribute, operation, value = stop_criteria.loc[i,:]
+                    link_name, attribute, operation, value, activation_time = stop_criteria.loc[i,:]
                     link_attribute = getattr(self._wn.get_link(link_name), attribute)
-                    if operation(link_attribute, value):
+                    if operation(link_attribute, value) and (self._wn.sim_time >= activation_time):
                         stop_criteria_met.append(i)
                         results.error_code = wntr.sim.results.ResultsStatus.error
                         warnings.warn('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ') 

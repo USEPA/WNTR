@@ -3,6 +3,7 @@ import wntr.epanet.io
 from wntr.epanet.util import EN
 from wntr.network.base import LinkStatus
 import warnings
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -149,9 +150,9 @@ class EpanetSimulator(WaterNetworkSimulator):
             while True:
                 ret = enData.ENrunH()
                 for i in stop_criteria.index:
-                    link_name, attribute, operation, value, link_index = stop_criteria.loc[i,:]
+                    link_name, attribute, operation, value, activation_time, link_index = stop_criteria.loc[i,:]
                     link_attribute = enData.ENgetlinkvalue(int(link_index), int(attribute))
-                    if operation(link_attribute, int(value)): # if this isn't status, we should not convert to int
+                    if operation(link_attribute, int(value)) and (t >= activation_time): # if this isn't status, we should not convert to int
                         stop_criteria_met.append(i)
                         #results.error_code = wntr.sim.results.ResultsStatus.error
                         warnings.warn('Simulation stoped based on stop criteria at time ' + str(t) + '. ') 
