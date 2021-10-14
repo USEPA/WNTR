@@ -1354,18 +1354,18 @@ class WNTRSimulator(WaterNetworkSimulator):
             overstep = float(self._wn.sim_time) % self._hydraulic_timestep
             self._wn.sim_time -= overstep
             
-            stop_criteria_met = False
+            stop_criteria_met = []
             if stop_criteria is not None:
                 for i in stop_criteria.index:
                     link_name, attribute, operation, value = stop_criteria.loc[i,:]
                     link_attribute = getattr(self._wn.get_link(link_name), attribute)
                     if operation(link_attribute, value):
-                        stop_criteria_met = True
+                        stop_criteria_met.append(i)
                         results.error_code = wntr.sim.results.ResultsStatus.error
                         warnings.warn('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ') 
                         logger.warning('Simulation stoped based on stop criteria at time ' + self._get_time() + '. ' ) 
                         break # break out of for loop
-                if stop_criteria_met:
+                if len(stop_criteria_met) > 0:
                     break # break out of while loop
                 
             if self._wn.sim_time > self._wn.options.time.duration:
@@ -1375,7 +1375,10 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._wn.reset_initial_values()
         
-        return results
+        if stop_criteria is None:
+            return results
+        else:
+            return results, stop_criteria.loc[stop_criteria_met,:]
 
     def _initialize_name_id_maps(self):
         n = 0
