@@ -2361,6 +2361,12 @@ class Demands(MutableSequence):
         for dem in self._list:
                 res.append(dem.category)
         return res
+
+    def tolist(self):
+        res = []
+        for dem in self:
+            res.append(dem.todict())
+        return res
         
 
 class Curve(object):
@@ -2584,3 +2590,11 @@ class Source(object):
     @source_type.setter
     def source_type(self, value):
         self._source_type = value
+
+    def todict(self):
+        ret = dict()
+        ret['node_name'] = self.node_name
+        ret['source_type'] = self.source_type
+        ret['strength'] = self.strength_timeseries.base_value
+        ret['pattern'] = self.strength_timeseries.pattern_name
+        return ret

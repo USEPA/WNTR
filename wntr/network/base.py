@@ -269,14 +269,30 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def todict(self):
         """Dictionary representation of the node"""
         d = {}
+        d['name'] = self.name
+        d['node_type'] = self.node_type
         for k in dir(self):
-            if not k.startswith('_'):
+            if not k.startswith('_') and \
+              k not in ['demand', 'base_demand', 'head', 'leak_area', 'leak_demand',
+                        'leak_discharge_coeff', 'leak_status', 'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
                 try:
                     val = getattr(self, k)
                     if not isinstance(val, types.MethodType):
-                        d[k] = val
+                        if hasattr(val, "toref"):
+                            d[k] = val.toref()
+                        elif hasattr(val, "tolist"):
+                            d[k] = val.tolist()
+                        elif hasattr(val, "todict"):
+                            d[k] = val.todict()
+                        elif isinstance(val, (enum.IntEnum, enum.Enum)):
+                            d[k] = str(val)
+                        else:
+                            d[k] = val
                 except DeprecationWarning: pass
         return d
+
+    def toref(self):
+        return self._name
 
 
 class Link(six.with_metaclass(abc.ABCMeta, object)):
@@ -528,12 +544,37 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     def todict(self):
         """Dictionary representation of the link"""
         d = {}
+        d['name'] = self.name
+        d['link_type'] = self.link_type
+        d['start_node_name'] = self.start_node_name
+        d['end_node_name'] = self.end_node_name
+        if hasattr(self, 'pump_type'):
+            d['pump_type'] = self.pump_type
+        if hasattr(self, 'valve_type'):
+            d['valve_type'] = self.valve_type
         for k in dir(self):
-            if not k.startswith('_'):
+            if not k.startswith('_') and k not in [
+                'flow', 'check_valve', 'friction_factor', 'headloss',
+                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries',
+            ]:
                 val = getattr(self, k)
                 if not isinstance(val, types.MethodType):
-                    d[k] = val
+                    if hasattr(val, "toref"):
+                        if hasattr(self, k+"_name") and getattr(self, k+"_name") is not None:
+                            continue
+                        d[k] = val.toref()
+                    elif hasattr(val, "tolist"):
+                        d[k] = val.tolist()
+                    elif hasattr(val, "todict"):
+                        d[k] = val.todict()
+                    elif isinstance(val, (enum.IntEnum, enum.Enum)):
+                        d[k] = str(val)
+                    else:
+                        d[k] = val
         return d
+
+    def toref(self):
+        return self._name
 
 
 class Registry(MutableMapping):

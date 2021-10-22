@@ -1102,12 +1102,17 @@ class WaterNetworkModel(AbstractModel):
     
     def todict(self):
         """Dictionary representation of the water network model"""
-        d = dict(options=self._options.todict(),
+        from wntr import __version__
+        d = dict(version="wntr-{}".format(__version__),
+                 comment="WaterNetworkModel - all values given in SI units",
+                 name=self.name,
+                 options=self._options.todict(),
+                 curves=self._curve_reg.tolist(),
+                 patterns=self._pattern_reg.tolist(),
                  nodes=self._node_reg.tolist(),
                  links=self._link_reg.tolist(),
-                 curves=self._curve_reg.tolist(),
-                 controls=self._controls,
-                 patterns=self._pattern_reg.tolist()
+                 sources=[s.todict() for k, s in self._sources.items()],
+                 controls=[c.todict() for k, c in self._controls.items()],
                  )
         return d
     
