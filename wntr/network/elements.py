@@ -2593,6 +2593,7 @@ class Source(object):
 
     def todict(self):
         ret = dict()
+        ret['name'] = self.name
         ret['node_name'] = self.node_name
         ret['source_type'] = self.source_type
         ret['strength'] = self.strength_timeseries.base_value

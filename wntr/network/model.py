@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import six
 import wntr.epanet
+from wntr.epanet.util import FlowUnits
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -1103,6 +1104,12 @@ class WaterNetworkModel(AbstractModel):
     def todict(self):
         """Dictionary representation of the water network model"""
         from wntr import __version__
+        controls = list()
+        for k, c in self._controls.items():
+            cc = c.todict()
+            if "name" in cc.keys() and not cc["name"]:
+                cc["name"] = k
+            controls.append(cc)
         d = dict(version="wntr-{}".format(__version__),
                  comment="WaterNetworkModel - all values given in SI units",
                  name=self.name,
@@ -1112,7 +1119,7 @@ class WaterNetworkModel(AbstractModel):
                  nodes=self._node_reg.tolist(),
                  links=self._link_reg.tolist(),
                  sources=[s.todict() for k, s in self._sources.items()],
-                 controls=[c.todict() for k, c in self._controls.items()],
+                 controls=controls,
                  )
         return d
     
@@ -1132,6 +1139,7 @@ class WaterNetworkModel(AbstractModel):
             the new wntr object
         """
         from wntr import __version__
+        from wntr.epanet.io import _read_control_line, _EpanetRule
         keys = [
             "version", 
             "comment", 
@@ -1158,10 +1166,10 @@ class WaterNetworkModel(AbstractModel):
         if "patterns" in d:
             for pattern in d["patterns"]:
                 wn.add_pattern(name=pattern["name"], pattern=pattern["multipliers"])
-        if "nodes" in d:  # TODO: FIXME: FINISH
+        if "nodes" in d:
             for node in d["nodes"]:
+                name = node["name"]
                 if node["node_type"] == "Junction":
-                    name = node["name"]
                     dl = node.setdefault("demand_timeseries_list")
                     if dl is not None and len(dl) > 0:
                         base_demand = dl[0].setdefault("base_val", 0.0)
@@ -1172,14 +1180,14 @@ class WaterNetworkModel(AbstractModel):
                         pattern_name = None
                         category = None
                     wn.add_junction(
-                        name=node["name"],
+                        name=name,
                         base_demand=base_demand,
                         demand_pattern=pattern_name,
                         elevation=node.setdefault("elevation"),
                         coordinates=node.setdefault("coordinates"),
                         demand_category=category
                     )
-                    j = wn.get_node(node["name"])
+                    j = wn.get_node(name)
                     j.emitter_coefficient = node.setdefault("emitter_coefficient")
                     j.initial_quality = node.setdefault("initial_quality")
                     j.minimum_pressure = node.setdefault("minimum_pressure")
@@ -1193,25 +1201,93 @@ class WaterNetworkModel(AbstractModel):
                             category = dl[i].setdefault("category")
                             j.add_demand(base_val, pattern_name, category)
                 elif node["node_type"] == "Tank":
-                    pass
+                    coordinates = node.setdefault("coordinates")
+
+                    wn.add_tank(name, elevation=node.setdefault("elevation"), init_level=node.setdefault("init_level", node.setdefault("min_level", 0)), max_level=node.setdefault("max_level",node.setdefault("min_level", 0)+10), diameter=node.setdefault("diameter", 0), min_level=node.setdefault("min_level", 0), vol_curve=node.setdefault("vol_curve_name"), overflow=node.setdefault("overflow", False), coordinates=coordinates)
+                    t = wn.get_node(name)
+                    t.initial_quality = node.setdefault("initial_quality", 0.0)
+                    if node.setdefault("mixing_fraction"): t.mixing_fraction = node.setdefault("mixing_fraction")
+                    if node.setdefault("mixing_model"): t.mixing_model = node.setdefault("mixing_model")
+                    t.tag = node.setdefault("tag")
+                    t.bulk_coeff = node.setdefault("bulk_coeff")
                 elif node["node_type"] == "Reservoir":
-                    pass
+                    wn.add_reservoir(name, base_head=node.setdefault("base_head"), head_pattern=node.setdefault("head_pattern_name"), coordinates=node.setdefault("coordinates"))
+                    r = wn.get_node(name)
+                    r.initial_quality = node.setdefault("initial_quality", 0.0)
+                    r.tag = node.setdefault("tag")
                 else:
-                    pass
-        if "links" in d:  # TODO: FIXME: FINISH
+                    raise ValueError("Illegal node type '{}'".format(node["node_type"]))
+        if "links" in d:
             for link in d["links"]:
+                name = link["name"]
                 if link["link_type"] == "Pipe":
-                    pass
+                    wn.add_pipe(name, link["start_node_name"], end_node_name=link["end_node_name"], length=link.setdefault("length", 304.8), diameter=link.setdefault("diameter", 0.3048), roughness=link.setdefault("roughness", 100.0), minor_loss=link.setdefault("minor_loss", 0.0), initial_status=link.setdefault("initial_status", 'OPEN'), check_valve=link.setdefault("check_valve", False))
+                    p = wn.get_link(name)
+                    p.bulk_coeff = link.setdefault("bulk_coeff")
+                    p.tag = link.setdefault("tag")
+                    p.vertices = link.setdefault("vertices", list())
+                    p.wall_coeff = link.setdefault("wall_coeff")
                 elif link["link_type"] == "Pump":
-                    pass
+                    pump_type = link.setdefault("pump_type", "POWER")
+                    wn.add_pump(name, link["start_node_name"], link["end_node_name"], pump_type=pump_type, pump_parameter=link.setdefault("power") if pump_type.lower() == "power" else link.setdefault("pump_curve_name"), speed=link.setdefault("base_speed", 1.0), pattern=link.setdefault("speed_pattern_name"),initial_status=link.setdefault("initial_status", "OPEN"))
+                    p = wn.get_link(name)
+                    p.efficiency = link.setdefault("efficiency")
+                    p.energy_pattern = link.setdefault("energy_pattern")
+                    p.energy_price = link.setdefault("energy_price")
+                    p.initial_setting = link.setdefault("initial_setting")
+                    p.tag = link.setdefault("tag")
+                    p.vertices = link.setdefault("vertices", list())
                 elif link["link_type"] == "Valve":
-                    pass
+                    valve_type = link["valve_type"]
+                    wn.add_valve(name, link["start_node_name"], link["end_node_name"], diameter=link.setdefault("diameter", 0.3048), valve_type=valve_type, minor_loss=link.setdefault("minor_loss", 0), initial_setting=link.setdefault("initial_setting",0), initial_status=link.setdefault("initial_status", "ACTIVE"))
+                    v = wn.get_link(name)
+                    if valve_type.lower() == "gpv":
+                        v.headloss_curve_name = link.setdefault("headloss_curve_name")
                 else:
-                    pass
-        if "sources" in d:  # TODO: FIXME: FINISH
-            pass
+                    raise ValueError("Illegal link type '{}'".format(link["link_type"]))
+        if "sources" in d:
+            for source in d["sources"]:
+                wn.add_source(source["name"],
+                node_name=source["node_name"], 
+                source_type=source["source_type"],
+                quality=source["strength"],
+                pattern=source["pattern"])
         if "controls" in d:  # TODO: FIXME: FINISH
-            pass
+            control_count = 0
+            for control in d["controls"]:
+                ctrl_type = control["type"]
+                if ctrl_type.lower() == "simple":
+                    control_count += 1
+                    control_name = 'control '+str(control_count)
+                    ta = control["then_actions"][0].split()
+                    tstring = ' '.join([ta[0], ta[1], ta[4]])
+                    cond = control["condition"].split()
+                    if cond[0].lower() == 'system':
+                        cstr = ' '.join(["AT", cond[1], cond[3], cond[4] if len(cond)>4 else ""])
+                    else:
+                        cstr = ' '.join(["IF", cond[0], cond[1], cond[3], cond[4]])
+                    ctrl = _read_control_line(tstring + " " + cstr, wn, FlowUnits.SI, control_name)
+                    print(ctrl)
+                    wn.add_control(control_name, ctrl)
+                elif ctrl_type.lower() == "rule":
+                    ctrllst = ["RULE"]
+                    control_name = control["name"]
+                    ctrllst.append(control["name"])
+                    ctrllst.append("IF")
+                    ctrllst.append(control["condition"])
+                    thenact = ' AND '.join(control["then_actions"])
+                    ctrllst.append("THEN")
+                    ctrllst.append(thenact)
+                    if "else_actions" in control and control["else_actions"]:
+                        ctrllst.append("ELSE")
+                        ctrllst.append(" AND ".join(control["else_actions"]))
+                    ctrllst.append("PRIORITY")
+                    ctrllst.append(str(control["priority"]))
+                    ctrlstring = ' '.join(ctrllst)
+                    c = _EpanetRule.parse_rules_lines([ctrlstring])
+                    wn.add_control(control_name, c[0].generate_control(wn))
+                else:
+                    raise ValueError("Illegal control type '{}'".format(ctrl_type))
         return wn
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):

@@ -554,7 +554,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             d['valve_type'] = self.valve_type
         for k in dir(self):
             if not k.startswith('_') and k not in [
-                'flow', 'check_valve', 'friction_factor', 'headloss',
+                'flow', 'cv', 'friction_factor', 'headloss',
                 'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries',
             ]:
                 val = getattr(self, k)
