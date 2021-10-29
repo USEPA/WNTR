@@ -1116,6 +1116,104 @@ class WaterNetworkModel(AbstractModel):
                  )
         return d
     
+    @classmethod
+    def fromdict(cls, d: dict):
+        """
+        Create a WaterNetworkModel from a dictionary model.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary containing WaterNetworkModel model
+
+        Returns
+        -------
+        WaterNetworkModel
+            the new wntr object
+        """
+        from wntr import __version__
+        keys = [
+            "version", 
+            "comment", 
+            "name", 
+            "options", 
+            "curves", 
+            "patterns", 
+            "nodes", 
+            "links", 
+            "sources", 
+            "controls",
+        ]
+        for key in keys:
+            if key not in d:
+                logger.warning("Dictionary model missing key '{}'".format(key))
+        wn = cls()
+        if "name" in d:
+            wn.name = d["name"]
+        if "options" in d:
+            wn.options.__init__(**d["options"])
+        if "curves" in d:
+            for curve in d["curves"]:
+                wn.add_curve(name=curve["name"], curve_type=curve["curve_type"], xy_tuples_list=curve["points"])
+        if "patterns" in d:
+            for pattern in d["patterns"]:
+                wn.add_pattern(name=pattern["name"], pattern=pattern["multipliers"])
+        if "nodes" in d:  # TODO: FIXME: FINISH
+            for node in d["nodes"]:
+                if node["node_type"] == "Junction":
+                    name = node["name"]
+                    dl = node.setdefault("demand_timeseries_list")
+                    if dl is not None and len(dl) > 0:
+                        base_demand = dl[0].setdefault("base_val", 0.0)
+                        pattern_name = dl[0].setdefault("pattern_name")
+                        category = dl[0].setdefault("category")
+                    else:
+                        base_demand = 0.0
+                        pattern_name = None
+                        category = None
+                    wn.add_junction(
+                        name=node["name"],
+                        base_demand=base_demand,
+                        demand_pattern=pattern_name,
+                        elevation=node.setdefault("elevation"),
+                        coordinates=node.setdefault("coordinates"),
+                        demand_category=category
+                    )
+                    j = wn.get_node(node["name"])
+                    j.emitter_coefficient = node.setdefault("emitter_coefficient")
+                    j.initial_quality = node.setdefault("initial_quality")
+                    j.minimum_pressure = node.setdefault("minimum_pressure")
+                    j.pressure_exponent = node.setdefault("pressure_exponent")
+                    j.required_pressure = node.setdefault("required_pressure")
+                    j.tag = node.setdefault("tag")
+                    if dl is not None and len(dl) > 1:
+                        for i in range(1, len(dl)):
+                            base_val = dl[i].setdefault("base_val", 0.0)
+                            pattern_name = dl[i].setdefault("pattern_name")
+                            category = dl[i].setdefault("category")
+                            j.add_demand(base_val, pattern_name, category)
+                elif node["node_type"] == "Tank":
+                    pass
+                elif node["node_type"] == "Reservoir":
+                    pass
+                else:
+                    pass
+        if "links" in d:  # TODO: FIXME: FINISH
+            for link in d["links"]:
+                if link["link_type"] == "Pipe":
+                    pass
+                elif link["link_type"] == "Pump":
+                    pass
+                elif link["link_type"] == "Valve":
+                    pass
+                else:
+                    pass
+        if "sources" in d:  # TODO: FIXME: FINISH
+            pass
+        if "controls" in d:  # TODO: FIXME: FINISH
+            pass
+        return wn
+
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
         Returns a networkx MultiDiGraph of the water network model
