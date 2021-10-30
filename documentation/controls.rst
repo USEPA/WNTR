@@ -173,7 +173,7 @@ and otherwise it will open pump 10.
     
     >>> cond3 = controls.AndCondition(cond1, cond2)
     >>> print(cond3)
-     TANK 1 LEVEL ABOVE 46.0248 AND SYSTEM TIME >= 121:00:00
+     TANK 1 LEVEL ABOVE 46.0248 AND SYSTEM TIME >= 121:00:00 
     
     >>> rule3 = controls.Rule(cond3, [act1], [act2], priority=3, name='complex_rule')
     >>> print(rule3)
