@@ -961,7 +961,7 @@ class TestNetworkDict(unittest.TestCase):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
             wn.tojson('test.json')
-            B = self.wntr.network.WaterNetworkModel.fromjson('test.json')
+            B = self.wntr.network.fromjson('test.json')
             assert(wn._compare(B))
 
 
