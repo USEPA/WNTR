@@ -16,6 +16,7 @@ model.
 """
 import logging
 import sys
+import json
 from collections import OrderedDict
 from collections.abc import MutableSequence
 
@@ -1122,6 +1123,21 @@ class WaterNetworkModel(AbstractModel):
                  controls=controls,
                  )
         return d
+
+    def tojson(self, f):
+        """
+        Write the WaterNetworkModel as a 
+
+        Parameters
+        ----------
+        f : str or file
+            destination file for the wntr model
+        """
+        if isinstance(f, str):
+            with open(f, 'w') as fout:
+                json.dump(self.todict(), fout)
+        else:
+            json.dump(self.todict(), f)
     
     @classmethod
     def fromdict(cls, d: dict):
@@ -1288,6 +1304,28 @@ class WaterNetworkModel(AbstractModel):
                 else:
                     raise ValueError("Illegal control type '{}'".format(ctrl_type))
         return wn
+
+    @classmethod
+    def fromjson(cls, f):
+        """
+        Create a water network model from a JSON file.
+
+        Parameters
+        ----------
+        f : str or file
+            filename or file pointer
+
+        Returns
+        -------
+        WaterNetworkModel
+        """
+        if isinstance(f, str):
+            with open(f, 'r') as fin:
+                d = json.load(fin)
+        else:
+            d = json.load(f)
+        return cls.fromdict(d)
+        
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """

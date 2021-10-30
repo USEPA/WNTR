@@ -960,14 +960,8 @@ class TestNetworkDict(unittest.TestCase):
         import json
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
-            A = wn.todict()
-            B = None
-            with open('test.json', 'w') as fout:
-                json.dump(A, fout)
-                A = None
-            with open('test.json', 'r') as fin:
-                A = json.load(fin)
-                B = self.wntr.network.WaterNetworkModel.fromdict(A)    
+            wn.tojson('test.json')
+            B = self.wntr.network.WaterNetworkModel.fromjson('test.json')
             assert(wn._compare(B))
 
 
