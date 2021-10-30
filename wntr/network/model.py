@@ -1184,7 +1184,7 @@ class WaterNetworkModel(AbstractModel):
                         base_demand=base_demand,
                         demand_pattern=pattern_name,
                         elevation=node.setdefault("elevation"),
-                        coordinates=node.setdefault("coordinates"),
+                        coordinates=node.setdefault("coordinates", list()),
                         demand_category=category
                     )
                     j = wn.get_node(name)
@@ -1267,7 +1267,6 @@ class WaterNetworkModel(AbstractModel):
                     else:
                         cstr = ' '.join(["IF", cond[0], cond[1], cond[3], cond[4]])
                     ctrl = _read_control_line(tstring + " " + cstr, wn, FlowUnits.SI, control_name)
-                    print(ctrl)
                     wn.add_control(control_name, ctrl)
                 elif ctrl_type.lower() == "rule":
                     ctrllst = ["RULE"]
@@ -2068,7 +2067,7 @@ class NodeRegistry(Registry):
         assert isinstance(base_demand, (int, float)), "base_demand must be a float"
         assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
         assert isinstance(elevation, (int, float)), "elevation must be a float"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
         assert isinstance(emitter_coeff, (type(None), int, float)), "emitter_coeff must be a float"
         assert isinstance(initial_quality, (type(None), int, float)), "initial_quality must be a float"
@@ -2129,7 +2128,7 @@ class NodeRegistry(Registry):
         assert isinstance(min_vol, (int, float)), "min_vol must be a float"
         assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
         assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         
         elevation = float(elevation)
         init_level = float(init_level)
@@ -2190,7 +2189,7 @@ class NodeRegistry(Registry):
         assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(base_head, (int, float)), "base_head must be float"
         assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple, list))), "coordinates must be a tuple"
         
         base_head = float(base_head)
 
