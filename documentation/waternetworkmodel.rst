@@ -283,7 +283,7 @@ To create a water network model from a dictionary, use the `fromdict` function o
 
 .. doctest::
     >>> dict_rep = wn.todict()
-    >>> wn2 = WaterNetworkModel.fromdict(dict_rep)
+    >>> wn2 = wntr.network.WaterNetworkModel.fromdict(dict_rep)
     >>> wn._compare(wn2)
     True
 
