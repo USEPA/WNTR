@@ -1425,7 +1425,7 @@ class WaterNetworkModel(AbstractModel):
             # Add the pattern
             # If the pattern name already exists, this fails 
             pattern_name = pattern_prefix + junc_name
-            self.add_pattern(pattern_name, demand_pattern.to_list())
+            self.add_pattern(pattern_name, demand_pattern.tolist())
             
             # Reset base demand
             junction = self.get_node(junc_name)

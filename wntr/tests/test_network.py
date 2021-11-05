@@ -161,10 +161,10 @@ class TestNetworkMethods(unittest.TestCase):
         pat2 = wn.get_pattern("pat2")
 
         self.assertEqual(
-            pat1.multipliers.to_list(),
+            pat1.multipliers.tolist(),
             [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
-        self.assertEqual(pat2.multipliers.to_list(), [1, 2, 3, 4])
+        self.assertEqual(pat2.multipliers.tolist(), [1, 2, 3, 4])
 
     def test_add_source(self):
         wn = self.wntr.network.WaterNetworkModel()
