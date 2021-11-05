@@ -2667,8 +2667,8 @@ class BinFile(object):
             self.report_file = rptfile
             nodenames = []
             linknames = []
-            nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).tolist()
-            linknames = np.array(np.fromfile(fin, dtype=dt_str, count=nlinks), dtype=str).tolist()
+            nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).to_list()
+            linknames = np.array(np.fromfile(fin, dtype=dt_str, count=nlinks), dtype=str).to_list()
             self.node_names = nodenames
             self.link_names = linknames
             linkstart = np.array(np.fromfile(fin, dtype=np.int32, count=nlinks), dtype=int)

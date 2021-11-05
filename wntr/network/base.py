@@ -266,7 +266,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         else:
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the node"""
         d = {}
         d['name'] = self.name
@@ -278,12 +278,12 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
                 try:
                     val = getattr(self, k)
                     if not isinstance(val, types.MethodType):
-                        if hasattr(val, "toref"):
-                            d[k] = val.toref()
-                        elif hasattr(val, "tolist"):
-                            d[k] = val.tolist()
-                        elif hasattr(val, "todict"):
-                            d[k] = val.todict()
+                        if hasattr(val, "to_ref"):
+                            d[k] = val.to_ref()
+                        elif hasattr(val, "to_list"):
+                            d[k] = val.to_list()
+                        elif hasattr(val, "to_dict"):
+                            d[k] = val.to_dict()
                         elif isinstance(val, (enum.IntEnum, enum.Enum)):
                             d[k] = str(val)
                         else:
@@ -291,7 +291,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
                 except DeprecationWarning: pass
         return d
 
-    def toref(self):
+    def to_ref(self):
         return self._name
 
 
@@ -541,7 +541,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
                 raise ValueError('vertices must be a list of 2-tuples')
         self._vertices = points
     
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the link"""
         d = {}
         d['name'] = self.name
@@ -559,21 +559,21 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             ]:
                 val = getattr(self, k)
                 if not isinstance(val, types.MethodType):
-                    if hasattr(val, "toref"):
+                    if hasattr(val, "to_ref"):
                         if hasattr(self, k+"_name") and getattr(self, k+"_name") is not None:
                             continue
-                        d[k] = val.toref()
-                    elif hasattr(val, "tolist"):
-                        d[k] = val.tolist()
-                    elif hasattr(val, "todict"):
-                        d[k] = val.todict()
+                        d[k] = val.to_ref()
+                    elif hasattr(val, "to_list"):
+                        d[k] = val.to_list()
+                    elif hasattr(val, "to_dict"):
+                        d[k] = val.to_dict()
                     elif isinstance(val, (enum.IntEnum, enum.Enum)):
                         d[k] = str(val)
                     else:
                         d[k] = val
         return d
 
-    def toref(self):
+    def to_ref(self):
         return self._name
 
 
@@ -737,18 +737,18 @@ class Registry(MutableMapping):
         if len(self._usage[key]) < 1:
             self._usage.pop(key)
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the registry"""
         d = dict()
         for k, v in self._data.items():
-            d[k] = v.todict()
+            d[k] = v.to_dict()
         return d
     
-    def tolist(self):
+    def to_list(self):
         """List representation of the registry"""
         l = list()
         for k, v in self._data.items():
-            l.append(v.todict())
+            l.append(v.to_dict())
         return l
 
 

@@ -161,10 +161,10 @@ class TestNetworkMethods(unittest.TestCase):
         pat2 = wn.get_pattern("pat2")
 
         self.assertEqual(
-            pat1.multipliers.tolist(),
+            pat1.multipliers.to_list(),
             [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
-        self.assertEqual(pat2.multipliers.tolist(), [1, 2, 3, 4])
+        self.assertEqual(pat2.multipliers.to_list(), [1, 2, 3, 4])
 
     def test_add_source(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -952,16 +952,16 @@ class TestNetworkDict(unittest.TestCase):
     def test_dict_roundtrip(self):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
-            A = wn.todict()
-            B = self.wntr.network.WaterNetworkModel.fromdict(A)
+            A = wn.to_dict()
+            B = self.wntr.network.WaterNetworkModel.from_dict(A)
             assert(wn._compare(B))
 
     def test_json_roundtrip(self):
         import json
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
-            wn.tojson('test.json')
-            B = self.wntr.network.fromjson('test.json')
+            wn.write_json('test.json')
+            B = self.wntr.network.read_json('test.json')
             assert(wn._compare(B))
 
 

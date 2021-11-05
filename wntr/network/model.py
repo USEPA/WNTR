@@ -9,7 +9,6 @@ model.
     WaterNetworkModel
     PatternRegistry
     CurveRegistry
-    SourceRegistry
     NodeRegistry
     LinkRegistry
 
@@ -1102,29 +1101,35 @@ class WaterNetworkModel(AbstractModel):
                 
         return d
     
-    def todict(self):
-        """Dictionary representation of the water network model"""
+    def to_dict(self):
+        """Dictionary representation of the water network model.
+        
+        Returns
+        -------
+        dict
+            the water network model as a dictionary
+        """
         from wntr import __version__
         controls = list()
         for k, c in self._controls.items():
-            cc = c.todict()
+            cc = c.to_dict()
             if "name" in cc.keys() and not cc["name"]:
                 cc["name"] = k
             controls.append(cc)
         d = dict(version="wntr-{}".format(__version__),
                  comment="WaterNetworkModel - all values given in SI units",
                  name=self.name,
-                 options=self._options.todict(),
-                 curves=self._curve_reg.tolist(),
-                 patterns=self._pattern_reg.tolist(),
-                 nodes=self._node_reg.tolist(),
-                 links=self._link_reg.tolist(),
-                 sources=[s.todict() for k, s in self._sources.items()],
+                 options=self._options.to_dict(),
+                 curves=self._curve_reg.to_list(),
+                 patterns=self._pattern_reg.to_list(),
+                 nodes=self._node_reg.to_list(),
+                 links=self._link_reg.to_list(),
+                 sources=[s.to_dict() for k, s in self._sources.items()],
                  controls=controls,
                  )
         return d
 
-    def tojson(self, f):
+    def write_json(self, f):
         """
         Write the WaterNetworkModel as a 
 
@@ -1135,12 +1140,12 @@ class WaterNetworkModel(AbstractModel):
         """
         if isinstance(f, str):
             with open(f, 'w') as fout:
-                json.dump(self.todict(), fout)
+                json.dump(self.to_dict(), fout)
         else:
-            json.dump(self.todict(), f)
+            json.dump(self.to_dict(), f)
     
     @classmethod
-    def fromdict(cls, d: dict):
+    def from_dict(cls, d: dict):
         """
         Create a WaterNetworkModel from a dictionary model.
 
@@ -1306,7 +1311,7 @@ class WaterNetworkModel(AbstractModel):
         return wn
 
     @classmethod
-    def fromjson(cls, f):
+    def read_json(cls, f):
         """
         Create a water network model from a JSON file.
 
@@ -1324,7 +1329,7 @@ class WaterNetworkModel(AbstractModel):
                 d = json.load(fin)
         else:
             d = json.load(f)
-        return cls.fromdict(d)
+        return cls.from_dict(d)
         
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
@@ -1420,7 +1425,7 @@ class WaterNetworkModel(AbstractModel):
             # Add the pattern
             # If the pattern name already exists, this fails 
             pattern_name = pattern_prefix + junc_name
-            self.add_pattern(pattern_name, demand_pattern.tolist())
+            self.add_pattern(pattern_name, demand_pattern.to_list())
             
             # Reset base demand
             junction = self.get_node(junc_name)
@@ -1780,17 +1785,6 @@ class PatternRegistry(Registry):
         """A new default pattern object"""
         return self.DefaultPattern(self._options)
 
-#    def tostring(self):
-#        """String representation of the pattern registry"""
-#        s  = 'Pattern Registry:\n'
-#        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
-#        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
-#        if len(self.orphaned()) > 0:
-#            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
-
 
 class CurveRegistry(Registry):
     """A registry for curves."""
@@ -1952,46 +1946,6 @@ class CurveRegistry(Registry):
     def volume_curve_names(self):
         """List of names of all volume curves"""
         return list(self._volume_curves)
-
-#    def tostring(self):
-#        """String representation of the curve registry"""
-#        s  = 'Curve Registry:\n'
-#        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
-#        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
-#        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
-#        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
-#        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
-#        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
-#        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
-
-
-class SourceRegistry(Registry):
-    """A registry for sources."""
-    def _finalize_(self, model):
-        super()._finalize_(model)
-        self._sources = None
-
-    def __delitem__(self, key):
-        try:
-            if self._usage and key in self._usage and len(self._usage[key]) > 0:
-                raise RuntimeError('cannot remove %s %s, still used by %s'%( 
-                                   self.__class__.__name__,
-                                   key,
-                                   self._usage[key]))
-            elif key in self._usage:
-                self._usage.pop(key)
-            source = self._data.pop(key)
-            self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
-            self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
-            return source
-        except KeyError:
-            # Do not raise an exception if there is no key of that name
-            return
 
 
 class NodeRegistry(Registry):
@@ -2294,19 +2248,6 @@ class NodeRegistry(Registry):
         """
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
-
-#    def tostring(self):
-#        """String representation of the node registry"""
-#        s  = 'Node Registry:\n'
-#        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
-#        s += '    Junctions:      {}\n'.format(len(self.junction_names))
-#        s += '    Tanks:          {}\n'.format(len(self.tank_names))
-#        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 
 
 class LinkRegistry(Registry):
@@ -2836,44 +2777,4 @@ class LinkRegistry(Registry):
         """
         for name in self._gpvs:
             yield name, self._data[name]
-
-#    def tostring(self):
-#        """String representation of the link registry"""
-#        s  = 'Link Registry:\n'
-#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
-#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-#        ct_cv = sum([ 1 for n in self.check_valves()])
-#        if ct_cv:
-#            s += '      Check valves:     {}\n'.format(ct_cv)
-#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-#        ct_cp = len(self._power_pumps)
-#        ct_hc = len(self._head_pumps)
-#        if ct_cp:
-#            s += '      Constant power:   {}\n'.format(ct_cp)
-#        if ct_hc:
-#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
-#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
-#        PRV = len(self._prvs)
-#        PSV = len(self._psvs)
-#        PBV = len(self._pbvs)
-#        FCV = len(self._fcvs)
-#        TCV = len(self._tcvs)
-#        GPV = len(self._gpvs)
-#        if PRV:
-#            s += '      Pres. reducing:   {}\n'.format(PRV)
-#        if PSV:
-#            s += '      Pres. sustaining: {}\n'.format(PSV)
-#        if PBV:
-#            s += '      Pres. breaker:    {}\n'.format(PBV)
-#        if FCV:
-#            s += '      Flow control:     {}\n'.format(FCV)
-#        if TCV:
-#            s += '      Throttle control: {}\n'.format(TCV)
-#        if GPV:
-#            s += '      General purpose:  {}\n'.format(GPV)
-#        if len(self.orphaned()) > 0:
-#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 

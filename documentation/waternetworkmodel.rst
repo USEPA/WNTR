@@ -271,31 +271,23 @@ EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
 
     >>> wn.write_inpfile('filename.inp', version=2.2)
 
-Write a model to a JSON file
----------------------------------
+Read and write a model to a dictionary or JSON file
+---------------------------------------------------
 
-The water network model can also be written to a file in a JSON text format.
+The water network model can be convernted to a dictionary representation.
+The dictionary will contain keys for options, nodes, links, patterns, curves, sources, and controls (and rules).
+Each of these entries will be a dictionary or list of dictionaries representing the individual
+objects. The keys of these object dictionaries correspond to the attributes of the objects.
 
-JSON representations of the model are always written in SI units (m, kg, s).
-The JSON file is just a formatted version of the water network model represented in dictionary form.
-To get the dictionary, use the `todict` function on the model.
-To create a water network model from a dictionary, use the `fromdict` function on the `WaterNetworkModel` class or the `wntr.network` module.
+Dictonary representations of the model are always written in SI units (m, kg, s).
+To get the dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.to_dict` function on the model.
+To create a water network model from a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.from_dict` function.
 
-.. doctest::
-    >>> dict_rep = wn.todict()
-    >>> wn2 = wntr.network.WaterNetworkModel.fromdict(dict_rep)
-    >>> wn._compare(wn2)
-    True
+The JSON (JavaScript Object Notation) file is just a formatted version of the dictionary.
+The JSON functions :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` wrap 
+the dictionary functions with the Python standard library JSON loader and dumper.
 
-The JSON functions `tojson` and `fromjson` wrap these dictionary functions with the standard library JSON loader and dumper.
-
-.. doctest::
-    >>> wn.tojson('test.json')
-    >>> wn3 = wntr.network.fromjson('test.json')
-    >>> wn._compare(wn3)
-    True
-
-Note that these functions do not check for a valid dictionary/JSON schema prior to trying to build a new model.
+Please note that these functions do not check for a valid dictionary/JSON schema prior to trying to build a new model.
 They will simply ignore extraneous or invalid dictionary keys which will be lost if the new water network model is re-exported.
 
 Build a model from scratch

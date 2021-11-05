@@ -2001,7 +2001,7 @@ class Rule(ControlBase):
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
 
-    def todict(self):
+    def to_dict(self):
         ret = dict()
         if self._control_type == _ControlType.rule:
             ret['type'] = 'rule'

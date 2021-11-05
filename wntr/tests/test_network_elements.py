@@ -61,7 +61,7 @@ class TestElements(unittest.TestCase):
         pattern1b = elements.Pattern(
             "constant", multipliers=[pattern_points3], time_options=(0, 1)
         )
-        self.assertListEqual(pattern1a.multipliers.tolist(), [pattern_points3])
+        self.assertListEqual(pattern1a.multipliers.to_list(), [pattern_points3])
         self.assertTrue(np.all(pattern1a.multipliers == pattern1b.multipliers))
         self.assertFalse(id(pattern1a.multipliers) == id(pattern1b.multipliers))
         self.assertEqual(pattern1a.time_options, pattern1b.time_options)

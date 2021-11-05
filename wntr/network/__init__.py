@@ -11,5 +11,5 @@ from .options import Options
 from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlChecker, ControlChangeTracker, Rule
-fromdict = WaterNetworkModel.fromdict
-fromjson = WaterNetworkModel.fromjson
+from_dict = WaterNetworkModel.from_dict
+read_json = WaterNetworkModel.read_json
