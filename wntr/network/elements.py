@@ -2228,10 +2228,10 @@ class TimeSeries(object):
     def to_dict(self):
         """Dictionary representation of the time series"""
         d = dict(base_val=self._base)
-        if isinstance(self._pattern, six.string_types):
-            d['pattern_name'] = self._pattern
-        if self._category:
-            d['category'] = self._category
+        # if isinstance(self._pattern, six.string_types):
+        d['pattern_name'] = self.pattern_name
+        # if self._category:
+        d['category'] = self.category
         return d
     
 #    def tostring(self):
