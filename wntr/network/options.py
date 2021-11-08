@@ -116,16 +116,16 @@ class TimeOptions(_OptionsBase):
     duration : int
         Simulation duration (seconds), by default 0.
 
-    hydraulic_timestep : int
+    hydraulic_timestep : int >= 1
         Hydraulic timestep (seconds), by default 3600 (one hour).
 
-    quality_timestep : int
+    quality_timestep : int >= 1
         Water quality timestep (seconds), by default 360 (five minutes).
 
-    rule_timestep : int
+    rule_timestep : int >= 1
         Rule timestep (seconds), by default 360 (five minutes).
 
-    pattern_timestep : int
+    pattern_timestep : int >= 1
         Pattern timestep (seconds), by default 3600 (one hour).
 
     pattern_start : int
@@ -133,7 +133,7 @@ class TimeOptions(_OptionsBase):
         where in pattern the pattern starts out, *not* what time the pattern 
         starts, by default 0.
 
-    report_timestep : int
+    report_timestep : int >= 1
         Reporting timestep (seconds), by default 3600 (one hour).
 
     report_start : int
@@ -198,15 +198,20 @@ class TimeOptions(_OptionsBase):
             value = str.upper(value)
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
                 raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
+        elif name in {'hydraulic_timestep', 'quality_timestep', 'rule_timestep', 
+                        'pattern_timestep'}:
+            try:
+                value = max(1, int(value))
+            except ValueError:
+                raise ValueError('%s must be an integer >= 1'%name)
+        elif name not in {'duration', 'pattern_start', 'report_start', 'report_timestep',
+                            'start_clocktime', 'pattern_interpolation'}:
+            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         elif name not in {'report_timestep', 'pattern_interpolation'}:
             try:
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number'%name)
-        elif name not in {'duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
-                            'pattern_timestep', 'pattern_start', 'report_timestep', 'report_start',
-                            'start_clocktime', 'statistic', 'pattern_interpolation'}:
-            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         self.__dict__[name] = value
 
 
@@ -802,6 +807,6 @@ class Options(_OptionsBase):
         self.__dict__[name] = value
 
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the options"""
         return dict(self)

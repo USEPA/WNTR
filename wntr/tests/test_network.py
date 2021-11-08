@@ -935,5 +935,36 @@ class TestCase(unittest.TestCase):
                 )
 
 
+class TestNetworkDict(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        import wntr
+
+        self.wntr = wntr
+
+        inp_file = join(ex_datadir, "Net6.inp")
+        self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp"]]
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def test_dict_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            A = wn.to_dict()
+            B = self.wntr.network.WaterNetworkModel.from_dict(A)
+            assert(wn._compare(B))
+
+    def test_json_roundtrip(self):
+        import json
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wn.convert_controls_to_rules()
+            wn.write_json('temp.json')
+            B = self.wntr.network.read_json('temp.json')
+            assert(wn._compare(B))
+
+
 if __name__ == "__main__":
     unittest.main()
