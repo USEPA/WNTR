@@ -3,7 +3,7 @@
 v0.4.1 (main)
 ---------------------------------------------------
 
-* Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index`.  The modified resilience 
+* Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index``.  The modified resilience 
   index is a measure of total surplus power. The metric can be computed as a timeseries for each junction or as a system average timeseries.
 
 * Added a function to compute tank capacity, ``wntr.metrics.tank_capacity``.  Tank capacity is the ratio of water volume to the maximum 

@@ -1102,12 +1102,12 @@ class WaterNetworkModel(AbstractModel):
         return d
     
     def to_dict(self):
-        """Dictionary representation of the water network model.
+        """Dictionary representation of the WaterNetworkModel.
         
         Returns
         -------
         dict
-            the water network model as a dictionary
+            Dictionary representation of the WaterNetworkModel
         """
         from wntr import __version__
         controls = list()
@@ -1131,12 +1131,12 @@ class WaterNetworkModel(AbstractModel):
 
     def write_json(self, f):
         """
-        Write the WaterNetworkModel as a 
+        Write the WaterNetworkModel to a JSON file
 
         Parameters
         ----------
-        f : str or file
-            destination file for the wntr model
+        f : str
+            Name of the file or file pointer
         """
         if isinstance(f, str):
             with open(f, 'w') as fout:
@@ -1147,17 +1147,17 @@ class WaterNetworkModel(AbstractModel):
     @classmethod
     def from_dict(cls, d: dict):
         """
-        Create a WaterNetworkModel from a dictionary model.
+        Create a WaterNetworkModel from a dictionary.
 
         Parameters
         ----------
         d : dict
-            dictionary containing WaterNetworkModel model
+            Dictionary representation of the WaterNetworkModel
 
         Returns
         -------
         WaterNetworkModel
-            the new wntr object
+            New WaterNetworkModel object
         """
         from wntr import __version__
         from wntr.epanet.io import _read_control_line, _EpanetRule
@@ -1313,12 +1313,12 @@ class WaterNetworkModel(AbstractModel):
     @classmethod
     def read_json(cls, f):
         """
-        Create a water network model from a JSON file.
+        Create a WaterNetworkModel from a JSON file.
 
         Parameters
         ----------
-        f : str or file
-            filename or file pointer
+        f : str
+            Name of the file or file pointer
 
         Returns
         -------

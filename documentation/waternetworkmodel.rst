@@ -274,21 +274,29 @@ EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
 Read and write a model to a dictionary or JSON file
 ---------------------------------------------------
 
-The water network model can be convernted to a dictionary representation.
-The dictionary will contain keys for options, nodes, links, patterns, curves, sources, and controls (and rules).
-Each of these entries will be a dictionary or list of dictionaries representing the individual
-objects. The keys of these object dictionaries correspond to the attributes of the objects.
+The water network model can be converted to a dictionary representation.
+The dictionary contains keys for each of the following water network model objects: 
+nodes, links, patterns, curves, sources, controls, and options.
+Each of these entries contains a dictionary or list of dictionaries with keys corresponding to the object attributes.
+Dictionary representations of the model are always written in SI units (m, kg, s).
+To create a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.to_dict` method on the water network model.
+To create a water network model from a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.from_dict` method.
 
-Dictonary representations of the model are always written in SI units (m, kg, s).
-To get the dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.to_dict` function on the model.
-To create a water network model from a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.from_dict` function.
+.. doctest::
 
-The JSON (JavaScript Object Notation) file is just a formatted version of the dictionary.
-The JSON functions :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` wrap 
-the dictionary functions with the Python standard library JSON loader and dumper.
+    >>> wn_dict = wn.to_dict()
 
-Please note that these functions do not check for a valid dictionary/JSON schema prior to trying to build a new model.
-They will simply ignore extraneous or invalid dictionary keys which will be lost if the new water network model is re-exported.
+The water network model can also be converted to a JSON (JavaScript Object Notation) file.  
+The JSON file is a formatted version of the dictionary representation.
+The :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` methods wrap 
+the dictionary representation with the Python standard library JSON loader and dumper.
+
+.. doctest::
+
+    >>> wn.write_json('Net3.json')
+	
+Note that these methods do not check for a valid dictionary/JSON schema prior to building a model.
+They simply ignore extraneous or invalid dictionary keys.
 
 Build a model from scratch
 ---------------------------------
