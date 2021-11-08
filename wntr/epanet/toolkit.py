@@ -110,9 +110,11 @@ def runepanet(inpfile, rptfile=None, binfile=None):
     enData.ENclose()
 
 
-class ENepanet:
-    """Wrapper class to load the EPANET DLL object, then perform operations on
+def ENepanet(inpfile="", rptfile="", binfile="", version=2.2):
+    """Wrapper method to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
+
+    Note that version 2.2 is thread safe while version 2.0 is not thread safe.
 
     Parameters
     ----------
@@ -122,51 +124,60 @@ class ENepanet:
         Output file to report to
     binfile : str
         Results file to generate
-    version : float
-        EPANET version to use (either 2.0 or 2.2)
+    version : float, {2.0 or 2.2}
+        EPANET version to use, defaults to 2.2
+    
+    """
+    if version == 2.2:
+        return ENepanet_22(inpfile=inpfile, rptfile=rptfile, binfile=binfile)
+    elif version == 2.0:
+        return ENepanet_20(inpfile=inpfile, rptfile=rptfile, binfile=binfile)
+    else:
+        raise RuntimeError("EPANET version '{}' is not a valid version; choose 2.0 or 2.2".format(version))
+
+
+class ENepanet_20:
+    """Wrapper class to load the EPANET 2.0 DLL object, then perform operations on
+    the EPANET object that is created when a file is loaded.
+
+    This class is *not* thread safe.
+
+    Parameters
+    ----------
+    inpfile : str
+        Input file to use
+    rptfile : str
+        Output file to report to
+    binfile : str
+        Results file to generate
     
     """
 
-    ENlib = None
-    """The variable that holds the ctypes Library object"""
+    def __init__(self, inpfile="", rptfile="", binfile=""):
+        self.ENlib = None
+        """The variable that holds the ctypes Library object"""
 
-    errcode = 0
-    """Return code from the EPANET library functions"""
+        self.errcode = 0
+        """Return code from the EPANET library functions"""
 
-    errcodelist = []
-    cur_time = 0
+        self.errcodelist = []
+        self.cur_time = 0
 
-    Warnflag = False
-    """A warning occurred at some point during EPANET execution"""
+        self.Warnflag = False
+        """A warning occurred at some point during EPANET execution"""
 
-    Errflag = False
-    """A fatal error occurred at some point during EPANET execution"""
+        self.Errflag = False
+        """A fatal error occurred at some point during EPANET execution"""
 
-    inpfile = "temp.inp"
-    """The name of the EPANET input file"""
-
-    rptfile = "temp.rpt"
-    """The report file to generate"""
-
-    binfile = "temp.bin"
-    """The optional binary output file"""
-
-    fileLoaded = False
-
-    def __init__(self, inpfile="", rptfile="", binfile="", version=2.2):
+        self.fileLoaded = False
 
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
 
-        if float(version) == 2.0:
-            libnames = ["epanet2_x86", "epanet2", "epanet"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet2_amd64")
-        elif float(version) == 2.2:
-            libnames = ["epanet22", "epanet22_win32"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet22_amd64")
+        libnames = ["epanet2_x86", "epanet2", "epanet"]
+        if "64" in platform.machine():
+            libnames.insert(0, "epanet2_amd64")
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
@@ -554,6 +565,456 @@ class ENepanet:
 
         inpfile = inpfile.encode("ascii")
         self.errcode = self.ENlib.ENsaveinpfile(inpfile)
+        self._error()
+
+        return
+
+
+class ENepanet_22:
+    """Wrapper class to load the EPANET 2.2 DLL object, then perform operations on
+    the EPANET object that is created when a file is loaded.
+
+    This class is thread safe.
+
+    Parameters
+    ----------
+    inpfile : str
+        Input file to use
+    rptfile : str
+        Output file to report to
+    binfile : str
+        Results file to generate
+    
+    """
+
+    def __init__(self, inpfile="", rptfile="", binfile=""):
+        self.ENlib = None
+        """The variable that holds the ctypes Library object"""
+
+        self.errcode = 0
+        """Return code from the EPANET library functions"""
+
+        self.errcodelist = []
+        self.cur_time = 0
+
+        self.Warnflag = False
+        """A warning occurred at some point during EPANET execution"""
+
+        self.Errflag = False
+        """A fatal error occurred at some point during EPANET execution"""
+
+        self.fileLoaded = False
+
+        self.inpfile = inpfile
+        """The name of the EPANET input file"""
+
+        self.rptfile = rptfile
+        """The report file to generate"""
+
+        self.binfile = binfile
+        """The optional binary output file"""
+
+        self._proj = None
+
+        libnames = ["epanet22", "epanet22_win32"]
+        if "64" in platform.machine():
+            libnames.insert(0, "epanet22_amd64")
+        for lib in libnames:
+            try:
+                if os.name in ["nt", "dos"]:
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Windows/%s.dll" % lib
+                    )
+                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+                elif sys.platform in ["darwin"]:
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
+                    )
+                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                else:
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Linux/lib%s.so" % lib
+                    )
+                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                return  # OK!
+            except Exception as E1:
+                if lib == libnames[-1]:
+                    raise E1
+                pass
+            finally:
+                if '32' in lib:
+                    self._proj = ctypes.c_uint32()
+                else:
+                    self._proj = ctypes.c_uint64()
+        return
+
+    def isOpen(self):
+        """Checks to see if the file is open"""
+        return self.fileLoaded
+
+    def _error(self):
+        """Print the error text the corresponds to the error code returned"""
+        if not self.errcode:
+            return
+        # errtxt = self.ENlib.ENgeterror(self.errcode)
+        logger.error("EPANET error: %d", self.errcode)
+        if self.errcode >= 100:
+            self.Errflag = True
+            self.errcodelist.append(self.errcode)
+            raise EpanetException("EPANET Error {}".format(self.errcode))
+        else:
+            self.Warnflag = True
+            # warnings.warn(ENgetwarning(self.errcode))
+            self.errcodelist.append(ENgetwarning(self.errcode, self.cur_time))
+        return
+
+    def ENopen(self, inpfile=None, rptfile=None, binfile=None):
+        """
+        Opens an EPANET input file and reads in network data
+
+        Parameters
+        ----------
+        inpfile : str
+            EPANET INP file (default to constructor value)
+        rptfile : str
+            Output file to create (default to constructor value)
+        binfile : str
+            Binary output file to create (default to constructor value)
+            
+        """
+        if self.fileLoaded:
+            self.ENclose()
+        if self.fileLoaded:
+            raise RuntimeError("File is loaded and cannot be closed")
+        self.ENlib.EN_createproject(byref(self._proj))
+        if inpfile is None:
+            inpfile = self.inpfile
+        if rptfile is None:
+            rptfile = self.rptfile
+        if binfile is None:
+            binfile = self.binfile
+        inpfile = inpfile.encode("ascii")
+        rptfile = rptfile.encode("ascii")
+        binfile = binfile.encode("ascii")
+        self.errcode = self.ENlib.EN_open(self._proj, inpfile, rptfile, binfile)
+        self._error()
+        if self.errcode < 100:
+            self.fileLoaded = True
+        return
+
+    def ENclose(self):
+        """Frees all memory and files used by EPANET"""
+        self.errcode = self.ENlib.EN_close(self._proj, )
+        self.ENlib.EN_deleteproject(self._proj, )
+        self._proj = None
+        self._proj = ctypes.c_uint64()
+        self._error()
+        if self.errcode < 100:
+            self.fileLoaded = False
+        return
+
+    def ENsolveH(self):
+        """Solves for network hydraulics in all time periods"""
+        self.errcode = self.ENlib.EN_solveH(self._proj, )
+        self._error()
+        return
+
+    def ENsaveH(self):
+        """Solves for network hydraulics in all time periods
+
+        Must be called before ENreport() if no water quality simulation made.
+        Should not be called if ENsolveQ() will be used.
+
+        """
+        self.errcode = self.ENlib.EN_saveH(self._proj, )
+        self._error()
+        return
+
+    def ENopenH(self):
+        """Sets up data structures for hydraulic analysis"""
+        self.errcode = self.ENlib.EN_openH(self._proj, )
+        self._error()
+        return
+
+    def ENinitH(self, iFlag):
+        """Initializes hydraulic analysis
+
+        Parameters
+        -----------
+        iFlag : 2-digit flag
+            2-digit flag where 1st (left) digit indicates
+            if link flows should be re-initialized (1) or
+            not (0) and 2nd digit indicates if hydraulic
+            results should be saved to file (1) or not (0)
+            
+        """
+        self.errcode = self.ENlib.EN_initH(self._proj, iFlag)
+        self._error()
+        return
+
+    def ENrunH(self):
+        """Solves hydraulics for conditions at time t
+        
+        This function is used in a loop with ENnextH() to run
+        an extended period hydraulic simulation.
+        See ENsolveH() for an example.
+        
+        Returns
+        --------
+        int
+            Current simulation time (seconds)
+        
+        """
+        lT = ctypes.c_long()
+        self.errcode = self.ENlib.EN_runH(self._proj, byref(lT))
+        self._error()
+        self.cur_time = lT.value
+        return lT.value
+
+    def ENnextH(self):
+        """Determines time until next hydraulic event
+        
+        This function is used in a loop with ENrunH() to run
+        an extended period hydraulic simulation.
+        See ENsolveH() for an example.
+        
+        Returns
+        ---------
+        int
+            Time (seconds) until next hydraulic event (0 marks end of simulation period)
+         
+        """
+        lTstep = ctypes.c_long()
+        self.errcode = self.ENlib.EN_nextH(self._proj, byref(lTstep))
+        self._error()
+        return lTstep.value
+
+    def ENcloseH(self):
+        """Frees data allocated by hydraulics solver"""
+        self.errcode = self.ENlib.EN_closeH(self._proj, )
+        self._error()
+        return
+
+    def ENsavehydfile(self, filename):
+        """Copies binary hydraulics file to disk
+
+        Parameters
+        -------------
+        filename : str
+            Name of hydraulics file to output
+            
+        """
+        self.errcode = self.ENlib.EN_savehydfile(self._proj, filename.encode("ascii"))
+        self._error()
+        return
+
+    def ENusehydfile(self, filename):
+        """Opens previously saved binary hydraulics file
+
+        Parameters
+        -------------
+        filename : str
+            Name of hydraulics file to use
+            
+        """
+        self.errcode = self.ENlib.EN_usehydfile(self._proj, filename.encode("ascii"))
+        self._error()
+        return
+
+    def ENsolveQ(self):
+        """Solves for network water quality in all time periods"""
+        self.errcode = self.ENlib.EN_solveQ(self._proj, )
+        self._error()
+        return
+
+    def ENopenQ(self):
+        """Sets up data structures for water quality analysis"""
+        self.errcode = self.ENlib.EN_openQ(self._proj, )
+        self._error()
+        return
+
+    def ENinitQ(self, iSaveflag):
+        """Initializes water quality analysis
+
+        Parameters
+        -------------
+        iSaveflag : int
+             EN_SAVE (1) if results saved to file, EN_NOSAVE (0) if not
+             
+        """
+        self.errcode = self.ENlib.EN_initQ(self._proj, iSaveflag)
+        self._error()
+        return
+
+    def ENrunQ(self):
+        """Retrieves hydraulic and water quality results at time t
+        
+        This function is used in a loop with ENnextQ() to run
+        an extended period water quality simulation. See ENsolveQ() for
+        an example.
+        
+        Returns
+        -------
+        int
+            Current simulation time (seconds)
+         
+        """
+        lT = ctypes.c_long()
+        self.errcode = self.ENlib.EN_runQ(self._proj, byref(lT))
+        self._error()
+        return lT.value
+
+    def ENnextQ(self):
+        """Advances water quality simulation to next hydraulic event
+
+        This function is used in a loop with ENrunQ() to run
+        an extended period water quality simulation. See ENsolveQ() for
+        an example.
+        
+        Returns
+        --------
+        int
+            Time (seconds) until next hydraulic event (0 marks end of simulation period)
+         
+        """
+        lTstep = ctypes.c_long()
+        self.errcode = self.ENlib.EN_nextQ(self._proj, byref(lTstep))
+        self._error()
+        return lTstep.value
+
+    def ENcloseQ(self):
+        """Frees data allocated by water quality solver"""
+        self.errcode = self.ENlib.EN_closeQ(self._proj, )
+        self._error()
+        return
+
+    def ENreport(self):
+        """Writes report to report file"""
+        self.errcode = self.ENlib.EN_report(self._proj, )
+        self._error()
+        return
+
+    def ENgetcount(self, iCode):
+        """Retrieves the number of components of a given type in the network
+
+        Parameters
+        -------------
+        iCode : int
+            Component code (see toolkit.optComponentCounts)
+
+        Returns
+        ---------
+        int
+            Number of components in network
+        
+        """
+        iCount = ctypes.c_int()
+        self.errcode = self.ENlib.EN_getcount(self._proj, iCode, byref(iCount))
+        self._error()
+        return iCount.value
+
+    def ENgetflowunits(self):
+        """Retrieves flow units code
+
+        Returns
+        -----------
+        Code of flow units in use (see toolkit.optFlowUnits)
+        
+        """
+        iCode = ctypes.c_int()
+        self.errcode = self.ENlib.EN_getflowunits(self._proj, byref(iCode))
+        self._error()
+        return iCode.value
+
+    def ENgetnodeindex(self, sId):
+        """Retrieves index of a node with specific ID
+
+        Parameters
+        -------------
+        sId : int
+            Node ID
+
+        Returns
+        ---------
+        Index of node in list of nodes
+        
+        """
+        iIndex = ctypes.c_int()
+        self.errcode = self.ENlib.EN_getnodeindex(self._proj, sId.encode("ascii"), byref(iIndex))
+        self._error()
+        return iIndex.value
+
+    def ENgetnodevalue(self, iIndex, iCode):
+        """
+        Retrieves parameter value for a node
+
+        Parameters
+        -------------
+        iIndex: int
+            Node index
+        iCode : int
+            Node parameter code (see toolkit.optNodeParams)
+
+        Returns
+        ---------
+        Value of node's parameter
+
+        """
+        fValue = ctypes.c_float()
+        self.errcode = self.ENlib.EN_getnodevalue(self._proj, iIndex, iCode, byref(fValue))
+        self._error()
+        return fValue.value
+
+    def ENgetlinkindex(self, sId):
+        """Retrieves index of a link with specific ID
+
+        Parameters
+        -------------
+        sId : int
+            Link ID
+
+        Returns
+        ---------
+        Index of link in list of links
+
+        """
+        iIndex = ctypes.c_int()
+        self.errcode = self.ENlib.EN_getlinkindex(self._proj, sId.encode("ascii"), byref(iIndex))
+        self._error()
+        return iIndex.value
+
+    def ENgetlinkvalue(self, iIndex, iCode):
+        """Retrieves parameter value for a link
+
+        Parameters
+        -------------
+        iIndex : int
+            Link index
+        iCode : int
+            Link parameter code (see toolkit.optLinkParams)
+
+        Returns
+        ---------
+        Value of link's parameter
+
+        """
+        fValue = ctypes.c_float()
+        self.errcode = self.ENlib.EN_getlinkvalue(self._proj, iIndex, iCode, byref(fValue))
+        self._error()
+        return fValue.value
+
+    def ENsaveinpfile(self, inpfile):
+        """Saves EPANET input file
+
+        Parameters
+        -------------
+        inpfile : str
+		    EPANET INP output file
+
+        """
+
+        inpfile = inpfile.encode("ascii")
+        self.errcode = self.ENlib.EN_saveinpfile(self._proj, inpfile)
         self._error()
 
         return

@@ -1,6 +1,8 @@
 import sys
 import unittest
 from os.path import abspath, dirname, join
+import threading
+import time
 
 import pandas
 
@@ -23,6 +25,64 @@ def compare_results(wntr_res, epa_res, abs_threshold, rel_threshold):
     diffb = (abs_diffb < abs_threshold) | (rel_diffb < rel_threshold)
     return diffa.all() and diffb.all()
 
+
+class TestThreading(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(results_dir)
+        import wntr
+
+        self.wntr = wntr
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def test_two_threads(self):
+        inp_file = join(ex_datadir, "Net6.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.time.duration = 24 * 3600
+        wn.options.time.hydraulic_timestep = 3600
+        wn.options.time.report_timestep = 3600
+        wn.remove_control(
+            "control 72"
+        )  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
+
+        def run_epanet(wn, name):
+            sim = self.wntr.sim.EpanetSimulator(wn)
+            sim.run_sim(name, version=2.2)
+
+        start_time = time.time()
+        for i in range(2):
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wn.options.time.duration = 24 * 3600
+            wn.options.time.hydraulic_timestep = 3600
+            wn.options.time.report_timestep = 3600
+            wn.remove_control(
+                "control 72"
+            )  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
+            run_epanet(wn, 'test{}'.format(i))
+        seq_time = time.time() - start_time
+
+        threads = list()
+        for i in range(2):
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wn.options.time.duration = 24 * 3600
+            wn.options.time.hydraulic_timestep = 3600
+            wn.options.time.report_timestep = 3600
+            wn.remove_control(
+                "control 72"
+            )  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
+            t = threading.Thread(target=run_epanet, args=(wn, 'test{}'.format(i)))
+            threads.append(t)
+        start_time = time.time()
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        mul_time = time.time()-start_time
+
+        assert(seq_time >= mul_time)
 
 class TestPerformance(unittest.TestCase):
     @classmethod

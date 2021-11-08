@@ -35,7 +35,7 @@ class TestEpanetToolkit(unittest.TestCase):
         assert(flowunit==1) # GPM
         
     def test_ENgetindex_ENgetvalue(self):
-        enData = wntr.epanet.toolkit.ENepanet()
+        enData = wntr.epanet.toolkit.ENepanet(version=2.0)
         enData.inpfile = join(datadir, "Net1.inp")
         enData.ENopen(enData.inpfile, "temp.rpt")
         
