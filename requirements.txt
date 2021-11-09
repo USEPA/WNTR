@@ -11,3 +11,7 @@ folium
 utm
 openpyxl
 nose
+
+# Testing
+nbconvert
+nbformat
