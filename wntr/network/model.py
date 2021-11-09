@@ -1129,7 +1129,7 @@ class WaterNetworkModel(AbstractModel):
                  )
         return d
 
-    def write_json(self, f):
+    def write_json(self, f, **kw_json):
         """
         Write the WaterNetworkModel to a JSON file
 
@@ -1137,12 +1137,14 @@ class WaterNetworkModel(AbstractModel):
         ----------
         f : str
             Name of the file or file pointer
+        kw_json : keyword arguments
+            arguments to pass directly to `json.dump`
         """
         if isinstance(f, str):
             with open(f, 'w') as fout:
-                json.dump(self.to_dict(), fout)
+                json.dump(self.to_dict(), fout,  **kw_json)
         else:
-            json.dump(self.to_dict(), f)
+            json.dump(self.to_dict(), f,  **kw_json)
     
     @classmethod
     def from_dict(cls, d: dict):
@@ -1311,7 +1313,7 @@ class WaterNetworkModel(AbstractModel):
         return wn
 
     @classmethod
-    def read_json(cls, f):
+    def read_json(cls, f, **kw_json):
         """
         Create a WaterNetworkModel from a JSON file.
 
@@ -1319,6 +1321,8 @@ class WaterNetworkModel(AbstractModel):
         ----------
         f : str
             Name of the file or file pointer
+        kw_json : keyword arguments
+            keyword arguments to pass to `json.load`
 
         Returns
         -------
@@ -1326,9 +1330,9 @@ class WaterNetworkModel(AbstractModel):
         """
         if isinstance(f, str):
             with open(f, 'r') as fin:
-                d = json.load(fin)
+                d = json.load(fin, **kw_json)
         else:
-            d = json.load(f)
+            d = json.load(f, **kw_json)
         return cls.from_dict(d)
         
 
