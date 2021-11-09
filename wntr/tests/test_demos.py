@@ -11,6 +11,7 @@ from os.path import abspath, dirname, isfile, join
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
+kernel_name = 'python%d' % sys.version_info[0]
 testdir = dirname(abspath(str(__file__)))
 examplesdir = join(testdir, '..', '..', 'examples', 'demos')
 
@@ -44,8 +45,9 @@ class TestExamples(unittest.TestCase):
             
             with open(f) as file:
                 nb = nbformat.read(file, as_version=4) 
-                        
-            proc = ExecutePreprocessor(timeout=600, kernel_name='python3')
+                
+            nb.metadata.get('kernelspec', {})['name'] = kernel_name            
+            proc = ExecutePreprocessor(timeout=600, kernel_name=kernel_name)
             proc.allow_errors = True
             proc.preprocess(nb) #, {'metadata': {'path': '/'}})
             
