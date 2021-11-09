@@ -127,33 +127,33 @@ class ENepanet:
     
     """
 
-    ENlib = None
-    """The variable that holds the ctypes Library object"""
-
-    errcode = 0
-    """Return code from the EPANET library functions"""
-
-    errcodelist = []
-    cur_time = 0
-
-    Warnflag = False
-    """A warning occurred at some point during EPANET execution"""
-
-    Errflag = False
-    """A fatal error occurred at some point during EPANET execution"""
-
-    inpfile = "temp.inp"
-    """The name of the EPANET input file"""
-
-    rptfile = "temp.rpt"
-    """The report file to generate"""
-
-    binfile = "temp.bin"
-    """The optional binary output file"""
-
-    fileLoaded = False
-
     def __init__(self, inpfile="", rptfile="", binfile="", version=2.2):
+
+        self.ENlib = None
+        """The variable that holds the ctypes Library object"""
+
+        self.errcode = 0
+        """Return code from the EPANET library functions"""
+
+        self.errcodelist = []
+        self.cur_time = 0
+
+        self.Warnflag = False
+        """A warning occurred at some point during EPANET execution"""
+
+        self.Errflag = False
+        """A fatal error occurred at some point during EPANET execution"""
+
+        self.inpfile = "temp.inp"
+        """The name of the EPANET input file"""
+
+        self.rptfile = "temp.rpt"
+        """The report file to generate"""
+
+        self.binfile = "temp.bin"
+        """The optional binary output file"""
+
+        self.fileLoaded = False
 
         self.inpfile = inpfile
         self.rptfile = rptfile
@@ -170,19 +170,30 @@ class ENepanet:
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Windows/%s.dll" % lib
+                    )
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
+                    )
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
+                    libepanet = resource_filename(
+                        epanet_toolkit, "Linux/lib%s.so" % lib
+                    )
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                return  # OK!
+                return
             except Exception as E1:
                 if lib == libnames[-1]:
                     raise E1
                 pass
+            finally:
+                if version >= 2.2:
+                    self._project = ctypes.c_uint64()
+                else:
+                    self._project = None
         return
 
     def isOpen(self):
@@ -219,28 +230,55 @@ class ENepanet:
             Binary output file to create (default to constructor value)
             
         """
-        if self.fileLoaded:
-            self.ENclose()
-        if self.fileLoaded:
-            raise RuntimeError("File is loaded and cannot be closed")
-        if inpfile is None:
-            inpfile = self.inpfile
-        if rptfile is None:
-            rptfile = self.rptfile
-        if binfile is None:
-            binfile = self.binfile
-        inpfile = inpfile.encode("ascii")
-        rptfile = rptfile.encode("ascii")
-        binfile = binfile.encode("ascii")
-        self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
-        self._error()
-        if self.errcode < 100:
-            self.fileLoaded = True
-        return
+        if self._project is not None:
+            if self.fileLoaded:
+                self.EN_close(self._project)
+            if self.fileLoaded:
+                raise RuntimeError("File is loaded and cannot be closed")
+            if inpfile is None:
+                inpfile = self.inpfile
+            if rptfile is None:
+                rptfile = self.rptfile
+            if binfile is None:
+                binfile = self.binfile
+            inpfile = inpfile.encode("ascii")
+            rptfile = rptfile.encode("ascii")
+            binfile = binfile.encode("ascii")
+            self.ENlib.EN_createproject(ctypes.byref(self._project))
+            self.errcode = self.ENlib.EN_open(self._project, inpfile, rptfile, binfile)
+            self._error()
+            if self.errcode < 100:
+                self.fileLoaded = True
+            return
+        else:
+            if self.fileLoaded:
+                self.ENclose()
+            if self.fileLoaded:
+                raise RuntimeError("File is loaded and cannot be closed")
+            if inpfile is None:
+                inpfile = self.inpfile
+            if rptfile is None:
+                rptfile = self.rptfile
+            if binfile is None:
+                binfile = self.binfile
+            inpfile = inpfile.encode("ascii")
+            rptfile = rptfile.encode("ascii")
+            binfile = binfile.encode("ascii")
+            self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
+            self._error()
+            if self.errcode < 100:
+                self.fileLoaded = True
+            return
 
     def ENclose(self):
         """Frees all memory and files used by EPANET"""
-        self.errcode = self.ENlib.ENclose()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_close(self._project)
+            self.ENlib.EN_deleteproject(self._project)
+            self._project = None
+            self._project = ctypes.c_uint64()
+        else:
+            self.errcode = self.ENlib.ENclose()
         self._error()
         if self.errcode < 100:
             self.fileLoaded = False
@@ -248,7 +286,10 @@ class ENepanet:
 
     def ENsolveH(self):
         """Solves for network hydraulics in all time periods"""
-        self.errcode = self.ENlib.ENsolveH()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_solveH(self._project)
+        else:
+            self.errcode = self.ENlib.ENsolveH()
         self._error()
         return
 
@@ -259,13 +300,19 @@ class ENepanet:
         Should not be called if ENsolveQ() will be used.
 
         """
-        self.errcode = self.ENlib.ENsaveH()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_saveH(self._project)
+        else:
+            self.errcode = self.ENlib.ENsaveH()
         self._error()
         return
 
     def ENopenH(self):
         """Sets up data structures for hydraulic analysis"""
-        self.errcode = self.ENlib.ENopenH()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_openH(self._project)
+        else:
+            self.errcode = self.ENlib.ENopenH()
         self._error()
         return
 
@@ -281,7 +328,10 @@ class ENepanet:
             results should be saved to file (1) or not (0)
             
         """
-        self.errcode = self.ENlib.ENinitH(iFlag)
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_initH(self._project, iFlag)
+        else:
+            self.errcode = self.ENlib.ENinitH(iFlag)
         self._error()
         return
 
@@ -299,7 +349,10 @@ class ENepanet:
         
         """
         lT = ctypes.c_long()
-        self.errcode = self.ENlib.ENrunH(byref(lT))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_runH(self._project, byref(lT))
+        else:
+            self.errcode = self.ENlib.ENrunH(byref(lT))
         self._error()
         self.cur_time = lT.value
         return lT.value
@@ -318,13 +371,19 @@ class ENepanet:
          
         """
         lTstep = ctypes.c_long()
-        self.errcode = self.ENlib.ENnextH(byref(lTstep))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_nextH(self._project, byref(lTstep))
+        else:
+            self.errcode = self.ENlib.ENnextH(byref(lTstep))
         self._error()
         return lTstep.value
 
     def ENcloseH(self):
         """Frees data allocated by hydraulics solver"""
-        self.errcode = self.ENlib.ENcloseH()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_closeH(self._project)
+        else:
+            self.errcode = self.ENlib.ENcloseH()
         self._error()
         return
 
@@ -337,7 +396,10 @@ class ENepanet:
             Name of hydraulics file to output
             
         """
-        self.errcode = self.ENlib.ENsavehydfile(filename.encode("ascii"))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_savehydfile(self._project, filename.encode("ascii"))
+        else:
+            self.errcode = self.ENlib.ENsavehydfile(filename.encode("ascii"))
         self._error()
         return
 
@@ -350,19 +412,28 @@ class ENepanet:
             Name of hydraulics file to use
             
         """
-        self.errcode = self.ENlib.ENusehydfile(filename.encode("ascii"))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_usehydfile(self._project, filename.encode("ascii"))
+        else:
+            self.errcode = self.ENlib.ENusehydfile(filename.encode("ascii"))
         self._error()
         return
 
     def ENsolveQ(self):
         """Solves for network water quality in all time periods"""
-        self.errcode = self.ENlib.ENsolveQ()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_solveQ(self._project)
+        else:
+            self.errcode = self.ENlib.ENsolveQ()
         self._error()
         return
 
     def ENopenQ(self):
         """Sets up data structures for water quality analysis"""
-        self.errcode = self.ENlib.ENopenQ()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_openQ(self._project)
+        else:
+            self.errcode = self.ENlib.ENopenQ()
         self._error()
         return
 
@@ -375,7 +446,10 @@ class ENepanet:
              EN_SAVE (1) if results saved to file, EN_NOSAVE (0) if not
              
         """
-        self.errcode = self.ENlib.ENinitQ(iSaveflag)
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_initQ(self._project, iSaveflag)
+        else:
+            self.errcode = self.ENlib.ENinitQ(iSaveflag)
         self._error()
         return
 
@@ -393,7 +467,10 @@ class ENepanet:
          
         """
         lT = ctypes.c_long()
-        self.errcode = self.ENlib.ENrunQ(byref(lT))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_runQ(self._project, byref(lT))
+        else:
+            self.errcode = self.ENlib.ENrunQ(byref(lT))
         self._error()
         return lT.value
 
@@ -411,19 +488,28 @@ class ENepanet:
          
         """
         lTstep = ctypes.c_long()
-        self.errcode = self.ENlib.ENnextQ(byref(lTstep))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_nextQ(self._project, byref(lTstep))
+        else:
+            self.errcode = self.ENlib.ENnextQ(byref(lTstep))
         self._error()
         return lTstep.value
 
     def ENcloseQ(self):
         """Frees data allocated by water quality solver"""
-        self.errcode = self.ENlib.ENcloseQ()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_closeQ(self._project)
+        else:
+            self.errcode = self.ENlib.ENcloseQ()
         self._error()
         return
 
     def ENreport(self):
         """Writes report to report file"""
-        self.errcode = self.ENlib.ENreport()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_report(self._project)
+        else:
+            self.errcode = self.ENlib.ENreport()
         self._error()
         return
 
@@ -442,7 +528,10 @@ class ENepanet:
         
         """
         iCount = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetcount(iCode, byref(iCount))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getcount(self._project, iCode, byref(iCount))
+        else:
+            self.errcode = self.ENlib.ENgetcount(iCode, byref(iCount))
         self._error()
         return iCount.value
 
@@ -455,7 +544,10 @@ class ENepanet:
         
         """
         iCode = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetflowunits(byref(iCode))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getflowunits(self._project, byref(iCode))
+        else:
+            self.errcode = self.ENlib.ENgetflowunits(byref(iCode))
         self._error()
         return iCode.value
 
@@ -473,7 +565,10 @@ class ENepanet:
         
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetnodeindex(sId.encode("ascii"), byref(iIndex))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getnodeindex(self._project, sId.encode("ascii"), byref(iIndex))
+        else:
+            self.errcode = self.ENlib.ENgetnodeindex(sId.encode("ascii"), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -494,7 +589,11 @@ class ENepanet:
 
         """
         fValue = ctypes.c_float()
-        self.errcode = self.ENlib.ENgetnodevalue(iIndex, iCode, byref(fValue))
+        if self._project is not None:
+            fValue = ctypes.c_double()
+            self.errcode = self.ENlib.EN_getnodevalue(self._project, iIndex, iCode, byref(fValue))
+        else:
+            self.errcode = self.ENlib.ENgetnodevalue(iIndex, iCode, byref(fValue))
         self._error()
         return fValue.value
 
@@ -512,7 +611,10 @@ class ENepanet:
 
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetlinkindex(sId.encode("ascii"), byref(iIndex))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getlinkindex(self._project, sId.encode("ascii"), byref(iIndex))
+        else:
+            self.errcode = self.ENlib.ENgetlinkindex(sId.encode("ascii"), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -532,7 +634,11 @@ class ENepanet:
 
         """
         fValue = ctypes.c_float()
-        self.errcode = self.ENlib.ENgetlinkvalue(iIndex, iCode, byref(fValue))
+        if self._project is not None:
+            fValue = ctypes.c_double()
+            self.errcode = self.ENlib.EN_getlinkvalue(self._project, iIndex, iCode, byref(fValue))
+        else:
+            self.errcode = self.ENlib.ENgetlinkvalue(iIndex, iCode, byref(fValue))
         self._error()
         return fValue.value
 
@@ -572,6 +678,11 @@ class ENepanet:
         )
         self._error()
 
+    def ENsettimeparam(self, eParam, lValue):
+        self.errcode = self.ENlib.ENsettimeparam(
+            ctypes.c_int(eParam), ctypes.c_long(lValue)
+        )
+
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
 
@@ -583,7 +694,10 @@ class ENepanet:
         """
 
         inpfile = inpfile.encode("ascii")
-        self.errcode = self.ENlib.ENsaveinpfile(inpfile)
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_saveinpfile(self._project, inpfile)
+        else:
+            self.errcode = self.ENlib.ENsaveinpfile(inpfile)
         self._error()
 
         return
