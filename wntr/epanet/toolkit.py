@@ -114,6 +114,8 @@ class ENepanet:
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
 
+    This simulator is thread safe **only** for EPANET `version=2.2`.
+
     Parameters
     ----------
     inpfile : str
@@ -629,16 +631,16 @@ class ENepanet:
 
     def ENsetlinkvalue(self, iIndex, iCode, fValue):
         """
-        [summary]
+        Set the value on a link
 
         Parameters
         ----------
-        iIndex : [type]
-            [description]
-        iCode : [type]
-            [description]
-        fValue : [type]
-            [description]
+        iIndex : int
+            the link index
+        iCode : int
+            the parameter enum integer
+        fValue : float
+            the value to set on the link
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_setlinkvalue(self._project,
@@ -652,16 +654,16 @@ class ENepanet:
 
     def ENsetnodevalue(self, iIndex, iCode, fValue):
         """
-        [summary]
+        Set the value on a node
 
         Parameters
         ----------
-        iIndex : [type]
-            [description]
-        iCode : [type]
-            [description]
-        fValue : [type]
-            [description]
+        iIndex : int
+            the node index
+        iCode : int
+            the parameter enum integer
+        fValue : float
+            the value to set on the node
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_setnodevalue(self._project,
@@ -674,6 +676,16 @@ class ENepanet:
         self._error()
 
     def ENsettimeparam(self, eParam, lValue):
+        """
+        Set a time parameter value
+
+        Parameters
+        ----------
+        eParam : int
+            the time parameter to set
+        lValue : long
+            the value to set, in seconds
+        """
         if self._project is not None:
             self.errcode = self.ENlib.EN_settimeparam(
                 self._project, ctypes.c_int(eParam), ctypes.c_long(lValue)
@@ -685,6 +697,19 @@ class ENepanet:
         self._error()
 
     def ENgettimeparam(self, eParam):
+        """
+        Get a time parameter value
+
+        Parameters
+        ----------
+        eParam : int
+            the time parameter to get
+
+        Returns
+        -------
+        long
+            the value of the time parameter, in seconds
+        """
         lValue = ctypes.c_long()
         if self._project is not None:
             self.errcode = self.ENlib.EN_gettimeparam(
