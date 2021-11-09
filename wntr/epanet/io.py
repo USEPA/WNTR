@@ -1245,62 +1245,13 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_rules(self):
-        if len(self.sections['[RULES]']) > 0:
-            rules = []
-            rule = None
-            in_if = False
-            in_then = False
-            in_else = False
-            for lnum, line in self.sections['[RULES]']:
-                line = line.split(';')[0]
-                words = line.split()
-                if words == []:
-                    continue
-                if len(words) == 0:
-                    continue
-                if words[0].upper() == 'RULE':
-                    if rule is not None:
-                        rules.append(rule)
-                    rule = _EpanetRule(words[1], self.flow_units, self.mass_units)
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                elif words[0].upper() == 'IF':
-                    in_if = True
-                    in_then = False
-                    in_else = False
-                    rule.add_if(line)
-                elif words[0].upper() == 'THEN':
-                    in_if = False
-                    in_then = True
-                    in_else = False
-                    rule.add_then(line)
-                elif words[0].upper() == 'ELSE':
-                    in_if = False
-                    in_then = False
-                    in_else = True
-                    rule.add_else(line)
-                elif words[0].upper() == 'PRIORITY':
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                    rule.set_priority(words[1])
-                elif in_if:
-                    rule.add_if(line)
-                elif in_then:
-                    rule.add_then(line)
-                elif in_else:
-                    rule.add_else(line)
-                else:
-                    continue
-            if rule is not None:
-                rules.append(rule)
-            for rule in rules:
-                ctrl = rule.generate_control(self.wn)
-                self.wn.add_control(ctrl.name, ctrl)
-                logger.debug('Added %s', str(ctrl))
-            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        rules = _EpanetRule.parse_rules_lines(self.sections['[RULES]'], self.flow_units, self.mass_units)
+        for rule in rules:
+            ctrl = rule.generate_control(self.wn)
+            self.wn.add_control(ctrl.name, ctrl)
+            logger.debug('Added %s', str(ctrl))
+        # wn._en_rules = '\n'.join(self.sections['[RULES]'])
+        #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
@@ -1607,7 +1558,7 @@ class InpFile(object):
             if words is not None and len(words) > 0:
                 if len(words) < 2:
                     edata['key'] = words[0]
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                    raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
@@ -1664,7 +1615,14 @@ class InpFile(object):
                     required_pressure = to_si(self.flow_units, float(words[2]), HydParam.Pressure)
                     opts.hydraulic.required_pressure = required_pressure
                 elif key == 'PRESSURE':
-                    opts.hydraulic.pressure_exponent = float(words[2])
+                    if len(words) > 2:
+                        if words[1].upper() == 'EXPONENT':
+                            opts.hydraulic.pressure_exponent = float(words[2])
+                        else:
+                            edata['key'] = ' '.join(words)
+                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                    else:
+                        opts.hydraulic.inpfile_pressure_units = words[1]
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
@@ -1675,16 +1633,16 @@ class InpFile(object):
                             opts.hydraulic.demand_model = words[2]
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
                         edata['key'] = ' '.join(words)
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
                         opts.hydraulic.emitter_exponent = float(words[2])
                     else:
                         edata['key'] = 'EMITTER EXPONENT'
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'TOLERANCE':
                     opts.quality.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
@@ -1699,11 +1657,11 @@ class InpFile(object):
                     if len(words) == 2:
                         edata['key'] = words[0]
                         setattr(opts, words[0].lower(), float(words[1]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
+                        logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
                     elif len(words) == 3:
                         edata['key'] = words[0] + ' ' + words[1]
                         setattr(opts, words[0].lower() + '_' + words[1].lower(), float(words[2]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
+                        logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
         if (type(opts.time.report_timestep) == float or
                 type(opts.time.report_timestep) == int):
             if opts.time.report_timestep < opts.time.hydraulic_timestep:
@@ -1767,10 +1725,17 @@ class InpFile(object):
                 f.write('{:20s} {:.2f}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
 
                 required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
-                f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
-
+                if required_pressure >= 0.1: # EPANET lower limit on required pressure = 0.1 (in psi or m)
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+                else:
+                    warnings.warn('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    logger.warning('REQUIRED PRESSURE is below the lower limit for EPANET (0.1 in psi or m). The value has been set to 0.1 in the INP file.')
+                    f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', 0.1).encode('ascii'))
                 f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
-
+        
+        if wn.options.hydraulic.inpfile_pressure_units is not None:
+            f.write(entry_string.format('PRESSURE', wn.options.hydraulic.inpfile_pressure_units).encode('ascii'))
+            
         # EPANET 2.0+ OPTIONS
         f.write(entry_float.format('EMITTER EXPONENT',  wn.options.hydraulic.emitter_exponent).encode('ascii'))
 
@@ -1911,9 +1876,9 @@ class InpFile(object):
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.report.report_params[current[0].lower()][1] = True
+                    self.wn.options.report.report_params[current[0].lower()] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.report.report_params[current[0].lower()][1] = False
+                    self.wn.options.report.report_params[current[0].lower()] = False
                 else:
                     self.wn.options.report.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
@@ -2133,6 +2098,76 @@ class _EpanetRule(object):
         self._else_clauses = []
         self.priority = 0
 
+    @classmethod
+    def parse_rules_lines(cls, lines, flow_units=FlowUnits.SI, mass_units=MassUnits.mg) -> list:
+        rules = list()
+        rule = None
+        in_if = False
+        in_then = False
+        in_else = False
+        new_lines = list()
+        new_line = list()
+        for line in lines:
+            if isinstance(line, (tuple, list)):
+                line = line[1]
+            line = line.split(';')[0]
+            words = line.strip().split()
+            for word in words:
+                if word.upper() in ['RULE', 'IF', 'THEN', 'ELSE', 'AND', 'OR', 'PRIORITY']:
+                    if len(new_line) > 0:
+                        text = ' '.join(new_line)
+                        new_lines.append(text)
+                        new_line = list()
+                new_line.append(word)
+        if len(new_line) > 0:
+            text = ' '.join(new_line)
+            new_lines.append(text)
+
+        for line in new_lines:
+            words = line.split()
+            if words == []:
+                continue
+            if len(words) == 0:
+                continue
+            if words[0].upper() == 'RULE':
+                if rule is not None:
+                    rules.append(rule)
+                rule = _EpanetRule(words[1], flow_units, mass_units)
+                in_if = False
+                in_then = False
+                in_else = False
+            elif words[0].upper() == 'IF':
+                in_if = True
+                in_then = False
+                in_else = False
+                rule.add_if(line)
+            elif words[0].upper() == 'THEN':
+                in_if = False
+                in_then = True
+                in_else = False
+                rule.add_then(line)
+            elif words[0].upper() == 'ELSE':
+                in_if = False
+                in_then = False
+                in_else = True
+                rule.add_else(line)
+            elif words[0].upper() == 'PRIORITY':
+                in_if = False
+                in_then = False
+                in_else = False
+                rule.set_priority(words[1])
+            elif in_if:
+                rule.add_if(line)
+            elif in_then:
+                rule.add_then(line)
+            elif in_else:
+                rule.add_else(line)
+            else:
+                continue
+        if rule is not None:
+            rules.append(rule)
+        return rules
+
     def from_if_then_else(self, control):
         """Create a rule from a Rule object"""
         if isinstance(control, Rule):
@@ -2300,14 +2335,14 @@ class _EpanetRule(object):
     def __str__(self):
         if self.priority >= 0:
             if len(self._else_clauses) > 0:
-                return 'RULE {}\n{}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
+                return 'RULE {}\n{}\n{}\n{}\n PRIORITY {}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
             else:
-                return 'RULE {}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
+                return 'RULE {}\n{}\n{}\n PRIORITY {}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
         else:
             if len(self._else_clauses) > 0:
-                return 'RULE {}\n{}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
+                return 'RULE {}\n{}\n{}\n{}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
             else:
-                return 'RULE {}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
+                return 'RULE {}\n{}\n{}\n ; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
 
     def generate_control(self, model):
         condition_list = []

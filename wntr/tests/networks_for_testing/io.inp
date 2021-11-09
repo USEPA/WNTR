@@ -85,7 +85,12 @@ link p1 open at clocktime 22
  Pattern            	pattern1
  Demand Multiplier  	1.0
  Tolerance          	0.01
-
+ Demand Model           PDA
+ Minimum Pressure       0
+ Required Pressure      20
+ Pressure Exponent      0.5
+ Pressure               psi
+ 
 [REPORT]
  Status             	Yes
  Summary            	No

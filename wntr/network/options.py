@@ -116,16 +116,16 @@ class TimeOptions(_OptionsBase):
     duration : int
         Simulation duration (seconds), by default 0.
 
-    hydraulic_timestep : int
+    hydraulic_timestep : int >= 1
         Hydraulic timestep (seconds), by default 3600 (one hour).
 
-    quality_timestep : int
+    quality_timestep : int >= 1
         Water quality timestep (seconds), by default 360 (five minutes).
 
-    rule_timestep : int
+    rule_timestep : int >= 1
         Rule timestep (seconds), by default 360 (five minutes).
 
-    pattern_timestep : int
+    pattern_timestep : int >= 1
         Pattern timestep (seconds), by default 3600 (one hour).
 
     pattern_start : int
@@ -133,7 +133,7 @@ class TimeOptions(_OptionsBase):
         where in pattern the pattern starts out, *not* what time the pattern 
         starts, by default 0.
 
-    report_timestep : int
+    report_timestep : int >= 1
         Reporting timestep (seconds), by default 3600 (one hour).
 
     report_start : int
@@ -146,7 +146,25 @@ class TimeOptions(_OptionsBase):
         Provide statistics rather than time series report in the report file.
         Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
         EPANET User Manual). Defaults to "NONE".
-    
+
+    pattern_interpolation: bool 
+        **Only used by the WNTRSimulator**. Defaults to False. If True, interpolation will
+        be used determine pattern values between pattern timesteps. If
+        False, patterns cause step-like behavior where the pattern
+        value corresponding to the most recent pattern timestep is
+        used until the next pattern timestep. For example, given the
+        pattern [1, 1.2, 1.6], a pattern timestep of 1 hour, and a
+        pattern_interpolation value of False, a value of 1 is used at
+        0 hours and every time strictly less than 1 hour. A value of
+        1.2 is used at hour 1 and every time strictly less than 2
+        hours. With a pattern_interpolation value of True, a value of
+        1 is used at 0 hours and a value of 1.2 is used at 1
+        hour. However, at an intermediat time such as 0.5 hours,
+        interpolation is used, resulting in a value of 1.1. Using
+        interpolation with a shorter hydraulic_timestep can make
+        problems with large changes in patterns (e.g., large changes
+        in demand) easier to solve.
+
     """
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -161,7 +179,8 @@ class TimeOptions(_OptionsBase):
                 report_timestep: int=3600,
                 report_start: int=0,
                 start_clocktime: int=0,
-                statistic: str='NONE'):
+                statistic: str='NONE',
+                pattern_interpolation: bool = False):
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
@@ -172,21 +191,27 @@ class TimeOptions(_OptionsBase):
         self.report_start = report_start
         self.start_clocktime = start_clocktime
         self.statistic = statistic
+        self.pattern_interpolation = pattern_interpolation
 
     def __setattr__(self, name, value):
         if name == 'statistic':
             value = str.upper(value)
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
                 raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
-        elif name not in ['report_timestep']:
+        elif name in {'hydraulic_timestep', 'quality_timestep', 'rule_timestep', 
+                        'pattern_timestep'}:
+            try:
+                value = max(1, int(value))
+            except ValueError:
+                raise ValueError('%s must be an integer >= 1'%name)
+        elif name not in {'duration', 'pattern_start', 'report_start', 'report_timestep',
+                            'start_clocktime', 'pattern_interpolation'}:
+            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
+        elif name not in {'report_timestep', 'pattern_interpolation'}:
             try:
                 value = float(value)
             except ValueError:
                 raise ValueError('%s must be a number'%name)
-        elif name not in ['duration', 'hydraulic_timestep', 'quality_timestep', 'rule_timestep',
-                            'pattern_timestep', 'pattern_start', 'report_timestep', 'report_start',
-                            'start_clocktime', 'statistic']:
-            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
         self.__dict__[name] = value
 
 
@@ -340,6 +365,8 @@ class HydraulicOptions(_OptionsBase):
         the INP file -- it has **no impact** on the units used in WNTR, which are 
         **always** SI units (m, kg, s).
     
+    inpfile_pressure_units: str
+        Pressure units for the INP file, by default None (uses pressure units from inpfile_units)
 
     """
     def __init__(self,
@@ -364,7 +391,8 @@ class HydraulicOptions(_OptionsBase):
                  damplimit: int = 0,
                  headerror: float = 0,
                  flowchange: float = 0,
-                 inpfile_units: str = 'GPM'):
+                 inpfile_units: str = 'GPM',
+                 inpfile_pressure_units: str = None):
         self.headloss = headloss
         self.hydraulics = hydraulics
         self.hydraulics_filename = hydraulics_filename
@@ -387,6 +415,7 @@ class HydraulicOptions(_OptionsBase):
         self.headerror = headerror
         self.flowchange = flowchange
         self.inpfile_units = inpfile_units
+        self.inpfile_pressure_units = inpfile_pressure_units
 
     def __setattr__(self, name, value):
         if name == 'headloss':
@@ -413,6 +442,8 @@ class HydraulicOptions(_OptionsBase):
             value = str.upper(value)
             if value not in ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD']:
                 raise ValueError('inpfile_units = "%s" is not a valid EPANET unit code', value)
+        elif name == 'inpfile_pressure_units' and isinstance(value, str):
+            value = str.upper(value)
         elif name == 'unbalanced_value':
             try:
                 value = _int_or_None(value)
@@ -423,7 +454,7 @@ class HydraulicOptions(_OptionsBase):
                 value = int(value)
             except ValueError:
                 raise ValueError('%s must be an integer', name)
-        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units']:
+        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units', 'inpfile_pressure_units']:
             try:
                 value = float(value)
             except ValueError:
@@ -432,7 +463,7 @@ class HydraulicOptions(_OptionsBase):
                         'pattern', 'demand_multiplier', 'demand_model', 'minimum_pressure', 'required_pressure',
                         'pressure_exponent', 'emitter_exponent', 'trials', 'accuracy', 'unbalanced', 
                         'unbalanced_value', 'checkfreq', 'maxcheck', 'damplimit', 'headerror',
-                        'flowchange', 'inpfile_units']:
+                        'flowchange', 'inpfile_units', 'inpfile_pressure_units']:
             raise AttributeError('%s is not a valid attribute of HydraulicOptions'%name)
         self.__dict__[name] = value
 
