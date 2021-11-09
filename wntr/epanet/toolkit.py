@@ -960,7 +960,7 @@ class ENepanet_22:
         Value of node's parameter
 
         """
-        fValue = ctypes.c_float()
+        fValue = ctypes.c_double()
         self.errcode = self.ENlib.EN_getnodevalue(self._proj, iIndex, iCode, byref(fValue))
         self._error()
         return fValue.value
@@ -998,7 +998,7 @@ class ENepanet_22:
         Value of link's parameter
 
         """
-        fValue = ctypes.c_float()
+        fValue = ctypes.c_double()
         self.errcode = self.ENlib.EN_getlinkvalue(self._proj, iIndex, iCode, byref(fValue))
         self._error()
         return fValue.value
