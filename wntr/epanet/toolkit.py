@@ -640,9 +640,14 @@ class ENepanet:
         fValue : [type]
             [description]
         """
-        self.errcode = self.ENlib.ENsetlinkvalue(
-            ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
-        )
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_setlinkvalue(self._project,
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENsetlinkvalue(
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+            )
         self._error()
 
     def ENsetnodevalue(self, iIndex, iCode, fValue):
@@ -658,15 +663,39 @@ class ENepanet:
         fValue : [type]
             [description]
         """
-        self.errcode = self.ENlib.ENsetnodevalue(
-            ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
-        )
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_setnodevalue(self._project,
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENsetnodevalue(
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+            )
         self._error()
 
     def ENsettimeparam(self, eParam, lValue):
-        self.errcode = self.ENlib.ENsettimeparam(
-            ctypes.c_int(eParam), ctypes.c_long(lValue)
-        )
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_settimeparam(
+                self._project, ctypes.c_int(eParam), ctypes.c_long(lValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENsettimeparam(
+                ctypes.c_int(eParam), ctypes.c_long(lValue)
+            )
+        self._error()
+
+    def ENgettimeparam(self, eParam):
+        lValue = ctypes.c_long()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_gettimeparam(
+                self._project, ctypes.c_int(eParam), byref(lValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENgettimeparam(
+                ctypes.c_int(eParam), byref(lValue)
+            )
+        self._error()
+        return lValue.value
 
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file

@@ -37,6 +37,18 @@ class TestEpanetToolkit(unittest.TestCase):
             flowunit = enData.ENgetflowunits()
             assert(flowunit==1) # GPM
         
+    def test_EN_timeparam(self):
+        for version in [2.0, 2.2,]:
+            enData = wntr.epanet.toolkit.ENepanet(version=version)
+            enData.inpfile = join(datadir, "Net1.inp")
+            enData.ENopen(enData.inpfile, "temp.rpt")
+            
+            duration = enData.ENgettimeparam(0)
+            assert(duration==86400) # s
+            enData.ENsettimeparam(0, 200)
+            duration = enData.ENgettimeparam(0)
+            assert(duration==200)
+        
     def test_ENgetindex_ENgetvalue(self):
         for version in [2.0, 2.2,]:
             enData = wntr.epanet.toolkit.ENepanet(version=version)
@@ -47,11 +59,18 @@ class TestEpanetToolkit(unittest.TestCase):
             assert(node_index == 1) 
             node_val = enData.ENgetnodevalue(node_index, 0) # ELEVATION = 0
             assert(node_val == 710) 
+            enData.ENsetnodevalue(node_index, 0, 170.5)
+            node_val = enData.ENgetnodevalue(node_index, 0) # ELEVATION = 0
+            assert(node_val == 170.5) 
+            
             
             link_index = enData.ENgetlinkindex('11') 
             assert(link_index == 2) 
             link_val = enData.ENgetlinkvalue(link_index, 0) # DIAMETER = 0
             assert(link_val == 14) 
+            enData.ENsetlinkvalue(link_index, 0, 16.5)
+            link_val = enData.ENgetlinkvalue(link_index, 0) # DIAMETER = 0
+            assert(link_val == 16.5) 
         
     def test_ENsaveinpfile(self):
         for version in [2.0, 2.2,]:
