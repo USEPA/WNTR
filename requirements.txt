@@ -13,5 +13,6 @@ openpyxl
 
 # Testing
 nose
-nbconvert
 nbformat
+nbconvert
+ 
