@@ -61,12 +61,13 @@ class WaterNetworkModel(AbstractModel):
         self._pattern_reg = PatternRegistry(self)
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
-        self._sources = OrderedDict()
+        self._sources = SourceRegistry(self)
 
         self._node_reg._finalize_(self)
         self._link_reg._finalize_(self)
         self._pattern_reg._finalize_(self)
         self._curve_reg._finalize_(self)
+        self._sources._finalize_(self)
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
 

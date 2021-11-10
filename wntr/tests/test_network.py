@@ -784,6 +784,10 @@ class TestCase(unittest.TestCase):
         expected = [93, 4, 3, 118, 3, 1, 6, 3, 1]
         self.assertListEqual(nums, expected)
 
+        # Verify that runtime errors occur when there is a node/pattern still in use
+        self.assertRaises(RuntimeError, wn.remove_node, "new_junc")
+        self.assertRaises(RuntimeError, wn.remove_pattern, "1")
+
         wn.remove_source("new_source")
         wn.remove_curve("new_curve")
         wn.remove_pattern("new_pattern")
