@@ -9,6 +9,7 @@ model.
     WaterNetworkModel
     PatternRegistry
     CurveRegistry
+    SourceRegistry
     NodeRegistry
     LinkRegistry
 
@@ -1950,6 +1951,30 @@ class CurveRegistry(Registry):
     def volume_curve_names(self):
         """List of names of all volume curves"""
         return list(self._volume_curves)
+
+
+class SourceRegistry(Registry):
+    """A registry for sources."""
+    def _finalize_(self, model):
+        super()._finalize_(model)
+        self._sources = None
+
+    def __delitem__(self, key):
+        try:
+            if self._usage and key in self._usage and len(self._usage[key]) > 0:
+                raise RuntimeError('cannot remove %s %s, still used by %s'%( 
+                                   self.__class__.__name__,
+                                   key,
+                                   self._usage[key]))
+            elif key in self._usage:
+                self._usage.pop(key)
+            source = self._data.pop(key)
+            self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+            self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
+            return source
+        except KeyError:
+            # Do not raise an exception if there is no key of that name
+            return
 
 
 class NodeRegistry(Registry):
