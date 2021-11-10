@@ -10,4 +10,10 @@ plotly
 folium
 utm
 openpyxl
+
+# Testing
 nose
+ipykernel
+nbformat
+nbconvert
+ 
