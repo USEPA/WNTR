@@ -9,13 +9,13 @@ model.
     WaterNetworkModel
     PatternRegistry
     CurveRegistry
-    SourceRegistry
     NodeRegistry
     LinkRegistry
 
 """
 import logging
 import sys
+import json
 from collections import OrderedDict
 from collections.abc import MutableSequence
 
@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import six
 import wntr.epanet
+from wntr.epanet.util import FlowUnits
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -1100,17 +1101,237 @@ class WaterNetworkModel(AbstractModel):
                 
         return d
     
-    def todict(self):
-        """Dictionary representation of the water network model"""
-        d = dict(options=self._options.todict(),
-                 nodes=self._node_reg.tolist(),
-                 links=self._link_reg.tolist(),
-                 curves=self._curve_reg.tolist(),
-                 controls=self._controls,
-                 patterns=self._pattern_reg.tolist()
+    def to_dict(self):
+        """Dictionary representation of the water network model.
+        
+        Returns
+        -------
+        dict
+            the water network model as a dictionary
+        """
+        from wntr import __version__
+        controls = list()
+        for k, c in self._controls.items():
+            cc = c.to_dict()
+            if "name" in cc.keys() and not cc["name"]:
+                cc["name"] = k
+            controls.append(cc)
+        d = dict(version="wntr-{}".format(__version__),
+                 comment="WaterNetworkModel - all values given in SI units",
+                 name=self.name,
+                 options=self._options.to_dict(),
+                 curves=self._curve_reg.to_list(),
+                 patterns=self._pattern_reg.to_list(),
+                 nodes=self._node_reg.to_list(),
+                 links=self._link_reg.to_list(),
+                 sources=[s.to_dict() for k, s in self._sources.items()],
+                 controls=controls,
                  )
         return d
+
+    def write_json(self, f):
+        """
+        Write the WaterNetworkModel as a 
+
+        Parameters
+        ----------
+        f : str or file
+            destination file for the wntr model
+        """
+        if isinstance(f, str):
+            with open(f, 'w') as fout:
+                json.dump(self.to_dict(), fout)
+        else:
+            json.dump(self.to_dict(), f)
     
+    @classmethod
+    def from_dict(cls, d: dict):
+        """
+        Create a WaterNetworkModel from a dictionary model.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary containing WaterNetworkModel model
+
+        Returns
+        -------
+        WaterNetworkModel
+            the new wntr object
+        """
+        from wntr import __version__
+        from wntr.epanet.io import _read_control_line, _EpanetRule
+        keys = [
+            "version", 
+            "comment", 
+            "name", 
+            "options", 
+            "curves", 
+            "patterns", 
+            "nodes", 
+            "links", 
+            "sources", 
+            "controls",
+        ]
+        for key in keys:
+            if key not in d:
+                logger.warning("Dictionary model missing key '{}'".format(key))
+        wn = cls()
+        if "name" in d:
+            wn.name = d["name"]
+        if "options" in d:
+            wn.options.__init__(**d["options"])
+        if "curves" in d:
+            for curve in d["curves"]:
+                wn.add_curve(name=curve["name"], curve_type=curve["curve_type"], xy_tuples_list=curve["points"])
+        if "patterns" in d:
+            for pattern in d["patterns"]:
+                wn.add_pattern(name=pattern["name"], pattern=pattern["multipliers"])
+        if "nodes" in d:
+            for node in d["nodes"]:
+                name = node["name"]
+                if node["node_type"] == "Junction":
+                    dl = node.setdefault("demand_timeseries_list")
+                    if dl is not None and len(dl) > 0:
+                        base_demand = dl[0].setdefault("base_val", 0.0)
+                        pattern_name = dl[0].setdefault("pattern_name")
+                        category = dl[0].setdefault("category")
+                    else:
+                        base_demand = 0.0
+                        pattern_name = None
+                        category = None
+                    wn.add_junction(
+                        name=name,
+                        base_demand=base_demand,
+                        demand_pattern=pattern_name,
+                        elevation=node.setdefault("elevation"),
+                        coordinates=node.setdefault("coordinates", list()),
+                        demand_category=category
+                    )
+                    j = wn.get_node(name)
+                    j.emitter_coefficient = node.setdefault("emitter_coefficient")
+                    j.initial_quality = node.setdefault("initial_quality")
+                    j.minimum_pressure = node.setdefault("minimum_pressure")
+                    j.pressure_exponent = node.setdefault("pressure_exponent")
+                    j.required_pressure = node.setdefault("required_pressure")
+                    j.tag = node.setdefault("tag")
+                    if dl is not None and len(dl) > 1:
+                        for i in range(1, len(dl)):
+                            base_val = dl[i].setdefault("base_val", 0.0)
+                            pattern_name = dl[i].setdefault("pattern_name")
+                            category = dl[i].setdefault("category")
+                            j.add_demand(base_val, pattern_name, category)
+                elif node["node_type"] == "Tank":
+                    coordinates = node.setdefault("coordinates")
+
+                    wn.add_tank(name, elevation=node.setdefault("elevation"), init_level=node.setdefault("init_level", node.setdefault("min_level", 0)), max_level=node.setdefault("max_level",node.setdefault("min_level", 0)+10), diameter=node.setdefault("diameter", 0), min_level=node.setdefault("min_level", 0), vol_curve=node.setdefault("vol_curve_name"), overflow=node.setdefault("overflow", False), coordinates=coordinates)
+                    t = wn.get_node(name)
+                    t.initial_quality = node.setdefault("initial_quality", 0.0)
+                    if node.setdefault("mixing_fraction"): t.mixing_fraction = node.setdefault("mixing_fraction")
+                    if node.setdefault("mixing_model"): t.mixing_model = node.setdefault("mixing_model")
+                    t.tag = node.setdefault("tag")
+                    t.bulk_coeff = node.setdefault("bulk_coeff")
+                elif node["node_type"] == "Reservoir":
+                    wn.add_reservoir(name, base_head=node.setdefault("base_head"), head_pattern=node.setdefault("head_pattern_name"), coordinates=node.setdefault("coordinates"))
+                    r = wn.get_node(name)
+                    r.initial_quality = node.setdefault("initial_quality", 0.0)
+                    r.tag = node.setdefault("tag")
+                else:
+                    raise ValueError("Illegal node type '{}'".format(node["node_type"]))
+        if "links" in d:
+            for link in d["links"]:
+                name = link["name"]
+                if link["link_type"] == "Pipe":
+                    wn.add_pipe(name, link["start_node_name"], end_node_name=link["end_node_name"], length=link.setdefault("length", 304.8), diameter=link.setdefault("diameter", 0.3048), roughness=link.setdefault("roughness", 100.0), minor_loss=link.setdefault("minor_loss", 0.0), initial_status=link.setdefault("initial_status", 'OPEN'), check_valve=link.setdefault("check_valve", False))
+                    p = wn.get_link(name)
+                    p.bulk_coeff = link.setdefault("bulk_coeff")
+                    p.tag = link.setdefault("tag")
+                    p.vertices = link.setdefault("vertices", list())
+                    p.wall_coeff = link.setdefault("wall_coeff")
+                elif link["link_type"] == "Pump":
+                    pump_type = link.setdefault("pump_type", "POWER")
+                    wn.add_pump(name, link["start_node_name"], link["end_node_name"], pump_type=pump_type, pump_parameter=link.setdefault("power") if pump_type.lower() == "power" else link.setdefault("pump_curve_name"), speed=link.setdefault("base_speed", 1.0), pattern=link.setdefault("speed_pattern_name"),initial_status=link.setdefault("initial_status", "OPEN"))
+                    p = wn.get_link(name)
+                    p.efficiency = link.setdefault("efficiency")
+                    p.energy_pattern = link.setdefault("energy_pattern")
+                    p.energy_price = link.setdefault("energy_price")
+                    p.initial_setting = link.setdefault("initial_setting")
+                    p.tag = link.setdefault("tag")
+                    p.vertices = link.setdefault("vertices", list())
+                elif link["link_type"] == "Valve":
+                    valve_type = link["valve_type"]
+                    wn.add_valve(name, link["start_node_name"], link["end_node_name"], diameter=link.setdefault("diameter", 0.3048), valve_type=valve_type, minor_loss=link.setdefault("minor_loss", 0), initial_setting=link.setdefault("initial_setting",0), initial_status=link.setdefault("initial_status", "ACTIVE"))
+                    v = wn.get_link(name)
+                    if valve_type.lower() == "gpv":
+                        v.headloss_curve_name = link.setdefault("headloss_curve_name")
+                else:
+                    raise ValueError("Illegal link type '{}'".format(link["link_type"]))
+        if "sources" in d:
+            for source in d["sources"]:
+                wn.add_source(source["name"],
+                node_name=source["node_name"], 
+                source_type=source["source_type"],
+                quality=source["strength"],
+                pattern=source["pattern"])
+        if "controls" in d:  # TODO: FIXME: FINISH
+            control_count = 0
+            for control in d["controls"]:
+                ctrl_type = control["type"]
+                if ctrl_type.lower() == "simple":
+                    control_count += 1
+                    control_name = 'control '+str(control_count)
+                    ta = control["then_actions"][0].split()
+                    tstring = ' '.join([ta[0], ta[1], ta[4]])
+                    cond = control["condition"].split()
+                    if cond[0].lower() == 'system':
+                        cstr = ' '.join(["AT", cond[1], cond[3], cond[4] if len(cond)>4 else ""])
+                    else:
+                        cstr = ' '.join(["IF", cond[0], cond[1], cond[3], cond[4]])
+                    ctrl = _read_control_line(tstring + " " + cstr, wn, FlowUnits.SI, control_name)
+                    wn.add_control(control_name, ctrl)
+                elif ctrl_type.lower() == "rule":
+                    ctrllst = ["RULE"]
+                    control_name = control["name"]
+                    ctrllst.append(control["name"])
+                    ctrllst.append("IF")
+                    ctrllst.append(control["condition"])
+                    thenact = ' AND '.join(control["then_actions"])
+                    ctrllst.append("THEN")
+                    ctrllst.append(thenact)
+                    if "else_actions" in control and control["else_actions"]:
+                        ctrllst.append("ELSE")
+                        ctrllst.append(" AND ".join(control["else_actions"]))
+                    ctrllst.append("PRIORITY")
+                    ctrllst.append(str(control["priority"]))
+                    ctrlstring = ' '.join(ctrllst)
+                    c = _EpanetRule.parse_rules_lines([ctrlstring])
+                    wn.add_control(control_name, c[0].generate_control(wn))
+                else:
+                    raise ValueError("Illegal control type '{}'".format(ctrl_type))
+        return wn
+
+    @classmethod
+    def read_json(cls, f):
+        """
+        Create a water network model from a JSON file.
+
+        Parameters
+        ----------
+        f : str or file
+            filename or file pointer
+
+        Returns
+        -------
+        WaterNetworkModel
+        """
+        if isinstance(f, str):
+            with open(f, 'r') as fin:
+                d = json.load(fin)
+        else:
+            d = json.load(f)
+        return cls.from_dict(d)
+        
+
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
         Returns a networkx MultiDiGraph of the water network model
@@ -1698,17 +1919,6 @@ class PatternRegistry(Registry):
         """A new default pattern object"""
         return self.DefaultPattern(self._options)
 
-#    def tostring(self):
-#        """String representation of the pattern registry"""
-#        s  = 'Pattern Registry:\n'
-#        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
-#        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
-#        if len(self.orphaned()) > 0:
-#            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
-
 
 class CurveRegistry(Registry):
     """A registry for curves."""
@@ -1871,46 +2081,6 @@ class CurveRegistry(Registry):
         """List of names of all volume curves"""
         return list(self._volume_curves)
 
-#    def tostring(self):
-#        """String representation of the curve registry"""
-#        s  = 'Curve Registry:\n'
-#        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
-#        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
-#        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
-#        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
-#        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
-#        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
-#        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
-
-
-class SourceRegistry(Registry):
-    """A registry for sources."""
-    def _finalize_(self, model):
-        super()._finalize_(model)
-        self._sources = None
-
-    def __delitem__(self, key):
-        try:
-            if self._usage and key in self._usage and len(self._usage[key]) > 0:
-                raise RuntimeError('cannot remove %s %s, still used by %s'%( 
-                                   self.__class__.__name__,
-                                   key,
-                                   self._usage[key]))
-            elif key in self._usage:
-                self._usage.pop(key)
-            source = self._data.pop(key)
-            self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
-            self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
-            return source
-        except KeyError:
-            # Do not raise an exception if there is no key of that name
-            return
-
 
 class NodeRegistry(Registry):
     """A registry for nodes."""
@@ -2023,7 +2193,7 @@ class NodeRegistry(Registry):
         assert isinstance(base_demand, (int, float)), "base_demand must be a float"
         assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
         assert isinstance(elevation, (int, float)), "elevation must be a float"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
         assert isinstance(emitter_coeff, (type(None), int, float)), "emitter_coeff must be a float"
         assert isinstance(initial_quality, (type(None), int, float)), "initial_quality must be a float"
@@ -2084,7 +2254,7 @@ class NodeRegistry(Registry):
         assert isinstance(min_vol, (int, float)), "min_vol must be a float"
         assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
         assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         
         elevation = float(elevation)
         init_level = float(init_level)
@@ -2145,7 +2315,7 @@ class NodeRegistry(Registry):
         assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(base_head, (int, float)), "base_head must be float"
         assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple, list))), "coordinates must be a tuple"
         
         base_head = float(base_head)
 
@@ -2212,19 +2382,6 @@ class NodeRegistry(Registry):
         """
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
-
-#    def tostring(self):
-#        """String representation of the node registry"""
-#        s  = 'Node Registry:\n'
-#        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
-#        s += '    Junctions:      {}\n'.format(len(self.junction_names))
-#        s += '    Tanks:          {}\n'.format(len(self.tank_names))
-#        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 
 
 class LinkRegistry(Registry):
@@ -2754,44 +2911,4 @@ class LinkRegistry(Registry):
         """
         for name in self._gpvs:
             yield name, self._data[name]
-
-#    def tostring(self):
-#        """String representation of the link registry"""
-#        s  = 'Link Registry:\n'
-#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
-#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-#        ct_cv = sum([ 1 for n in self.check_valves()])
-#        if ct_cv:
-#            s += '      Check valves:     {}\n'.format(ct_cv)
-#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-#        ct_cp = len(self._power_pumps)
-#        ct_hc = len(self._head_pumps)
-#        if ct_cp:
-#            s += '      Constant power:   {}\n'.format(ct_cp)
-#        if ct_hc:
-#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
-#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
-#        PRV = len(self._prvs)
-#        PSV = len(self._psvs)
-#        PBV = len(self._pbvs)
-#        FCV = len(self._fcvs)
-#        TCV = len(self._tcvs)
-#        GPV = len(self._gpvs)
-#        if PRV:
-#            s += '      Pres. reducing:   {}\n'.format(PRV)
-#        if PSV:
-#            s += '      Pres. sustaining: {}\n'.format(PSV)
-#        if PBV:
-#            s += '      Pres. breaker:    {}\n'.format(PBV)
-#        if FCV:
-#            s += '      Flow control:     {}\n'.format(FCV)
-#        if TCV:
-#            s += '      Throttle control: {}\n'.format(TCV)
-#        if GPV:
-#            s += '      General purpose:  {}\n'.format(GPV)
-#        if len(self.orphaned()) > 0:
-#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 

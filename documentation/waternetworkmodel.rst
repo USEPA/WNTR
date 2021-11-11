@@ -271,6 +271,25 @@ EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
 
     >>> wn.write_inpfile('filename.inp', version=2.2)
 
+Read and write a model to a dictionary or JSON file
+---------------------------------------------------
+
+The water network model can be convernted to a dictionary representation.
+The dictionary will contain keys for options, nodes, links, patterns, curves, sources, and controls (and rules).
+Each of these entries will be a dictionary or list of dictionaries representing the individual
+objects. The keys of these object dictionaries correspond to the attributes of the objects.
+
+Dictonary representations of the model are always written in SI units (m, kg, s).
+To get the dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.to_dict` function on the model.
+To create a water network model from a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.from_dict` function.
+
+The JSON (JavaScript Object Notation) file is just a formatted version of the dictionary.
+The JSON functions :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` wrap 
+the dictionary functions with the Python standard library JSON loader and dumper.
+
+Please note that these functions do not check for a valid dictionary/JSON schema prior to trying to build a new model.
+They will simply ignore extraneous or invalid dictionary keys which will be lost if the new water network model is re-exported.
+
 Build a model from scratch
 ---------------------------------
 
