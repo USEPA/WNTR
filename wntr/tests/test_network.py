@@ -957,7 +957,7 @@ class TestNetworkDict(unittest.TestCase):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
             A = wn.to_dict()
-            B = self.wntr.network.WaterNetworkModel.from_dict(A)
+            B = self.wntr.network.from_dict(A)
             assert(wn._compare(B))
 
     def test_json_roundtrip(self):
