@@ -266,17 +266,33 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         else:
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the node"""
         d = {}
+        d['name'] = self.name
+        d['node_type'] = self.node_type
         for k in dir(self):
-            if not k.startswith('_'):
+            if not k.startswith('_') and \
+              k not in ['demand', 'base_demand', 'head', 'leak_area', 'leak_demand',
+                        'leak_discharge_coeff', 'leak_status', 'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
                 try:
                     val = getattr(self, k)
                     if not isinstance(val, types.MethodType):
-                        d[k] = val
+                        if hasattr(val, "to_ref"):
+                            d[k] = val.to_ref()
+                        elif hasattr(val, "to_list"):
+                            d[k] = val.to_list()
+                        elif hasattr(val, "to_dict"):
+                            d[k] = val.to_dict()
+                        elif isinstance(val, (enum.IntEnum, enum.Enum)):
+                            d[k] = str(val)
+                        else:
+                            d[k] = val
                 except DeprecationWarning: pass
         return d
+
+    def to_ref(self):
+        return self._name
 
 
 class Link(six.with_metaclass(abc.ABCMeta, object)):
@@ -525,15 +541,40 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
                 raise ValueError('vertices must be a list of 2-tuples')
         self._vertices = points
     
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the link"""
         d = {}
+        d['name'] = self.name
+        d['link_type'] = self.link_type
+        d['start_node_name'] = self.start_node_name
+        d['end_node_name'] = self.end_node_name
+        if hasattr(self, 'pump_type'):
+            d['pump_type'] = self.pump_type
+        if hasattr(self, 'valve_type'):
+            d['valve_type'] = self.valve_type
         for k in dir(self):
-            if not k.startswith('_'):
+            if not k.startswith('_') and k not in [
+                'flow', 'cv', 'friction_factor', 'headloss',
+                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries',
+            ]:
                 val = getattr(self, k)
                 if not isinstance(val, types.MethodType):
-                    d[k] = val
+                    if hasattr(val, "to_ref"):
+                        if hasattr(self, k+"_name") and getattr(self, k+"_name") is not None:
+                            continue
+                        d[k] = val.to_ref()
+                    elif hasattr(val, "to_list"):
+                        d[k] = val.to_list()
+                    elif hasattr(val, "to_dict"):
+                        d[k] = val.to_dict()
+                    elif isinstance(val, (enum.IntEnum, enum.Enum)):
+                        d[k] = str(val)
+                    else:
+                        d[k] = val
         return d
+
+    def to_ref(self):
+        return self._name
 
 
 class Registry(MutableMapping):
@@ -696,18 +737,18 @@ class Registry(MutableMapping):
         if len(self._usage[key]) < 1:
             self._usage.pop(key)
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the registry"""
         d = dict()
         for k, v in self._data.items():
-            d[k] = v.todict()
+            d[k] = v.to_dict()
         return d
     
-    def tolist(self):
+    def to_list(self):
         """List representation of the registry"""
         l = list()
         for k, v in self._data.items():
-            l.append(v.todict())
+            l.append(v.to_dict())
         return l
 
 

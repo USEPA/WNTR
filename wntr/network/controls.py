@@ -345,7 +345,7 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
 
     def _repr_value(self, attr, value):
         if attr.lower() in ['status'] and int(value) == value:
-            return LinkStatus(int(value)).name
+            return LinkStatus(int(value)).name.upper()
         return value
 
     @classmethod
@@ -481,7 +481,7 @@ class TimeOfDayCondition(ControlCondition):
                           repr(self._repeat), repr(self._first_day))
 
     def __str__(self):
-        fmt = 'clock_time {:s} "{}"'.format(self._relation.symbol,
+        fmt = 'SYSTEM CLOCKTIME {:s} {}'.format(self._relation.text.upper(),
                                           self._sec_to_clock(self._threshold))
         if not self._repeat:
             fmt = '( ' + ' && clock_day == {} )'.format(self._first_day)
@@ -607,7 +607,7 @@ class SimTimeCondition(ControlCondition):
                           repr(self._repeat), repr(self._first_time))
 
     def __str__(self):
-        fmt = '{} {} sec'.format(self._relation.symbol, self._threshold)
+        fmt = 'SYSTEM TIME {} {}'.format(self._relation.text.upper(), self._sec_to_hours_min_sec(self._threshold))
         if self._repeat is True:
             fmt = '% 86400.0 ' + fmt
         elif self._repeat > 0:
@@ -615,7 +615,7 @@ class SimTimeCondition(ControlCondition):
         if self._first_time > 0:
             fmt = '(sim_time - {:d}) '.format(int(self._first_time)) + fmt
         else:
-            fmt = 'sim_time ' + fmt
+            fmt = '' + fmt
         return fmt
 
     def requires(self):
@@ -730,13 +730,17 @@ class ValueCondition(ControlCondition):
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
+        if 'Pump' in typ:
+            typ = 'Pump'
+        elif 'Valve' in typ:
+            typ = 'Valve'
         obj = str(self._source_obj)
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name
         att = self._source_attr
-        rel = self._relation.symbol
+        rel = self._relation.text
         val = self._repr_value(att, self._threshold)
-        return "{}('{}').{} {} {}".format(typ, obj, att, rel, val)
+        return "{} {} {} {} {}".format(typ.upper(), obj, att.upper(), rel.upper(), val)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -1013,7 +1017,7 @@ class OrCondition(ControlCondition):
         return True
 
     def __str__(self):
-        return "( " + str(self._condition_1) + " || " + str(self._condition_2) + " )"
+        return " " + str(self._condition_1) + " OR " + str(self._condition_2) + " "
 
     def __repr__(self):
         return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
@@ -1079,7 +1083,7 @@ class AndCondition(ControlCondition):
         return True
 
     def __str__(self):
-        return "( "+ str(self._condition_1) + " && " + str(self._condition_2) + " )"
+        return " "+ str(self._condition_1) + " AND " + str(self._condition_2) + " "
 
     def __repr__(self):
         return 'And({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
@@ -1751,14 +1755,14 @@ class ControlAction(BaseControlAction):
         return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj), str(self._attribute), str(self._repr_value()))
 
     def __str__(self):
-        return "set {}('{}').{} to {}".format(self._target_obj.__class__.__name__,
+        return "{} {} {} IS {}".format(self._target_obj.link_type.upper(),
                                        self._target_obj.name,
-                                       self._attribute,
+                                       self._attribute.upper(),
                                        self._repr_value())
 
     def _repr_value(self):
         if self._attribute.lower() in ['status']:
-            return LinkStatus(int(self._value)).name
+            return LinkStatus(int(self._value)).name.upper()
         return self._value
 
     def run_control_action(self):
@@ -1997,6 +2001,21 @@ class Rule(ControlBase):
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
 
+    def to_dict(self):
+        ret = dict()
+        if self._control_type == _ControlType.rule:
+            ret['type'] = 'rule'
+            ret['name'] = str(self._name)
+            ret['condition'] = str(self._condition)
+            ret['then_actions'] = [str(a) for a in self._then_actions]
+            ret['else_actions'] = [str(a) for a in self._else_actions]
+            ret['priority'] = int(self._priority)
+        else:
+            ret['type'] = 'simple'
+            ret['condition'] = str(self._condition)
+            ret['then_actions'] = [str(a) for a in self._then_actions]
+        return ret
+
     @property
     def epanet_control_type(self):
         """
@@ -2034,25 +2053,25 @@ class Rule(ControlBase):
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = '{} {} := if {}'.format(self._control_type_str(), self._name, self._condition)
+        text = 'IF {}'.format(str(self._condition))
         if self._then_actions is not None and len(self._then_actions) > 0:
-            then_text = ' then '
+            then_text = ' THEN '
             for ct, act in enumerate(self._then_actions):
                 if ct == 0:
                     then_text += str(act)
                 else:
-                    then_text += ' and {}'.format(str(act))
+                    then_text += ' AND {}'.format(str(act))
             text += then_text
         if self._else_actions is not None and len(self._else_actions) > 0:
-            else_text = ' else '
+            else_text = ' ELSE '
             for ct, act in enumerate(self._else_actions):
                 if ct == 0:
                     else_text += str(act)
                 else:
-                    else_text += ' and {}'.format(str(act))
+                    else_text += ' AND {}'.format(str(act))
             text += else_text
         if self._priority is not None and self._priority >= 0:
-            text += ' with priority {}'.format(self._priority)
+            text += ' PRIORITY {}'.format(self._priority)
         return text
 
     def is_control_action_required(self):
