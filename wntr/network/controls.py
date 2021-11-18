@@ -1996,7 +1996,7 @@ class Rule(ControlBase):
         """
         self.update_condition(condition)
         self.update_then_actions(then_actions)
-        self.update_else_action(else_actions)
+        self.update_else_actions(else_actions)
         self._which = None
         self.update_priority(priority)
         self._name = name
@@ -2128,7 +2128,7 @@ class Rule(ControlBase):
         
         self._then_actions = _ensure_iterable(then_actions)
 
-    def update_else_action(self, else_actions, verbose=False):
+    def update_else_actions(self, else_actions, verbose=False):
         """Update the rule's else actions in place"""
         if verbose:
             try:
