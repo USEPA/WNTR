@@ -35,11 +35,10 @@ from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict
-from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
-from typing import Hashable, Dict, Any, Tuple, MutableSet
+from typing import Hashable, Dict, Any, Tuple, MutableSet, Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +70,26 @@ logger = logging.getLogger(__name__)
 #    Close check valves/pumps for negative flow
 #    Close pumps without power
 
+def _ensure_iterable(to_check: Any)->Iterable[Any]:
+    """Make sure the input is interable
+
+    Parameters
+    ----------
+    to_check : Any
+        The input to check which can be of any type including None
+
+    Returns
+    -------
+    Iterable[Any]
+        to_check as an iterable object, if None an empty list is returned
+    """
+    if isinstance(to_check, Iterable):
+        to_return = list(to_check)
+    elif to_check is not None:
+        to_return = [to_check]
+    else:
+        to_return = []
+    return to_return
 
 class Subject(object):
     """
