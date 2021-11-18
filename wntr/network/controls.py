@@ -35,11 +35,10 @@ from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict
-from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
-from typing import Hashable, Dict, Any, Tuple, MutableSet
+from typing import Hashable, Dict, Any, Tuple, MutableSet, Iterable
 
 logger = logging.getLogger(__name__)
 
