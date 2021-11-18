@@ -2135,14 +2135,7 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        self._condition = condition
-        self._then_actions = [then_action]
-        self._else_actions = []
-        self._which = None
-        self._priority = priority
-        self._name = name
-        if self._name is None:
-            self._name = ''
+        super().__init__(condition=condition, then_actions=then_action, priority=priority, name=name)
         if isinstance(condition, TankLevelCondition):
             self._control_type = _ControlType.pre_and_postsolve
         elif isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
