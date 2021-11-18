@@ -2105,6 +2105,7 @@ class Rule(ControlBase):
             raise RuntimeError('control actions called even though if-then statement was False')
     
     def update_condition(self, condition, verbose = False):
+        """Update the controls condition in place"""
         if verbose:
             try:
                 logger.info(f"Replacing {self._condition} with {condition}")
@@ -2117,6 +2118,7 @@ class Rule(ControlBase):
         self._condition = condition
 
     def update_then_actions(self, then_actions, verbose=False):
+        """Update the rule's then actions in place"""
         if verbose:
             try:
                 logger.info(f"Replacing {self._then_actions} with {then_actions}")
@@ -2127,6 +2129,7 @@ class Rule(ControlBase):
         self._then_actions = _ensure_iterable(then_actions)
 
     def update_else_action(self, else_actions, verbose=False):
+        """Update the rule's else actions in place"""
         if verbose:
             try:
                 logger.info(f"Replacing {self._else_actions} with {else_actions}")
@@ -2137,6 +2140,7 @@ class Rule(ControlBase):
         self._else_actions = _ensure_iterable(else_actions)
     
     def update_priority(self, priority, verbose=False):
+        """Update the rule's priority in place"""
         if verbose:
             try:
                 logger.info(f"Replacing {self._priority} with {priority}")
