@@ -1994,23 +1994,11 @@ class Rule(ControlBase):
         name: str
             The name of the control
         """
-        if not isinstance(condition, ControlCondition):
-            raise ValueError('The conditions argument must be a ControlCondition instance')
-        self._condition = condition
-        if isinstance(then_actions, Iterable):
-            self._then_actions = list(then_actions)
-        elif then_actions is not None:
-            self._then_actions = [then_actions]
-        else:
-            self._then_actions = []
-        if isinstance(else_actions, Iterable):
-            self._else_actions = list(else_actions)
-        elif else_actions is not None:
-            self._else_actions = [else_actions]
-        else:
-            self._else_actions = []
+        self.update_condition(condition)
+        self.update_then_actions(then_actions)
+        self.update_else_action(else_actions)
         self._which = None
-        self._priority = priority
+        self.update_priority(priority)
         self._name = name
         if self._name is None:
             self._name = ''
@@ -2115,6 +2103,48 @@ class Rule(ControlBase):
                 control_action.run_control_action()
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
+    
+    def update_condition(self, condition, verbose = False):
+        if verbose:
+            try:
+                logger.info(f"Replacing {self._condition} with {condition}")
+            except AttributeError:
+                # self._condition doesn't already exist
+                pass
+
+        if not isinstance(condition, ControlCondition):
+            raise ValueError('The conditions argument must be a ControlCondition instance')
+        self._condition = condition
+
+    def update_then_actions(self, then_actions, verbose=False):
+        if verbose:
+            try:
+                logger.info(f"Replacing {self._then_actions} with {then_actions}")
+            except AttributeError:
+                # self._then_actions doesn't already exist
+                pass
+        
+        self._then_actions = _ensure_iterable(then_actions)
+
+    def update_else_action(self, else_actions, verbose=False):
+        if verbose:
+            try:
+                logger.info(f"Replacing {self._else_actions} with {else_actions}")
+            except AttributeError:
+                # self._else_actions doesn't already exist
+                pass
+
+        self._else_actions = _ensure_iterable(else_actions)
+    
+    def update_priority(self, priority, verbose=False):
+        if verbose:
+            try:
+                logger.info(f"Replacing {self._priority} with {priority}")
+            except AttributeError:
+                # self._priority doesn't already exist
+                pass
+
+        self._priority = priority
 
 
 class Control(Rule):
