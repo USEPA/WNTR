@@ -2109,7 +2109,8 @@ class Rule(ControlBase):
             try:
                 logger.info(f"Replacing {self._condition} with {condition}")
             except AttributeError:
-                # self._condition doesn't already exist
+                # self._condition doesn't already exist. Not sure how we could get here, 
+                # but best to make sure it doesn't error out.
                 pass
 
         if not isinstance(condition, ControlCondition):
@@ -2122,7 +2123,8 @@ class Rule(ControlBase):
             try:
                 logger.info(f"Replacing {self._then_actions} with {then_actions}")
             except AttributeError:
-                # self._then_actions doesn't already exist
+                # self._then_actions doesn't already exist. Not sure how we could get here, 
+                # but best to make sure it doesn't error out.
                 pass
         
         self._then_actions = _ensure_iterable(then_actions)
@@ -2133,7 +2135,8 @@ class Rule(ControlBase):
             try:
                 logger.info(f"Replacing {self._else_actions} with {else_actions}")
             except AttributeError:
-                # self._else_actions doesn't already exist
+                # self._else_actions doesn't already exist. Not sure how we could get here, 
+                # but best to make sure it doesn't error out.
                 pass
 
         self._else_actions = _ensure_iterable(else_actions)
@@ -2144,7 +2147,8 @@ class Rule(ControlBase):
             try:
                 logger.info(f"Replacing {self._priority} with {priority}")
             except AttributeError:
-                # self._priority doesn't already exist
+                # self._priority doesn't already exist. Not sure how we could get here, 
+                # but best to make sure it doesn't error out.
                 pass
 
         self._priority = priority
