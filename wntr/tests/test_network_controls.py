@@ -167,7 +167,7 @@ class TestConditionalControls(unittest.TestCase):
         # check current priority is different to the new one
         self.assertNotEqual(wn.get_control(wn.control_name_list[idx]).priority, new_priority)
         # Update priority and check it has worked
-        wn.get_control(wn.control_name_list[idx]).update_priority(new_priority, verbose=True)
+        wn.get_control(wn.control_name_list[idx]).update_priority(new_priority)
         self.assertEqual(wn.get_control(wn.control_name_list[idx]).priority, new_priority)
 
     def test_update_conditions(self):
@@ -177,7 +177,7 @@ class TestConditionalControls(unittest.TestCase):
         new_condition = self.wntr.network.controls.TimeOfDayCondition(wn, 'Is','01:00:00')
 
         self.assertNotEqual(wn.get_control(wn.control_name_list[idx]).condition, new_condition)
-        wn.get_control(wn.control_name_list[idx]).update_condition(new_condition, verbose=True)
+        wn.get_control(wn.control_name_list[idx]).update_condition(new_condition)
         self.assertEqual(wn.get_control(wn.control_name_list[idx]).condition, new_condition)
 
 
@@ -192,7 +192,7 @@ class TestConditionalControls(unittest.TestCase):
         iterable_action = self.wntr.network.controls._ensure_iterable(new_action)
 
         self.assertNotEqual(wn.get_control(wn.control_name_list[0])._then_actions,iterable_action)
-        wn.get_control(wn.control_name_list[0]).update_then_actions(new_action, verbose=True)
+        wn.get_control(wn.control_name_list[0]).update_then_actions(new_action)
         self.assertEqual(wn.get_control(wn.control_name_list[0])._then_actions,iterable_action)
 
     def test_update_else_actions(self):
@@ -206,7 +206,7 @@ class TestConditionalControls(unittest.TestCase):
         iterable_action = self.wntr.network.controls._ensure_iterable(new_action)
 
         self.assertNotEqual(wn.get_control(wn.control_name_list[0])._else_actions,iterable_action)
-        wn.get_control(wn.control_name_list[0]).update_else_actions(new_action, verbose=True)
+        wn.get_control(wn.control_name_list[0]).update_else_actions(new_action)
         self.assertEqual(wn.get_control(wn.control_name_list[0])._else_actions,iterable_action)
 
     def test_open_link_by_tank_level(self):
