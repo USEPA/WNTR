@@ -2116,7 +2116,11 @@ class Rule(ControlBase):
         ValueError
             If the provided condition isn't a valid ControlCondition
         """
-        logger.info(f"Replacing {self._condition} with {condition}")
+        try:
+            logger.info(f"Replacing {self._condition} with {condition}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
@@ -2129,7 +2133,11 @@ class Rule(ControlBase):
         then_actions : Iterable[ControlAction]
             The new then_actions for this control to use
         """        
-        logger.info(f"Replacing {self._then_actions} with {then_actions}")        
+        try:
+            logger.info(f"Replacing {self._then_actions} with {then_actions}")        
+        except AttributeError:
+            # Occurs during intialisation
+            pass
         self._then_actions = _ensure_iterable(then_actions)
 
     def update_else_actions(self, else_actions:Iterable[ControlAction]):
@@ -2140,7 +2148,11 @@ class Rule(ControlBase):
         else_actions : Iterable[ControlAction]
             The new else_actions for this control to use
         """
-        logger.info(f"Replacing {self._else_actions} with {else_actions}")
+        try:
+            logger.info(f"Replacing {self._else_actions} with {else_actions}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
         self._else_actions = _ensure_iterable(else_actions)
     
     def update_priority(self, priority:ControlPriority):
@@ -2151,7 +2163,11 @@ class Rule(ControlBase):
         priority : ControlPriority
             The new priority for this control to use
         """
-        logger.info(f"Replacing {self._priority} with {priority}")
+        try:
+            logger.info(f"Replacing {self._priority} with {priority}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
         self._priority = priority
 
 
