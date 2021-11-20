@@ -2103,54 +2103,55 @@ class Rule(ControlBase):
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
     
-    def update_condition(self, condition, verbose = False):
-        """Update the controls condition in place"""
-        if verbose:
-            try:
-                logger.info(f"Replacing {self._condition} with {condition}")
-            except AttributeError:
-                # self._condition doesn't already exist. Not sure how we could get here, 
-                # but best to make sure it doesn't error out.
-                pass
+    def update_condition(self, condition:ControlCondition):
+        """Update the controls condition in place
 
+        Parameters
+        ----------
+        condition : ControlCondition
+            The new condition for this control to use
+
+        Raises
+        ------
+        ValueError
+            If the provided condition isn't a valid ControlCondition
+        """
+        logger.info(f"Replacing {self._condition} with {condition}")
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
 
-    def update_then_actions(self, then_actions, verbose=False):
-        """Update the rule's then actions in place"""
-        if verbose:
-            try:
-                logger.info(f"Replacing {self._then_actions} with {then_actions}")
-            except AttributeError:
-                # self._then_actions doesn't already exist. Not sure how we could get here, 
-                # but best to make sure it doesn't error out.
-                pass
-        
+    def update_then_actions(self, then_actions:Iterable[ControlAction]):
+        """Update the controls then_actions in place
+
+        Parameters
+        ----------
+        then_actions : Iterable[ControlAction]
+            The new then_actions for this control to use
+        """        
+        logger.info(f"Replacing {self._then_actions} with {then_actions}")        
         self._then_actions = _ensure_iterable(then_actions)
 
-    def update_else_actions(self, else_actions, verbose=False):
-        """Update the rule's else actions in place"""
-        if verbose:
-            try:
-                logger.info(f"Replacing {self._else_actions} with {else_actions}")
-            except AttributeError:
-                # self._else_actions doesn't already exist. Not sure how we could get here, 
-                # but best to make sure it doesn't error out.
-                pass
+    def update_else_actions(self, else_actions:Iterable[ControlAction]):
+        """Update the controls else_actions in place
 
+        Parameters
+        ----------
+        else_actions : Iterable[ControlAction]
+            The new else_actions for this control to use
+        """
+        logger.info(f"Replacing {self._else_actions} with {else_actions}")
         self._else_actions = _ensure_iterable(else_actions)
     
-    def update_priority(self, priority, verbose=False):
-        """Update the rule's priority in place"""
-        if verbose:
-            try:
-                logger.info(f"Replacing {self._priority} with {priority}")
-            except AttributeError:
-                # self._priority doesn't already exist. Not sure how we could get here, 
-                # but best to make sure it doesn't error out.
-                pass
+    def update_priority(self, priority:ControlPriority):
+        """Update the controls priority in place
 
+        Parameters
+        ----------
+        priority : ControlPriority
+            The new priority for this control to use
+        """
+        logger.info(f"Replacing {self._priority} with {priority}")
         self._priority = priority
 
 
