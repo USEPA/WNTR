@@ -7,8 +7,7 @@
 Advanced simulation techniques
 ===============================
 
-In addition to the methods which have been described previously, there are many other
-ways to use WNTR. This section describes several advanced simulation techniques.
+In addition to the methods which have been described previously, WNTR can be used in many other ways. This section describes several advanced simulation techniques.
 
 
 .. _stochastic_simulation:
@@ -17,8 +16,10 @@ Stochastic simulation
 -------------------------------
 
 Stochastic simulations can be used to evaluate an ensemble of hydraulic and/or water quality 
-scenarios.  For disaster scenarios, the location, duration, and severity of different types of incidents
-can be drawn from distributions and included in the simulation.  
+scenarios.  
+While a "run-all" approach may be useful, or appropriate, in some situations,
+for disaster scenarios, the location, duration, and severity of different types of incidents
+can often be drawn from distributions and included in the simulation in a stochastic manner.
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
 Fragility curves are a common way to include stochasticity in the damage 
@@ -28,6 +29,7 @@ The Python packages NumPy and SciPy include statistical distributions and random
 simulations.  
 For example, the following code can be used to select N unique pipes 
 based on the failure probability of each pipe.  
+The ``selected_pipes`` variable will be a list of two pipe names selected based on the failure probabilities.
 
 .. doctest::
     :hide:
@@ -54,20 +56,20 @@ distributions.
 
 Multiple processors
 ------------------------
-One aspect of stochastic simulation is that it is highly parallelizable; each
-realization is an independent simulation that can be modeled separately.
+In order to speed up independent calculations, simulations can be parallelized.
 There are many different parallelization methods and packages available to 
-Python users. Some example tools are: the `multiprocessing` package, MPI libraries,
-or threading.
+Python users, although the operating system and hardware available will determine which packages can be used.
+Some examples are the :class:`multiprocessing` package, MPI libraries,
+or the :class:`threading` package. 
+Because the :class:`threading` package works with almost all systems, it will be used in the examples below.
 
-This section will show an example of how to run the :class:`~wntr.sim.epanet.EpanetSimulator`
+The example of how to run the :class:`~wntr.sim.epanet.EpanetSimulator`
 in a multi-threaded manner.
 The :class:`~wntr.sim.core.WNTRSimulator` can also be used in a similar way. 
-Threads are a "lightweight" method of doing parallel processing. This means that
-the interpreter process is shared among threads, and specifically, that libraries
-are only loaded once. Because the EPANET 2.0 library is not "thread-safe", threading
-only works if the :class:`~wntr.sim.epanet.EpanetSimulator` is run using with the 
-argument `version=2.2` (which is the default).
+Threads are a "lightweight" method of parallel processing. This means that
+the interpreter process is shared among threads, and, more specifically, that libraries
+are only loaded once. 
+However, the EPANET 2.0 library was not written to be "thread-safe" -- i.e., it does not allow simultaneous use of the library by multiple threads -- so the :class:`~wntr.sim.epanet.EpanetSimulator` must be run using EPANET 2.2 (which is the default).
 
 .. doctest::
     :hide:
@@ -78,72 +80,46 @@ argument `version=2.2` (which is the default).
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
+
+The first step is to load the ``threading`` and other packages and load in a network model.
+In order to execute a thread, it is necessary to create a function that will perform the actual work.
+In this specific example, a simple function (listed below) is created that accepts a water network model,
+a name for the model, and a dictionary which will contain results.
+
+
 .. doctest::
 
     >>> import threading
-    >>> import time
     >>> import copy
     >>> import wntr # doctest: +SKIP
 
     >>> wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp') # doctest: +SKIP
 
-The first step is to create a function that will perform the actual work for each thread.
-In this example, the simple function accepts a water network model,
-a name for the model and thread, and a dictionary which will contain results.
-
-
-.. doctest::
-
     >>> def run_epanet(wn, name, results):
+    ...     """Run the EPANET simulator on a water network."""
     ...     sim = wntr.sim.EpanetSimulator(wn)
     ...     res = sim.run_sim(name, version=2.2)
     ...     results[name] = res
 
 
-The threads in the standard Python threading module do return a value. However, because the
-threads are lightweight, they can store results in a single mutable object that is contained
-by the main process, such as a dictionary or list, as long as the indices are unique.
+Threads in the standard Python threading module do not return a value; however, because the
+threads are lightweight, they can store results in a mutable object, such as a dictionary or list, that is contained
+by the main process -- as long as the indices are unique.
 For details on how to use threading, see the :class:`threading` module in 
 the standard Python library documentation.
 
-To test the difference in performance, the simulation can be run sequentially and then in 
-parallel.
-First, the simulations are run sequentially. To make the results interesting, each simulation
-will run for one day longer than the previous simulation.
+The example code below shows how to run different simulations with 
+different durations.
+The results are stored in the ``results`` dictionary with keys
+``parallel-1``, ``parallel-2``, ..., where the number indicates the number of days that were simulated.
+Once the threads are created, they are started using the ``start`` method and then joined, or completed, using the ``join`` method.
 
 .. doctest::
 
+    >>> num_threads = 5
     >>> results = dict()
-    >>> n = 2
-
-    >>> start_time = time.time()
-    >>> for i in range(n):
-    ...     wn.options.time.duration = 86400 + i * 86400
-    ...     run_epanet(wn, 'sequential-{}'.format(i), results)
-    
-    >>> print("Sequential run time: %.2f seconds"%(time.time() - start_time)) # doctest: +SKIP
-    Sequential run time: 0.07 seconds
-
-    >>> print("Results added: ", results.keys()) # doctest: +SKIP
-    Results added:  dict_keys(['sequential-0', 'sequential-1'])
-
-    >>> t1 = results['sequential-0'].node['demand'].index[-1]
-    >>> t2 = results['sequential-1'].node['demand'].index[-1]
-    >>> print("Final time step: sequential-0 = {}, sequential-1 = {}".format(t1, t2))
-    Final time step: sequential-0 = 86400, sequential-1 = 172800
-
-
-The results are executed in 0.7 seconds, and the results show that the last index of the 
-results is 1 day for the first simulation and 2 days for the second simulation.
-
-For the parallel simulation, the water network model must be copied into new model objects
-to avoid any thread conflicts.
-
-.. doctest::
-
     >>> threads = list()
-    >>> start_time = time.time()
-    >>> for i in range(n):
+    >>> for i in range(num_threads):
     ...     wn_thread = copy.deepcopy(wn)
     ...     wn_thread.options.time.duration = 86400 + i * 86400
     ...     t = threading.Thread(target=run_epanet, args=(wn_thread, 'parallel-{}'.format(i), results))
@@ -153,26 +129,18 @@ to avoid any thread conflicts.
     >>> for t in threads:
     ...     t.join()
 
-    >>> print("Parallel run time: %.2f seconds"%(time.time()-start_time))  # doctest: +SKIP
-    Parallel run time: 0.04 seconds
 
-    >>> print("Results added: ", results.keys()) # doctest: +SKIP
-    Results added:  dict_keys(['sequential-0', 'sequential-1', 'parallel-0', 'parallel-1'])
-
-    >>> t3 = results['parallel-0'].node['demand'].index[-1]
-    >>> t4 = results['parallel-1'].node['demand'].index[-1]
-    >>> print("Final time step: parallel-0 = {}, parallel-1 = {}".format(t3, t4))
-    Final time step: parallel-0 = 86400, parallel-1 = 172800
-
-
-After the threads are executed, there are two additional keys that have been added to the 
-results dictionary. The execution time was roughly half of the sequential execution time.
-The final time step of the results are again 1 and 2 days.
-
+For the parallel simulation, the water network model must be copied into new model objects
+to avoid any thread conflicts.
 Ensuring that the water network model
-is either reloaded or copied using deepcopy is critical when using multi-processing
+is either reloaded from scratch or copied using ``copy.deepcopy`` is critical when using threading
 with the :class:`~wntr.sim.core.WNTRSimulator`, as temporary data is stored inside the 
-:class:`~wntr.network.model.WaterNetworkModel` in this case.
+:class:`~wntr.network.model.WaterNetworkModel` as the simulation progresses.
+
+When the above example is executed, it runs approximately twice as fast as it does when executed sequentially.
+The 
+`test code for threading <https://github.com/USEPA/WNTR/blob/main/wntr/tests/test_sim_performance.py>`_ (see the ``test_Net6_thread_performance`` class) shows additional detail on threading.
+
 
 .. _wntr_aml:
 
