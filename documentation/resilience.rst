@@ -294,12 +294,12 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    Modified resilience index              The modified resilience index [JaSr08]_ is similar to the Todini index, but is only computed at junctions.
                                           The metric defines resilience at a specific time as a measure of surplus 
                                           power at each junction or as a system average.
-										  The modified resilience index can be computed using the :class:`~wntr.metrics.hydraulic.modified_resilience_index` method.
+                                          The modified resilience index can be computed using the :class:`~wntr.metrics.hydraulic.modified_resilience_index` method.
 
    Tank capacity                          Tank capacity is the ratio of current water volume stored in tanks to the maximum volume of water that can be stored.
                                           This metric is measured at each tank as a function of time and ranges between 0 and 1. 
-										  A value of 1 indicates that tank storage is maximized, while a value of 0 means there is no water stored in the tank. 
-										  Tank capacity can be computed using the :class:`~wntr.metrics.hydraulic.tank_capacity` method.
+                                          A value of 1 indicates that tank storage is maximized, while a value of 0 means there is no water stored in the tank. 
+                                          Tank capacity can be computed using the :class:`~wntr.metrics.hydraulic.tank_capacity` method.
    
    Entropy                                Entropy [AwGB90]_ is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
