@@ -105,7 +105,8 @@ class FragilityCurve(object):
         damage_state : pd.Series
             The damage state of each element
         """
-        np.random.seed(seed)
+        if seed is not None:
+            np.random.seed(seed)
             
         p = pd.Series(data = np.random.uniform(size=Pr.shape[0]), index=Pr.index)
         
