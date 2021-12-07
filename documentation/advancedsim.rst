@@ -87,7 +87,7 @@ The first step is to load the Python packages that are needed for this example a
 
     >>> import threading
     >>> import copy
-	>>> import numpy as np
+    >>> import numpy as np
     >>> import wntr # doctest: +SKIP
 
     >>> wn = wntr.network.model.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
@@ -164,7 +164,7 @@ The example below illustrates the use of WNTR's AML on a simple set of nonlinear
    v - u - 1 = 0
 
 The following code is used to create a model (m) of these equations using WNTR's AML.  
-The u and v variables are both initialized to a value of 1.
+The :math:`u` and :math:`v` variables are both initialized to a value of 1.
    
 .. doctest::
 
@@ -200,13 +200,17 @@ The values that are stored in the Jacobian sparse matrix can also be loaded into
           [-1.,  1.]])
 
 
-The SciPy method ``sparse.linalg.spsolve`` can be used to solve the system of equations using the following steps:
+The SciPy method ``sparse.linalg.spsolve`` can be used to solve the system of equations 
+:math:`Ax=b`, where 
+:math:`A` is the Jacobian of the model, 
+:math:`b` is the residual of the model, and 
+:math:`x` is the solution to the system of equations.
 
-* Get the variables values, x.  This returns the values for u and v, which were both initialized to be 1.
+* Get the variables values.  This returns the values for :math:`u` and :math:`v`, which were both initialized to be 1.
 
-* Solve the system Ax=b, where A is the Jacobian of the model and b is the residual of the model.
+* Solve the system of equations and return the solution.
 
-* Add the solution, d, back to the variables values in x.
+* Add the solution back to the variables values.
 
 * Load the variable values back into the model.
 
@@ -217,10 +221,10 @@ The SciPy method ``sparse.linalg.spsolve`` can be used to solve the system of eq
 
    >>> from scipy.sparse.linalg import spsolve
    
-   >>> x = m.get_x()
-   >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
-   >>> x = x + d
-   >>> m.load_var_values_from_x(x)
+   >>> var_values = m.get_x()
+   >>> x = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
+   >>> var_values = var_values + x
+   >>> m.load_var_values_from_x(var_values)
    >>> m.evaluate_residuals() # doctest: +SKIP
    array([-1., 0.])
 
@@ -230,7 +234,7 @@ This is the default solver for the WNTRSimulator's hydraulic model.
 This method repeats a Newton step until the maximum residual is less than a user 
 specified tolerance (set to 1*10 :sup:`-6` by default).
 The method ``opt.solve`` returns a tuple which includes the solver status (converged or error).
-The solution for u and v is then returned and printed to 4 significant digits.
+The solution for :math:`u` and :math:`v` is then returned and printed to 4 significant digits.
 
 .. doctest::
 
