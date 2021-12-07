@@ -47,6 +47,9 @@ def random_colormap(N, colormap='jet', name='random', seed=None):
     
     name : str (optional)
         Name of the colormap
+    
+    seed : int or None
+        Random seed
         
     Returns
     --------
