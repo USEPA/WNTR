@@ -2644,7 +2644,6 @@ class BinFile(object):
             chemical = bytes(np.fromfile(fin, dtype=dt_str, count=self.idlen)[:]).decode('latin-1')
 #            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
             wqunits = bytes(np.fromfile(fin, dtype=dt_str, count=self.idlen)[:]).decode('latin-1')
-            print(chemical, wqunits)
             mass = wqunits.split('/',1)[0]
             if mass in ['mg', 'ug', u'mg', u'ug']:
                 massunits = MassUnits[mass]
