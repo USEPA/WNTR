@@ -27,7 +27,7 @@ state on a component, as described in the Section on :ref:`fragility_curves`.
 
 The Python packages NumPy and SciPy include statistical distributions and random selection methods that can be used for stochastic
 simulations.  
-For example, the following code uses the NumPy method ``random.choice`` to select 2 unique pipes from a list of 4 pipes
+For example, the following code uses the NumPy method ``random.choice`` to select two unique pipes from a list of four pipes
 based on a failure probability of each pipe.  This information can be used within WNTR to simulate stochastic pipe failure. 
 
 .. doctest::
@@ -60,7 +60,7 @@ Since individual disaster scenarios are typically independent, they can be simul
 This independence allows for parallelization and the use of multiple processors, which can significantly reduce the time it takes to run an analysis.
 Many different parallelization methods and packages are available to Python users.
 The user's operating system and hardware will determine which packages can be used.
-Some examples include the multiprocessing Python package, the threading Python package, and MPI libraries.
+Some examples include the multiprocessing Python package, the threading Python package, and Message Passing Interface (MPI) libraries.
 
 Because the threading Python package works with Windows, Linux, and Mac OS X operating systems, it is used in the examples below.
 Threads are a "lightweight" method of parallel processing. This means that
@@ -108,7 +108,7 @@ which is passed to the run_epanet function as an input.
     ...     res = sim.run_sim(name, version=2.2)
     ...     results[name] = res
 
-The example code below runs 5 simulations in a multi-threaded manner.
+The example code below runs five simulations in a multi-threaded manner.
 To make each simulation different, the simulation duration is changed for each new simulation.
 In practice, the differences would reflect unique conditions for each resilience scenario.
 
@@ -185,7 +185,7 @@ Before evaluating or solving the model, the :func:`~wntr.sim.aml.aml.Model.set_s
 The model can then be used to evaluate the constraint residuals and the Jacobian.
 The methods :func:`~wntr.sim.aml.aml.Model.evaluate_residuals` and
 :func:`~wntr.sim.aml.aml.Model.evaluate_jacobian` return a NumPy array
-and a SciPy sparse CSR matrix, respectively. 
+and a SciPy compressed sparse row (CSR) matrix, respectively. 
 The values that are stored in the Jacobian sparse matrix can also be loaded into a NumPy array.
 
 .. doctest::
@@ -234,7 +234,7 @@ This is the default solver for the WNTRSimulator's hydraulic model.
 This method repeats a Newton step until the maximum residual is less than a user 
 specified tolerance (set to 1*10 :sup:`-6` by default).
 The method ``opt.solve`` returns a tuple which includes the solver status (converged or error).
-The solution for :math:`u` and :math:`v` is then returned and printed to 4 significant digits.
+The solution for :math:`u` and :math:`v` is then returned and printed to four significant digits.
 
 .. doctest::
 

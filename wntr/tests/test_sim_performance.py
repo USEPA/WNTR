@@ -93,6 +93,17 @@ class TestPerformance(unittest.TestCase):
             )
         )
 
+    def test_Net1_charset(self):
+        """Only needs to test that runs successfully with latin-1 character set."""
+        inp_file = join(ex_datadir, "latin1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_res = epa_sim.run_sim()
+
+        sim = self.wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+
     def test_Net1_performance(self):
         head_diff_abs_threshold = 1e-3
         demand_diff_abs_threshold = 1e-5
