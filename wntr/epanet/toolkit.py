@@ -228,9 +228,9 @@ class ENepanet:
                 rptfile = self.rptfile
             if binfile is None:
                 binfile = self.binfile
-            inpfile = inpfile.encode("ascii")
-            rptfile = rptfile.encode("ascii")
-            binfile = binfile.encode("ascii")
+            inpfile = inpfile.encode("latin-1")
+            rptfile = rptfile.encode("latin-1")
+            binfile = binfile.encode("latin-1")
             self.ENlib.EN_createproject(ctypes.byref(self._project))
             self.errcode = self.ENlib.EN_open(self._project, inpfile, rptfile, binfile)
             self._error()
@@ -248,9 +248,9 @@ class ENepanet:
                 rptfile = self.rptfile
             if binfile is None:
                 binfile = self.binfile
-            inpfile = inpfile.encode("ascii")
-            rptfile = rptfile.encode("ascii")
-            binfile = binfile.encode("ascii")
+            inpfile = inpfile.encode("latin-1")
+            rptfile = rptfile.encode("latin-1")
+            binfile = binfile.encode("latin-1")
             self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
             self._error()
             if self.errcode < 100:
@@ -384,9 +384,9 @@ class ENepanet:
             
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_savehydfile(self._project, filename.encode("ascii"))
+            self.errcode = self.ENlib.EN_savehydfile(self._project, filename.encode("latin-1"))
         else:
-            self.errcode = self.ENlib.ENsavehydfile(filename.encode("ascii"))
+            self.errcode = self.ENlib.ENsavehydfile(filename.encode("latin-1"))
         self._error()
         return
 
@@ -400,9 +400,9 @@ class ENepanet:
             
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_usehydfile(self._project, filename.encode("ascii"))
+            self.errcode = self.ENlib.EN_usehydfile(self._project, filename.encode("latin-1"))
         else:
-            self.errcode = self.ENlib.ENusehydfile(filename.encode("ascii"))
+            self.errcode = self.ENlib.ENusehydfile(filename.encode("latin-1"))
         self._error()
         return
 
@@ -553,9 +553,9 @@ class ENepanet:
         """
         iIndex = ctypes.c_int()
         if self._project is not None:
-            self.errcode = self.ENlib.EN_getnodeindex(self._project, sId.encode("ascii"), byref(iIndex))
+            self.errcode = self.ENlib.EN_getnodeindex(self._project, sId.encode("latin-1"), byref(iIndex))
         else:
-            self.errcode = self.ENlib.ENgetnodeindex(sId.encode("ascii"), byref(iIndex))
+            self.errcode = self.ENlib.ENgetnodeindex(sId.encode("latin-1"), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -599,9 +599,9 @@ class ENepanet:
         """
         iIndex = ctypes.c_int()
         if self._project is not None:
-            self.errcode = self.ENlib.EN_getlinkindex(self._project, sId.encode("ascii"), byref(iIndex))
+            self.errcode = self.ENlib.EN_getlinkindex(self._project, sId.encode("latin-1"), byref(iIndex))
         else:
-            self.errcode = self.ENlib.ENgetlinkindex(sId.encode("ascii"), byref(iIndex))
+            self.errcode = self.ENlib.ENgetlinkindex(sId.encode("latin-1"), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -732,7 +732,7 @@ class ENepanet:
 
         """
 
-        inpfile = inpfile.encode("ascii")
+        inpfile = inpfile.encode("latin-1")
         if self._project is not None:
             self.errcode = self.ENlib.EN_saveinpfile(self._project, inpfile)
         else:
