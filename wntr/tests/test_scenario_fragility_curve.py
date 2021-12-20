@@ -45,8 +45,7 @@ class TestFragilityCurveScenario(unittest.TestCase):
     def test_sample_damage_state(self):
         x = pd.Series({"1": 0, "2": 1, "3": 2})
         Pr = FC1.cdf_probability(x)
-        np.random.seed(45)
-        states = FC1.sample_damage_state(Pr)
+        states = FC1.sample_damage_state(Pr, seed=45)
         # p with random seed of 45
         # 1    0.989012
         # 2    0.549545

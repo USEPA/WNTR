@@ -15,6 +15,7 @@ wntr.egg-info/
 temp*.inp
 temp*.bin
 temp*.rpt
+temp*.json
 
 examples/*.inp
 wntr/tests/*.png
