@@ -88,7 +88,7 @@ class FragilityCurve(object):
             
         return Pr
     
-    def sample_damage_state(self, Pr):
+    def sample_damage_state(self, Pr, seed=None):
         """
         Sample the damage state using a uniform random variable
         
@@ -97,11 +97,17 @@ class FragilityCurve(object):
         Pr : pd.Dataframe
             Probability of exceeding a damage state
             
+        seed : int or None
+            Random seed
+        
         Returns
         -------
         damage_state : pd.Series
             The damage state of each element
         """
+        if seed is not None:
+            np.random.seed(seed)
+            
         p = pd.Series(data = np.random.uniform(size=Pr.shape[0]), index=Pr.index)
         
         damage_state = pd.Series(data=[None]* Pr.shape[0], index=Pr.index)

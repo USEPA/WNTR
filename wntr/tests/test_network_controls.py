@@ -159,6 +159,56 @@ class TestConditionalControls(unittest.TestCase):
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
+    def test_update_priority(self):
+        inp_file = join(test_datadir, "conditional_controls_1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        new_priority =1 
+        idx = 0
+        # check current priority is different to the new one
+        self.assertNotEqual(wn.get_control(wn.control_name_list[idx]).priority, new_priority)
+        # Update priority and check it has worked
+        wn.get_control(wn.control_name_list[idx]).update_priority(new_priority)
+        self.assertEqual(wn.get_control(wn.control_name_list[idx]).priority, new_priority)
+
+    def test_update_conditions(self):
+        inp_file = join(test_datadir, "conditional_controls_1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        idx = 0
+        new_condition = self.wntr.network.controls.TimeOfDayCondition(wn, 'Is','01:00:00')
+
+        self.assertNotEqual(wn.get_control(wn.control_name_list[idx]).condition, new_condition)
+        wn.get_control(wn.control_name_list[idx]).update_condition(new_condition)
+        self.assertEqual(wn.get_control(wn.control_name_list[idx]).condition, new_condition)
+
+
+    def test_update_then_actions(self):
+        inp_file = join(test_datadir, "conditional_controls_1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        link_num=0
+        link = wn.get_link(wn.link_name_list[link_num])
+
+        new_action = self.wntr.network.controls.ControlAction(link, 'status', 0)
+        # When updating then_actions, the action will be made iterable, we need to make it iterable too.
+        iterable_action = self.wntr.network.controls._ensure_iterable(new_action)
+
+        self.assertNotEqual(wn.get_control(wn.control_name_list[0])._then_actions,iterable_action)
+        wn.get_control(wn.control_name_list[0]).update_then_actions(new_action)
+        self.assertEqual(wn.get_control(wn.control_name_list[0])._then_actions,iterable_action)
+
+    def test_update_else_actions(self):
+        inp_file = join(test_datadir, "conditional_controls_1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        link_num=0
+        link = wn.get_link(wn.link_name_list[link_num])
+
+        new_action = self.wntr.network.controls.ControlAction(link, 'status', 0)
+        # When updating then_actions, the action will be made iterable, we need to make it iterable too.
+        iterable_action = self.wntr.network.controls._ensure_iterable(new_action)
+
+        self.assertNotEqual(wn.get_control(wn.control_name_list[0])._else_actions,iterable_action)
+        wn.get_control(wn.control_name_list[0]).update_else_actions(new_action)
+        self.assertEqual(wn.get_control(wn.control_name_list[0])._else_actions,iterable_action)
+
     def test_open_link_by_tank_level(self):
         inp_file = join(test_datadir, "conditional_controls_2.inp")
         wn = self.wntr.network.WaterNetworkModel(inp_file)

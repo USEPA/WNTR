@@ -35,7 +35,7 @@ def generate_valve_layer(wn, placement_type='strategic', n=1, seed=None):
           contain a valve.
         - If 'random', n is the number of number of randomly placed valves.
         
-    seed : int or float
+    seed : int or None
         Random seed
        
     Returns
