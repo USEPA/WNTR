@@ -191,7 +191,7 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
             subtotal += segment_length
         last_segment = segments[-1]
         length = last_segment['subtotal'] + last_segment['length']
-        split_length = length * split_point
+        split_length = length * split_at_point
         for segment in segments:
             if segment['start_pos'] == pipe.start_node.coordinates:
                 pass
