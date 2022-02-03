@@ -3,10 +3,9 @@ Geographic and shape functionality
 """
 
 import os.path
+import warnings
 
 import pandas as pd
-from wntr.network.model import WaterNetworkModel
-from wntr.sim.results import SimulationResults
 
 try:
     from shapely.geometry import LineString, Point, shape
@@ -30,7 +29,7 @@ class NetworkGeometry:
     set of GeoPandas and shapely objects.
     """
 
-    def __init__(self, wn: WaterNetworkModel = None, crs: str = "") -> None:
+    def __init__(self, wn, crs: str = "") -> None:
         if not has_shapely or not has_geopandas:
             raise ModuleNotFoundError("Cannot do WNTR geometry without shapely and pandas")
         self.crs = crs
@@ -45,7 +44,7 @@ class NetworkGeometry:
 
     def set_data(
         self,
-        results: SimulationResults = None,
+        results = None,
         time: int = -1,
         node_data: pd.DataFrame = None,
         link_data: pd.DataFrame = None,
@@ -75,6 +74,7 @@ class NetworkGeometry:
         """
         crs = self.crs
         wn = self._wn
+        from wntr.sim.results import SimulationResults
         if isinstance(results, SimulationResults) and time == -1:
             time = results.node["head"].index.iloc[-1]
 
@@ -136,7 +136,7 @@ class NetworkGeometry:
             dd = dict(
                 name=node.name,
                 type=node.node_type,
-                elevation=node.elevation,
+                elevation=node.base_head,
                 tag=node.tag,
                 initial_quality=node.initial_quality,
                 base_head=node.base_head,
@@ -260,22 +260,39 @@ class NetworkGeometry:
             if desired, an indicator such as the timestep or other string; by default blank
         """
         prefix = os.path.join(path, prefix)
-        self.junctions.to_file(
-            prefix + "_junctions" + suffix + ".geojson", driver="GeoJSON",
-        )
-        self.tanks.to_file(
-            prefix + "_tanks" + suffix + ".geojson", driver="GeoJSON",
-        )
-        self.reservoirs.to_file(
-            prefix + "_reservoirs" + suffix + ".geojson", driver="GeoJSON",
-        )
-        self.pipes.to_file(
-            prefix + "_pipes" + suffix + ".geojson", driver="GeoJSON",
-        )
-        self.pumps.to_file(
-            prefix + "_pumps" + suffix + ".geojson", driver="GeoJSON",
-        )
-        self.valves.to_file(
-            prefix + "_valves" + suffix + ".geojson", driver="GeoJSON",
-        )
-
+        try:
+            self.junctions.to_file(
+                prefix + "_junctions" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No junctions in water network, no file created for them')
+        try:
+            self.tanks.to_file(
+                prefix + "_tanks" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No tanks in water network, no file created for them')
+        try:
+            self.reservoirs.to_file(
+                prefix + "_reservoirs" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No reservoirs in water network, no file created for them')
+        try:
+            self.pipes.to_file(
+                prefix + "_pipes" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No pipes in water network, no file created for them')
+        try:
+            self.pumps.to_file(
+                prefix + "_pumps" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No pumps in water network, no file created for them')
+        try:
+            self.valves.to_file(
+                prefix + "_valves" + suffix + ".geojson", driver="GeoJSON",
+            )
+        except ValueError:
+            warnings.warn('No valves in water network, no file created for them')

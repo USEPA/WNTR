@@ -23,7 +23,6 @@ import json
 import wntr.epanet
 from wntr.epanet.util import FlowUnits
 import wntr.network.model
-import wntr.network.geo
 
 logger = logging.getLogger(__name__)
 
@@ -393,7 +392,7 @@ def read_inpfile(
     return wn
 
 
-def write_geojson(geom: wntr.network.geo.NetworkGeometry, filename: str, path: str = ".", suffix: str = ""):
+def write_geojson(geometry, filename: str, path: str = ".", suffix: str = ""):
     """
     Write a set of GIS files (GeoJSON formatted) describing the network.
 
@@ -408,5 +407,5 @@ def write_geojson(geom: wntr.network.geo.NetworkGeometry, filename: str, path: s
     suffix : str, optional
         [description], by default ""
     """
-    geom.write_geojson(prefix=filename, path=path, suffix=suffix)
+    geometry.write_geojson(prefix=filename, path=path, suffix=suffix)
     
