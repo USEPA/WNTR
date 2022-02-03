@@ -95,7 +95,7 @@ class NetworkGeometry:
                 for key in results.node.keys():
                     dd[key] = results.node[key].loc[time, node_name]
             if isinstance(node_data, (pd.DataFrame, dict,)):
-                for column in link_data.keys():
+                for column in node_data.keys():
                     if node_name in node_data[column].keys():
                         dd[column] = node_data[column][node_name]
             data.append(dd)
@@ -120,7 +120,7 @@ class NetworkGeometry:
                 for key in results.node.keys():
                     dd[key] = results.node[key].loc[time, node_name]
             if isinstance(node_data, (pd.DataFrame, dict,)):
-                for column in link_data.keys():
+                for column in node_data.keys():
                     if node_name in node_data[column].keys():
                         dd[column] = node_data[column][node_name]
             data.append(dd)
@@ -145,7 +145,7 @@ class NetworkGeometry:
                 for key in results.node.keys():
                     dd[key] = results.node[key].loc[time, node_name]
             if isinstance(node_data, (pd.DataFrame, dict,)):
-                for column in link_data.keys():
+                for column in node_data.keys():
                     if node_name in node_data[column].keys():
                         dd[column] = node_data[column][node_name]
             data.append(dd)
@@ -180,7 +180,7 @@ class NetworkGeometry:
                     if link_name in link_data[column].keys():
                         dd[column] = link_data[column][link_name]
             data.append(dd)
-            geometry.append([g, g2])
+            geometry.append(g2)
         df = pd.DataFrame(data)
         self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
