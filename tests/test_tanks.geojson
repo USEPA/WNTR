@@ -1,8 +1,0 @@
-{
-"type": "FeatureCollection",
-"features": [
-{ "type": "Feature", "properties": { "name": "1", "type": "Tank", "elevation": 40.20312, "tag": null, "initial_quality": 0.0, "initial_level": 3.99288 }, "geometry": { "type": "Point", "coordinates": [ 27.46, 9.84 ] } },
-{ "type": "Feature", "properties": { "name": "2", "type": "Tank", "elevation": 35.5092, "tag": null, "initial_quality": 0.0, "initial_level": 7.1628 }, "geometry": { "type": "Point", "coordinates": [ 32.99, 3.45 ] } },
-{ "type": "Feature", "properties": { "name": "3", "type": "Tank", "elevation": 39.3192, "tag": null, "initial_quality": 0.0, "initial_level": 8.8392 }, "geometry": { "type": "Point", "coordinates": [ 29.41, 27.27 ] } }
-]
-}
