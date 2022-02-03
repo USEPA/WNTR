@@ -108,9 +108,7 @@ def from_dict(
         wn.options.__init__(**d["options"])
     if "curves" in d:
         for curve in d["curves"]:
-            wn.add_curve(
-                name=curve["name"], curve_type=curve["curve_type"], xy_tuples_list=curve["points"]
-            )
+            wn.add_curve(name=curve["name"], curve_type=curve["curve_type"], xy_tuples_list=curve["points"])
     if "patterns" in d:
         for pattern in d["patterns"]:
             wn.add_pattern(name=pattern["name"], pattern=pattern["multipliers"])
@@ -373,9 +371,7 @@ def write_inpfile(
         wn._inpfile = wntr.epanet.InpFile()
     if units is None:
         units = wn._options.hydraulic.inpfile_units
-    wn._inpfile.write(
-        filename, wn, units=units, version=version, force_coordinates=force_coordinates
-    )
+    wn._inpfile.write(filename, wn, units=units, version=version, force_coordinates=force_coordinates)
 
 
 def read_inpfile(
@@ -394,3 +390,22 @@ def read_inpfile(
     wn = inpfile.read(filename, wn=append)
     wn._inpfile = inpfile
     return wn
+
+
+def write_geojson(geometry, filename: str, path: str = ".", suffix: str = ""):
+    """
+    Write a set of GIS files (GeoJSON formatted) describing the network.
+
+    Parameters
+    ----------
+    geom : wntr.network.geo.NetworkGeometry
+        [description]
+    filename : str
+        [description]
+    path : str, optional
+        [description], by default "."
+    suffix : str, optional
+        [description], by default ""
+    """
+    geometry.write_geojson(prefix=filename, path=path, suffix=suffix)
+    
