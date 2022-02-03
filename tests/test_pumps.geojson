@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "name": "10", "type": "Pump", "pump_type": "HEAD", "tag": null, "initial_status": 0, "initial_setting": null }, "geometry": { "type": "LineString", "coordinates": [ [ 8.0, 27.53 ], [ 9.0, 27.85 ] ] } },
+{ "type": "Feature", "properties": { "name": "335", "type": "Pump", "pump_type": "HEAD", "tag": null, "initial_status": 1, "initial_setting": null }, "geometry": { "type": "LineString", "coordinates": [ [ 23.9, 29.94 ], [ 23.71, 29.03 ] ] } }
+]
+}

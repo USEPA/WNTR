@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/dbhart/Source/wntr'
+make: Leaving directory `/Users/dbhart/Source/wntr'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+ 

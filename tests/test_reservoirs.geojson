@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "name": "River", "type": "Reservoir", "elevation": 67.056, "tag": null, "initial_quality": 0.0, "base_head": 67.056 }, "geometry": { "type": "Point", "coordinates": [ 24.15, 31.06 ] } },
+{ "type": "Feature", "properties": { "name": "Lake", "type": "Reservoir", "elevation": 50.9016, "tag": null, "initial_quality": 0.0, "base_head": 50.9016 }, "geometry": { "type": "Point", "coordinates": [ 8.0, 27.53 ] } }
+]
+}
