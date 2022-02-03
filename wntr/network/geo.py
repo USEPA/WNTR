@@ -180,7 +180,7 @@ class NetworkGeometry:
                     if link_name in link_data[column].keys():
                         dd[column] = link_data[column][link_name]
             data.append(dd)
-            geometry.append([g, g2])
+            geometry.append(g2)
         df = pd.DataFrame(data)
         self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
