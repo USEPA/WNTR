@@ -392,20 +392,31 @@ def read_inpfile(
     return wn
 
 
-def write_geojson(geometry, filename: str, path: str = ".", suffix: str = ""):
+def write_geojson(wn, prefix: str, path: str = ".", suffix: str = ""):
     """
-    Write a set of GIS files (GeoJSON formatted) describing the network.
+    Write a *set* of GeoJSON files for GIS processing, one file for each network element.
+
+    Please note that this is a simple export of the water network data, and it does not
+    include results or other analyses. To add results of a simulation or analysis, do:
+
+    .. code::
+
+        wn_gisdata = wn.get_gis_data()
+        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
+        wn_gisdata.write(...)
+
 
     Parameters
     ----------
-    geom : wntr.network.geo.NetworkGeometry
+    wn : wntr.network.WaterNetworkModel
         [description]
-    filename : str
+    prefix : str
         [description]
     path : str, optional
-        [description], by default "."
+        [description], by default the current directory
     suffix : str, optional
-        [description], by default ""
+        [description], by default None
     """
-    geometry.write_geojson(prefix=filename, path=path, suffix=suffix)
+    geometry = wn.get_gis_data()
+    geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GeoJSON")
     
