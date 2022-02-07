@@ -35,6 +35,10 @@ class WaterNetworkGIS:
             the water network
         crs : str, optional
             coordinate reference string, by default ""
+        pump_as_point_geometry : bool, optional
+            create pumps as points (True) or lines (False), by default True
+        valve_as_point_geometry : bool, optional
+            create valves as points (True) or lines (False), by default True
 
         Raises
         ------
@@ -64,11 +68,14 @@ class WaterNetworkGIS:
         Parameters
         ----------
         crs : str, optional
-            [description], by default None
+            the coordinate reference system, such as by default None (use internal object attribute value).
+            If set, this will update the object's internal attribute
         pump_as_point_geometry : bool, optional
-            [description], by default None
+            create pumps as points (True) or lines (False), by default None (use internal object attribute value).
+            If set, this will update the object's internal attribute
         valve_as_point_geometry : bool, optional
-            [description], by default None
+            create valves as points (True) or lines (False), by default None (use internal object attribute value).
+            If set, this will update the object's internal attribute
         """
         if crs is not None:
             self.crs = crs
@@ -98,7 +105,7 @@ class WaterNetworkGIS:
             geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.junctions = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         data = list()
@@ -118,7 +125,7 @@ class WaterNetworkGIS:
             geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.tanks = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         data = list()
@@ -138,7 +145,7 @@ class WaterNetworkGIS:
             geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.reservoirs = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         data = list()
@@ -167,7 +174,7 @@ class WaterNetworkGIS:
                 geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         data = list()
@@ -196,7 +203,7 @@ class WaterNetworkGIS:
                 geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.pumps = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         data = list()
@@ -223,7 +230,7 @@ class WaterNetworkGIS:
             geometry.append(g)
         df = pd.DataFrame(data)
         if len(df) > 0:
-            df.set_index('name', inplace=True)
+            df.set_index("name", inplace=True)
         self.pipes = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
     def add_node_attributes(self, values, name):
@@ -277,11 +284,21 @@ class WaterNetworkGIS:
                 if name not in self.pumps.columns:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value
-            
 
     def write(self, prefix: str, path: str = None, suffix: str = None, driver="GeoJSON") -> None:
         """
-        Write the Geometry object to a GeoJSON file
+        Write the Geometry object to GIS file(s) with names constructed from parameters.
+
+        The file name is of the format
+
+            [ ``{path}/`` ] ``{prefix}_$elementType`` [ ``_{suffix}`` ] ``.$extensionByDriver``
+
+        where parameters surrounded by brackets "[]" are optional parameters and the ``$`` indicates
+        parts of the filename determined by the function. One file will be created for each type of
+        network element (junctions, pipes, etc.) assuming that the element exists in the network;
+        i.e., blank files will not be created. Drivers available are any of the geopandas valid
+        drivers.
+
 
         Parameters
         ----------
@@ -292,7 +309,7 @@ class WaterNetworkGIS:
         suffix : str, optional
             if desired, an indicator such as the timestep or other string, by default None
         driver : str, optional
-            one of the geopandas drivers (use :code:``None`` for ESRI shapefile folders), by default "GeoJSON",
+            one of the geopandas drivers (use :code:`None` for ESRI shapefile folders), by default "GeoJSON",
         """
         if path is None:
             path = "."
