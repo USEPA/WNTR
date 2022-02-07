@@ -174,6 +174,7 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
     first_vertices = []
     last_vertices = []
     if pipe.vertices:
+        # Extract pipe vertices including the start and end node coordinate
         pipe_vertices = [pipe.start_node.coordinates,
                          *pipe.vertices,
                          pipe.end_node.coordinates]
@@ -188,10 +189,15 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                              'end_pos': end_pos,
                              'length': segment_length,
                              'subtotal': subtotal})
+            
             subtotal += segment_length
+            
         last_segment = segments[-1]
         length = last_segment['subtotal'] + last_segment['length']
         split_length = length * split_at_point
+        
+        # Loop over segments and assign vertices (start_pos) to the first or 
+        # second pipe. Skip the first segment (its start_pos is not a vertice)
         for segment in segments:
             if segment['start_pos'] == pipe.start_node.coordinates:
                 pass
@@ -199,6 +205,9 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                 first_vertices.append(segment['start_pos'])
             else:
                 last_vertices.append(segment['start_pos'])
+            
+        # Identify the segment that cross the split point and compute the new
+        # junction coordinates
         for segment in segments:
             if (segment['subtotal'] + segment['length'] >= split_length
                     and segment['subtotal'] < split_length):

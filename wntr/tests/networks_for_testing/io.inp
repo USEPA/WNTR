@@ -97,6 +97,9 @@ link p1 open at clocktime 22
  Energy			No
 
 [VERTICES]
+;Link            	X-Coord           	Y-Coord
+p1	15	5
+p1	20	5
 
 [LABELS]
 
