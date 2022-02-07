@@ -170,13 +170,54 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
         de = end_node.elevation - e0
         junction_elevation = e0 + de * split_at_point
 
-    # calculate the new coordinates
-    x0 = pipe.start_node.coordinates[0]
-    dx = pipe.end_node.coordinates[0] - x0
-    y0 = pipe.start_node.coordinates[1]
-    dy = pipe.end_node.coordinates[1] - y0
-    junction_coordinates = (x0 + dx * split_at_point,
-                            y0 + dy * split_at_point)
+    # calculate the new coordinates and where each vertice belongs
+    first_vertices = []
+    last_vertices = []
+    if pipe.vertices:
+        pipe_vertices = [pipe.start_node.coordinates,
+                         *pipe.vertices,
+                         pipe.end_node.coordinates]
+        segments = []
+        subtotal = 0
+        for i in range(len(pipe_vertices) - 1):
+            start_pos = pipe_vertices[i]
+            end_pos = pipe_vertices[i + 1]
+            segment_length = (sum([(a-b)**2 for (a,b) in zip(start_pos, end_pos)])
+                              ** 0.5)
+            segments.append({'start_pos': start_pos,
+                             'end_pos': end_pos,
+                             'length': segment_length,
+                             'subtotal': subtotal})
+            subtotal += segment_length
+        last_segment = segments[-1]
+        length = last_segment['subtotal'] + last_segment['length']
+        split_length = length * split_at_point
+        for segment in segments:
+            if segment['start_pos'] == pipe.start_node.coordinates:
+                pass
+            elif segment['subtotal'] < split_length:
+                first_vertices.append(segment['start_pos'])
+            else:
+                last_vertices.append(segment['start_pos'])
+        for segment in segments:
+            if (segment['subtotal'] + segment['length'] >= split_length
+                    and segment['subtotal'] < split_length):
+                split_at = ((split_length - segment['subtotal'])
+                            / segment['length'])
+                x0 = segment['start_pos'][0]
+                dx = segment['end_pos'][0] - x0
+                y0 = segment['start_pos'][1]
+                dy = segment['end_pos'][1] - y0
+                junction_coordinates = (x0 + dx * split_at,
+                                        y0 + dy * split_at)
+    # calculate the new coordinates without vertices            
+    else: 
+        x0 = pipe.start_node.coordinates[0]
+        dx = pipe.end_node.coordinates[0] - x0
+        y0 = pipe.start_node.coordinates[1]
+        dy = pipe.end_node.coordinates[1] - y0
+        junction_coordinates = (x0 + dx * split_at_point,
+                                y0 + dy * split_at_point)
 
     # add the new junction
     for new_junction_name in new_junction_names:
@@ -200,6 +241,9 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                      original_length*(1-split_at_point), pipe.diameter, 
                      pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
         pipe.length = original_length*split_at_point
+        pipe.vertices = first_vertices
+        new_pipe = wn2.get_link(new_pipe_name)
+        new_pipe.vertices = last_vertices
     else: # add pipe at start
         pipe.start_node = wn2.get_node(j0) 
         # add new pipe and change original length
@@ -207,6 +251,9 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                      original_length*split_at_point, pipe.diameter, 
                      pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
         pipe.length = original_length*(1-split_at_point)
+        pipe.vertices = last_vertices
+        new_pipe = wn2.get_link(new_pipe_name)
+        new_pipe.vertices = first_vertices
         
     if pipe.check_valve:
         logger.warn('You are splitting a pipe with a check valve. The new \
