@@ -15,6 +15,8 @@ v0.4.1 (main)
 
 * Added methods to update parameters used to define rules and controls.
 
+* Updated ``wntr.morph.split_pipe`` and ``wntr.morph.break_pipe`` to include pipe vertices.
+
 * Removed private attribute on pumps associated with power outage controls which is no longer needed.
 
 * Added functionality to convert the water network model to a dictionary or JSON formatted file and 

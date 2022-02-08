@@ -171,8 +171,8 @@ class TestMorph(unittest.TestCase):
         wn2 = wntr.morph.split_pipe(wn, "p1", "p1__new", "new_junc", split_at_point=0.7)
         pipe = wn2.get_link("p1")
         pipeB = wn2.get_link("p1__new")
-        self.assertEqual(len(pipe.vertices), 1)
-        self.assertEqual(len(pipeB.vertices), 1)
+        self.assertEqual(pipe.vertices, [(15.0, 5.0)])
+        self.assertEqual(pipeB.vertices, [(20.0, 5.0)])
         
         wn2 = wntr.morph.split_pipe(wn, "p1", "p1__new", "new_junc", split_at_point=0.9)
         pipe = wn2.get_link("p1")
