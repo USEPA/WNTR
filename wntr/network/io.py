@@ -392,7 +392,15 @@ def read_inpfile(
     return wn
 
 
-def write_geojson(wn, prefix: str, path: str = ".", suffix: str = ""):
+def write_geojson(
+    wn,
+    prefix: str,
+    path: str = ".",
+    suffix: str = "",
+    pump_as_point_geometry=True,
+    valve_as_point_geometry=True,
+    crs="",
+):
     """
     Write a *set* of GeoJSON files for GIS processing, one file for each network element.
 
@@ -417,6 +425,86 @@ def write_geojson(wn, prefix: str, path: str = ".", suffix: str = ""):
     suffix : str, optional
         [description], by default None
     """
-    geometry = wn.get_gis_data()
+    geometry = wn.get_gis_data(
+        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+    )
     geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GeoJSON")
-    
+
+
+def write_shapefiles(
+    wn,
+    prefix: str,
+    path: str = ".",
+    suffix: str = "",
+    pump_as_point_geometry=True,
+    valve_as_point_geometry=True,
+    crs="",
+):
+    """
+    Write a *set* of ESRI Shapefile directories for GIS processing, one file for each network element.
+
+    Please note that this is a simple export of the water network data, and it does not
+    include results or other analyses. To add results of a simulation or analysis, do:
+
+    .. code::
+
+        wn_gisdata = wn.get_gis_data()
+        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
+        wn_gisdata.write(...)
+
+
+    Parameters
+    ----------
+    wn : wntr.network.WaterNetworkModel
+        [description]
+    prefix : str
+        [description]
+    path : str, optional
+        [description], by default the current directory
+    suffix : str, optional
+        [description], by default None
+    """
+    geometry = wn.get_gis_data(
+        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+    )
+    geometry.write(prefix=prefix, path=path, suffix=suffix, driver=None)
+
+
+def write_gpkg(
+    wn,
+    prefix: str,
+    path: str = ".",
+    suffix: str = "",
+    pump_as_point_geometry=True,
+    valve_as_point_geometry=True,
+    crs="",
+):
+    """
+    Write a *set* of GPKG files for GIS processing, one file for each network element.
+
+    Please note that this is a simple export of the water network data, and it does not
+    include results or other analyses. To add results of a simulation or analysis, do:
+
+    .. code::
+
+        wn_gisdata = wn.get_gis_data()
+        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
+        wn_gisdata.write(...)
+
+
+    Parameters
+    ----------
+    wn : wntr.network.WaterNetworkModel
+        [description]
+    prefix : str
+        [description]
+    path : str, optional
+        [description], by default the current directory
+    suffix : str, optional
+        [description], by default None
+    """
+    geometry = wn.get_gis_data(
+        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+    )
+    geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GPKG")
+

@@ -1224,7 +1224,7 @@ class WaterNetworkModel(AbstractModel):
         """
         return wntr.network.io.read_json(f, append=self, **kw_json)
 
-    def get_gis_data(self, pump_as_point_geometry=True, valve_as_point_geometry=True, crs=""):
+    def to_gis_data(self, pump_as_point_geometry=True, valve_as_point_geometry=True, crs=""):
         """
         Get the data in geoPandas data frames for each network element.
         Once obtained, additional information can be added (such as results)
@@ -1244,6 +1244,41 @@ class WaterNetworkModel(AbstractModel):
         return WaterNetworkGIS(
             self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
         )
+
+    def write_gis_data(
+        self,
+        prefix: str,
+        path: str = ".",
+        suffix: str = "",
+        pump_as_point_geometry=True,
+        valve_as_point_geometry=True,
+        crs="",
+        driver="GeoJSON",
+    ):
+        """
+        [summary]
+
+        Parameters
+        ----------
+        prefix : str
+            [description]
+        path : str, optional
+            [description], by default "."
+        suffix : str, optional
+            [description], by default ""
+        pump_as_point_geometry : bool, optional
+            [description], by default True
+        valve_as_point_geometry : bool, optional
+            [description], by default True
+        crs : str, optional
+            [description], by default ""
+        driver : str, optional
+            [description], by default "GeoJSON"
+        """
+        obj = WaterNetworkGIS(
+            self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+        )
+        obj.write(prefix, path=path, suffix=suffix, driver=driver)
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
