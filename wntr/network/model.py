@@ -1955,7 +1955,7 @@ class NodeRegistry(Registry):
         assert isinstance(diameter, (int, float)), "diameter must be a float"
         assert isinstance(min_vol, (int, float)), "min_vol must be a float"
         assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
-        assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
+        assert isinstance(overflow, (type(None), str, bool, int)), "overflow must be a bool, 'YES' or 'NO, or 0 or 1"
         assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         
         elevation = float(elevation)
