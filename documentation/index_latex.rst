@@ -22,8 +22,11 @@ WNTR documentation
    disaster_models
    resilience
    stochastic
+   realtime
+   fragility
    morph
    graphics
+   advancedsim
    license
    developers
    reference

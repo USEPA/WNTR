@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.plantuml',
 ]
 
 napoleon_use_rtype = False
@@ -126,6 +127,12 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# Plantuml
+if os.environ.get("READTHEDOCS") != None:
+    plantuml = 'java -Djava.awt.headless=true -jar /usr/share/plantuml/plantuml.jar'
+else:
+    plantuml = 'java -jar ~/plantuml.jar'
 
 
 # -- Options for HTML output ----------------------------------------------

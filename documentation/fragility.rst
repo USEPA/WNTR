@@ -2,42 +2,6 @@
 
     \clearpage
 
-.. _stochastic_simulation:
-
-Stochastic simulation
-===============================
-
-Stochastic simulations can be used to evaluate an ensemble of hydraulic and/or water quality 
-scenarios.  For disaster scenarios, the location, duration, and severity of different types of incidents
-can be drawn from distributions and included in the simulation.  
-Distributions can be a function of component properties (i.e., age, material) or 
-based on engineering standards.
-The Python packages NumPy and SciPy include statistical distributions and random selection methods that can be used for stochastic
-simulations.  
-
-For example, the following code can be used to select N unique pipes 
-based on the failure probability of each pipe.
-
-.. doctest::
-    :hide:
-
-    >>> import numpy as np
-    >>> np.random.seed(12343)
-		
-.. doctest::
-
-    >>> import numpy as np # doctest: +SKIP
-	
-    >>> pipe_names = ['pipe1', 'pipe2', 'pipe3', 'pipe4']
-    >>> failure_probability = [0.10, 0.20, 0.30, 0.40]
-    >>> N = 2
-    >>> selected_pipes = np.random.choice(pipe_names, N, replace=False, 
-    ...     p=failure_probability)
-				     
-A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_ provided with WNTR runs multiple realizations 
-of a pipe leak scenario where the location and duration are drawn from probability 
-distributions.
-
 .. _fragility_curves:
 
 Fragility curves
@@ -69,6 +33,7 @@ The following example defines a fragility curve with two damage states: Minor da
 
     >>> import matplotlib.pylab as plt
     >>> import wntr
+    >>> import numpy as np
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:

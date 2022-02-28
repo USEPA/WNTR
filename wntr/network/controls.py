@@ -35,11 +35,10 @@ from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict
-from collections.abc import Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
-from typing import Hashable, Dict, Any, Tuple, MutableSet
+from typing import Hashable, Dict, Any, Tuple, MutableSet, Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +70,26 @@ logger = logging.getLogger(__name__)
 #    Close check valves/pumps for negative flow
 #    Close pumps without power
 
+def _ensure_iterable(to_check: Any)->Iterable[Any]:
+    """Make sure the input is interable
+
+    Parameters
+    ----------
+    to_check : Any
+        The input to check which can be of any type including None
+
+    Returns
+    -------
+    Iterable[Any]
+        to_check as an iterable object, if None an empty list is returned
+    """
+    if isinstance(to_check, Iterable):
+        to_return = list(to_check)
+    elif to_check is not None:
+        to_return = [to_check]
+    else:
+        to_return = []
+    return to_return
 
 class Subject(object):
     """
@@ -2010,23 +2029,11 @@ class Rule(ControlBase):
         name: str
             The name of the control
         """
-        if not isinstance(condition, ControlCondition):
-            raise ValueError('The conditions argument must be a ControlCondition instance')
-        self._condition = condition
-        if isinstance(then_actions, Iterable):
-            self._then_actions = list(then_actions)
-        elif then_actions is not None:
-            self._then_actions = [then_actions]
-        else:
-            self._then_actions = []
-        if isinstance(else_actions, Iterable):
-            self._else_actions = list(else_actions)
-        elif else_actions is not None:
-            self._else_actions = [else_actions]
-        else:
-            self._else_actions = []
+        self.update_condition(condition)
+        self.update_then_actions(then_actions)
+        self.update_else_actions(else_actions)
         self._which = None
-        self._priority = priority
+        self.update_priority(priority)
         self._name = name
         if self._name is None:
             self._name = ''
@@ -2134,6 +2141,73 @@ class Rule(ControlBase):
                 control_action.run_control_action()
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
+    
+    def update_condition(self, condition:ControlCondition):
+        """Update the controls condition in place
+
+        Parameters
+        ----------
+        condition : ControlCondition
+            The new condition for this control to use
+
+        Raises
+        ------
+        ValueError
+            If the provided condition isn't a valid ControlCondition
+        """
+        try:
+            logger.info(f"Replacing {self._condition} with {condition}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
+        if not isinstance(condition, ControlCondition):
+            raise ValueError('The conditions argument must be a ControlCondition instance')
+        self._condition = condition
+
+    def update_then_actions(self, then_actions:Iterable[ControlAction]):
+        """Update the controls then_actions in place
+
+        Parameters
+        ----------
+        then_actions : Iterable[ControlAction]
+            The new then_actions for this control to use
+        """        
+        try:
+            logger.info(f"Replacing {self._then_actions} with {then_actions}")        
+        except AttributeError:
+            # Occurs during intialisation
+            pass
+        self._then_actions = _ensure_iterable(then_actions)
+
+    def update_else_actions(self, else_actions:Iterable[ControlAction]):
+        """Update the controls else_actions in place
+
+        Parameters
+        ----------
+        else_actions : Iterable[ControlAction]
+            The new else_actions for this control to use
+        """
+        try:
+            logger.info(f"Replacing {self._else_actions} with {else_actions}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
+        self._else_actions = _ensure_iterable(else_actions)
+    
+    def update_priority(self, priority:ControlPriority):
+        """Update the controls priority in place
+
+        Parameters
+        ----------
+        priority : ControlPriority
+            The new priority for this control to use
+        """
+        try:
+            logger.info(f"Replacing {self._priority} with {priority}")
+        except AttributeError:
+            # Occurs during intialisation
+            pass
+        self._priority = priority
 
 
 class Control(Rule):
@@ -2155,14 +2229,7 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        self._condition = condition
-        self._then_actions = [then_action]
-        self._else_actions = []
-        self._which = None
-        self._priority = priority
-        self._name = name
-        if self._name is None:
-            self._name = ''
+        super().__init__(condition=condition, then_actions=then_action, priority=priority, name=name)
         if isinstance(condition, TankLevelCondition):
             self._control_type = _ControlType.pre_and_postsolve
         elif isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):

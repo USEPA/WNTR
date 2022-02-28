@@ -47,12 +47,16 @@ def random_colormap(N, colormap='jet', name='random', seed=None):
     
     name : str (optional)
         Name of the colormap
+    
+    seed : int or None
+        Random seed
         
     Returns
     --------
     cmap : matplotlib.colors.ListedColormap object
     """
-    np.random.seed(seed)
+    if seed is not None:
+        np.random.seed(seed)
     
     vals = np.arange(0,1,1/N) 
     np.random.shuffle(vals)

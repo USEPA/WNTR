@@ -1,0 +1,47 @@
+wntr:
+  network: Net3.inp
+scada:
+  - name: tank1-rtu
+    metadata:
+      instruments:
+        - name: Tank1
+          wntr: "1"
+          type: tank
+          read: [head]
+        - name: Pump335
+          wntr: "335"
+          type: pump
+          write: [status]
+          read: [status, flow]
+        - name: Pipe330
+          wntr: "330"
+          type: pipe
+          write: [status]
+          read: [status, flow]
+      logic:
+        - IF Tank1.head < 149 THEN Pump335.status = Closed
+        - IF Tank1.head > 151 THEN Pump335.status = Open
+        - IF Tank1.head < 149 THEN Pipe330.status = Closed
+        - IF Tank1.head > 151 THEN Pipe330.status = Open
+  - name: lake-rtu
+    metadata:
+      instruments:
+        - name: Pump10
+          wntr: "10"
+          type: pump
+          write: [status]
+          read: [status, flow]
+      internal:
+        - name: Clocktime
+          type: clock
+          read: [seconds, hours]
+      logic:
+        - IF Clocktime.seconds = 3600 THEN Pump10.status = Open
+        - IF Clocktime.seconds = 56000 THEN Pump10.status = Closed
+  - name: tank2-rtu
+    metadata:
+      instruments:
+        - name: Tank2
+          wntr: "2"
+          type: tank
+          read: [head]
