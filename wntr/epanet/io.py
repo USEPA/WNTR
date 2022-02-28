@@ -670,6 +670,10 @@ class InpFile(object):
                  'curve': '',
                  'overflow': '',
                  'com': ';'}
+            if tank.init_level < tank.min_level:
+                E['initlev'] = from_si(self.flow_units, tank.min_level, HydParam.HydraulicHead) + abs(from_si(self.flow_units, tank.init_level, HydParam.HydraulicHead) - from_si(self.flow_units, tank.min_level, HydParam.HydraulicHead))
+            if tank.init_level > tank.max_level:
+                E['initlev'] = from_si(self.flow_units, tank.max_level, HydParam.HydraulicHead) - abs(from_si(self.flow_units, tank.init_level, HydParam.HydraulicHead) - from_si(self.flow_units, tank.max_level, HydParam.HydraulicHead))
             if tank.vol_curve is not None:
                 E['curve'] = tank.vol_curve.name
             if version ==2.2:
@@ -2815,10 +2819,23 @@ class BinFile(object):
         
                 status = np.array(df['linkstatus'])
                 if self.convert_status:
-                    status[status <= 2] = 0
-                    status[status == 3] = 1
-                    status[status >= 5] = 1
-                    status[status == 4] = 2
+                    """
+                    EPANET status codes
+                    0 = closed (max head exceeded)
+                    1 = temporarily closed
+                    2 = closed
+                    3 = open
+                    4 = active (partially open)
+                    5 = open (max flow exceeded)
+                    6 = open (flow setting not met)
+                    7 = open (press setting not met)
+                    """
+                    # 0 = 0, treat closed (max head exceeded) pump as closed
+                    # 1 = 1, treat temporarily closed pipe as open
+                    status[status == 2] = 0 # 2 = 0, closed
+                    status[status == 3] = 1 # 3 = 1, open
+                    status[status == 4] = 2 # 4 = 2, active
+                    status[status >= 5] = 1 # 5,6,7 = 1, treat valve open under different conditions as open
                 self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
                 
                 setting = np.array(df['linksetting'])
