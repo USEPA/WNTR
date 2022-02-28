@@ -807,6 +807,6 @@ class Options(_OptionsBase):
         self.__dict__[name] = value
 
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the options"""
         return dict(self)

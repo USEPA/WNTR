@@ -23,8 +23,10 @@ WNTR documentation
    resilience
    stochastic
    realtime
+   fragility
    morph
    graphics
+   advancedsim
    license
    developers
    reference

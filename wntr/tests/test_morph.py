@@ -124,7 +124,7 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe.roughness, pipeB.roughness)
         self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
         self.assertEqual(pipe.initial_status, pipeB.initial_status)
-
+    
     def test_break_pipe(self):
 
         inp_file = join(datadir, "leaks.inp")
@@ -156,6 +156,29 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe.roughness, pipeB.roughness)
         self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
         self.assertEqual(pipe.initial_status, pipeB.initial_status)
+
+    def test_split_break_pipe_vertices(self):
+
+        inp_file = join(datadir, "io.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        
+        wn2 = wntr.morph.split_pipe(wn, "p1", "p1__new", "new_junc")
+        pipe = wn2.get_link("p1")
+        pipeB = wn2.get_link("p1__new")
+        self.assertEqual(len(pipe.vertices), 0)
+        self.assertEqual(len(pipeB.vertices), 2)
+        
+        wn2 = wntr.morph.split_pipe(wn, "p1", "p1__new", "new_junc", split_at_point=0.7)
+        pipe = wn2.get_link("p1")
+        pipeB = wn2.get_link("p1__new")
+        self.assertEqual(pipe.vertices, [(15.0, 5.0)])
+        self.assertEqual(pipeB.vertices, [(20.0, 5.0)])
+        
+        wn2 = wntr.morph.split_pipe(wn, "p1", "p1__new", "new_junc", split_at_point=0.9)
+        pipe = wn2.get_link("p1")
+        pipeB = wn2.get_link("p1__new")
+        self.assertEqual(len(pipe.vertices), 2)
+        self.assertEqual(len(pipeB.vertices), 0)
 
     def test_skeletonize(self):
 

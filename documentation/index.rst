@@ -26,8 +26,10 @@ designed to simulate and analyze resilience of water distribution networks.
    resilience
    stochastic
    realtime
+   fragility
    morph
    graphics
+   advancedsim
    license
    whatsnew
    developers

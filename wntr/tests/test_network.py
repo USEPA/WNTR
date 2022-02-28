@@ -784,6 +784,10 @@ class TestCase(unittest.TestCase):
         expected = [93, 4, 3, 118, 3, 1, 6, 3, 1]
         self.assertListEqual(nums, expected)
 
+        # Verify that runtime errors occur when there is a node/pattern still in use
+        self.assertRaises(RuntimeError, wn.remove_node, "new_junc")
+        self.assertRaises(RuntimeError, wn.remove_pattern, "1")
+
         wn.remove_source("new_source")
         wn.remove_curve("new_curve")
         wn.remove_pattern("new_pattern")
@@ -952,16 +956,17 @@ class TestNetworkDict(unittest.TestCase):
     def test_dict_roundtrip(self):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
-            A = wn.todict()
-            B = self.wntr.network.WaterNetworkModel.fromdict(A)
+            A = wn.to_dict()
+            B = self.wntr.network.from_dict(A)
             assert(wn._compare(B))
 
     def test_json_roundtrip(self):
         import json
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
-            wn.tojson('test.json')
-            B = self.wntr.network.fromjson('test.json')
+            wn.convert_controls_to_rules()
+            wn.write_json('temp.json')
+            B = self.wntr.network.read_json('temp.json')
             assert(wn._compare(B))
 
 

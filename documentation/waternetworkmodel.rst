@@ -131,11 +131,11 @@ The following shows how to add an additional demand to the junction 121.
 .. doctest::
 
     >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
-    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]> 
+    <Demands: [<TimeSeries: base_value=0.002626444876132, pattern_name='1', category='None'>]> 
     
     >>> junction.add_demand(base=1.0, pattern_name='1')
     >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
-    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>, <TimeSeries: base=1.0, pattern='1', category='None'>]>
+    <Demands: [<TimeSeries: base_value=0.002626444876132, pattern_name='1', category='None'>, <TimeSeries: base_value=1.0, pattern_name='1', category='None'>]>
 
 To remove the demand, use the Python ``del`` as with an array element.
 
@@ -143,7 +143,7 @@ To remove the demand, use the Python ``del`` as with an array element.
 
     >>> del junction.demand_timeseries_list[1]
     >>> print(junction.demand_timeseries_list)
-    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]>
+    <Demands: [<TimeSeries: base_value=0.002626444876132, pattern_name='1', category='None'>]>
 
 
 Modify time series
@@ -271,32 +271,32 @@ EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
 
     >>> wn.write_inpfile('filename.inp', version=2.2)
 
-Write a model to a JSON file
----------------------------------
+Read and write a model to a dictionary or JSON file
+---------------------------------------------------
 
-The water network model can also be written to a file in a JSON text format.
-
-JSON representations of the model are always written in SI units (m, kg, s).
-The JSON file is just a formatted version of the water network model represented in dictionary form.
-To get the dictionary, use the `todict` function on the model.
-To create a water network model from a dictionary, use the `fromdict` function on the `WaterNetworkModel` class or the `wntr.network` module.
-
-.. doctest::
-    >>> dict_rep = wn.todict()
-    >>> wn2 = wntr.network.WaterNetworkModel.fromdict(dict_rep)
-    >>> wn._compare(wn2)
-    True
-
-The JSON functions `tojson` and `fromjson` wrap these dictionary functions with the standard library JSON loader and dumper.
+The water network model can be converted to a dictionary representation.
+The dictionary contains keys for each of the following water network model objects: 
+nodes, links, patterns, curves, sources, controls, and options.
+Each of these entries contains a dictionary or list of dictionaries with keys corresponding to the object attributes.
+Dictionary representations of the model are always written in SI units (m, kg, s).
+To create a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.to_dict` method on the water network model.
+To create a water network model from a dictionary, use the :class:`~wntr.network.model.WaterNetworkModel.from_dict` method.
 
 .. doctest::
-    >>> wn.tojson('test.json')
-    >>> wn3 = wntr.network.fromjson('test.json')
-    >>> wn._compare(wn3)
-    True
 
-Note that these functions do not check for a valid dictionary/JSON schema prior to trying to build a new model.
-They will simply ignore extraneous or invalid dictionary keys which will be lost if the new water network model is re-exported.
+    >>> wn_dict = wn.to_dict()
+
+The water network model can also be converted to a JSON (JavaScript Object Notation) file.  
+The JSON file is a formatted version of the dictionary representation.
+The :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` methods wrap 
+the dictionary representation with the Python standard library JSON loader and dumper.
+
+.. doctest::
+
+    >>> wn.write_json('Net3.json')
+	
+Note that these methods do not check for a valid dictionary/JSON schema prior to building a model.
+They simply ignore extraneous or invalid dictionary keys.
 
 Build a model from scratch
 ---------------------------------
