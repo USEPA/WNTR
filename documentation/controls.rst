@@ -64,7 +64,7 @@ The following example creates an action that opens pipe 330, in which a status o
     >>> pipe = wn.get_link('330')
     >>> act1 = controls.ControlAction(pipe, 'status', 1)
     >>> print(act1)
-    set Pipe('330').status to Open
+    PIPE 330 STATUS IS OPEN
 
 Conditions
 ----------
@@ -112,11 +112,11 @@ The action `act1` from above is used in the control.
     >>> tank = wn.get_node('1')
     >>> cond1 = controls.ValueCondition(tank, 'level', '>', 46.0248)
     >>> print(cond1)
-    Tank('1').level > 46.0248
+    TANK 1 LEVEL ABOVE 46.0248
     
     >>> ctrl1 = controls.Control(cond1, act1, name='control1')
     >>> print(ctrl1)
-    Control control1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
+    IF TANK 1 LEVEL ABOVE 46.0248 THEN PIPE 330 STATUS IS OPEN PRIORITY 3
     
 In the following example, a time-based control is defined that opens pump 10 at hour 121.
 A new action is defined that opens the pump. The SimTimeCondition parameter can be specified as decimal hours
@@ -128,11 +128,11 @@ or as a string in ``[dd-]hh:mm[:ss]`` format. When printed, the output is conver
     >>> act2 = controls.ControlAction(pump, 'status', 1)
     >>> cond2 = controls.SimTimeCondition(wn, '=', '121:00:00')
     >>> print(cond2)
-    sim_time = 435600 sec
+    SYSTEM TIME IS 121:00:00
     
     >>> ctrl2 = controls.Control(cond2, act2, name='control2')
     >>> print(ctrl2)
-    Control control2 := if sim_time = 435600 sec then set HeadPump('10').status to Open with priority 3
+    IF SYSTEM TIME IS 121:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 3
 
 Rules
 --------------------------
@@ -153,12 +153,12 @@ The following examples illustrate the creation of rules, using conditions and ac
     
     >>> rule1 = controls.Rule(cond1, [act1], name='rule1')
     >>> print(rule1)
-    Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
+    IF TANK 1 LEVEL ABOVE 46.0248 THEN PIPE 330 STATUS IS OPEN PRIORITY 3
     
     >>> pri5 = controls.ControlPriority.high
     >>> rule2 = controls.Rule(cond2, [act2], name='rule2', priority=pri5)
     >>> print(rule2)
-    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 5
+    IF SYSTEM TIME >= 121:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 5
 
 Since rules operate on a different timestep than controls, these rules might behave differently than the equivalent controls defined above. 
 Controls (or simple controls in EPANET) operate on the hydraulic timestep while Rules (or rule-based controls in EPANET) operate at a smaller timestep. 
@@ -173,11 +173,11 @@ and otherwise it will open pump 10.
     
     >>> cond3 = controls.AndCondition(cond1, cond2)
     >>> print(cond3)
-    ( Tank('1').level > 46.0248 && sim_time >= 435600 sec )
+     TANK 1 LEVEL ABOVE 46.0248 AND SYSTEM TIME >= 121:00:00 
     
     >>> rule3 = controls.Rule(cond3, [act1], [act2], priority=3, name='complex_rule')
     >>> print(rule3)
-    Rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time >= 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
+    IF  TANK 1 LEVEL ABOVE 46.0248 AND SYSTEM TIME >= 121:00:00  THEN PIPE 330 STATUS IS OPEN ELSE PUMP 10 STATUS IS OPEN PRIORITY 3
 
 Actions can also be combined, as shown in the following example.
 
@@ -186,7 +186,7 @@ Actions can also be combined, as shown in the following example.
     >>> cond4 = controls.OrCondition(cond1, cond2)
     >>> rule4 = controls.Rule(cond4, [act1, act2], name='rule4')
     >>> print(rule4)
-    Rule rule4 := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
+    IF  TANK 1 LEVEL ABOVE 46.0248 OR SYSTEM TIME >= 121:00:00  THEN PIPE 330 STATUS IS OPEN AND PUMP 10 STATUS IS OPEN PRIORITY 3
 
 The flexibility of rules provides an extremely powerful tool for defining complex network operations.
 
@@ -201,7 +201,7 @@ The control or rule should be named so that it can be retrieved and modified if 
 
     >>> wn.add_control('NewTimeControl', ctrl2)
     >>> wn.get_control('NewTimeControl')
-    <Control: 'control2', <SimTimeCondition: model, 'Is', '5-01:00:00', False, 0>, [<ControlAction: 10, status, Open>], [], priority=3>
+    <Control: 'control2', <SimTimeCondition: model, 'Is', '5-01:00:00', False, 0>, [<ControlAction: 10, status, OPEN>], [], priority=3>
 
 ..
 	If a control of that name already exists, an error will occur. In this case, the control will need to be deleted first.

@@ -3,6 +3,7 @@ import wntr.epanet.io
 from wntr.epanet.util import EN
 from wntr.network.base import LinkStatus
 import warnings
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -145,19 +146,19 @@ class EpanetSimulator(WaterNetworkSimulator):
             enData.ENopenH()
             enData.ENinitH(1)
             t = 0
-            stop_criteria_met = False
+            stop_criteria_met = []
             while True:
                 ret = enData.ENrunH()
                 for i in stop_criteria.index:
-                    link_name, attribute, operation, value, link_index = stop_criteria.loc[i,:]
+                    link_name, attribute, operation, value, activation_time, link_index = stop_criteria.loc[i,:]
                     link_attribute = enData.ENgetlinkvalue(int(link_index), int(attribute))
-                    if operation(link_attribute, int(value)): # if this isn't status, we should not convert to int
-                        stop_criteria_met = True
+                    if operation(link_attribute, int(value)) and (t > activation_time): # if this isn't status, we should not convert to int
+                        stop_criteria_met.append(i)
                         #results.error_code = wntr.sim.results.ResultsStatus.error
                         warnings.warn('Simulation stoped based on stop criteria at time ' + str(t) + '. ') 
                         logger.warning('Simulation stoped based on stop criteria at time ' + str(t) + '. ' ) 
-                        break # break out of for loop
-                if stop_criteria_met:
+                        #break # break out of for loop
+                if len(stop_criteria_met) > 0:
                     enData.ENsettimeparam(EN.DURATION, t)
                     tstep = enData.ENnextH()
                     break
@@ -200,8 +201,11 @@ class EpanetSimulator(WaterNetworkSimulator):
             # enData.ENclose()
             # logger.debug('Completed run')
 
-            # del stop_criteria['_link_index']
+            del stop_criteria['_link_index']
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
         
-        return results
+        if stop_criteria is None:
+            return results
+        else:
+            return results, stop_criteria.loc[stop_criteria_met,:]

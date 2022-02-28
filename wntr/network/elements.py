@@ -1108,7 +1108,7 @@ class Pump(Link):
             For example, the pump opens based on the level of a specific tank.
         """
         from wntr.network.controls import ControlAction, SimTimeCondition, AndCondition, Rule
-        
+
         # Outage
         act = ControlAction(self, 'status', LinkStatus.Closed)
         cond1 = SimTimeCondition(wn, 'Above' , start_time)
@@ -2065,7 +2065,7 @@ class Pattern(object):
             raise ValueError('Pattern->time_options must be a TimeOptions or null')
         self._time_options = object
 
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the pattern"""
         d = dict(name=self.name, 
                  multipliers=list(self._multipliers))
@@ -2225,13 +2225,13 @@ class TimeSeries(object):
             return self._base
         return self._base * self.pattern.at(time)
     
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the time series"""
         d = dict(base_val=self._base)
-        if isinstance(self._pattern, six.string_types):
-            d['pattern_name'] = self._pattern
-        if self._category:
-            d['category'] = self._category
+        # if isinstance(self._pattern, six.string_types):
+        d['pattern_name'] = self.pattern_name
+        # if self._category:
+        d['category'] = self.category
         return d
     
 #    def tostring(self):
@@ -2361,6 +2361,12 @@ class Demands(MutableSequence):
         for dem in self._list:
                 res.append(dem.category)
         return res
+
+    def to_list(self):
+        res = []
+        for dem in self:
+            res.append(dem.to_dict())
+        return res
         
 
 class Curve(object):
@@ -2477,7 +2483,7 @@ class Curve(object):
         """Returns the number of points in the curve."""
         return len(self.points)
     
-    def todict(self):
+    def to_dict(self):
         """Dictionary representation of the curve"""
         d = dict(name=self._name, 
                  curve_type=self._curve_type,
@@ -2584,3 +2590,12 @@ class Source(object):
     @source_type.setter
     def source_type(self, value):
         self._source_type = value
+
+    def to_dict(self):
+        ret = dict()
+        ret['name'] = self.name
+        ret['node_name'] = self.node_name
+        ret['source_type'] = self.source_type
+        ret['strength'] = self.strength_timeseries.base_value
+        ret['pattern'] = self.strength_timeseries.pattern_name
+        return ret

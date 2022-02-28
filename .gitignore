@@ -12,9 +12,9 @@ wntr.egg-info/
 *.pickle
 *.xlsx
 
-temp.inp
-temp.bin
-temp.rpt
+temp*.inp
+temp*.bin
+temp*.rpt
 
 examples/*.inp
 wntr/tests/*.png

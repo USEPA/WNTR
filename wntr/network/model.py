@@ -15,15 +15,14 @@ model.
 
 """
 import logging
-import sys
 from collections import OrderedDict
-from collections.abc import MutableSequence
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 import six
 import wntr.epanet
+import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -59,12 +58,13 @@ class WaterNetworkModel(AbstractModel):
         self._pattern_reg = PatternRegistry(self)
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
-        self._sources = OrderedDict()
+        self._sources = SourceRegistry(self)
 
         self._node_reg._finalize_(self)
         self._link_reg._finalize_(self)
         self._pattern_reg._finalize_(self)
         self._curve_reg._finalize_(self)
+        self._sources._finalize_(self)
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
 
@@ -1100,17 +1100,57 @@ class WaterNetworkModel(AbstractModel):
                 
         return d
     
-    def todict(self):
-        """Dictionary representation of the water network model"""
-        d = dict(options=self._options.todict(),
-                 nodes=self._node_reg.tolist(),
-                 links=self._link_reg.tolist(),
-                 curves=self._curve_reg.tolist(),
-                 controls=self._controls,
-                 patterns=self._pattern_reg.tolist()
-                 )
-        return d
+    def to_dict(self):
+        """Dictionary representation of the WaterNetworkModel.
+        
+        Returns
+        -------
+        dict
+            Dictionary representation of the WaterNetworkModel
+        """
+        return wntr.network.io.to_dict(self)
+
+    def from_dict(self, d: dict):
+        """
+        Append the model with elements from a water network model dictionary.
+
+        Parameters
+        ----------
+        d : dict
+            dictionary representation of the water network model to append to existing model
+        """
+        wntr.network.io.from_dict(d, append=self)
+
+    def write_json(self, f, **kw_json):
+        """
+        Write the WaterNetworkModel to a JSON file
+
+        Parameters
+        ----------
+        f : str
+            Name of the file or file pointer
+        kw_json : keyword arguments
+            arguments to pass directly to `json.dump`
+        """
+        wntr.network.io.write_json(self, f, **kw_json)
     
+    def read_json(self, f, **kw_json):
+        """
+        Create a WaterNetworkModel from a JSON file.
+
+        Parameters
+        ----------
+        f : str
+            Name of the file or file pointer
+        kw_json : keyword arguments
+            keyword arguments to pass to `json.load`
+
+        Returns
+        -------
+        WaterNetworkModel
+        """
+        return wntr.network.io.read_json(f, append=self, **kw_json)
+
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
         Returns a networkx MultiDiGraph of the water network model
@@ -1576,9 +1616,7 @@ class WaterNetworkModel(AbstractModel):
             Name of the INP file.
 
         """
-        inpfile = wntr.epanet.InpFile()
-        inpfile.read(filename, wn=self)
-        self._inpfile = inpfile
+        return wntr.network.io.read_inpfile(filename, append=self)
 
     def write_inpfile(self, filename, units=None, version=2.2, force_coordinates=False):
         """
@@ -1611,12 +1649,7 @@ class WaterNetworkModel(AbstractModel):
             the MAP file is `None` by default.
 
         """
-        if self._inpfile is None:
-            logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
-            self._inpfile = wntr.epanet.InpFile()
-        if units is None:
-            units = self._options.hydraulic.inpfile_units
-        self._inpfile.write(filename, self, units=units, version=version, force_coordinates=force_coordinates)
+        wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
 
 
 class PatternRegistry(Registry):
@@ -1697,17 +1730,6 @@ class PatternRegistry(Registry):
     def default_pattern(self):
         """A new default pattern object"""
         return self.DefaultPattern(self._options)
-
-#    def tostring(self):
-#        """String representation of the pattern registry"""
-#        s  = 'Pattern Registry:\n'
-#        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
-#        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
-#        if len(self.orphaned()) > 0:
-#            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 
 
 class CurveRegistry(Registry):
@@ -1871,22 +1893,6 @@ class CurveRegistry(Registry):
         """List of names of all volume curves"""
         return list(self._volume_curves)
 
-#    def tostring(self):
-#        """String representation of the curve registry"""
-#        s  = 'Curve Registry:\n'
-#        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
-#        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
-#        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
-#        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
-#        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
-#        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
-#        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
-
 
 class SourceRegistry(Registry):
     """A registry for sources."""
@@ -2023,7 +2029,7 @@ class NodeRegistry(Registry):
         assert isinstance(base_demand, (int, float)), "base_demand must be a float"
         assert isinstance(demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)), "demand_pattern must be a string or Pattern"
         assert isinstance(elevation, (int, float)), "elevation must be a float"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
         assert isinstance(emitter_coeff, (type(None), int, float)), "emitter_coeff must be a float"
         assert isinstance(initial_quality, (type(None), int, float)), "initial_quality must be a float"
@@ -2084,7 +2090,7 @@ class NodeRegistry(Registry):
         assert isinstance(min_vol, (int, float)), "min_vol must be a float"
         assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
         assert isinstance(overflow, (type(None), bool)), "overflow must be a Boolean"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
         
         elevation = float(elevation)
         init_level = float(init_level)
@@ -2145,7 +2151,7 @@ class NodeRegistry(Registry):
         assert isinstance(name, str) and len(name) < 32 and name.find(' ') == -1, "name must be a string with less than 32 characters and contain no spaces"
         assert isinstance(base_head, (int, float)), "base_head must be float"
         assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
-        assert isinstance(coordinates, (type(None), tuple)), "coordinates must be a tuple"
+        assert isinstance(coordinates, (type(None), (tuple, list))), "coordinates must be a tuple"
         
         base_head = float(base_head)
 
@@ -2212,19 +2218,6 @@ class NodeRegistry(Registry):
         """
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
-
-#    def tostring(self):
-#        """String representation of the node registry"""
-#        s  = 'Node Registry:\n'
-#        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
-#        s += '    Junctions:      {}\n'.format(len(self.junction_names))
-#        s += '    Tanks:          {}\n'.format(len(self.tank_names))
-#        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
-#        if len(self.orphaned()) > 0:
-#            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 
 
 class LinkRegistry(Registry):
@@ -2754,44 +2747,4 @@ class LinkRegistry(Registry):
         """
         for name in self._gpvs:
             yield name, self._data[name]
-
-#    def tostring(self):
-#        """String representation of the link registry"""
-#        s  = 'Link Registry:\n'
-#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
-#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-#        ct_cv = sum([ 1 for n in self.check_valves()])
-#        if ct_cv:
-#            s += '      Check valves:     {}\n'.format(ct_cv)
-#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-#        ct_cp = len(self._power_pumps)
-#        ct_hc = len(self._head_pumps)
-#        if ct_cp:
-#            s += '      Constant power:   {}\n'.format(ct_cp)
-#        if ct_hc:
-#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
-#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
-#        PRV = len(self._prvs)
-#        PSV = len(self._psvs)
-#        PBV = len(self._pbvs)
-#        FCV = len(self._fcvs)
-#        TCV = len(self._tcvs)
-#        GPV = len(self._gpvs)
-#        if PRV:
-#            s += '      Pres. reducing:   {}\n'.format(PRV)
-#        if PSV:
-#            s += '      Pres. sustaining: {}\n'.format(PSV)
-#        if PBV:
-#            s += '      Pres. breaker:    {}\n'.format(PBV)
-#        if FCV:
-#            s += '      Flow control:     {}\n'.format(FCV)
-#        if TCV:
-#            s += '      Throttle control: {}\n'.format(TCV)
-#        if GPV:
-#            s += '      General purpose:  {}\n'.format(GPV)
-#        if len(self.orphaned()) > 0:
-#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
-#            for orphan in self.orphaned():
-#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-#        return s
 

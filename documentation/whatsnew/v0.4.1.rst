@@ -1,0 +1,19 @@
+.. _whatsnew_041:
+
+v0.4.1 (main)
+---------------------------------------------------
+
+* Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index``.  The modified resilience 
+  index is a measure of total surplus power. The metric can be computed as a timeseries for each junction or as a system average timeseries.
+
+* Added a function to compute tank capacity, ``wntr.metrics.tank_capacity``.  Tank capacity is the ratio of water volume to the maximum 
+  water volume for each tank and is reported as a timeseries.
+
+* Updated the WNTRSimulator to use ``wn.options.time.pattern_start``.
+
+* Removed private attribute on pumps associated with power outage controls which is no longer needed.
+
+* Added functionality to convert the water network model to a dictionary or JSON formatted file and 
+  create a water network model from a dictionary or JSON formatted file. 
+  The new functionality is located in ``wntr.network.io`` and includes ``to_dict``, ``from_dict``, 
+  ``write_json`` and ``read_json``.  These can also be called using methods on the WaterNetworkModel object.
