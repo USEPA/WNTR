@@ -1,27 +1,55 @@
 .. _whatsnew_041:
 
-v0.4.1 (main)
+v0.4.1 (March 1, 2022)
 ---------------------------------------------------
 
-* Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index``.  The modified resilience 
-  index is a measure of total surplus power. The metric can be computed as a timeseries for each junction or as a system average timeseries.
+* Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index``.  
+  The modified resilience index is a measure of total surplus power. The metric can be computed 
+  as a timeseries for each junction or as a system average timeseries. 
+  [(#226))](https://github.com/USEPA/WNTR/pull/226)
 
-* Added a function to compute tank capacity, ``wntr.metrics.tank_capacity``.  Tank capacity is the ratio of water volume to the maximum 
-  water volume for each tank and is reported as a timeseries.
-
-* Updated the WNTRSimulator to use ``wn.options.time.pattern_start``.
-
-* Added the ability to set the random seed when sampling damage states from fragility curves.
-
-* Added methods to update parameters used to define rules and controls.
-
-* Updated ``wntr.morph.split_pipe`` and ``wntr.morph.break_pipe`` to include pipe vertices.
-
-* Removed private attribute on pumps associated with power outage controls which is no longer needed.
+* Added a function to compute tank capacity, ``wntr.metrics.tank_capacity``.  
+  Tank capacity is the ratio of water volume to the maximum 
+  water volume for each tank and is reported as a timeseries. 
+  [(#226))](https://github.com/USEPA/WNTR/pull/226)
 
 * Added functionality to convert the water network model to a dictionary or JSON formatted file and 
   create a water network model from a dictionary or JSON formatted file. 
   The new functionality is located in ``wntr.network.io`` and includes ``to_dict``, ``from_dict``, 
-  ``write_json`` and ``read_json``.  These can also be called using methods on the WaterNetworkModel object.
+  ``write_json`` and ``read_json``.  These can also be called using methods on the WaterNetworkModel object. 
+  [(#232)](https://github.com/USEPA/WNTR/pull/232)
+  
+* Updated the WNTRSimulator to use ``wn.options.time.pattern_start``. 
+  [(#225)](https://github.com/USEPA/WNTR/pull/225)
+
+* Added the ability to set the random seed when sampling damage states from fragility curves.
+  [(#246)](https://github.com/USEPA/WNTR/pull/246)
+
+* Added methods to update parameters used to define rules and controls.
+  [(#241)](https://github.com/USEPA/WNTR/pull/241)
+
+* Updated ``wntr.morph.split_pipe`` and ``wntr.morph.break_pipe`` to include pipe vertices.
+  [(#248)](https://github.com/USEPA/WNTR/pull/248)
+
+* Updated the EpanetSimulator to be thread safe (only available for EPANET version 2.2). 
+  [(#236)](https://github.com/USEPA/WNTR/pull/236)
+
+* Updated rules parsing mechanism for the EPANET INP files.
+  [(#228))](https://github.com/USEPA/WNTR/pull/228)
+
+* Added an assert statement to ensure that the hydraulic, quality, pattern and rule timesteps 
+  are an integer and are not less than 1 second.
+  [(#229)](https://github.com/USEPA/WNTR/pull/229)
 
 * Added the Jupyter Notebook demos into the testing framework.
+  [(#237)](https://github.com/USEPA/WNTR/pull/237)
+  
+* Fixed assert statement in add_tank to check for bool, str, or int 
+  [(#251)](https://github.com/USEPA/WNTR/pull/251)
+  
+* Corrected text in the time series string representation.
+  [(#238)](https://github.com/USEPA/WNTR/pull/238)
+  
+* Removed private attribute on pumps associated with power outage controls which is no longer needed.
+  [(#225)](https://github.com/USEPA/WNTR/pull/225)
+  
