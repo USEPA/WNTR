@@ -5,7 +5,7 @@ import os
 import re
 
 use_swig = False
-build = False
+build = True
 
 extension_modules = list()
 
