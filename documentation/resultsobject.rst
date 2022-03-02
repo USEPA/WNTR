@@ -19,7 +19,7 @@ Simulation results are stored in a results object which contains:
     >>> import pandas as pd
     >>> import matplotlib.pylab as plt
 	>>> import wntr
-    >>> pd.set_option('precision', 2)
+    >>> pd.set_option('display.precision', 2)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
