@@ -1,6 +1,6 @@
 .. _whatsnew_041:
 
-v0.4.1 (March 1, 2022)
+v0.4.1 (March 2, 2022)
 ---------------------------------------------------
 
 * Added a function to compute the modified resilience index, ``wntr.metrics.modified_resilience_index``.  
