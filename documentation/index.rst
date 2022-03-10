@@ -27,6 +27,7 @@ designed to simulate and analyze resilience of water distribution networks.
    fragility
    morph
    graphics
+   gis
    advancedsim
    license
    whatsnew

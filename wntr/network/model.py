@@ -48,7 +48,7 @@ from .elements import (
     TimeSeries,
     Valve,
 )
-from .gis import WaterNetworkGIS
+
 from .options import Options
 
 logger = logging.getLogger(__name__)
@@ -1241,7 +1241,8 @@ class WaterNetworkModel(AbstractModel):
         crs : str, optional
             the coordinate system, by default ""
         """
-        return WaterNetworkGIS(
+        from wntr.gis import wn_to_gis
+        return wn_to_gis(
             self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
         )
 
@@ -1275,7 +1276,8 @@ class WaterNetworkModel(AbstractModel):
         driver : str, optional
             [description], by default "GeoJSON"
         """
-        obj = WaterNetworkGIS(
+        from wntr.gis import wn_to_gis
+        obj = wn_to_gis(
             self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
         )
         obj.write(prefix, path=path, suffix=suffix, driver=driver)
@@ -2449,7 +2451,7 @@ class LinkRegistry(Registry):
         assert isinstance(diameter, (int, float)), "diameter must be a float"
         assert isinstance(roughness, (int, float)), "roughness must be a float"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
-        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
         assert isinstance(check_valve, bool), "check_valve must be a Boolean"
 
         length = float(length)
@@ -2517,7 +2519,7 @@ class LinkRegistry(Registry):
         assert isinstance(pump_parameter, (int, float, str)), "pump_parameter must be a float or string"
         assert isinstance(speed, (int, float)), "speed must be a float"
         assert isinstance(pattern, (type(None), str)), "pattern must be a string"
-        assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+        assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
 
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]

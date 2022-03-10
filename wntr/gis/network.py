@@ -1,5 +1,6 @@
 """
-Geographic and shape functionality
+The wntr.gis.network module contains methods to convert between water network 
+models and GIS formatted data
 """
 
 import os.path
@@ -10,63 +11,113 @@ import numpy as np
 
 try:
     from shapely.geometry import LineString, Point, shape
-
     has_shapely = True
 except ModuleNotFoundError:
     has_shapely = False
 
 try:
     import geopandas as gpd
-
     has_geopandas = True
 except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
 
+def wn_to_gis(wn, crs: str = "", pump_as_point_geometry=True, valve_as_point_geometry=True):
+    """
+    Convert a WaterNetworkModel into GeoDataFrames
+    
+    Parameters
+    ----------
+    wn : WaterNetworkModel
+        Water network model
+    crs : str, optional
+        Coordinate reference string, by default ""
+    pump_as_point_geometry : bool, optional
+        Create pumps as points (True) or lines (False), by default True
+    valve_as_point_geometry : bool, optional
+        Create valves as points (True) or lines (False), by default True
+        
+    Returns
+    -------
+    WaterNetworkGIS object that contains junctions, tanks, reservoirs, pipes, 
+    pumps, and valves GeoDataFrames
+        
+    """
+    gis_data = WaterNetworkGIS()
+    gis_data.create_gis(wn, crs, pump_as_point_geometry, valve_as_point_geometry)
+    
+    return gis_data
+
+def gis_to_wn(gis_data):
+    """
+    Convert GeoDataFrames into a WaterNetworkModel
+    
+    Parameters
+    ----------
+    gis_data : WaterNetworkGIS or dictionary of GeoDataFrames
+        GeoDataFrames containing water network attributes. If gis_data is a 
+        dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
+        pumps, and valves. If the pumps or valves are Points, they will be 
+        converted to Lines with the same start and end node location.
+        
+    Returns
+    -------
+    WaterNetworkModel
+        
+    """
+
+    if isinstance(gis_data, dict):
+        gis_data = WaterNetworkGIS()
+        gis_data.junctions = gis_data['junctions']
+        gis_data.tanks = gis_data['tanks']
+        gis_data.reservoirs = gis_data['reservoirs']
+        gis_data.pipes = gis_data['pipes']
+        gis_data.pumps = gis_data['pumps']
+        gis_data.valves = gis_data['valves']
+        
+    wn = gis_data.create_wn()
+    
+    return wn
+        
 class WaterNetworkGIS:
-    def __init__(self, wn, crs: str = "", pump_as_point_geometry=True, valve_as_point_geometry=True) -> None:
-        """
-        Water network model as GeoPandas and Shapely objects with attributes
+    """
+    Water network GIS class 
+    
+    Contains methods to create GeoDataFrames from WaterNetworkModel and 
+    create WaterNetworkModel from GeoDataFrames.
 
-        Parameters
-        ----------
-        wn : WaterNetworkModel
-            the water network
-        crs : str, optional
-            coordinate reference string, by default ""
-        pump_as_point_geometry : bool, optional
-            create pumps as points (True) or lines (False), by default True
-        valve_as_point_geometry : bool, optional
-            create valves as points (True) or lines (False), by default True
-
-        Raises
-        ------
-        ModuleNotFoundError
-            if missing either shapely or geopandas
-        """
+    Raises
+    ------
+    ModuleNotFoundError
+        if missing either shapely or geopandas
+    """
+    
+    def __init__(self) -> None:
+        
         if not has_shapely or not has_geopandas:
-            raise ModuleNotFoundError("Cannot do WNTR geometry without shapely and geopandas")
-        self.crs = crs
-        self.pump_as_point_geometry = pump_as_point_geometry
-        self.valve_as_point_geometry = valve_as_point_geometry
-        self._wn = wn
+            raise ModuleNotFoundError('shaply and geopandas are required')
+
         self.junctions = None
         self.tanks = None
         self.reservoirs = None
         self.pipes = None
         self.pumps = None
         self.valves = None
-        self.reset_data()
 
-    def reset_data(
-        self, crs: str = None, pump_as_point_geometry: bool = None, valve_as_point_geometry: bool = None,
+    def create_gis(
+        self, wn, crs: str = None, pump_as_point_geometry: bool = None, valve_as_point_geometry: bool = None,
     ) -> None:
         """
-        Reset the data in the geometry with new options (will delete any attributes previously added)
+        Create GIS data from a water network model.
+        
+        Note: patterns, curves, rules, controls, sources, and options are not 
+        saved to the GIS data
 
         Parameters
         ----------
+        wn : WaterNetworkModel
+            Water network model
         crs : str, optional
             the coordinate reference system, such as by default None (use internal object attribute value).
             If set, this will update the object's internal attribute
@@ -77,17 +128,10 @@ class WaterNetworkGIS:
             create valves as points (True) or lines (False), by default None (use internal object attribute value).
             If set, this will update the object's internal attribute
         """
-        if crs is not None:
-            self.crs = crs
-        if pump_as_point_geometry is not None:
-            self.pump_as_point_geometry = pump_as_point_geometry
-        if valve_as_point_geometry is not None:
-            self.valve_as_point_geometry = valve_as_point_geometry
-        crs = self.crs
-        pumps_as_points = self.pump_as_point_geometry
-        valves_as_points = self.valve_as_point_geometry
-        wn = self._wn
-
+        pumps_as_points = pump_as_point_geometry
+        valves_as_points = valve_as_point_geometry
+        
+        ### Junctions
         data = list()
         geometry = list()
         for node_name in wn.junction_name_list:
@@ -107,7 +151,8 @@ class WaterNetworkGIS:
         if len(df) > 0:
             df.set_index("name", inplace=True)
         self.junctions = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
+        
+        ### Tanks
         data = list()
         geometry = list()
         for node_name in wn.tank_name_list:
@@ -127,7 +172,8 @@ class WaterNetworkGIS:
         if len(df) > 0:
             df.set_index("name", inplace=True)
         self.tanks = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
+        
+        ### Reservoirs
         data = list()
         geometry = list()
         for node_name in wn.reservoir_name_list:
@@ -147,7 +193,8 @@ class WaterNetworkGIS:
         if len(df) > 0:
             df.set_index("name", inplace=True)
         self.reservoirs = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
+        
+        ### Valves
         data = list()
         geometry = list()
         for link_name in wn.valve_name_list:
@@ -161,6 +208,8 @@ class WaterNetworkGIS:
             g2 = Point(link.start_node.coordinates)
             dd = dict(
                 name=link.name,
+                start_node_name=link.start_node_name,
+                end_node_name=link.end_node_name,
                 type=link.link_type,
                 valve_type=link.valve_type,
                 tag=link.tag,
@@ -177,6 +226,7 @@ class WaterNetworkGIS:
             df.set_index("name", inplace=True)
         self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
+        ### Pumps
         data = list()
         geometry = list()
         for link_name in wn.pump_name_list:
@@ -190,6 +240,8 @@ class WaterNetworkGIS:
             g2 = Point(link.start_node.coordinates)
             dd = dict(
                 name=link.name,
+                start_node_name=link.start_node_name,
+                end_node_name=link.end_node_name,
                 type=link.link_type,
                 pump_type=link.pump_type,
                 tag=link.tag,
@@ -205,7 +257,8 @@ class WaterNetworkGIS:
         if len(df) > 0:
             df.set_index("name", inplace=True)
         self.pumps = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
+        
+        ### Pipes
         data = list()
         geometry = list()
         for link_name in wn.pipe_name_list:
@@ -218,6 +271,8 @@ class WaterNetworkGIS:
             g = LineString(ls)
             dd = dict(
                 name=link.name,
+                start_node_name=link.start_node_name,
+                end_node_name=link.end_node_name,
                 type=link.link_type,
                 tag=link.tag,
                 initial_status=link.initial_status,
@@ -233,16 +288,131 @@ class WaterNetworkGIS:
             df.set_index("name", inplace=True)
         self.pipes = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
+        
+    def create_wn(self):
+        """
+        Create a water network model from GIS data
+        
+        Note: The water network model will not include patterns, curves, rules, 
+        controls, or sources.  Options will be set to default values.
+        
+        """
+        from wntr.network import WaterNetworkModel
+        
+        wn = WaterNetworkModel()
+        
+        ### Junctions
+        assert (self.junctions['geometry'].geom_type).isin(['Point']).all()
+        attributes = ['base_demand', 'demand_pattern', 'elevation', 'demand_category']
+        
+        for name, element in self.junctions.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            x = element.geometry.xy[0][0]
+            y = element.geometry.xy[1][0]
+            kwargs['coordinates'] = (x,y)
+
+            wn.add_junction(name, **kwargs)
+        
+        ### Tanks
+        assert (self.tanks['geometry'].geom_type).isin(['Point']).all()
+        attributes = ['elevation', 'init_level', 'min_level', 'max_level',
+                      'diameter', 'min_vol', 'vol_curve', 'overflow']
+        
+        for name, element in self.tanks.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            x = element.geometry.xy[0][0]
+            y = element.geometry.xy[1][0]
+            kwargs['coordinates'] = (x,y)
+            
+            wn.add_tank(name, **kwargs)
+    
+        ### Reservoirs
+        assert (self.reservoirs['geometry'].geom_type).isin(['Point']).all()
+        attributes = ['base_head', 'head_pattern']
+        
+        for name, element in self.reservoirs.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            x = element.geometry.xy[0][0]
+            y = element.geometry.xy[1][0]
+            kwargs['coordinates'] = (x,y)
+                
+            wn.add_reservoir(name, **kwargs)
+            
+        ### Pipes
+        assert (self.pipes['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all()
+        assert 'start_node_name' in self.pipes.columns
+        assert 'end_node_name' in self.pipes.columns
+        attributes = ['start_node_name', 'end_node_name', 'length', 'diameter', 
+                      'roughness', 'minor_loss', 'initial_status', 'check_valve']
+
+        for name, element in self.pipes.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            # TODO save vertices to the water network       
+
+            wn.add_pipe(name, **kwargs)
+
+        ### Pumps
+        # TODO if geometry is a Point, the dataframe might not include a start or end node name 
+        # and a new node might need to be added and connected to the out link.
+        assert (self.pipes['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
+        assert 'start_node_name' in self.pipes.columns
+        assert 'end_node_name' in self.pipes.columns
+        attributes = ['start_node_name', 'end_node_name', 'pump_type', 
+                      'pump_parameter', 'speed', 'pattern', 'initial_status']
+        
+        for name, element in self.pumps.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            wn.add_pump(name, **kwargs)
+            
+        ### Valves
+        # TODO if geometry is a Point, the dataframe might not include a start or end node name 
+        # and a new node might need to be added and connected to the out link.
+        assert (self.pipes['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
+        assert 'start_node_name' in self.pipes.columns
+        assert 'end_node_name' in self.pipes.columns
+        attributes = ['start_node_name', 'end_node_name', 'diameter', 
+                      'valve_type', 'minor_loss', 'initial_setting', 'initial_status']
+        
+        for name, element in self.valves.iterrows():
+            kwargs = {}
+            for attribute in attributes:
+                if attribute in element.index:
+                    kwargs[attribute] = element[attribute] 
+
+            wn.add_valve(name, **kwargs)
+            
+        return wn
+    
     def add_node_attributes(self, values, name):
         """
-        Add attributes to the nodes of the network geometry.
+        Add attribute to junctions, tanks, or reservoirs GeoDataFrames
 
         Parameters
         ----------
         values : dict or Series or row of a DataFrame
-            [description]
+            Attribute values
         name : str
-            [description]
+            Attribute name
         """
         for node_name, value in values.items():
             node = self._wn.get_node(node_name)
@@ -261,14 +431,14 @@ class WaterNetworkGIS:
 
     def add_link_attributes(self, values, name):
         """
-        Add attributes the links of the network geometry.
+        Add attribute to pipes, pumkps, or valves GeoDataFrames
 
         Parameters
         ----------
         values : dict or Series or row of a DataFrame
-            [description]
-        name : [type]
-            [description]
+            Attribute values
+        name : str
+            Attribute name 
         """
         for link_name, value in values.items():
             link = self._wn.get_link(link_name)
@@ -346,75 +516,4 @@ class WaterNetworkGIS:
             )
     
 
-def snap_points_to_points(points1, points2):
-    pass
 
-def snap_points_to_lines(points, lines):
-    pass
-
-def _intersect(elements, polygons, column):
-   
-    isinstance(polygons, gpd.GeoDataFrame)
-    
-    intersects = gpd.sjoin(elements, polygons, op='intersects')
-    
-    n = intersects.groupby('name')[column].count()
-    val_sum = intersects.groupby('name')[column].sum()
-    val_min = intersects.groupby('name')[column].min()
-    val_max = intersects.groupby('name')[column].max()
-    val_average = intersects.groupby('name')[column].mean()
-    
-    polygon_indices = intersects.groupby('name')['index_right'].apply(list)
-    polygon_values = intersects.groupby('name')[column].apply(list)
-
-    stats = pd.DataFrame(index=elements.index, data={'N': n,
-                                                     'Sum': val_sum,
-                                                     'Min': val_min, 
-                                                     'Max': val_max, 
-                                                     'Average': val_average,
-                                                     'Polygons': polygon_indices,
-                                                     'Values': polygon_values})
-    return stats
-
-
-def intersect_points_with_polygons(points, polygons, column):
-    
-    isinstance(points, gpd.GeoDataFrame)
-    assert (points['geometry'].geom_type).isin(['Point']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
-    
-    stats = _intersect(points, polygons, column)
-    return stats
-
-def intersect_lines_with_polygons(lines, polygons, column, return_weighted_average=True):
-    
-    isinstance(lines, gpd.GeoDataFrame)
-    assert (lines['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
-    isinstance(return_weighted_average, bool)
-    
-    stats = _intersect(lines, polygons, column)
-    
-    if return_weighted_average:
-        stats['Weighted Average'] = 0
-        line_length = lines.length
-        for i in polygons.index:
-            polygon = gpd.GeoDataFrame(polygons.loc[[i],:], crs=None)
-            clip = gpd.clip(lines, polygon) # you might be able to downselect lines using stats['Polygons'] to speed up clip
-            
-            if len(clip.index) > 0:
-                val = float(polygon[column])
-                
-                weighed_val = clip.length/line_length[clip.index]*val
-                assert (weighed_val <= val).all()
-                stats.loc[clip.index, 'Weighted Average'] = stats.loc[clip.index, 'Weighted Average'] + weighed_val
-                
-        stats['Weighted Average'] = stats['Weighted Average']/stats['N']
-    
-    return stats
