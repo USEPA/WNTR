@@ -10,6 +10,8 @@ plotly
 folium
 utm
 openpyxl
+geopandas
+shapely
 
 # Testing
 nose
