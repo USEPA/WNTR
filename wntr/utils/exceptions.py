@@ -36,6 +36,12 @@ class ToolkitError(WNTRException):  # pragma: no cover
     pass
 
 
+class InpFileError(WNTRException):  # pragma: no cover
+    """
+    A syntax error is present in the INP file.
+    """
+
+
 class WNTRWarning(Warning):  # pragma: no cover
     """
     Base class for filtering WNTR specific warnings.

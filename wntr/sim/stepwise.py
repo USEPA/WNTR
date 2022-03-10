@@ -28,7 +28,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import wntr.epanet.io
-from wntr.epanet.util import EN
+from wntr.epanet.util import EN, LinkTankStatus
 from wntr.network.base import LinkStatus
 from wntr.network.controls import StopControl, StopCriteria
 from wntr.sim.core import WaterNetworkSimulator
@@ -72,6 +72,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._node_sensors = dict()
         self._stop_criteria = StopCriteria()  # node/link, name, attribute, comparison, level
         self._crit_num = 0
+        self._temp_index = list()
         self._temp_link_report_lines = dict()
         self._temp_node_report_lines = dict()
         self._next_stop_time = None
@@ -355,13 +356,92 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             return False
         raise NotImplementedError()
 
-    def save_report_step(self):
+    def _save_report_step(self):
         t = self._en.ENgettimeparam(EN.HTIME)
         report_line = -1 if t < self._report_start else (t - self._report_start) // self._report_timestep
         if report_line > self._last_line_added:
             time = self._report_start + report_line * self._report_timestep
             self._last_line_added = report_line
             logger.debug('Reporting at time {}'.format(time))
+            self._temp_index.append(time)
+            demand = list()
+            head = list()
+            pressure = list()
+            quality = list()
+            for idx in self._node_name_idx:
+                demand.append(self._en.ENgetnodevalue(idx, EN.DEMAND))
+                head.append(self._en.ENgetnodevalue(idx, EN.HEAD))
+                pressure.append(self._en.ENgetnodevalue(idx, EN.PRESSURE))
+                quality.append(self._en.ENgetnodevalue(idx, EN.QUALITY))
+            self._temp_node_report_lines['demand'].append(demand)
+            self._temp_node_report_lines['head'].append(head)
+            self._temp_node_report_lines['pressure'].append(pressure)
+            self._temp_node_report_lines['quality'].append(quality)
+            linkqual = list()
+            flow = list()
+            velocity = list()
+            headloss = list()
+            status = list()
+            setting = list()
+            for idx in self._link_name_idx:
+                linkqual.append(self._en.ENgetlinkvalue(idx, EN.LINKQUAL))
+                flow.append(self._en.ENgetlinkvalue(idx, EN.FLOW))
+                velocity.append(self._en.ENgetlinkvalue(idx, EN.VELOCITY))
+                headloss.append(self._en.ENgetlinkvalue(idx, EN.HEADLOSS))
+                status.append(self._en.ENgetlinkvalue(idx, EN.STATUS))
+                setting.append(self._en.ENgetlinkvalue(idx, EN.SETTING))
+            self._temp_link_report_lines['quality'].append(linkqual)
+            self._temp_link_report_lines['flowrate'].append(flow)
+            self._temp_link_report_lines['velocity'].append(velocity)
+            self._temp_link_report_lines['headloss'].append(headloss)
+            self._temp_link_report_lines['status'].append(status)
+            self._temp_link_report_lines['setting'].append(setting)
+
+    def _copy_results_object(self):
+        if len(self._temp_index) <= 0: return
+        for _, _, name in self._node_attributes:
+            df = self._results.node[name]
+            df = df.append(pd.DataFrame(self._temp_node_report_lines[name], columns=self._node_name_str, index=self._temp_index))
+            self._results.node[name] = df
+            self._temp_node_report_lines[name] = list()
+        for _, _, name in self._link_attributes:
+            df = self._results.link[name]
+            df = df.append(pd.DataFrame(self._temp_link_report_lines[name], columns=self._link_name_str, index=self._temp_index))
+            self._results.link[name] = df
+            self._temp_link_report_lines[name] = list()
+        self._temp_index = list()
+
+    def _setup_results_object(self):
+        self._results = SimulationResults()
+        self._results.node = dict()
+        self._results.link = dict()
+        self._node_name_idx = list()
+        self._link_name_idx = list()
+        self._node_name_str = self._wn.node_name_list
+        self._link_name_str = self._wn.link_name_list
+        for node_name in self._node_name_str:
+            self._node_name_idx.append(self._en.ENgetnodeindex(node_name))
+        for link_name in self._link_name_str:
+            self._link_name_idx.append(self._en.ENgetlinkindex(link_name))
+        for _, _, name in self._node_attributes:
+            self._results.node[name] = pd.DataFrame([], columns=self._node_name_str)
+            self._temp_node_report_lines[name] = list()
+        for _, _, name in self._link_attributes:
+            self._results.link[name] = pd.DataFrame([], columns=self._link_name_str)
+            self._temp_link_report_lines[name] = list()
+        
+    def _save_intermediate_values(self):
+        for name, vals in self._node_sensors.items():
+            en_idx, at_idx = name
+            node, attr = vals
+            value = self._en.ENgetnodevalue(en_idx, at_idx)
+            setattr(node, attr, value)
+        for name, vals in self._link_sensors.items():
+            en_idx, at_idx = name
+            link, attr = vals
+            value = self._en.ENgetlinkvalue(en_idx, at_idx)
+            setattr(link, attr, value)
+
 
     def initialize(
             self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None,):
@@ -374,24 +454,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         rptfile = file_prefix + ".rpt"
         outfile = file_prefix + ".bin"
         self.outfile = outfile
-        self._results = SimulationResults()
         enData.ENopen(inpfile, rptfile, outfile)
         self._en = enData
-        enData.ENsettimeparam(EN.DURATION, int(86400 * 365.25 * 10))
-        enData.ENopenH()
-        enData.ENinitH(1)
-        enData.ENopenQ()
-        enData.ENinitQ(1)
-        enData.ENrunH()
-        enData.ENrunQ()
-        self._t = 0
-        self._report_timestep = enData.ENgettimeparam(EN.REPORTSTEP)
-        self._report_start = enData.ENgettimeparam(EN.REPORTSTART)
-        self._last_line_added = -1
-        self.save_report_step()            
-        logger.debug("Initialized stepwise run")
-        # TODO: need to create a list of nodes and links and their attributes for
-        # calculating results
+
+        self._setup_results_object()
+        # setup intermediate sensors indices
         new_link_sensors = dict()
         new_node_sensors = dict()
         for name, vals in self._link_sensors.items():
@@ -405,21 +472,29 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._link_sensors = new_link_sensors
         self._node_sensors = new_node_sensors
 
+        enData.ENsettimeparam(EN.DURATION, int(86400 * 365.25 * 10))
+        self._t = 0
+        self._report_timestep = enData.ENgettimeparam(EN.REPORTSTEP)
+        self._report_start = enData.ENgettimeparam(EN.REPORTSTART)
+        self._last_line_added = -1
+
+        enData.ENopenH()
+        enData.ENinitH(1)
+        enData.ENopenQ()
+        enData.ENinitQ(1)
+        enData.ENrunH()
+        enData.ENrunQ()
+        
+        # Load initial time-0 results into results (if reporting)
+        self._save_report_step()
         # Load initial time-0 results into intermediate sensors
-        for name, vals in self._node_sensors.items():
-            en_idx, at_idx = name
-            node, attr = vals
-            value = enData.ENgetnodevalue(en_idx, at_idx)
-            setattr(node, attr, value)
-        for name, vals in self._link_sensors.items():
-            en_idx, at_idx = name
-            link, attr = vals
-            value = enData.ENgetlinkvalue(en_idx, at_idx)
-            setattr(link, attr, value)
+        self._save_intermediate_values()
 
         tstep = enData.ENnextH()
         qstep = enData.ENnextQ()
         self._t = self._t + tstep
+        self._copy_results_object()
+        logger.debug("Initialized stepwise run")
 
     def run_sim(self):
         enData = self._en
@@ -434,17 +509,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             enData.ENrunQ()
 
             # Read all sensors in the _node and _link sensors list
-            for name, vals in self._node_sensors.items():
-                en_idx, at_idx = name
-                node, attr = vals
-                value = enData.ENgetnodevalue(en_idx, at_idx)
-                setattr(node, attr, value)
-            for name, vals in self._link_sensors.items():
-                en_idx, at_idx = name
-                link, attr = vals
-                value = enData.ENgetlinkvalue(en_idx, at_idx)
-                setattr(link, attr, value)
-            self.save_report_step()
+            self._save_intermediate_values()
+            self._save_report_step()
             logger.debug("Ran 1 step")
 
             # Check on stop criteria
@@ -459,12 +525,13 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
             # if tstep < 1, duration has been reached
             if tstep <= 0 or tstep + self._t > self._next_stop_time:
-                self.save_report_step()
+                self._save_report_step()
                 break
 
             # Update time
             self._t = self._t + tstep
         
+        self._copy_results_object()
         return completed, conditions
 
     def close(self):
@@ -477,6 +544,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             enData.ENrunQ()
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
+            self._save_report_step()
         enData.ENcloseH()
         enData.ENcloseQ()
         logger.debug("Solved quality")
@@ -485,4 +553,5 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         enData.ENclose()
         logger.debug("Completed step run")
         results = wntr.epanet.io.BinFile().read(self.outfile)
-        return results
+        self._copy_results_object()
+        return results, self._results

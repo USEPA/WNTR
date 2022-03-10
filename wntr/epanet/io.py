@@ -38,7 +38,7 @@ from wntr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
 from wntr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
                                 WaterNetworkModel)
 from wntr.network.options import Options
-from wntr.utils.exceptions import ToolkitError, ToolkitWarning
+from wntr.utils.exceptions import NetworkModelError, ToolkitError, ToolkitWarning, InpFileError
 
 from .util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
                    QualParam, QualType, ResultType, StatisticsType, from_si,
@@ -151,7 +151,7 @@ def _str_time_to_sec(s):
             if bool(time_tuple):
                 return int(time_tuple.groups()[0])*60*60
             else:
-                raise RuntimeError("Time format in "
+                raise InpFileError("Time format in "
                                    "INP file not recognized. ")
 
 
@@ -180,7 +180,7 @@ def _clock_time_to_sec(s, am_pm):
     elif am_pm.upper() == 'PM':
         am = False
     else:
-        raise RuntimeError('am_pm option not recognized; options are AM or PM')
+        raise InpFileError('am_pm option not recognized; options are AM or PM')
 
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -192,7 +192,7 @@ def _clock_time_to_sec(s, am_pm):
             time_sec -= 3600*12
         if not am:
             if time_sec >= 3600*12:
-                raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                raise InpFileError('Cannot specify am/pm for times greater than 12:00:00')
             time_sec += 3600*12
         return time_sec
     else:
@@ -205,7 +205,7 @@ def _clock_time_to_sec(s, am_pm):
                 time_sec -= 3600*12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    raise InpFileError('Cannot specify am/pm for times greater than 12:00:00')
                 time_sec += 3600*12
             return time_sec
         else:
@@ -217,11 +217,11 @@ def _clock_time_to_sec(s, am_pm):
                     time_sec -= 3600*12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                        raise InpFileError('Cannot specify am/pm for times greater than 12:00:00')
                     time_sec += 3600*12
                 return time_sec
             else:
-                raise RuntimeError("Time format in "
+                raise InpFileError("Time format in "
                                    "INP file not recognized. ")
 
 
@@ -317,13 +317,13 @@ class InpFile(object):
                         section = None
                         break
                     else:
-                        raise RuntimeError('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
+                        raise InpFileError('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
                 elif section is None and line.startswith(';'):
                     self.top_comments.append(line[1:])
                     continue
                 elif section is None:
                     logger.debug('Found confusing line: %s', repr(line))
-                    raise RuntimeError('%(fname)s:%(lnum)d: Non-comment outside of valid section!' % edata)
+                    raise InpFileError('%(fname)s:%(lnum)d: Non-comment outside of valid section!' % edata)
                 # We have text, and we are in a section
                 self.sections[section].append((lnum, line))
 
@@ -639,7 +639,7 @@ class InpFile(object):
                 overflow = False
                 volume = 0.0
             else:
-                raise RuntimeError('Tank entry format not recognized.')
+                raise InpFileError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
                         to_si(self.flow_units, float(current[1]), HydParam.Elevation),
                         to_si(self.flow_units, float(current[2]), HydParam.Length),
@@ -780,13 +780,13 @@ class InpFile(object):
 #                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
                     pattern = self.wn.get_pattern(current[i+1]).name
                 else:
-                    raise RuntimeError('Pump keyword in inp file not recognized.')
+                    raise InpFileError('Pump keyword in inp file not recognized.')
 
             if speed is None:
                 speed = 1.0
 
             if pump_type is None:
-                raise RuntimeError('Either head curve id or pump power must be specified for all pumps.')
+                raise InpFileError('Either head curve id or pump power must be specified for all pumps.')
             self.wn.add_pump(current[0], current[1], current[2], pump_type, value, speed, pattern)
 
     def _write_pumps(self, f, wn):
@@ -809,7 +809,7 @@ class InpFile(object):
             elif pump.pump_type == 'POWER':
                 E['params'] = str(from_si(self.flow_units, pump.power, HydParam.Power))
             else:
-                raise RuntimeError('Only head or power info is supported of pumps.')
+                raise NetworkModelError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
             if pump.speed_timeseries.base_value != 1:
                 E['speed_keyword'] = 'SPEED'
@@ -834,7 +834,7 @@ class InpFile(object):
                 current.append(0.0)
             else:
                 if len(current) != 7:
-                    raise RuntimeError('The [VALVES] section of an INP file must have 6 or 7 entries.')
+                    raise InpFileError('The [VALVES] section of an INP file must have 6 or 7 entries.')
             valve_type = current[4].upper()
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(self.flow_units, float(current[5]), HydParam.Pressure)
@@ -852,7 +852,7 @@ class InpFile(object):
                 self.wn.add_curve(curve_name, 'HEADLOSS', curve_points)
                 valve_set = curve_name
             else:
-                raise RuntimeError('VALVE type "%s" unrecognized' % valve_type)
+                raise InpFileError('VALVE type "%s" unrecognized' % valve_type)
             self.wn.add_valve(current[0],
                          current[1],
                          current[2],
@@ -1002,7 +1002,7 @@ class InpFile(object):
             # If default is '1' but it does not exist, then it is constant
             # Any other default that does not exist is an error
             if self.wn.options.hydraulic.pattern is not None and self.wn.options.hydraulic.pattern != '1':
-                raise KeyError('Default pattern {} is undefined'.format(self.wn.options.hydraulic.pattern))
+                raise InpFileError('Default pattern {} is undefined'.format(self.wn.options.hydraulic.pattern))
             self.wn.options.hydraulic.pattern = None
 
     def _write_patterns(self, f, wn):
@@ -1209,7 +1209,7 @@ class InpFile(object):
             if all_control.epanet_control_type not in [_ControlType.rule, _ControlType.stop_condition]:
                 if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
                     logger.error('Too many actions on CONTROL "%s"'%text)
-                    raise RuntimeError('Too many actions on CONTROL "%s"'%text)
+                    raise InpFileError('Too many actions on CONTROL "%s"'%text)
                 if not isinstance(control_action.target()[0], Link):
                     continue
                 if isinstance(all_control._condition, (SimTimeCondition, TimeOfDayCondition)):
@@ -1243,10 +1243,10 @@ class InpFile(object):
                     elif isinstance(all_control._condition._source_obj, Junction):
                         vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
                     else: 
-                        raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
+                        raise InpFileError('Unknown control for EPANET INP files: %s' %type(all_control))
                     f.write(entry.format(**vals).encode('latin-1'))
                 elif not isinstance(all_control, Control):
-                    raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
+                    raise InpFileError('Unknown control for EPANET INP files: %s' % type(all_control))
         f.write('\n'.encode('latin-1'))
 
     def _read_rules(self):
@@ -1410,7 +1410,7 @@ class InpFile(object):
             elif key1 == 'ROUGHNESS':
                 self.wn.options.reaction.roughness_correl = float(current[2])
             else:
-                raise RuntimeError('Reaction option not recognized: %s'%key1)
+                raise InpFileError('Reaction option not recognized: %s'%key1)
 
     def _write_reactions(self, f, wn):
         f.write( '[REACTIONS]\n'.encode('latin-1'))
@@ -1520,7 +1520,7 @@ class InpFile(object):
                 tank.mixing_model = MixType.Mix2
                 tank.mixing_fraction = float(current[2])
             elif key == '2COMP' and len(current) < 3:
-                raise RuntimeError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
+                raise InpFileError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
             elif key == 'FIFO':
                 tank.mixing_model = MixType.FIFO
             elif key == 'LIFO':
@@ -1563,7 +1563,7 @@ class InpFile(object):
             if words is not None and len(words) > 0:
                 if len(words) < 2:
                     edata['key'] = words[0]
-                    raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                    raise InpFileError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
@@ -1625,7 +1625,7 @@ class InpFile(object):
                             opts.hydraulic.pressure_exponent = float(words[2])
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise InpFileError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
                         opts.hydraulic.inpfile_pressure_units = words[1]
                 elif key == 'PATTERN':
@@ -1638,16 +1638,16 @@ class InpFile(object):
                             opts.hydraulic.demand_model = words[2]
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise InpFileError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
                         edata['key'] = ' '.join(words)
-                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise InpFileError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
                         opts.hydraulic.emitter_exponent = float(words[2])
                     else:
                         edata['key'] = 'EMITTER EXPONENT'
-                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise InpFileError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'TOLERANCE':
                     opts.quality.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
@@ -1670,9 +1670,9 @@ class InpFile(object):
         if (type(opts.time.report_timestep) == float or
                 type(opts.time.report_timestep) == int):
             if opts.time.report_timestep < opts.time.hydraulic_timestep:
-                raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
+                raise InpFileError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
-                raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
+                raise InpFileError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
 
     def _write_options(self, f, wn, version=2.2):
         f.write('[OPTIONS]\n'.encode('latin-1'))
@@ -2248,7 +2248,7 @@ class _EpanetRule(object):
                                 condition._relation.symbol, value)
             self.add_if(clause)
         else:
-            raise ValueError('Unknown ControlCondition for EPANET Rules')
+            raise InpFileError('Unknown ControlCondition for EPANET Rules')
 
     def add_then(self, clause):
         """Add a "then/and" clause from an INP file"""
@@ -3102,7 +3102,7 @@ def _read_control_line(line, wn, flow_units, control_name):
                 raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
             action_obj = wntr.network.ControlAction(link, 'setting', setting)
         else:
-            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
+            raise InpFileError(('Links of type {0} can only have controls that change\n'.format(type(link))+
                                 'the link status. Control: {0}'.format(line)))
 
     # Create the control object
@@ -3117,7 +3117,7 @@ def _read_control_line(line, wn, flow_units, control_name):
             elif current[6] == 'BELOW':
                 oper = np.less
             else:
-                raise RuntimeError("The following control is not recognized: " + line)
+                raise InpFileError("The following control is not recognized: " + line)
             # OKAY - we are adding in the elevation. This is A PROBLEM
             # IN THE INP WRITER. Now that we know, we can fix it, but
             # if this changes, it will affect multiple pieces, just an
@@ -3131,7 +3131,7 @@ def _read_control_line(line, wn, flow_units, control_name):
                                   float(current[7]), HydParam.HydraulicHead)# + node.elevation
                 control_obj = Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
         else:
-            raise RuntimeError("The following control is not recognized: " + line)
+            raise InpFileError("The following control is not recognized: " + line)
 #                control_name = ''
 #                for i in range(len(current)-1):
 #                    control_name = control_name + '/' + current[i]
