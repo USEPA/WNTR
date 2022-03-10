@@ -716,6 +716,118 @@ class ENepanet:
         self._error()
         return lValue.value
 
+    def ENaddcontrol(self, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float) -> int:
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+
+        Returns
+        -------
+        int
+            _description_
+        """
+        lValue = ctypes.c_int()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_addcontrol(
+                self._project, 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENaddcontrol(
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        self._error()
+        return lValue.value
+
+    def ENsetcontrol(self, iIndex: int, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+        """
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_setcontrol(
+                self._project, 
+                ctypes.c_int(iIndex), 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel)
+            )
+        else:
+            self.errcode = self.ENlib.ENsetcontrol(
+                ctypes.c_int(iIndex), 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel)
+            )
+        self._error()
+
+    def ENdeletecontrol(self, iControlIndex):
+        """
+        Get a time parameter value
+
+        Parameters
+        ----------
+        iControlIndex : int
+            the time parameter to get
+
+        Returns
+        -------
+        int
+            the index of the new control
+        """
+        lValue = ctypes.c_long()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_deletecontrol(
+                self._project, 
+                ctypes.c_int(iControlIndex)
+            )
+        else:
+            self.errcode = self.ENlib.ENdeletecontrol(
+                ctypes.c_int(iControlIndex)
+            )
+        self._error()
+        return lValue.value
+
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
 

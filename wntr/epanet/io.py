@@ -38,6 +38,7 @@ from wntr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
 from wntr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
                                 WaterNetworkModel)
 from wntr.network.options import Options
+from wntr.utils.exceptions import ToolkitError, ToolkitWarning
 
 from .util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
                    QualParam, QualType, ResultType, StatisticsType, from_si,
@@ -1205,7 +1206,7 @@ class InpFile(object):
         # Time controls and conditional controls only
         for text, all_control in wn.controls():
             control_action = all_control._then_actions[0]
-            if all_control.epanet_control_type is not _ControlType.rule:
+            if all_control.epanet_control_type not in [_ControlType.rule, _ControlType.stop_condition]:
                 if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
                     logger.error('Too many actions on CONTROL "%s"'%text)
                     raise RuntimeError('Too many actions on CONTROL "%s"'%text)
@@ -2770,15 +2771,16 @@ class BinFile(object):
                 
             N = int(np.floor(len(data)/(4*nnodes+8*nlinks)))
             if N < nrptsteps:
-                t = reporttimes[N]
+                t = reporttimes[N-1]
                 if convergence_error:
-                    logger.error('Simulation did not converge at time ' + self._get_time(t) + '.')
-                    raise RuntimeError('Simulation did not converge at time ' + self._get_time(t) + '.')
+                    logger.error('Simulation terminated early(?) at time ' + self._get_time(t) + '.')
+                    raise ToolkitError('Simulation terminate early(?) at time ' + self._get_time(t) + '.')
                 else:
                     data = data[0:N*(4*nnodes+8*nlinks)]
                     data = np.reshape(data, (N, (4*nnodes+8*nlinks)))
                     reporttimes = reporttimes[0:N]
-                    warnings.warn('Simulation did not converge at time ' + self._get_time(t) + '.')
+                    w = ToolkitWarning('Simulation terminated early(?) at time ' + self._get_time(t) + '.')
+                    warnings.warn(w)
                     self.results.error_code = wntr.sim.results.ResultsStatus.error
             else:
                 data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
