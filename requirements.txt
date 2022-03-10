@@ -12,6 +12,7 @@ utm
 openpyxl
 geopandas
 shapely
+pygeos
 
 # Testing
 nose
