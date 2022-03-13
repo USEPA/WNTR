@@ -34,6 +34,8 @@ class TestGIS(unittest.TestCase):
 
         inp_file = join(ex_datadir, "Net1.inp")
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        sim = wntr.sim.EpanetSimulator(wn)
+        self.results = sim.run_sim()
         self.wn_geojson = self.wntr.gis.wn_to_gis(wn)
         
         polygon_pts = [[(25,80), (80,80), (80,60), (25,60)],
@@ -67,6 +69,12 @@ class TestGIS(unittest.TestCase):
         print(stats)
         
         self.assertEqual(1, 1)
+    
+    def test_add_attributes_and_write(self):
+        self.wn_geojson.add_node_attributes(self.results.node['pressure'].loc[3600,:], 'Pressure_1hr')
+        self.wn_geojson.add_link_attributes(self.results.link['flowrate'].loc[3600,:], 'Flowrate_1hr')
+        self.wn_geojson.write('temp_Net1')
+    
         
 
 if __name__ == "__main__":
