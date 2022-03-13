@@ -51,6 +51,16 @@ class TestGIS(unittest.TestCase):
         df = pd.DataFrame(polygon_data)
         df.set_index("name", inplace=True)
         self.polygons = gpd.GeoDataFrame(df, crs=None)
+
+        points = [(48.2,37.2), (70.8,69.3), (54.5, 40.5), 
+                  (51.2, 71.1), (32.1, 67.6), (51.7, 87.3)]
+        point_data = []
+        for i, pts in enumerate(points):
+            geometry = Point(pts)
+            point_data.append({'geometry': geometry})
+            
+        df = pd.DataFrame(point_data)
+        self.points = gpd.GeoDataFrame(df, crs=None)
         
     @classmethod
     def tearDownClass(self):
@@ -74,8 +84,20 @@ class TestGIS(unittest.TestCase):
         self.wn_geojson.add_node_attributes(self.results.node['pressure'].loc[3600,:], 'Pressure_1hr')
         self.wn_geojson.add_link_attributes(self.results.link['flowrate'].loc[3600,:], 'Flowrate_1hr')
         self.wn_geojson.write('temp_Net1')
-    
+
+    def test_snap_points_to_points(self):
         
+        snapped_points = wntr.gis.snap_points_to_points(self.points, self.wn_geojson.junctions, tolerance=20.0)
+        print(snapped_points)
+        
+        self.assertEqual(1, 1)
+
+    def test_snap_points_to_lines(self):
+        
+        snapped_points = wntr.gis.snap_points_to_lines(self.points, self.wn_geojson.pipes, tolerance=5.0)
+        print(snapped_points)
+        
+        self.assertEqual(1, 1)
 
 if __name__ == "__main__":
     unittest.main()
