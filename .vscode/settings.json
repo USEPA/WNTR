@@ -1,0 +1,8 @@
+{
+    "python.testing.pytestArgs": [
+        "wntr"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.pythonPath": "C:\\Users\\btrindad\\Anaconda3\\envs\\epanet\\python.exe"
+}

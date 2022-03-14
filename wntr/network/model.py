@@ -14,24 +14,29 @@ model.
     LinkRegistry
 
 """
+from ctypes import ArgumentError
 import logging
 from collections import OrderedDict
+from typing import Union
 
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
+from shapely.geometry.linestring import LineString
 import six
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
 
-from .base import AbstractModel, Link, LinkStatus, Registry
+from .base import AbstractModel, Link, LinkStatus, Node, Registry
 from .controls import Control, Rule
 from .elements import (Curve, Demands, FCValve, GPValve, HeadPump, Junction,
                        Pattern, PBValve, Pipe, PowerPump, PRValve, PSValve,
                        Pump, Reservoir, Source, Tank, TCValve, TimeSeries,
                        Valve)
 from .options import Options
+
 
 logger = logging.getLogger(__name__)
 
@@ -666,7 +671,7 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Get elements from the model
-    def get_node(self, name): 
+    def get_node(self, name) -> Node: 
         """Get a specific node
         
         Parameters
@@ -1516,6 +1521,120 @@ class WaterNetworkModel(AbstractModel):
 
         """
         wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
+
+    def create_model_gis(self, gis_path: str, pressure_zone_layer: str) -> None:
+        self._gis_pzone = gpd.read_file(gis_path, layer=pressure_zone_layer)
+        self._results = None
+        self._demands_pzone = None
+        self._date = None
+
+        # Create gis of nodes from EPANET
+        coords_raw = np.array(
+            [self._wn.nodes[n].coordinates for n in self._wn.nodes]
+        ).T
+        nodes_points = gpd.points_from_xy(
+            coords_raw[0],
+            coords_raw[1]
+        )
+
+        self._nodes_gis = gpd.GeoDataFrame(
+            data=[n for n in self._wn.nodes],
+            geometry=nodes_points, crs=self._gis_pzone.crs.srs
+        ).set_index(0)
+
+        # Add pattern names to nodes
+        def get_pattern(node):
+            junc = self.get_node(node.name)
+            if junc.node_type == 'Junction':
+                pattern = self.get_node(
+                    node.name).demand_timeseries_list[0].pattern_name
+            else:
+                pattern = ''
+            return pattern  # colors[pattern]
+        self._nodes_gis['pattern'] = self._nodes_gis.apply(get_pattern, axis=1)
+
+        # Create gis of pipes from EPANET
+        link_geometry = []
+        for link_name in self.link_name_list:
+            link = self.get_link(link_name)
+            coords = [self.nodes[link.start_node].coordinates]
+            coords += link.vertices
+            coords += [self.nodes[link.end_node].coordinates]
+            link_geometry.append(LineString(coords))
+
+        self._links_gis = gpd.GeoDataFrame(
+            data=self.link_name_list,
+            geometry=link_geometry, crs=self._gis_pzone.crs.srs).set_index(0)
+
+        # Set pressure zones
+        self._assign_pressure_zones()
+
+        self._all_dmas = self._nodes_gis.pzone.unique()
+        self._all_dmas = np.delete(self._all_dmas, self._all_dmas==None) # Remove None DMA
+
+        # Set original demand multiplier for each DMA
+        self._dma_demand_multipliers = {dma: 1. for dma in self._all_dmas}
+
+    def _assign_pressure_zones(self):
+        """Assign pressure zone to nodes in EPANET GIS.
+        """
+        self._nodes_gis['pzone'] = None
+        for ix, pz in self._gis_pzone.iterrows():
+            in_pz = self._nodes_gis.geometry.within(pz.geometry)
+            self._nodes_gis.loc[in_pz, 'pzone'] = pz.NAME
+            for n in self._nodes_gis.loc[in_pz].index:
+                self.get_node(n).pressure_zone = pz.NAME
+
+    def update_base_demands_dict(self, new_demands_junctions: dict=None, 
+            new_demands_dmas: dict=None, all_junctions_demand_mult: float=None, 
+            dma_demand_mult: dict=None):
+        """Apply either new demands or a DMA-based multiplier to all nodes in
+        the network.
+
+        Args:
+            new_demands_junctions (Dict, optional): Keys as nodes and values 
+            as demands. Defaults to None.
+            new_demands_dmas (Dict, optional): Keys as DMA names as in the GIS 
+            and values as demand multipliers. Defaults to None.
+
+        Raises:
+            ArgumentError: Neither input is passed.
+        """
+
+        # If DMA demands are passed and junction demand dictionary is not 
+        # provided, create with multiplied demands for all nodes within each DMA.
+        if new_demands_dmas is not None:
+            ndd = {k: v for k, v in new_demands_dmas.items()
+                   if k in self._all_dmas}
+            new_demands_junctions = {
+                n: self.get_node(n).base_demand \
+                for n in self._nodes_gis.index \
+                if self.get_node(n).node_type == 'Junction'
+            }
+            for dma, mult in ndd.items():
+                for n in self._nodes_gis.loc[self._nodes_gis.pzone == dma].index:
+                    if self.get_node(n).node_type == 'Junction':
+                        new_demands_junctions[n] *= mult
+        elif new_demands_junctions is not None:
+            for k, v in new_demands_junctions.items():
+                try:
+                    self.get_node(k).demand_timeseries_list[0].base_value = v
+                except AttributeError as e:
+                    print(
+                        f'Could not attribute demand of {v} to node {k} of ' +
+                        'type {self.get_node(k).node_type}')
+        elif all_junctions_demand_mult is not None:
+            for k in self.node_name_list:
+                if self.get_node(k).node_type == 'Junction':
+                    self.get_node(k).demand_timeseries_list[0].base_value *= \
+                        new_demands_junctions
+        elif dma_demand_mult is not None:
+            for k in self.node_name_list:
+                if self.get_node(k).node_type == 'Junction':
+                    self.get_node(k).demand_timeseries_list[0].base_value *= dma_demand_mult[self._nodes_gis[k]]
+            
+        else:
+            raise ArgumentError('Either new_demands_junctions, new_demands_dmas, all_junctions_demand_mult, or dma_demand_mult must be provided.')
 
 
 class PatternRegistry(Registry):

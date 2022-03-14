@@ -1,7 +1,9 @@
+import os
 from wntr.sim.core import WaterNetworkSimulator
 import wntr.epanet.io
 import warnings
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +82,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         Parameters
         ----------
         file_prefix : str
-            Default prefix is "temp". All files (.inp, .bin/.out, .hyd, .rpt) use this prefix
+            Default prefix is "temp". All files (.inp, .bin/.out, .hyd, .rpt) use this prefix. If "random," 
+            will generate a random name for all files so that several simulations can be run simultaneously.
         use_hyd : bool
             Will load hydraulics from ``file_prefix + '.hyd'`` or from file specified in `hydfile_name`
         save_hyd : bool
@@ -98,6 +101,12 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         if isinstance(version, str):
             version = float(version)
+
+        clean_temp = False
+        if file_prefix == 'random':
+            file_prefix = f'temp{np.random.randint(1, high=1e9)}.inp'
+            clean_temp = True
+
         inpfile = file_prefix + '.inp'
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         enData = wntr.epanet.toolkit.ENepanet(version=version)
@@ -122,9 +131,23 @@ class EpanetSimulator(WaterNetworkSimulator):
         logger.debug('Ran quality')
         enData.ENclose()
         logger.debug('Completed run')
-        #os.sys.stderr.write('Finished Closing\n')
+        #os.sys.stderr.write('Finished Closing\n')            
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+
+        if clean_temp:
+            try:
+                os.remove(inpfile)
+            except:
+                pass
+            try:
+                os.remove(rptfile)
+            except:
+                pass
+            try:
+                os.remove(outfile)
+            except:
+                pass
 
         return results
 

@@ -138,6 +138,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
         self._is_isolated = False
+        self._pressure_zone = None
 
     def _compare(self, other):
         """
@@ -187,6 +188,13 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def pressure(self):
         """float : (read-only) the current simulation pressure at the node"""
         return self._pressure
+    
+    @property
+    def pressure_zone(self):
+        return self._pressure_zone
+    @pressure_zone.setter
+    def pressure_zone(self, value: str):
+        self._pressure_zone = value
 
     @property
     def quality(self):
