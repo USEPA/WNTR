@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "name": 0, "node": "22", "snap_distance": 3.3286633954186438 }, "geometry": { "type": "Point", "coordinates": [ 50.0, 40.0 ] } },
+{ "type": "Feature", "properties": { "name": 1, "node": "13", "snap_distance": 1.0630145812734646 }, "geometry": { "type": "Point", "coordinates": [ 70.0, 70.0 ] } },
+{ "type": "Feature", "properties": { "name": 2, "node": "22", "snap_distance": 4.5276925690687087 }, "geometry": { "type": "Point", "coordinates": [ 50.0, 40.0 ] } },
+{ "type": "Feature", "properties": { "name": 3, "node": "12", "snap_distance": 1.6278820596099688 }, "geometry": { "type": "Point", "coordinates": [ 50.0, 70.0 ] } },
+{ "type": "Feature", "properties": { "name": 4, "node": "11", "snap_distance": 3.1890437438204002 }, "geometry": { "type": "Point", "coordinates": [ 30.0, 70.0 ] } }
+]
+}
