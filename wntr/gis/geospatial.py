@@ -87,35 +87,6 @@ def snap_points_to_points(points, wn_points, tolerance):
     isinstance(wn_points, gpd.GeoDataFrame)
     assert(wn_points['geometry'].geom_type).isin(['Point']).all()
     
-#    # modify wn_points dataframe to include "name" as a separate column
-#    wn_points = wn_points.reset_index()  
-#    # determine how far to look around each point for points
-#    bbox = points.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
-#    # determine which links are close to each point
-#    hits = bbox.apply(lambda row: list(wn_points.loc[list(wn_points.sindex.intersection(row))]['name']), axis=1)        
-#    closest = pd.DataFrame({
-#        # index of points table
-#        "point": np.repeat(hits.index, hits.apply(len)),
-#        # name of junction
-#        "name": np.concatenate(hits.values)
-#        })
-#    # Merge the closest dataframe with the wn_points dataframe on the wn_points names
-#    closest = pd.merge(closest, wn_points, on="name")
-#    # rename the line "name" column header to "node"
-#    closest = closest.rename(columns={"name":"node"})
-#    # Join back to the original points to get their geometry
-#    # rename the point geometry as "points"
-#    closest = closest.join(points.geometry.rename("points"), on="point")
-##    # Convert back to a GeoDataFrame, so we can do spatial ops
-#    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_points.crs)    
-#    # Calculate distance between the point and nearby junctions
-#    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=wn_points.crs))
-#    # Sort on ascending snap distance, so that closest goes to top
-#    closest = closest.sort_values(by=["snap_distance"])        
-#    # group by the index of the points and take the first, which is the closest line
-#    closest = closest.groupby("point").first()        
-#    # construct a GeoDataFrame of the closest lines
-#    snapped_points = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_points.crs)
     snapped_points = _snap(points, wn_points, tolerance)
     snapped_points = snapped_points.rename(columns={"wn_element":"node"})
     snapped_points = snapped_points.reindex(columns=["node", "snap_distance", "geometry"])
@@ -154,35 +125,6 @@ def snap_points_to_lines(points, wn_lines, tolerance):
     isinstance(points, gpd.GeoDataFrame)
     assert(wn_lines['geometry'].geom_type).isin(['LineString','MultiLineString']).all()
     
-#    # modify lines dataframe to include "name" as a separate column
-#    wn_lines = wn_lines.reset_index()
-#    # determine how far to look around each point for lines
-#    bbox = points.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
-#    # determine which links are close to each point
-#    hits = bbox.apply(lambda row: list(wn_lines.loc[list(wn_lines.sindex.intersection(row))]['name']), axis=1)        
-#    closest = pd.DataFrame({
-#        # index of points table
-#        "point": np.repeat(hits.index, hits.apply(len)),
-#        # name of link
-#        "name": np.concatenate(hits.values)
-#        })
-#    # Merge the closest dataframe with the lines dataframe on the line names
-#    closest = pd.merge(closest, wn_lines, on="name")
-#    # rename the line "name" column header to "link"
-#    closest = closest.rename(columns={"name":"link"})
-#    # Join back to the original points to get their geometry
-#    # rename the point geometry as "points"
-#    closest = closest.join(points.geometry.rename("points"), on="point")
-#    # Convert back to a GeoDataFrame, so we can do spatial ops
-#    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_lines.crs)    
-#    # Calculate distance between the point and nearby links
-#    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=wn_lines.crs))
-#    # Sort on ascending snap distance, so that closest goes to top
-#    closest = closest.sort_values(by=["snap_distance"])        
-#    # group by the index of the points and take the first, which is the closest line
-#    closest = closest.groupby("point").first()        
-#    # construct a GeoDataFrame of the closest lines
-#    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_lines.crs)
     closest = _snap(points, wn_lines, tolerance)
     closest = closest.rename(columns={"wn_element":"link"})
     # position of nearest point from start of the line
