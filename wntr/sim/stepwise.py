@@ -53,6 +53,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         WaterNetworkSimulator.__init__(self, wn)
         self._en = None
         self._t = 0
+        self._tn = 0
         self._results = None
         self.__initialized = False
         self._node_attributes = [
@@ -72,7 +73,6 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._link_sensors = dict()
         self._node_sensors = dict()
         self._stop_criteria = StopCriteria()  # node/link, name, attribute, comparison, level
-        self._crit_num = 0
         self._temp_index = list()
         self._temp_link_report_lines = dict()
         self._temp_node_report_lines = dict()
@@ -80,6 +80,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     @property
     def current_time(self):
+        return self._t
+
+    @property
+    def next_time(self):
         return self._en.ENgettimeparam(EN.HTIME)
 
     def get_results(self):
@@ -288,7 +292,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         """
         if not self.__initialized:
             w = SimulatorWarning(
-                "The simulation has not been initialized, please modify wn.options.time.duration instead"
+                "The simulation has not been initialized"
             )
             warnings.warn(w)
             return self._wn.options.time.duration
@@ -300,7 +304,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         else:
             hstep = self._en.ENgettimeparam(EN.HYDSTEP)
             self._next_stop_time = seconds
-            self._en.ENsettimeparam(EN.DURATION, ((seconds // hstep) + 1) * hstep)
+            self._en.ENsettimeparam(EN.DURATION, seconds)
             # self._en.ENsettimeparam(EN.DURATION, seconds + )
             return self._en.ENgettimeparam(EN.DURATION)
 
@@ -388,6 +392,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def _save_report_step(self):
         t = self._en.ENgettimeparam(EN.HTIME)
+        # this is checking to make sure we are at a report step, or if past the step, but it didn't get reported, then report out.
         report_line = -1 if t < self._report_start else (t - self._report_start) // self._report_timestep
         if report_line > self._last_line_added:
             time = self._report_start + report_line * self._report_timestep
@@ -478,12 +483,12 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def _save_intermediate_values(self):
         for name, vals in self._node_sensors.items():
-            en_idx, at_idx = name
-            node, attr, f = vals
-            value = self._en.ENgetnodevalue(en_idx, at_idx)
+            en_idx, at_idx = name   #(where, what) you are measuring
+            node, attr, f = vals  # WNTR node object, attribute name, and conversion function
+            value = self._en.ENgetnodevalue(en_idx, at_idx) 
             if f is not None:
                 value = f(self._flow_units, value, mass_units=self._mass_units)
-            setattr(node, attr, value)
+            setattr(node, attr, value)  # set the simulation value on the node object
         for name, vals in self._link_sensors.items():
             en_idx, at_idx = name
             link, attr, f = vals
@@ -547,7 +552,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                 )
 
         self._setup_results_object(result_size)
-        # setup intermediate sensors indices
+        # setup intermediate sensors indices from names to internal EPANET numbers
         new_link_sensors = dict()
         new_node_sensors = dict()
         for name, vals in self._link_sensors.items():
@@ -573,13 +578,13 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         enData.ENrunQ()
 
         # Load initial time-0 results into results (if reporting)
-        self._save_report_step()
+        self._save_report_step() # saves on internal temp results lists
         # Load initial time-0 results into intermediate sensors
-        self._save_intermediate_values()
-
+        self._save_intermediate_values()  # stores on WaterNetworkModel
+        self._t = enData.ENgettimeparam(EN.HTIME)
         tstep = enData.ENnextH()
         qstep = enData.ENnextQ()
-        self._t = self._t + tstep
+        self._nt = self._t + tstep
         self._copy_results_object()
         logger.debug("Initialized stepwise run")
 
@@ -606,17 +611,20 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                 enData.ENsettimeparam(EN.DURATION, enData.ENgettimeparam(EN.HTIME))
                 completed = False
 
+            self._t = enData.ENgettimeparam(EN.HTIME)
+
             # Move EPANET forward in time
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
 
+            self._nt = self._t + tstep
+
             # if tstep < 1, duration has been reached
-            if tstep <= 0 or tstep + self._t > self._next_stop_time:
+            if tstep <= 0 or self._t > self._next_stop_time:  # FIXME: change to beginning of while loop
                 self._save_report_step()
                 break
 
             # Update time
-            self._t = self._t + tstep
 
         self._copy_results_object()
         return completed, conditions
