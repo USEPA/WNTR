@@ -2264,7 +2264,7 @@ class Control(Rule):
 
         Returns
         -------
-        ctrl: Control
+        ctrl: Control 
         """
         if time_flag.upper() == 'SIM_TIME':
             condition = SimTimeCondition(model=wnm, relation=Comparison.eq, threshold=run_at_time, repeat=daily_flag,
