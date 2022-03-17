@@ -7,11 +7,13 @@
 
     >>> import wntr
     >>> import numpy as np
+    >>> import pandas as pd
+	  >>> import geopandas as gpd
     >>> import matplotlib.pylab as plt
     >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net1.inp')
     ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net1.inp')
 
 
 Geospatial capabilities
@@ -79,7 +81,7 @@ The following example creates GeoDataFrames from a water network model.
 
     >>> import wntr # doctest: +SKIP
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
     >>> wn_gis = wntr.gis.wn_to_gis(wn)
 	
 Individual GeoDataFrames are obtained as follows
@@ -110,16 +112,16 @@ The GeoDataFrames can be saved to GEOJSON files using the :class:`~wntr.gis.netw
 
 .. doctest::
 
-    >>> wn_gis.write('Net3')
+    >>> wn_gis.write('Net1')
 	
 This creates the following GEOJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
 
-* Net3_junctions.geojson
-* Net3_tanks.geojson
-* Net3_reservoirs.geojson
-* Net3_pipes.geojson
-* Net3_pumps.geojson
-* Net3_valves.geojson
+* Net1_junctions.geojson
+* Net1_tanks.geojson
+* Net1_reservoirs.geojson
+* Net1_pipes.geojson
+* Net1_pumps.geojson
+* Net1_valves.geojson
 
 These files can be loaded into GIS platforms for further analysis and visualization.
 
@@ -173,8 +175,21 @@ Snap points to points
 The following example snaps household utility data to the nearest junction and then assigns the demand to that junction.
 
 .. doctest::
+    :hide:
+	
+    >>> points = [(48.2,37.2), (70.8,69.3), (54.5, 40.5), (51.2, 71.1), (32.1, 67.6), (51.7, 87.3)]
+    >>> point_data = []
+    >>> for i, pts in enumerate(points):
+    ...     geometry = Point(pts)
+    ...     point_data.append({'geometry': geometry})            
+    >>> points = gpd.GeoDataFrame(DataFrame(point_data), crs=None)
 
-    >>> add example
+.. doctest::
+
+    >>> snapped_points = wntr.gis.snap_points_to_points(points, wn_gis, tolerance=5.0)
+    >>> print(snapped_points.head(1))
+		node	snap_distance	geometry
+	0	22	3.33		POINT(50,40)
 
 
 Snap points to lines
@@ -184,7 +199,19 @@ The following example snaps valve data to the nearest pipe and then creates a :r
 
 .. doctest::
 
-    >>> add example
+    >>> snapped_points = wntr.gis.snap_points_to_lines(points, wn_gis, tolerance=5.0)
+    >>> print(snapped_points.head(1))
+		link	node	snap_distance	distance_along_line	geometry
+	0	122	22	1.8		0.09			POINT(50,37.2)
+    >>> G = wn.get_graph()
+    >>> node_segments, link_segments, segment_size = wntr.metric.topographic.valve_segments(G,snapped_points)
+    
+.. _fig-snapped_points:
+.. figure:: figures/snapped_points.png
+   :width: 600
+   :alt: Snapped points to points or lines
+
+   Example snapped points to points (junctions) or lines (links).
 
 Intersect polygons with points
 ---------------------------------
