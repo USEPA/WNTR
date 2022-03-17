@@ -96,7 +96,7 @@ class WaterNetworkGIS:
     def __init__(self) -> None:
         
         if not has_shapely or not has_geopandas:
-            raise ModuleNotFoundError('shaply and geopandas are required')
+            raise ModuleNotFoundError('shapley and geopandas are required')
 
         self.junctions = None
         self.tanks = None
@@ -402,7 +402,7 @@ class WaterNetworkGIS:
             wn.add_valve(name, **kwargs)
             
         return wn
-    
+                
     def add_node_attributes(self, values, name):
         """
         Add attribute to junctions, tanks, or reservoirs GeoDataFrames
@@ -415,23 +415,22 @@ class WaterNetworkGIS:
             Attribute name
         """
         for node_name, value in values.items():
-            node = self._wn.get_node(node_name)
-            if str(node.node_type).lower() == "junction":
+            if node_name in self.junctions.index:
                 if name not in self.junctions.columns:
                     self.junctions[name] = np.nan
                 self.junctions.loc[node_name, name] = value
-            if str(node.node_type).lower() == "tank":
+            elif node_name in self.tanks.index:
                 if name not in self.tanks.columns:
                     self.tanks[name] = np.nan
                 self.tanks.loc[node_name, name] = value
-            if str(node.node_type).lower() == "reservoir":
+            elif node_name in self.reservoirs.index:
                 if name not in self.reservoirs.columns:
                     self.reservoirs[name] = np.nan
                 self.reservoirs.loc[node_name, name] = value
-
+            
     def add_link_attributes(self, values, name):
         """
-        Add attribute to pipes, pumkps, or valves GeoDataFrames
+        Add attribute to pipes, pumps, or valves GeoDataFrames
 
         Parameters
         ----------
@@ -441,16 +440,15 @@ class WaterNetworkGIS:
             Attribute name 
         """
         for link_name, value in values.items():
-            link = self._wn.get_link(link_name)
-            if str(link.link_type).lower() == "pipe":
+            if link_name in self.pipes.index:
                 if name not in self.pipes.columns:
                     self.pipes[name] = np.nan
                 self.pipes.loc[link_name, name] = value
-            if str(link.link_type).lower() == "valve":
+            elif link_name in self.valves.index:
                 if name not in self.valves.columns:
                     self.valves[name] = np.nan
                 self.valves.loc[link_name, name] = value
-            if str(link.link_type).lower() == "pump":
+            elif link_name in self.pumps.index:
                 if name not in self.pumps.columns:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value

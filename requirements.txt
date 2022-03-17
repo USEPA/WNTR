@@ -11,8 +11,6 @@ folium
 utm
 openpyxl
 geopandas
-shapely
-pygeos
 
 # Testing
 nose
