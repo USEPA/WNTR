@@ -90,7 +90,7 @@ def snap_points_to_points(points, wn_points, tolerance):
     snapped_points = _snap(points, wn_points, tolerance)
     snapped_points = snapped_points.rename(columns={"wn_element":"node"})
     snapped_points = snapped_points.reindex(columns=["node", "snap_distance", "geometry"])
-    snapped_points.index.name = 'name'
+    snapped_points.index.name = None #'name'
     return snapped_points
     
 def snap_points_to_lines(points, wn_lines, tolerance):
@@ -137,7 +137,7 @@ def snap_points_to_lines(points, wn_lines, tolerance):
     snapped_points.loc[snapped_points["distance_along_line"]<0.5, "node"] = closest["start_node_name"]
     snapped_points.loc[snapped_points["distance_along_line"]>=0.5, "node"] = closest["end_node_name"]
     snapped_points = snapped_points.reindex(columns=["link", "node", "snap_distance", "distance_along_line", "geometry"])
-    snapped_points.index.name = 'name'
+    snapped_points.index.name = None #'name'
     return snapped_points
 
 
