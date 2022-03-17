@@ -22,6 +22,8 @@ References
 
 .. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p
 
+.. [JVFM21] Jordahl, K., Van den Bossche, J., Fleischmann, M,  McBride, J. and others (2021) geopandas, 10.5281/zenodo.5573592
+
 .. [Folium] python-visualization/folium. (n.d.). Retrieved on February 5, 2019 from https://github.com/python-visualization/folium
 
 .. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
@@ -47,6 +49,8 @@ References
 .. [OsKS02] Ostfeld, A., Kogan, D., and Shamir, U. (2002). Reliability simulation of water distribution systems - single and multiquality. Urban Water, 4(1), 53-61.
 
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cincinnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
+
+.. [rtree] Toblerity/rtree. (n.d.). Retrieved on March 17, 2022 from https://github.com/Toblerity/rtree
 
 .. [RWTS20] Rossman, L., Woo, H., Tryby M., Shang, F., Janke, R., and  Haxton, T. (2020) EPANET 2.2 User Manual. U.S. Environmental Protection Agency, Washington, DC, EPA/600/R-20/133.
 

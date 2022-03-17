@@ -220,6 +220,8 @@ The following Python packages are optional:
   https://pypi.org/project/utm/
 * geopandas [JVFM21]_: used to work with geospatial data,
   https://geopandas.org/
+* rtree [rtree]_: used for overlay operations in geopandas,
+  https://rtree.readthedocs.io/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 * numpydoc [VaCV11]_: used to build the user manual,
@@ -231,7 +233,7 @@ All of these packages **except geopandas** are included in the Anaconda Python d
 
 .. note:: 
    Proper installation of geopandas requires installing several geopandas dependencies, including 
-   fiona, pyproj, rtree, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
+   fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
    On Linux and Mac OS X, installing geopandas through the conda-forge channel will install the dependencies.
    On Windows, the dependencies must be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
    
