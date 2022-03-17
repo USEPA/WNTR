@@ -6,6 +6,7 @@ from os.path import abspath, dirname, join
 import numpy as np
 import pandas as pd
 import wntr
+from pandas.testing import assert_frame_equal
 
 try:
     from shapely.geometry import LineString, Point, Polygon, shape
@@ -87,17 +88,21 @@ class TestGIS(unittest.TestCase):
 
     def test_snap_points_to_points(self):
         
-        snapped_points = wntr.gis.snap_points_to_points(self.points, self.wn_geojson.junctions, tolerance=20.0)
-        print(snapped_points)
-        
-        self.assertEqual(1, 1)
+        snapped_points = wntr.gis.snap_points_to_points(self.points, self.wn_geojson.junctions, tolerance=5.0)
+        snap_calc = pd.DataFrame(snapped_points)
+        actual_points_to_points = gpd.read_file(join(datadir, "snapped_points_to_points.geojson"))
+        snap_actual = pd.DataFrame(actual_points_to_points, index=actual_points_to_points["name"])
+        snap_actual = snap_actual.drop(columns="name")
+        assert_frame_equal(snap_calc, snap_actual)
 
     def test_snap_points_to_lines(self):
         
         snapped_points = wntr.gis.snap_points_to_lines(self.points, self.wn_geojson.pipes, tolerance=5.0)
-        print(snapped_points)
-        
-        self.assertEqual(1, 1)
+        snap_calc = pd.DataFrame(snapped_points)        
+        actual_points_to_lines = gpd.read_file(join(datadir, "snapped_points_to_lines.geojson"))
+        snap_actual = pd.DataFrame(actual_points_to_lines, index=actual_points_to_lines["name"])
+        snap_actual = snap_actual.drop(columns="name")
+        assert_frame_equal(snap_calc, snap_actual)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "name": 0, "link": "122", "node": "22", "snap_distance": 1.8, "distance_along_line": 0.09333333333333324 }, "geometry": { "type": "Point", "coordinates": [ 50.0, 37.2 ] } },
+{ "type": "Feature", "properties": { "name": 1, "link": "113", "node": "13", "snap_distance": 0.8, "distance_along_line": 0.023333333333333428 }, "geometry": { "type": "Point", "coordinates": [ 70.0, 69.3 ] } },
+{ "type": "Feature", "properties": { "name": 2, "link": "22", "node": "22", "snap_distance": 0.5, "distance_along_line": 0.225 }, "geometry": { "type": "Point", "coordinates": [ 54.5, 40.0 ] } },
+{ "type": "Feature", "properties": { "name": 3, "link": "12", "node": "12", "snap_distance": 1.1, "distance_along_line": 0.06 }, "geometry": { "type": "Point", "coordinates": [ 51.2, 70.0 ] } },
+{ "type": "Feature", "properties": { "name": 4, "link": "111", "node": "11", "snap_distance": 2.1, "distance_along_line": 0.08 }, "geometry": { "type": "Point", "coordinates": [ 30.0, 67.6 ] } },
+{ "type": "Feature", "properties": { "name": 5, "link": "110", "node": "2", "snap_distance": 1.7, "distance_along_line": 0.135 }, "geometry": { "type": "Point", "coordinates": [ 50.0, 87.3 ] } }
+]
+}
