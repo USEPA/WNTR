@@ -150,6 +150,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.junctions = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
         
         ### Tanks
@@ -171,6 +172,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.tanks = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
         
         ### Reservoirs
@@ -192,6 +194,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.reservoirs = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
         
         ### Valves
@@ -224,6 +227,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         ### Pumps
@@ -256,6 +260,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.pumps = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
         
         ### Pipes
@@ -286,6 +291,7 @@ class WaterNetworkGIS:
         df = pd.DataFrame(data)
         if len(df) > 0:
             df.set_index("name", inplace=True)
+            df.index.name = None
         self.pipes = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
         
