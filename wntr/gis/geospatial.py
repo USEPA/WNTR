@@ -141,147 +141,95 @@ def snap_points_to_lines(points, wn_lines, tolerance):
     return snapped_points
 
 
-def _intersect(elements, polygons, column):
-   
-    isinstance(polygons, gpd.GeoDataFrame)
-    
-    intersects = gpd.sjoin(elements, polygons, op='intersects')
-    
-    n = intersects.groupby('name')[column].count()
-    val_sum = intersects.groupby('name')[column].sum()
-    val_min = intersects.groupby('name')[column].min()
-    val_max = intersects.groupby('name')[column].max()
-    val_average = intersects.groupby('name')[column].mean()
-    
-    polygon_indices = intersects.groupby('name')['index_right'].apply(list)
-    polygon_values = intersects.groupby('name')[column].apply(list)
-
-    
-    stats = pd.DataFrame(index=elements.index, data={'N': n,
-                                                     'Sum': val_sum,
-                                                     'Min': val_min, 
-                                                     'Max': val_max, 
-                                                     'Average': val_average,
-                                                     'Polygons': polygon_indices,
-                                                     'Values': polygon_values})
-    
-    stats['N'] = stats['N'].fillna(0)
-    stats.loc[stats['Polygons'].isnull(), 'Polygons'] = stats.loc[stats['Polygons'].isnull(), 'Polygons'] .apply(lambda x: [])
-    stats.loc[stats['Values'].isnull(), 'Values'] = stats.loc[stats['Values'].isnull(), 'Values'] .apply(lambda x: [])
-    
-    return stats
-
-
-def intersect_points_with_polygons(points, polygons, column):
+def intersect(A, B, B_column):
     """
-    Identify polygons that intersect points and return statistics on the 
-    intersecting polygon values.
+    Identify geometries that intersect and return statistics on the 
+    intersecting values.
     
-    Each polygon is assigned a value based on a column of data in the polygons
-    GeoDataFrame.  The function returns information about the intersection 
-    for each point. 
+    The function returns information about the intersection for each geometry 
+    in A. Each geometry in B is assigned a value based on a column of data in 
+    that GeoDataFrame.  
     
     Parameters
     ----------
-    points : geopandas GeoDataFrame
-        GeoDataFrame containing Point geometries, generally a GeoDataFrame 
-        containing water network junctions, tanks, or reservoirs
-    polygons : geopandas GeoDataFrame
-        GeoDataFrame containing Polygon or MultiPolygon geometries
-    column : str
-        Column name in the polygons GeoDataFrame used to assign a value to each 
-        polygon.
+    A : geopandas GeoDataFrame
+        GeoDataFrame containing Point or Line geometries, generally a GeoDataFrame 
+        containing water network junctions, tanks, reservoirs, pipes, pumps, or valves.
+    B : geopandas GeoDataFrame
+        GeoDataFrame containing Line or Polygon geometries, generally an external dataset
+    B_column : str
+        Column name in the B GeoDataFrame used to assign a value to each geometry.
     
     Returns
     -------
     pandas DataFrame
-        Intersection statistics (index = point names, columns = stats)
+        Intersection statistics (index = A.index, columns = stats)
         Columns include:
-            - N: number of intersecting polygons
-            - Sum: sum of the intersecting polygon values
-            - Min: minimum value of the intersecting polygons
-            - Max: maximum value of the intersecting polygons
-            - Average: average value of the intersecting polygons
-            - Polygons: list of intersecting polygon names
-            - Values: list of intersecting polygon values
-    
+            - n: number of intersecting geometries
+            - sum: sum of the intersecting geometry values
+            - min: minimum value of the intersecting geometry
+            - max: maximum value of the intersecting geometry
+            - average: average value of the intersecting geometry
+            - weighted_average: weighted average value of intersecting geometries (only if A contains Lines and B contains Polygons)
+            - intersections: list of intersecting geometry indicies
+            - values: list of intersecting geometry values
+            
     """
+    isinstance(A, gpd.GeoDataFrame)
+    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
+    isinstance(B, gpd.GeoDataFrame)
+    assert (B['geometry'].geom_type).isin(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']).all()
+    isinstance(B_column, str)
+    assert B_column in B.columns
     
-    isinstance(points, gpd.GeoDataFrame)
-    assert (points['geometry'].geom_type).isin(['Point']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
+    intersects = gpd.sjoin(A, B, op='intersects')
     
-    stats = _intersect(points, polygons, column)
+    n = intersects.groupby('name')[B_column].count()
+    val_sum = intersects.groupby('name')[B_column].sum()
+    val_min = intersects.groupby('name')[B_column].min()
+    val_max = intersects.groupby('name')[B_column].max()
+    val_average = intersects.groupby('name')[B_column].mean()
+    
+    B_indices = intersects.groupby('name')['index_right'].apply(list)
+    B_values = intersects.groupby('name')[B_column].apply(list)
+
+    stats = pd.DataFrame(index=A.index, data={'n': n,
+                                              'sum': val_sum,
+                                              'min': val_min, 
+                                              'max': val_max, 
+                                              'average': val_average,
+                                              'intersections': B_indices,
+                                              'values': B_values})
+    
+    stats['n'] = stats['n'].fillna(0)
+    stats.loc[stats['intersections'].isnull(), 'intersections'] = stats.loc[stats['intersections'].isnull(), 'intersections'] .apply(lambda x: [])
+    stats.loc[stats['values'].isnull(), 'values'] = stats.loc[stats['values'].isnull(), 'values'] .apply(lambda x: [])
+    
+    weighted_average = False
+    if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
+        if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
+            weighted_average = True
+            
+    if weighted_average:
+        stats['weighted_average'] = 0
+        A_length = A.length
+        for i in B.index:
+            B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=None)
+            A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
+            #print(i, lines_subset)
+            clip = gpd.clip(A_subset, B_geom) 
+                
+            if len(clip.index) > 0:
+                val = float(B_geom[B_column])
+                
+                weighed_val = clip.length/A_length[clip.index]*val
+                assert (weighed_val <= val).all()
+                stats.loc[clip.index, 'weighted_average'] = stats.loc[clip.index, 'weighted_average'] + weighed_val
+                
+        stats['weighted_average'] = stats['weighted_average']/stats['n']
+    
     return stats
 
-
-def intersect_lines_with_polygons(lines, polygons, column):
-    """
-    Identify polygons that intersect lines and return statistics on the 
-    intersecting polygon values.
-    
-    Each polygon is assigned a value based on a column of data in the polygons
-    GeoDataFrame.  The function returns information about the intersection 
-    for each line, including the weighted average (based on intersection length). 
-    
-    Parameters
-    ----------
-    lines : geopandas GeoDataFrame
-        GeoDataFrame containing LineString or MultiLineString geometries, 
-        generally a GeoDataFrame containing water network pipes
-    polygons : geopandas GeoDataFrame
-        GeoDataFrame containing Polygon or MultiPolygon geometries
-    column : str
-        Column name in the polygons GeoDataFrame used to assign a value to each 
-        polygon.
-    
-    Returns
-    -------
-    pandas DataFrame
-        Intersection statistics (index = point names, columns = stats)
-        Columns include:
-            - N: number of intersecting polygons
-            - Sum: sum of the intersecting polygon values
-            - Min: minimum value of the intersecting polygons
-            - Max: maximum value of the intersecting polygons
-            - Average: average value of the intersecting polygons
-            - Weighted average: weighted average value of the intersecting polygons (based on intersection length)
-            - Polygons: list of intersecting polygon names
-            - Values: list of intersecting polygon values
-    
-    """
-
-    isinstance(lines, gpd.GeoDataFrame)
-    assert (lines['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
-    #isinstance(return_weighted_average, bool)
-    
-    stats = _intersect(lines, polygons, column)
-    
-    stats['Weighted Average'] = 0
-    line_length = lines.length
-    for i in polygons.index:
-        polygon = gpd.GeoDataFrame(polygons.loc[[i],:], crs=None)
-        lines_subset = lines.loc[stats['Polygons'].apply(lambda x: i in x),:]
-        #print(i, lines_subset)
-        clip = gpd.clip(lines_subset, polygon) 
-            
-        if len(clip.index) > 0:
-            val = float(polygon[column])
-            
-            weighed_val = clip.length/line_length[clip.index]*val
-            assert (weighed_val <= val).all()
-            stats.loc[clip.index, 'Weighted Average'] = stats.loc[clip.index, 'Weighted Average'] + weighed_val
-            
-    stats['Weighted Average'] = stats['Weighted Average']/stats['N']
-    
-    return stats
 
 if __name__ == '__main__':
     print('new script')

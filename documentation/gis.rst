@@ -286,16 +286,73 @@ The data, water network model, and valve layer can be plotted as follows.
 
    Example valve layer created by snapping points to lines
 
-Intersect polygons with points and lines
-----------------------------------------
 
-The external dataset used in this example is demographic data.
+Intersect junctions and pipes with lines
+--------------------------------------------
+
+The external dataset used in this example is a proxy for earthquake fault lines.
+The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.LineString`` geometries and a 
+`values` column which contains earthquake magnitude.
+
+.. doctest::
+    :hide:
+	
+    >>> points = np.random.random((5, 2))*100
+    >>> line_data = []
+    >>> line_data.append({'magnitude': 5, 'geometry': shapely.geometry.LineString([[36, 2],[44,44],[85,85]])})
+    >>> line_data.append({'magnitude': 7, 'geometry': shapely.geometry.LineString([[30,85],[38,56],[45,27],[42,2]])})
+    >>> fault_lines = gpd.GeoDataFrame(pd.DataFrame(line_data), crs=None)
+
+.. doctest::
+
+    >>> print(fault_lines) # doctest: +SKIP
+       magnitude                                           geometry
+    0          5  LINESTRING (36.00000 2.00000, 44.00000 44.0000...
+    1          7  LINESTRING (30.00000 85.00000, 38.00000 56.000...
+	
+The following example uses the function :class:`~wntr.gis.intersect` to assign earthquake magnitudes to junctions and pipes. 
+
+.. doctest::
+
+    >>> junction_magnitude = wntr.gis.intersect(wn_gis.junctions, fault_lines, 'magnitude')
+    >>> pipe_magnitude = wntr.gis.intersect(wn_gis.pipes, fault_lines, 'magnitude')
+
+The data and water network model can be plotted as follows.  
+Junctions and pipes are colored with their average magnitude.
+
+.. doctest::
+
+    >>> ax = fault_lines.plot(column='magnitude')
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=junction_magnitude['average'], 
+    ...     link_attribute=pipe_magnitude['average'], 
+    ...     node_range=[0,10], link_range=[0,10], ax=ax)
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('intersect_lines.png', dpi=300)
+	
+:numref:`fig-intersect-lines` illustrates the intersection of junctions and pipes with the lines. 
+
+.. _fig-intersect-lines:
+.. figure:: figures/intersect_lines.png
+   :width: 800
+   :alt: Intersection of junctions and pipes with lines
+
+   Example intersection of junctions and pipes with lines
+   
+Intersect junctions and pipes with polygons
+--------------------------------------------
+
+The external dataset used in this example is a proxy for demographic data.
 The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Polygon`` geometries and a 
 `values` column which contains demographic data (set to a value between 0 and 1 for the example).
 
 .. doctest::
     :hide:
 	
+    >>> np.random.seed(123)
     >>> coords = wn.query_node_attribute('coordinates')
     >>> coord_vals = pd.DataFrame.from_records(coords.values, columns=['x', 'y'])
     >>> wn_hull = shapely.geometry.MultiPoint(coords.values).convex_hull
@@ -313,7 +370,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
     
 	>>> poly_data = []
     >>> for poly in shapely.ops.polygonize(line_data):
-    ...     poly_data.append({'geometry': poly, 'value': np.round(np.random.rand(),2)})      
+    ...     poly_data.append({'value': np.round(np.random.rand(),2), 'geometry': poly})      
     >>> polygons = gpd.GeoDataFrame(pd.DataFrame(poly_data), crs=None)
     >>> demographic_data = gpd.clip(polygons, wn_hull) 
 
@@ -321,44 +378,47 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 .. doctest::
 
     >>> print(demographic_data) # doctest: +SKIP
-                                                geometry  value
-    0  POLYGON ((13.569 62.876, 17.826 60.684, 34.367...   0.40
-    8  POLYGON ((18.930 78.148, 13.569 62.876, 2.085 ...   0.88
-    6  POLYGON ((34.367 41.946, 17.826 60.684, 50.044...   0.77
-    7  POLYGON ((18.930 78.148, 17.537 84.949, 37.912...   0.39
-    9  POLYGON ((17.826 60.684, 13.569 62.876, 18.930...   0.41
-    1  POLYGON ((32.134 25.013, 58.883 5.296, 58.321 ...   0.29
-    5  POLYGON ((73.994 27.964, 58.883 5.296, 32.134 ...   0.96
-    2  POLYGON ((80.000 66.228, 80.000 57.058, 54.816...   0.08
-    4  POLYGON ((42.449 44.043, 54.816 54.591, 80.000...   0.66
-    3  POLYGON ((74.674 79.468, 77.071 77.071, 77.730...   0.55
+       value                                           geometry
+    2   0.72  POLYGON ((9.345 76.556, 38.147 57.705, 37.710 ...
+    4   0.72  POLYGON ((28.041 35.444, 36.497 23.797, 26.099...
+    5   0.32  POLYGON ((9.345 76.556, 14.951 83.656, 33.841 ...
+    8   0.29  POLYGON ((36.497 23.797, 28.041 35.444, 37.710...
+    3   0.61  POLYGON ((36.497 23.797, 52.871 21.711, 62.509...
+    1   0.85  POLYGON ((69.609 78.469, 39.415 58.916, 33.841...
+    6   0.36  POLYGON ((39.415 58.916, 69.609 78.469, 73.580...
+    7   0.23  POLYGON ((52.871 21.711, 60.483 37.194, 78.168...
+    9   0.63  POLYGON ((80.000 60.400, 80.000 40.000, 79.952...
+    0   0.63  POLYGON ((73.580 66.810, 69.609 78.469, 70.116...
 	
-The following example uses the functions :class:`~wntr.gis.intersect_points_with_polygons` and :class:`~wntr.gis.intersect_lines_with_polygons`
+The following example uses the function :class:`~wntr.gis.intersect`
 to assign demographic data to junctions and pipes.  Note that intersection with lines returns a weighted average.
 
 .. doctest::
 
-    >>> junction_demographics = wntr.gis.intersect_points_with_polygons(wn_gis.junctions, demographic_data, 'value')
-    >>> pipe_demographics = wntr.gis.intersect_lines_with_polygons(wn_gis.pipes, demographic_data, 'value')
+    >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 'value')
+    >>> pipe_demographics = wntr.gis.intersect(wn_gis.pipes, demographic_data, 'value')
+
+The data and water network model can be plotted as follows. 
+Junctions and pipes are colored with their average value (weighted average for pipes).
 
 .. doctest::
 
     >>> ax = demographic_data.plot(column='value', alpha=0.5)
-    >>> ax = wntr.graphics.plot_network(wn, node_attribute=junction_demographics['Average'], 
-    ...     link_attribute=pipe_demographics['Weighted Average'], 
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=junction_demographics['average'], 
+    ...     link_attribute=pipe_demographics['weighted_average'], 
     ...     node_range=[0,1], link_range=[0,1], ax=ax)
 						   
 .. doctest::
     :hide:
     
     >>> plt.tight_layout()
-    >>> plt.savefig('intersect_points_lines.png', dpi=300)
+    >>> plt.savefig('intersect_polygons.png', dpi=300)
 
-:numref:`fig-intersect-points-lines` illustrates the intersection of junctions and pipes with the polygons. Note that the color scale for 
+:numref:`fig-intersect-polygons` illustrates the intersection of junctions and pipes with the polygons. Note that the color scale for 
 the polygons is different than the junction and pipe attributes.  
 
-.. _fig-intersect-points-lines:
-.. figure:: figures/intersect_points_lines.png
+.. _fig-intersect-polygons:
+.. figure:: figures/intersect_polygons.png
    :width: 800
    :alt: Intersection of junctions and pipes with polygons
 
