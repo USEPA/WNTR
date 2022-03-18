@@ -211,7 +211,7 @@ def intersect(A, B, B_column):
     isinstance(B_column, str)
     assert B_column in B.columns
     
-    intersects = gpd.sjoin(A, B, op='intersects')
+    intersects = gpd.sjoin(A, B, predicate='intersects')
     intersects.index.name = 'name'
     
     n = intersects.groupby('name')[B_column].count()
