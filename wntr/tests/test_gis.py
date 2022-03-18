@@ -53,8 +53,9 @@ class TestGIS(unittest.TestCase):
         df.set_index("name", inplace=True)
         self.polygons = gpd.GeoDataFrame(df, crs=None)
 
-        points = [(48.2,37.2), (70.8,69.3), (54.5, 40.5), 
-                  (51.2, 71.1), (32.1, 67.6), (51.7, 87.3)]
+        points = [(52,72), (75,40), (27,37)]
+        #points = [(48.2,37.2), (70.8,69.3), (54.5, 40.5), 
+        #          (51.2, 71.1), (32.1, 67.6), (51.7, 87.3)]
         point_data = []
         for i, pts in enumerate(points):
             geometry = Point(pts)
@@ -69,14 +70,14 @@ class TestGIS(unittest.TestCase):
     
     def test_intersect_points_with_polygons(self):
         
-        stats = wntr.gis.intersect_points_with_polygons(self.wn_geojson.junctions, self.polygons, 'value')
+        stats = wntr.gis.intersect(self.wn_geojson.junctions, self.polygons, 'value')
         print(stats)
         
         self.assertEqual(1, 1)
         
     def test_intersect_lines_with_polygons(self):
         
-        stats = wntr.gis.intersect_lines_with_polygons(self.wn_geojson.pipes, self.polygons, 'value')
+        stats = wntr.gis.intersect(self.wn_geojson.pipes, self.polygons, 'value')
         print(stats)
         
         self.assertEqual(1, 1)
@@ -89,20 +90,25 @@ class TestGIS(unittest.TestCase):
     def test_snap_points_to_points(self):
         
         snapped_points = wntr.gis.snap_points_to_points(self.points, self.wn_geojson.junctions, tolerance=5.0)
-        snap_calc = pd.DataFrame(snapped_points)
-        actual_points_to_points = gpd.read_file(join(datadir, "snapped_points_to_points.geojson"))
-        snap_actual = pd.DataFrame(actual_points_to_points)
-        snap_actual = snap_actual.drop(columns="name")
-        assert_frame_equal(snap_calc, snap_actual)
+        
+        # distance = np.sqrt(2)*2, 5, np.sqrt(2)*3
+        expected = pd.DataFrame([{'node': '12', 'snap_distance': 2.828427, 'geometry': Point([50.0,70.0])},
+                                 {'node': '23', 'snap_distance': 5.0,      'geometry': Point([70.0,40.0])},
+                                 {'node': '21', 'snap_distance': 4.242641, 'geometry': Point([30.0,40.0])}])
+        
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        
 
     def test_snap_points_to_lines(self):
         
         snapped_points = wntr.gis.snap_points_to_lines(self.points, self.wn_geojson.pipes, tolerance=5.0)
-        snap_calc = pd.DataFrame(snapped_points)        
-        actual_points_to_lines = gpd.read_file(join(datadir, "snapped_points_to_lines.geojson"))
-        snap_actual = pd.DataFrame(actual_points_to_lines)
-        snap_actual = snap_actual.drop(columns="name")
-        assert_frame_equal(snap_calc, snap_actual)
+        
+        # distance = 2,5,3
+        expected = pd.DataFrame([{'link': '110', 'node': '12', 'snap_distance': 2.0, 'distance_along_line': 0.9, 'geometry': Point([50.0,72.0])},
+                                 {'link':  '22', 'node': '23', 'snap_distance': 5.0, 'distance_along_line': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link': '121', 'node': '21', 'snap_distance': 3.0, 'distance_along_line': 0.1, 'geometry': Point([30.0,37.0])}])
+        
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
 
 if __name__ == "__main__":
     unittest.main()

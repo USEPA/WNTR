@@ -10,49 +10,64 @@ import numpy as np
 
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
-
     has_shapely = True
 except ModuleNotFoundError:
     has_shapely = False
 
 try:
     import geopandas as gpd
-
     has_geopandas = True
 except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
-def _snap(points, wn_elements, tolerance):    
-    # modify lines dataframe to include "name" as a separate column
-    wn_elements = wn_elements.reset_index()
-    # determine how far to look around each point for lines
-    bbox = points.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
-    # determine which links are close to each point
-    hits = bbox.apply(lambda row: list(wn_elements.loc[list(wn_elements.sindex.intersection(row))]['name']), axis=1)        
+
+def _snap(A, B, tolerance):  
+    # Snap A to B
+    
+    # Modify B to include "indexB" as a separate column
+    B = B.reset_index()
+    B.rename(columns={'index':'indexB'}, inplace=True)
+    
+    # Define the coordinate referece system, based on B
+    crs = B.crs
+    
+    # Determine which Bs are closest to each A
+    bbox = A.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
+    hits = bbox.apply(lambda row: list(B.loc[list(B.sindex.intersection(row))]['indexB']), axis=1)        
     closest = pd.DataFrame({
         # index of points table
         "point": np.repeat(hits.index, hits.apply(len)),
         # name of link
-        "name": np.concatenate(hits.values)
+        "indexB": np.concatenate(hits.values)
         })
+    
     # Merge the closest dataframe with the lines dataframe on the line names
-    closest = pd.merge(closest, wn_elements, on="name")
-    # rename the line "name" column header to "link"
-    closest = closest.rename(columns={"name":"wn_element"})
+    closest = pd.merge(closest, B, on="indexB")
+
     # Join back to the original points to get their geometry
     # rename the point geometry as "points"
-    closest = closest.join(points.geometry.rename("points"), on="point")
+    closest = closest.join(A.geometry.rename("points"), on="point")
+    
     # Convert back to a GeoDataFrame, so we can do spatial ops
-    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_elements.crs)    
+    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)  
+    
     # Calculate distance between the point and nearby links
-    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=wn_elements.crs))
+    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=crs))
+    
     # Sort on ascending snap distance, so that closest goes to top
-    closest = closest.sort_values(by=["snap_distance"])        
+    closest = closest.sort_values(by=["snap_distance"]) 
+       
     # group by the index of the points and take the first, which is the closest line
-    closest = closest.groupby("point").first()        
+    closest = closest.groupby("point").first()      
+    
     # construct a GeoDataFrame of the closest lines
-    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_elements.crs)
+    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)
+    
+    # Reset B index
+    B.set_index('indexB', inplace=True)
+    B.index.name = None
+    
     return closest
 
 def snap_points_to_points(points, wn_points, tolerance):
@@ -81,16 +96,21 @@ def snap_points_to_points(points, wn_points, tolerance):
             - Snap_distance: distance between original and snapped points
             - Elevation: snapped point elevation 
 
-    """       
+    """    
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
     isinstance(points, gpd.GeoDataFrame)
     assert(points['geometry'].geom_type).isin(['Point']).all()
     isinstance(wn_points, gpd.GeoDataFrame)
     assert(wn_points['geometry'].geom_type).isin(['Point']).all()
     
     snapped_points = _snap(points, wn_points, tolerance)
-    snapped_points = snapped_points.rename(columns={"wn_element":"node"})
-    snapped_points = snapped_points.reindex(columns=["node", "snap_distance", "geometry"])
-    snapped_points.index.name = None #'name'
+    snapped_points = snapped_points.rename(columns={"indexB":"node"})
+    
+    snapped_points = snapped_points[["node", "snap_distance", "geometry"]]
+    snapped_points.index.name = None 
+    
     return snapped_points
     
 def snap_points_to_lines(points, wn_lines, tolerance):
@@ -99,10 +119,10 @@ def snap_points_to_lines(points, wn_lines, tolerance):
 
     Parameters
     ----------
-    points : GeoPandas GeoDataFrame
+    points : geopandas GeoDataFrame
         A pandas.DataFrame object with a 'geometry' column populated by 
         'POINT' geometries.
-    wn_lines : GeoPandas GeoDataFrame
+    wn_lines : geopandas GeoDataFrame
         A pandas.DataFrame object with a 'geometry' column populated by 
         'LINESTRING' or 'MULTILINESTRING' geometries.
     tolerance : float
@@ -120,13 +140,17 @@ def snap_points_to_lines(points, wn_lines, tolerance):
             - Snap_distance: distance between original and snapped points
             - Distance_along_line: normalized distance of snapped points along the lines from the start node (0.0) and end node (1.0)
     """   
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
     isinstance(points, gpd.GeoDataFrame)
     assert(points['geometry'].geom_type).isin(['Point']).all()
     isinstance(points, gpd.GeoDataFrame)
     assert(wn_lines['geometry'].geom_type).isin(['LineString','MultiLineString']).all()
     
     closest = _snap(points, wn_lines, tolerance)
-    closest = closest.rename(columns={"wn_element":"link"})
+    closest = closest.rename(columns={"indexB":"link"})
+    
     # position of nearest point from start of the line
     pos = closest.geometry.project(gpd.GeoSeries(closest.points))        
     # get new point location geometry
@@ -136,152 +160,102 @@ def snap_points_to_lines(points, wn_lines, tolerance):
     snapped_points["distance_along_line"] = closest.geometry.project(snapped_points, normalized=True)
     snapped_points.loc[snapped_points["distance_along_line"]<0.5, "node"] = closest["start_node_name"]
     snapped_points.loc[snapped_points["distance_along_line"]>=0.5, "node"] = closest["end_node_name"]
-    snapped_points = snapped_points.reindex(columns=["link", "node", "snap_distance", "distance_along_line", "geometry"])
-    snapped_points.index.name = None #'name'
+    
+    snapped_points = snapped_points[["link", "node", "snap_distance", "distance_along_line", "geometry"]]
+    snapped_points.index.name = None
+    
     return snapped_points
 
 
-def _intersect(elements, polygons, column):
-   
-    isinstance(polygons, gpd.GeoDataFrame)
-    
-    intersects = gpd.sjoin(elements, polygons, op='intersects')
-    
-    n = intersects.groupby('name')[column].count()
-    val_sum = intersects.groupby('name')[column].sum()
-    val_min = intersects.groupby('name')[column].min()
-    val_max = intersects.groupby('name')[column].max()
-    val_average = intersects.groupby('name')[column].mean()
-    
-    polygon_indices = intersects.groupby('name')['index_right'].apply(list)
-    polygon_values = intersects.groupby('name')[column].apply(list)
-
-    
-    stats = pd.DataFrame(index=elements.index, data={'N': n,
-                                                     'Sum': val_sum,
-                                                     'Min': val_min, 
-                                                     'Max': val_max, 
-                                                     'Average': val_average,
-                                                     'Polygons': polygon_indices,
-                                                     'Values': polygon_values})
-    
-    stats['N'] = stats['N'].fillna(0)
-    stats.loc[stats['Polygons'].isnull(), 'Polygons'] = stats.loc[stats['Polygons'].isnull(), 'Polygons'] .apply(lambda x: [])
-    stats.loc[stats['Values'].isnull(), 'Values'] = stats.loc[stats['Values'].isnull(), 'Values'] .apply(lambda x: [])
-    
-    return stats
-
-
-def intersect_points_with_polygons(points, polygons, column):
+def intersect(A, B, B_column):
     """
-    Identify polygons that intersect points and return statistics on the 
-    intersecting polygon values.
+    Identify geometries that intersect and return statistics on the 
+    intersecting values.
     
-    Each polygon is assigned a value based on a column of data in the polygons
-    GeoDataFrame.  The function returns information about the intersection 
-    for each point. 
+    The function returns information about the intersection for each geometry 
+    in A. Each geometry in B is assigned a value based on a column of data in 
+    that GeoDataFrame.  
     
     Parameters
     ----------
-    points : geopandas GeoDataFrame
-        GeoDataFrame containing Point geometries, generally a GeoDataFrame 
-        containing water network junctions, tanks, or reservoirs
-    polygons : geopandas GeoDataFrame
-        GeoDataFrame containing Polygon or MultiPolygon geometries
-    column : str
-        Column name in the polygons GeoDataFrame used to assign a value to each 
-        polygon.
+    A : geopandas GeoDataFrame
+        GeoDataFrame containing Point or Line geometries, generally a GeoDataFrame 
+        containing water network junctions, tanks, reservoirs, pipes, pumps, or valves.
+    B : geopandas GeoDataFrame
+        GeoDataFrame containing Line or Polygon geometries, generally an external dataset
+    B_column : str
+        Column name in the B GeoDataFrame used to assign a value to each geometry.
     
     Returns
     -------
     pandas DataFrame
-        Intersection statistics (index = point names, columns = stats)
+        Intersection statistics (index = A.index, columns = stats)
         Columns include:
-            - N: number of intersecting polygons
-            - Sum: sum of the intersecting polygon values
-            - Min: minimum value of the intersecting polygons
-            - Max: maximum value of the intersecting polygons
-            - Average: average value of the intersecting polygons
-            - Polygons: list of intersecting polygon names
-            - Values: list of intersecting polygon values
-    
-    """
-    
-    isinstance(points, gpd.GeoDataFrame)
-    assert (points['geometry'].geom_type).isin(['Point']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
-    
-    stats = _intersect(points, polygons, column)
-    return stats
-
-
-def intersect_lines_with_polygons(lines, polygons, column):
-    """
-    Identify polygons that intersect lines and return statistics on the 
-    intersecting polygon values.
-    
-    Each polygon is assigned a value based on a column of data in the polygons
-    GeoDataFrame.  The function returns information about the intersection 
-    for each line, including the weighted average (based on intersection length). 
-    
-    Parameters
-    ----------
-    lines : geopandas GeoDataFrame
-        GeoDataFrame containing LineString or MultiLineString geometries, 
-        generally a GeoDataFrame containing water network pipes
-    polygons : geopandas GeoDataFrame
-        GeoDataFrame containing Polygon or MultiPolygon geometries
-    column : str
-        Column name in the polygons GeoDataFrame used to assign a value to each 
-        polygon.
-    
-    Returns
-    -------
-    pandas DataFrame
-        Intersection statistics (index = point names, columns = stats)
-        Columns include:
-            - N: number of intersecting polygons
-            - Sum: sum of the intersecting polygon values
-            - Min: minimum value of the intersecting polygons
-            - Max: maximum value of the intersecting polygons
-            - Average: average value of the intersecting polygons
-            - Weighted average: weighted average value of the intersecting polygons (based on intersection length)
-            - Polygons: list of intersecting polygon names
-            - Values: list of intersecting polygon values
-    
-    """
-
-    isinstance(lines, gpd.GeoDataFrame)
-    assert (lines['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all()
-    isinstance(polygons, gpd.GeoDataFrame)
-    assert (polygons['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all()
-    isinstance(column, str)
-    assert column in polygons.columns
-    #isinstance(return_weighted_average, bool)
-    
-    stats = _intersect(lines, polygons, column)
-    
-    stats['Weighted Average'] = 0
-    line_length = lines.length
-    for i in polygons.index:
-        polygon = gpd.GeoDataFrame(polygons.loc[[i],:], crs=None)
-        lines_subset = lines.loc[stats['Polygons'].apply(lambda x: i in x),:]
-        #print(i, lines_subset)
-        clip = gpd.clip(lines_subset, polygon) 
+            - n: number of intersecting geometries
+            - sum: sum of the intersecting geometry values
+            - min: minimum value of the intersecting geometry
+            - max: maximum value of the intersecting geometry
+            - average: average value of the intersecting geometry
+            - weighted_average: weighted average value of intersecting geometries (only if A contains Lines and B contains Polygons)
+            - intersections: list of intersecting geometry indicies
+            - values: list of intersecting geometry values
             
-        if len(clip.index) > 0:
-            val = float(polygon[column])
+    """
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
+    isinstance(A, gpd.GeoDataFrame)
+    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
+    isinstance(B, gpd.GeoDataFrame)
+    assert (B['geometry'].geom_type).isin(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']).all()
+    isinstance(B_column, str)
+    assert B_column in B.columns
+    
+    intersects = gpd.sjoin(A, B, op='intersects')
+    intersects.index.name = 'name'
+    
+    n = intersects.groupby('name')[B_column].count()
+    val_sum = intersects.groupby('name')[B_column].sum()
+    val_min = intersects.groupby('name')[B_column].min()
+    val_max = intersects.groupby('name')[B_column].max()
+    val_average = intersects.groupby('name')[B_column].mean()
+    
+    B_indices = intersects.groupby('name')['index_right'].apply(list)
+    B_values = intersects.groupby('name')[B_column].apply(list)
+
+    stats = pd.DataFrame(index=A.index, data={'n': n,
+                                              'sum': val_sum,
+                                              'min': val_min, 
+                                              'max': val_max, 
+                                              'average': val_average,
+                                              'intersections': B_indices,
+                                              'values': B_values})
+    
+    stats['n'] = stats['n'].fillna(0)
+    stats.loc[stats['intersections'].isnull(), 'intersections'] = stats.loc[stats['intersections'].isnull(), 'intersections'] .apply(lambda x: [])
+    stats.loc[stats['values'].isnull(), 'values'] = stats.loc[stats['values'].isnull(), 'values'] .apply(lambda x: [])
+    
+    weighted_average = False
+    if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
+        if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
+            weighted_average = True
             
-            weighed_val = clip.length/line_length[clip.index]*val
-            assert (weighed_val <= val).all()
-            stats.loc[clip.index, 'Weighted Average'] = stats.loc[clip.index, 'Weighted Average'] + weighed_val
-            
-    stats['Weighted Average'] = stats['Weighted Average']/stats['N']
+    if weighted_average:
+        stats['weighted_average'] = 0
+        A_length = A.length
+        for i in B.index:
+            B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=None)
+            A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
+            #print(i, lines_subset)
+            clip = gpd.clip(A_subset, B_geom) 
+                
+            if len(clip.index) > 0:
+                val = float(B_geom[B_column])
+                
+                weighed_val = clip.length/A_length[clip.index]*val
+                assert (weighed_val <= val).all()
+                stats.loc[clip.index, 'weighted_average'] = stats.loc[clip.index, 'weighted_average'] + weighed_val
+                
+        stats['weighted_average'] = stats['weighted_average']/stats['n']
     
     return stats
-
-if __name__ == '__main__':
-    print('new script')
