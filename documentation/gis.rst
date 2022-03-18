@@ -25,7 +25,7 @@ The junctions, tanks, reservoirs, pipes, pumps, and valves in a water network mo
 geospatial data objects. These objects can be used 
 directly within WNTR, 
 in Python with geospatial packages such as geopandas and shapely, and 
-in Global Information System (GIS) platforms.
+in geographic information system (GIS) platforms.
 Open source GIS platforms include QGIS and GRASS GIS.
 
 The following capabilities depend on the geopandas Python package

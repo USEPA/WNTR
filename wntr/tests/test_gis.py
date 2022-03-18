@@ -69,14 +69,14 @@ class TestGIS(unittest.TestCase):
     
     def test_intersect_points_with_polygons(self):
         
-        stats = wntr.gis.intersect_points_with_polygons(self.wn_geojson.junctions, self.polygons, 'value')
+        stats = wntr.gis.intersect(self.wn_geojson.junctions, self.polygons, 'value')
         print(stats)
         
         self.assertEqual(1, 1)
         
     def test_intersect_lines_with_polygons(self):
         
-        stats = wntr.gis.intersect_lines_with_polygons(self.wn_geojson.pipes, self.polygons, 'value')
+        stats = wntr.gis.intersect(self.wn_geojson.pipes, self.polygons, 'value')
         print(stats)
         
         self.assertEqual(1, 1)
