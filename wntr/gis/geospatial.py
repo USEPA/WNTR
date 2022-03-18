@@ -10,49 +10,64 @@ import numpy as np
 
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
-
     has_shapely = True
 except ModuleNotFoundError:
     has_shapely = False
 
 try:
     import geopandas as gpd
-
     has_geopandas = True
 except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
-def _snap(points, wn_elements, tolerance):    
-    # modify lines dataframe to include "name" as a separate column
-    wn_elements = wn_elements.reset_index()
-    # determine how far to look around each point for lines
-    bbox = points.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
-    # determine which links are close to each point
-    hits = bbox.apply(lambda row: list(wn_elements.loc[list(wn_elements.sindex.intersection(row))]['name']), axis=1)        
+
+def _snap(A, B, tolerance):  
+    # Snap A to B
+    
+    # Modify B to include "indexB" as a separate column
+    B = B.reset_index()
+    B.rename(columns={'index':'indexB'}, inplace=True)
+    
+    # Define the coordinate referece system, based on B
+    crs = B.crs
+    
+    # Determine which Bs are closest to each A
+    bbox = A.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
+    hits = bbox.apply(lambda row: list(B.loc[list(B.sindex.intersection(row))]['indexB']), axis=1)        
     closest = pd.DataFrame({
         # index of points table
         "point": np.repeat(hits.index, hits.apply(len)),
         # name of link
-        "name": np.concatenate(hits.values)
+        "indexB": np.concatenate(hits.values)
         })
+    
     # Merge the closest dataframe with the lines dataframe on the line names
-    closest = pd.merge(closest, wn_elements, on="name")
-    # rename the line "name" column header to "link"
-    closest = closest.rename(columns={"name":"wn_element"})
+    closest = pd.merge(closest, B, on="indexB")
+
     # Join back to the original points to get their geometry
     # rename the point geometry as "points"
-    closest = closest.join(points.geometry.rename("points"), on="point")
+    closest = closest.join(A.geometry.rename("points"), on="point")
+    
     # Convert back to a GeoDataFrame, so we can do spatial ops
-    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_elements.crs)    
+    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)  
+    
     # Calculate distance between the point and nearby links
-    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=wn_elements.crs))
+    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=crs))
+    
     # Sort on ascending snap distance, so that closest goes to top
-    closest = closest.sort_values(by=["snap_distance"])        
+    closest = closest.sort_values(by=["snap_distance"]) 
+       
     # group by the index of the points and take the first, which is the closest line
-    closest = closest.groupby("point").first()        
+    closest = closest.groupby("point").first()      
+    
     # construct a GeoDataFrame of the closest lines
-    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=wn_elements.crs)
+    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)
+    
+    # Reset B index
+    B.set_index('indexB', inplace=True)
+    B.index.name = None
+    
     return closest
 
 def snap_points_to_points(points, wn_points, tolerance):
@@ -81,16 +96,21 @@ def snap_points_to_points(points, wn_points, tolerance):
             - Snap_distance: distance between original and snapped points
             - Elevation: snapped point elevation 
 
-    """       
+    """    
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
     isinstance(points, gpd.GeoDataFrame)
     assert(points['geometry'].geom_type).isin(['Point']).all()
     isinstance(wn_points, gpd.GeoDataFrame)
     assert(wn_points['geometry'].geom_type).isin(['Point']).all()
     
     snapped_points = _snap(points, wn_points, tolerance)
-    snapped_points = snapped_points.rename(columns={"wn_element":"node"})
-    snapped_points = snapped_points.reindex(columns=["node", "snap_distance", "geometry"])
-    snapped_points.index.name = None #'name'
+    snapped_points = snapped_points.rename(columns={"indexB":"node"})
+    
+    snapped_points = snapped_points[["node", "snap_distance", "geometry"]]
+    snapped_points.index.name = None 
+    
     return snapped_points
     
 def snap_points_to_lines(points, wn_lines, tolerance):
@@ -99,10 +119,10 @@ def snap_points_to_lines(points, wn_lines, tolerance):
 
     Parameters
     ----------
-    points : GeoPandas GeoDataFrame
+    points : geopandas GeoDataFrame
         A pandas.DataFrame object with a 'geometry' column populated by 
         'POINT' geometries.
-    wn_lines : GeoPandas GeoDataFrame
+    wn_lines : geopandas GeoDataFrame
         A pandas.DataFrame object with a 'geometry' column populated by 
         'LINESTRING' or 'MULTILINESTRING' geometries.
     tolerance : float
@@ -120,13 +140,17 @@ def snap_points_to_lines(points, wn_lines, tolerance):
             - Snap_distance: distance between original and snapped points
             - Distance_along_line: normalized distance of snapped points along the lines from the start node (0.0) and end node (1.0)
     """   
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
     isinstance(points, gpd.GeoDataFrame)
     assert(points['geometry'].geom_type).isin(['Point']).all()
     isinstance(points, gpd.GeoDataFrame)
     assert(wn_lines['geometry'].geom_type).isin(['LineString','MultiLineString']).all()
     
     closest = _snap(points, wn_lines, tolerance)
-    closest = closest.rename(columns={"wn_element":"link"})
+    closest = closest.rename(columns={"indexB":"link"})
+    
     # position of nearest point from start of the line
     pos = closest.geometry.project(gpd.GeoSeries(closest.points))        
     # get new point location geometry
@@ -136,8 +160,10 @@ def snap_points_to_lines(points, wn_lines, tolerance):
     snapped_points["distance_along_line"] = closest.geometry.project(snapped_points, normalized=True)
     snapped_points.loc[snapped_points["distance_along_line"]<0.5, "node"] = closest["start_node_name"]
     snapped_points.loc[snapped_points["distance_along_line"]>=0.5, "node"] = closest["end_node_name"]
-    snapped_points = snapped_points.reindex(columns=["link", "node", "snap_distance", "distance_along_line", "geometry"])
-    snapped_points.index.name = None #'name'
+    
+    snapped_points = snapped_points[["link", "node", "snap_distance", "distance_along_line", "geometry"]]
+    snapped_points.index.name = None
+    
     return snapped_points
 
 
@@ -175,6 +201,9 @@ def intersect(A, B, B_column):
             - values: list of intersecting geometry values
             
     """
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
     isinstance(A, gpd.GeoDataFrame)
     assert (A['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
     isinstance(B, gpd.GeoDataFrame)
@@ -183,6 +212,7 @@ def intersect(A, B, B_column):
     assert B_column in B.columns
     
     intersects = gpd.sjoin(A, B, op='intersects')
+    intersects.index.name = 'name'
     
     n = intersects.groupby('name')[B_column].count()
     val_sum = intersects.groupby('name')[B_column].sum()
@@ -229,7 +259,3 @@ def intersect(A, B, B_column):
         stats['weighted_average'] = stats['weighted_average']/stats['n']
     
     return stats
-
-
-if __name__ == '__main__':
-    print('new script')
