@@ -28,6 +28,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import wntr.epanet.io
+from wntr.epanet.toolkit import ENepanet
 from wntr.epanet.util import EN, FlowUnits, HydParam, LinkTankStatus, MassUnits, QualParam, to_si
 from wntr.network.base import Link, LinkStatus
 from wntr.network.controls import StopControl, StopCriteria
@@ -51,11 +52,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def __init__(self, wn: WaterNetworkModel):
         WaterNetworkSimulator.__init__(self, wn)
-        self._en = None
-        self._t = 0
-        self._tn = 0
-        self._results = None
-        self.__initialized = False
+        self._en: ENepanet = None
+        self._t: int = 0
+        self._tn: int = 0
+        self._results: SimulationResults = None
         self._node_attributes = [
             (EN.QUALITY, "_quality", "quality", None),
             (EN.DEMAND, "_demand", "demand", HydParam.Demand._to_si),
@@ -76,7 +76,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._temp_index = list()
         self._temp_link_report_lines = dict()
         self._temp_node_report_lines = dict()
-        self._next_stop_time = None
+        self._next_stop_time: int = None
+        self._overrides = dict()
 
     @property
     def current_time(self):
@@ -90,28 +91,28 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         return self._results
 
     def add_stop_criterion(self, control: StopControl) -> int:
-        raise NotImplementedError()
+        self._stop_criteria.register_criterion(control)
 
-    def remove_stop_criterion(self, number):
-        raise NotImplementedError()
+    def remove_stop_criterion(self, control):
+        self._stop_criteria.deregister(control)
 
     def clear_stop_criteria(self):
-        raise NotImplementedError()
+        self._stop_criteria._controls.clear()
 
     def query_node_attribute(self, node_name: str, attribute) -> float:
-        if self.__initialized:
+        if self._en is not None:
             node_id = self._en.ENgetnodeindex(node_name)
             if isinstance(attribute, (EN, int)):
                 return self._en.ENgetnodevalue(node_id, attribute)
             else:
                 return self._en.ENgetnodevalue(node_id, EN[attribute.upper()])
         else:
-            msg = "query_node_attribute cannot be called until the simulator is initialized"
+            msg = "The simulator has not been initialized"
             logger.error(msg)
             raise SimulatorError(msg)
 
     def query_link_attribute(self, link_name: str, attribute: str) -> float:
-        if self.__initialized:
+        if self._en is not None:
             link_id = self._en.ENgetlinkindex(link_name)
             if isinstance(attribute, (EN, int)):
                 return self._en.ENgetlinkvalue(link_id, attribute)
@@ -120,28 +121,23 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             else:
                 return self._en.ENgetlinkvalue(link_id, EN[attribute.upper()])
         else:
-            msg = "query_link_attribute cannot be called until the simulator is initialized"
+            msg = "The simulator has not been initialized"
             logger.error(msg)
             raise SimulatorError(msg)
 
     def add_node_sensor(self, node_name: str):
         """
-        Add a sensor that will hold the current value of an attribute at a specific node.
+        Add a sensor that keeps the current values of all output parameters for a node.
+        These values are accessible by looking at the read-only parameters on the node
+        in the water network model.
 
         Parameters
         ----------
         node_name : str
-            _description_
-        attribute : str
-            Must be one of "DEMAND", "HEAD", "PRESSURE", "QUALITY"
-
-        Raises
-        ------
-        NotImplementedError
-            _description_
+            the name of the node to track
         """
         node = self._wn.get_node(node_name)
-        if self.__initialized:
+        if self._en is not None:
             node_id = self._en.ENgetnodeindex(node_name)
         else:
             node_id = node_name
@@ -150,23 +146,17 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def add_link_sensor(self, link_name: str):
         """
-        Add a sensor that will hold the current value of an attribute on a specific link.
+        Add a sensor that keeps the current values of all output parameters for a link.
+        These values are accessible by looking at the read-only parameters on the link
+        in the water network model.
 
         Parameters
         ----------
         link_name : str
-            _description_
-        attribute : str
-            Must be one of "LINKQUAL", "FLOW", "VELOCITY", "HEADLOSS", "STATUS" or "SETTING"
-
-
-        Raises
-        ------
-        NotImplementedError
-            _description_
+            the name of the link to track
         """
         link = self._wn.get_link(link_name)
-        if self.__initialized:
+        if self._en is not None:
             link_id = self._en.ENgetlinkindex(link_name)
         else:
             link_id = link_name
@@ -196,7 +186,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             _description_
         """
         node = self._wn.get_node(node_name)
-        if self.__initialized:
+        if self._en is not None:
             node_id = self._en.ENgetnodeindex(node_name)
         else:
             node_id = node_name
@@ -226,7 +216,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             _description_
         """
         link = self._wn.get_link(link_name)
-        if self.__initialized:
+        if self._en is not None:
             link_id = self._en.ENgetlinkindex(link_name)
         else:
             link_id = link_name
@@ -253,20 +243,18 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
         Returns
         -------
-        _type_
-            _description_
+        int
+            the size of the timestep that was actually set, in seconds
 
         Raises
         ------
-        NotImplementedError
-            _description_
+        SimulatorError
+            if the simulation has not been initialized
         """
-        if not self.__initialized:
-            a = SimulatorWarning(
-                "The simulation has not been initialized, please modify wn.options.time.duration instead"
-            )
-            warnings.warn(a)
-            return self._wn.options.time.hydraulic_timestep
+        if self._en is None:
+            a = SimulatorError("The simulation has not been initialized")
+            logger.error(a)
+            raise a
         self._en.ENsettimeparam(EN.HYDSTEP, seconds)
         return self._en.ENgettimeparam(EN.HYDSTEP)
 
@@ -285,27 +273,25 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
         Raises
         ------
-        NotImplementedError
-            _description_
-        ValueError
-            if the new duration is less than the current simulation time
+        SimulationError
+            if the new duration is less than the current simulation time or
+            if the simulation is at the duration or has not been initialized
         """
-        if not self.__initialized:
-            w = SimulatorWarning(
-                "The simulation has not been initialized"
-            )
-            warnings.warn(w)
-            return self._wn.options.time.duration
+        if self._en is None:
+            w = SimulatorError("The simulation has not been initialized")
+            logger.error(w)
+            raise w
         elif self._t > seconds:
-            raise SimulatorError("Current simulation has passed time {} (current is {})".format(seconds, self._t))
+            w = SimulatorWarning("Current simulation has passed time {} (current is {})".format(seconds, self._t))
+            warnings.warn(w)
+            return self._en.ENgettimeparam(EN.DURATION)
         elif self._t == seconds:
             w = SimulatorWarning("The simulation is already at time {}".format(seconds))
             warnings.warn(w)
+            return self._en.ENgettimeparam(EN.DURATION)
         else:
-            hstep = self._en.ENgettimeparam(EN.HYDSTEP)
             self._next_stop_time = seconds
             self._en.ENsettimeparam(EN.DURATION, seconds)
-            # self._en.ENsettimeparam(EN.DURATION, seconds + )
             return self._en.ENgettimeparam(EN.DURATION)
 
     def set_link_status(self, link_name: str, value: float, override=False):
@@ -329,14 +315,19 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         NotImplementedError
             _description_
         """
-        if not self.__initialized:
-            a = SimulatorWarning(
-                "You cannot change a link status with set_link_status until the simulation is initialized - action ignored"
-            )
-            warnings.warn(a)
-            return False
-        raise NotImplementedError()
-        return True
+        if self._en is None:
+            w = SimulatorError("The simulation has not been initialized")
+            logger.error(w)
+            raise w
+        link_num = self._en.ENgetlinkindex(link_name)
+        if not override:
+            self._en.ENsetlinkvalue(link_num, EN.STATUS, value)
+        elif link_name in self._overrides:
+            control_number = self._overrides[link_name]
+            self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
+        else:
+            control_number = self._en.ENaddcontrol(EN.LOWLEVEL, link_num, value, 1, 1e30)
+            self._overrides[link_name] = control_number
 
     def set_link_setting(self, link_name: str, value: float, override=False):
         """
@@ -359,14 +350,19 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         NotImplementedError
             _description_
         """
-        if not self.__initialized:
-            a = SimulatorWarning(
-                "You cannot change a link status with set_link_status until the simulation is initialized - action ignored"
-            )
-            warnings.warn(a)
-            return False
-        raise NotImplementedError()
-        return True
+        if self._en is None:
+            w = SimulatorError("The simulation has not been initialized")
+            logger.error(w)
+            raise w
+        link_num = self._en.ENgetlinkindex(link_name)
+        if not override:
+            self._en.ENsetlinkvalue(link_num, EN.SETTING, value)
+        elif link_name in self._overrides:
+            control_number = self._overrides[link_name]
+            self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
+        else:
+            control_number = self._en.ENaddcontrol(EN.LOWLEVEL, link_num, value, 1, 1e30)
+            self._overrides[link_name] = control_number
 
     def release_override(self, link_name: str):
         """
@@ -382,13 +378,19 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         NotImplementedError
             _description_
         """
-        if not self.__initialized:
-            a = SimulatorWarning(
-                "You cannot release an override with release_override until the simulation is initialized - action ignored"
-            )
-            warnings.warn(a)
-            return False
-        raise NotImplementedError()
+        if self._en is None:
+            w = SimulatorError("The simulation has not been initialized")
+            logger.error(w)
+            raise w
+        if link_name in self._overrides.keys():
+            control_number = self._overrides[link_name]
+            self._en.ENdeletecontrol(control_number)
+            for k, v in self._overrides.items():
+                if v > control_number:
+                    self._overrides[k] = v - 1
+        else:
+            w = SimulatorWarning("No override set on the specified link")
+            warnings.warn(w)
 
     def _save_report_step(self):
         t = self._en.ENgettimeparam(EN.HTIME)
@@ -433,24 +435,18 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             self._temp_link_report_lines["setting"].append(setting)
 
     def _copy_results_object(self):
-        if len(self._temp_index) <= 0:
+        if len(self._temp_index) == 0:
             return
         for _, _, name, f in self._node_attributes:
-            # df = self._results.node[name]
-            # df2 = pd.DataFrame(self._temp_node_report_lines[name], columns=self._node_name_str, index=self._temp_index)
             df2 = np.array(self._temp_node_report_lines[name])
             if f is not None:
                 df2 = f(self._flow_units, df2, mass_units=self._mass_units)
-            # df = df.append(df2)
             self._results.node[name].loc[self._temp_index, :] = df2
             self._temp_node_report_lines[name] = list()
         for _, _, name, f in self._link_attributes:
-            # df = self._results.link[name]
-            # df2 = pd.DataFrame(self._temp_link_report_lines[name], columns=self._link_name_str, index=self._temp_index)
             df2 = np.array(self._temp_link_report_lines[name])
             if f is not None:
                 df2 = f(self._flow_units, df2, mass_units=self._mass_units)
-            # df = df.append(df2)
             self._results.link[name].loc[self._temp_index, :] = df2
             self._temp_link_report_lines[name] = list()
         self._temp_index = list()
@@ -483,9 +479,9 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def _save_intermediate_values(self):
         for name, vals in self._node_sensors.items():
-            en_idx, at_idx = name   #(where, what) you are measuring
+            en_idx, at_idx = name  # (where, what) you are measuring
             node, attr, f = vals  # WNTR node object, attribute name, and conversion function
-            value = self._en.ENgetnodevalue(en_idx, at_idx) 
+            value = self._en.ENgetnodevalue(en_idx, at_idx)
             if f is not None:
                 value = f(self._flow_units, value, mass_units=self._mass_units)
             setattr(node, attr, value)  # set the simulation value on the node object
@@ -500,9 +496,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     def initialize(
         self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, result_size=0
     ):
-        if self.__initialized:
+        if self._en is not None:
             raise SimulatorError(self.__class__.__name__ + " already initialized")
-        self.__initialized = True
         inpfile = file_prefix + ".inp"
         enData = wntr.epanet.toolkit.ENepanet(version=version)
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
@@ -520,7 +515,6 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._report_start = enData.ENgettimeparam(EN.REPORTSTART)
         self._last_line_added = -1
 
-        assert isinstance(self._wn, WaterNetworkModel)
         if self._wn.options.quality.parameter is not None:
             if self._wn.options.quality.parameter.upper() == "CHEMICAL":
                 if self._wn.options.quality.inpfile_units.lower().startswith("ug"):
@@ -578,7 +572,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         enData.ENrunQ()
 
         # Load initial time-0 results into results (if reporting)
-        self._save_report_step() # saves on internal temp results lists
+        self._save_report_step()  # saves on internal temp results lists
         # Load initial time-0 results into intermediate sensors
         self._save_intermediate_values()  # stores on WaterNetworkModel
         self._t = enData.ENgettimeparam(EN.HTIME)
@@ -594,7 +588,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         conditions = list()
         if enData is None:
             raise SimulatorError(self.__class__.__name__ + " not initialized before use")
-
+        if self._t > self._next_stop_time:
+            return True, []
         while True:
             # Run hydraulic TS and quality TS
             enData.ENrunH()
@@ -620,7 +615,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             self._nt = self._t + tstep
 
             # if tstep < 1, duration has been reached
-            if tstep <= 0 or self._t > self._next_stop_time:  # FIXME: change to beginning of while loop
+            if tstep <= 0 or self._t > self._next_stop_time:
                 self._save_report_step()
                 break
 
@@ -647,6 +642,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         logger.debug("Ran quality")
         enData.ENclose()
         logger.debug("Completed step run")
+        self._en = None
         # results = wntr.epanet.io.BinFile().read(self.outfile)
         self._copy_results_object()
         return self._results

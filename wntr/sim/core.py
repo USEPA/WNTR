@@ -64,7 +64,7 @@ class WaterNetworkSimulator(object):
 
     def __init__(self, wn=None):
 
-        self._wn = wn
+        self._wn : WaterNetworkModel = wn
         # self.mode = mode
         self.mode = self._wn.options.hydraulic.demand_model
 
