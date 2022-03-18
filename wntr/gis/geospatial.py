@@ -232,6 +232,7 @@ def intersect(A, B, B_column):
                                               'values': B_values})
     
     stats['n'] = stats['n'].fillna(0)
+    stats['n'] = stats['n'].apply(int)
     stats.loc[stats['intersections'].isnull(), 'intersections'] = stats.loc[stats['intersections'].isnull(), 'intersections'] .apply(lambda x: [])
     stats.loc[stats['values'].isnull(), 'values'] = stats.loc[stats['values'].isnull(), 'values'] .apply(lambda x: [])
     
@@ -245,13 +246,12 @@ def intersect(A, B, B_column):
         A_length = A.length
         for i in B.index:
             B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=None)
+            val = float(B_geom[B_column])
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
             clip = gpd.clip(A_subset, B_geom) 
                 
             if len(clip.index) > 0:
-                val = float(B_geom[B_column])
-                
                 weighed_val = clip.length/A_length[clip.index]*val
                 assert (weighed_val <= val).all()
                 stats.loc[clip.index, 'weighted_average'] = stats.loc[clip.index, 'weighted_average'] + weighed_val
