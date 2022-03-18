@@ -55,7 +55,7 @@ class TestGIS(unittest.TestCase):
         df.set_index("name", inplace=True)
         self.polygons = gpd.GeoDataFrame(df, crs=None)
 
-        points = [(52,72), (75,40), (27,37)]
+        points = [(52,71), (75,40), (27,37)]
         point_data = []
         for i, pts in enumerate(points):
             geometry = Point(pts)
@@ -158,10 +158,9 @@ class TestGIS(unittest.TestCase):
 
     def test_snap_points_to_points(self):
         
-        snapped_points = wntr.gis.snap_points_to_points(self.points, self.wn_geojson.junctions, tolerance=5.0)
-        
+        snapped_points = wntr.gis.snap(self.points, self.wn_geojson.junctions, tolerance=5.0)        
         # distance = np.sqrt(2)*2, 5, np.sqrt(2)*3
-        expected = pd.DataFrame([{'node': '12', 'snap_distance': 2.828427, 'geometry': Point([50.0,70.0])},
+        expected = pd.DataFrame([{'node': '12', 'snap_distance': 2.23607, 'geometry': Point([50.0,70.0])},
                                  {'node': '23', 'snap_distance': 5.0,      'geometry': Point([70.0,40.0])},
                                  {'node': '21', 'snap_distance': 4.242641, 'geometry': Point([30.0,40.0])}])
         
@@ -170,10 +169,11 @@ class TestGIS(unittest.TestCase):
 
     def test_snap_points_to_lines(self):
         
-        snapped_points = wntr.gis.snap_points_to_lines(self.points, self.wn_geojson.pipes, tolerance=5.0)
+        snapped_points = wntr.gis.snap(self.points, self.wn_geojson.pipes, tolerance=5.0)
+        print(snapped_points)
         
-        # distance = 2,5,3
-        expected = pd.DataFrame([{'link': '110', 'node': '12', 'snap_distance': 2.0, 'distance_along_line': 0.9, 'geometry': Point([50.0,72.0])},
+        # distance = 1,5,3
+        expected = pd.DataFrame([{'link': '12', 'node': '12', 'snap_distance': 1, 'distance_along_line': 0.1, 'geometry': Point([52.0,70.0])},
                                  {'link':  '22', 'node': '23', 'snap_distance': 5.0, 'distance_along_line': 1.0, 'geometry': Point([70.0,40.0])},
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'distance_along_line': 0.1, 'geometry': Point([30.0,37.0])}])
         

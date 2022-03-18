@@ -198,12 +198,12 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
     1  POINT (70.80000 69.30000)
     2  POINT (51.20000 71.10000)
 
-The following example uses the function :class:`~wntr.gis.snap_points_to_points` to snap hydrant locations to the nearest junction.
+The following example uses the function :class:`~wntr.gis.snap` to snap hydrant locations to the nearest junction.
 	
 .. doctest::
 
-    >>> snapped_junction = wntr.gis.snap_points_to_points(hydrant_locations, wn_gis.junctions, tolerance=5.0)
-    >>> print(snapped_junction)
+    >>> snapped_to_junctions = wntr.gis.snap(hydrant_locations, wn_gis.junctions, tolerance=5.0)
+    >>> print(snapped_to_junctions)
       node  snap_distance                   geometry
     0   22       3.328663  POINT (50.00000 40.00000)
     1   13       1.063015  POINT (70.00000 70.00000)
@@ -214,7 +214,7 @@ The data, water network model, and snapped points can be plotted as follows.
 .. doctest::
 
     >>> ax = hydrant_locations.plot()
-    >>> ax = wntr.graphics.plot_network(wn, node_attribute=snapped_junction['node'].to_list(), ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
 
 .. doctest::
     :hide:
@@ -245,12 +245,12 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
     1  POINT (32.10000 67.60000)
     2  POINT (51.70000 87.30000)
 	
-The following example uses the function :class:`~wntr.gis.snap_points_to_lines` to snap valve locations to the nearest pipe.
+The following example uses the function :class:`~wntr.gis.snap` to snap valve locations to the nearest pipe.
 
 .. doctest::
 
-    >>> snapped_pipe = wntr.gis.snap_points_to_lines(valve_locations, wn_gis.pipes, tolerance=5.0)
-    >>> print(snapped_pipe)
+    >>> snapped_to_pipes = wntr.gis.snap(valve_locations, wn_gis.pipes, tolerance=5.0)
+    >>> print(snapped_to_pipes)
       link node  snap_distance  distance_along_line                   geometry
     0   22   22            0.5                0.225  POINT (54.50000 40.00000)
     1  111   11            2.1                0.080  POINT (30.00000 67.60000)
@@ -260,7 +260,7 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
 
 .. doctest::
 
-    >>> valve_layer = snapped_pipe[['link', 'node']]
+    >>> valve_layer = snapped_to_pipes[['link', 'node']]
     >>> G = wn.get_graph()
     >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
 
