@@ -105,9 +105,8 @@ class WaterNetworkGIS:
         self.pumps = None
         self.valves = None
 
-    def create_gis(
-        self, wn, crs: str = None, pump_as_point_geometry: bool = None, valve_as_point_geometry: bool = None,
-    ) -> None:
+    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = None, 
+                   valves_as_points: bool = None,) -> None:
         """
         Create GIS data from a water network model.
         
@@ -121,16 +120,13 @@ class WaterNetworkGIS:
         crs : str, optional
             the coordinate reference system, such as by default None (use internal object attribute value).
             If set, this will update the object's internal attribute
-        pump_as_point_geometry : bool, optional
+        pumps_as_points : bool, optional
             create pumps as points (True) or lines (False), by default None (use internal object attribute value).
             If set, this will update the object's internal attribute
-        valve_as_point_geometry : bool, optional
+        valves_as_points : bool, optional
             create valves as points (True) or lines (False), by default None (use internal object attribute value).
             If set, this will update the object's internal attribute
         """
-        pumps_as_points = pump_as_point_geometry
-        valves_as_points = valve_as_point_geometry
-        
         ### Junctions
         data = list()
         geometry = list()
@@ -308,105 +304,74 @@ class WaterNetworkGIS:
         wn = WaterNetworkModel()
         
         ### Junctions
-        assert (self.junctions['geometry'].geom_type).isin(['Point']).all()
-        attributes = ['base_demand', 'demand_pattern', 'elevation', 'demand_category']
-        
-        for name, element in self.junctions.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            x = element.geometry.xy[0][0]
-            y = element.geometry.xy[1][0]
-            kwargs['coordinates'] = (x,y)
-
-            wn.add_junction(name, **kwargs)
+        if self.junctions.shape[0] > 0:
+            assert (self.junctions['geometry'].geom_type).isin(['Point']).all()
+            attributes = list(wn.add_junction.__code__.co_varnames)
+            valid_attributes = set(self.junctions.columns) & set(attributes)
+            valid_attributes.update(['coordinates'])
+            # TODO: we could also set additional attributes....
+            # additional_attributes = set(self.junctions.columns) - set(attributes)
+            
+            for name, element in self.junctions.iterrows():
+                element['coordinates'] = (element.geometry.xy[0][0],
+                                         element.geometry.xy[1][0])
+                wn.add_junction(name, **element[valid_attributes].to_dict())
         
         ### Tanks
-        assert (self.tanks['geometry'].geom_type).isin(['Point']).all()
-        attributes = ['elevation', 'init_level', 'min_level', 'max_level',
-                      'diameter', 'min_vol', 'vol_curve', 'overflow']
-        
-        for name, element in self.tanks.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            x = element.geometry.xy[0][0]
-            y = element.geometry.xy[1][0]
-            kwargs['coordinates'] = (x,y)
+        if self.tanks.shape[0] > 0:
+            assert (self.tanks['geometry'].geom_type).isin(['Point']).all()
+            attributes = list(wn.add_tank.__code__.co_varnames)
+            valid_attributes = set(self.tanks.columns) & set(attributes)
+            valid_attributes.update(['coordinates'])
             
-            wn.add_tank(name, **kwargs)
+            for name, element in self.tanks.iterrows():
+                element['coordinates'] = (element.geometry.xy[0][0],
+                                         element.geometry.xy[1][0])
+                wn.add_tank(name, **element[valid_attributes].to_dict())
     
         ### Reservoirs
-        assert (self.reservoirs['geometry'].geom_type).isin(['Point']).all()
-        attributes = ['base_head', 'head_pattern']
-        
-        for name, element in self.reservoirs.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            x = element.geometry.xy[0][0]
-            y = element.geometry.xy[1][0]
-            kwargs['coordinates'] = (x,y)
-                
-            wn.add_reservoir(name, **kwargs)
+        if self.reservoirs.shape[0] > 0:
+            assert (self.reservoirs['geometry'].geom_type).isin(['Point']).all()
+            attributes = list(wn.add_reservoir.__code__.co_varnames)
+            valid_attributes = set(self.reservoirs.columns) & set(attributes)
+            valid_attributes.update(['coordinates'])
             
+            for name, element in self.reservoirs.iterrows():
+                element['coordinates'] = (element.geometry.xy[0][0],
+                                         element.geometry.xy[1][0])
+                wn.add_reservoir(name, **element[valid_attributes].to_dict())
+                
         ### Pipes
-        assert (self.pipes['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all()
-        assert 'start_node_name' in self.pipes.columns
-        assert 'end_node_name' in self.pipes.columns
-        attributes = ['start_node_name', 'end_node_name', 'length', 'diameter', 
-                      'roughness', 'minor_loss', 'initial_status', 'check_valve']
-
-        for name, element in self.pipes.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            # TODO save vertices to the water network       
-
-            wn.add_pipe(name, **kwargs)
+        if self.pipes.shape[0] > 0:
+            assert 'start_node_name' in self.pipes.columns
+            assert 'end_node_name' in self.pipes.columns
+            attributes = list(wn.add_pipe.__code__.co_varnames)
+            valid_attributes = set(self.pipes.columns) & set(attributes)
+    
+            for name, element in self.pipes.iterrows():
+                # TODO save vertices to the water network       
+                wn.add_pipe(name, **element[valid_attributes].to_dict())
 
         ### Pumps
-        # TODO if geometry is a Point, the dataframe might not include a start or end node name 
-        # and a new node might need to be added and connected to the out link.
-        assert (self.pipes['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
-        assert 'start_node_name' in self.pipes.columns
-        assert 'end_node_name' in self.pipes.columns
-        attributes = ['start_node_name', 'end_node_name', 'pump_type', 
-                      'pump_parameter', 'speed', 'pattern', 'initial_status']
-        
-        for name, element in self.pumps.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            wn.add_pump(name, **kwargs)
+        if self.pumps.shape[0] > 0:
+            assert 'start_node_name' in self.pumps.columns
+            assert 'end_node_name' in self.pumps.columns
+            attributes = list(wn.add_pump.__code__.co_varnames)
+            valid_attributes = set(self.pumps.columns) & set(attributes)
+            
+            for name, element in self.pumps.iterrows():
+                wn.add_pump(name, **element[valid_attributes].to_dict())
             
         ### Valves
-        # TODO if geometry is a Point, the dataframe might not include a start or end node name 
-        # and a new node might need to be added and connected to the out link.
-        assert (self.pipes['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
-        assert 'start_node_name' in self.pipes.columns
-        assert 'end_node_name' in self.pipes.columns
-        attributes = ['start_node_name', 'end_node_name', 'diameter', 
-                      'valve_type', 'minor_loss', 'initial_setting', 'initial_status']
-        
-        for name, element in self.valves.iterrows():
-            kwargs = {}
-            for attribute in attributes:
-                if attribute in element.index:
-                    kwargs[attribute] = element[attribute] 
-
-            wn.add_valve(name, **kwargs)
+        if self.valves.shape[0] > 0:
+            assert 'start_node_name' in self.valves.columns
+            assert 'end_node_name' in self.valves.columns
+            attributes = list(wn.add_valve.__code__.co_varnames)
+            valid_attributes = set(self.valves.columns) & set(attributes)
             
+            for name, element in self.valves.iterrows():
+                wn.add_valve(name, **element[valid_attributes].to_dict())
+                
         return wn
                 
     def add_node_attributes(self, values, name):
