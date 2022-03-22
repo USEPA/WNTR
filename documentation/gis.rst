@@ -466,16 +466,17 @@ Pipes are colored with the weighted mean probability.
 
    Example intersection of pipes with landslide zones
    
-By reversing the order of intersection, the pipes that intersect each landslide zone can also be identified:
+By reversing the order of intersection, the pipes that intersect each landslide zone and information about 
+the intersecting pipe diameters can also be identified:
 
 .. doctest::
 
-    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes)
+    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
-        intersections  n
-    0  [111, 121, 21]  3
-    1    [21, 11, 31]  3
-    2            [22]  1
+        intersections                                             values  n     sum     min     max      mean
+    0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.7112  0.2032  0.2540  0.237067
+    1    [21, 11, 31]  [0.254, 0.35559999999999997, 0.15239999999999998]  3  0.7620  0.1524  0.3556  0.254000
+    2            [22]                              [0.30479999999999996]  1  0.3048  0.3048  0.3048  0.304800
 	
 Assign demographic data to pipes and junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
