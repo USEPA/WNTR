@@ -23,7 +23,7 @@ except ModuleNotFoundError:
     has_geopandas = False
 
 
-def wn_to_gis(wn, crs: str = "", pump_as_point_geometry=True, valve_as_point_geometry=True):
+def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
     """
     Convert a WaterNetworkModel into GeoDataFrames
     
@@ -32,11 +32,11 @@ def wn_to_gis(wn, crs: str = "", pump_as_point_geometry=True, valve_as_point_geo
     wn : WaterNetworkModel
         Water network model
     crs : str, optional
-        Coordinate reference string, by default ""
-    pump_as_point_geometry : bool, optional
-        Create pumps as points (True) or lines (False), by default True
-    valve_as_point_geometry : bool, optional
-        Create valves as points (True) or lines (False), by default True
+        Coordinate reference system, by default None
+    pumps_as_points : bool, optional
+        Create pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Create valves as points (True) or lines (False), by default False
         
     Returns
     -------
@@ -45,7 +45,7 @@ def wn_to_gis(wn, crs: str = "", pump_as_point_geometry=True, valve_as_point_geo
         
     """
     gis_data = WaterNetworkGIS()
-    gis_data.create_gis(wn, crs, pump_as_point_geometry, valve_as_point_geometry)
+    gis_data.create_gis(wn, crs, pumps_as_points, valves_as_points)
     
     return gis_data
 
@@ -105,8 +105,8 @@ class WaterNetworkGIS:
         self.pumps = None
         self.valves = None
 
-    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = None, 
-                   valves_as_points: bool = None,) -> None:
+    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = False, 
+                   valves_as_points: bool = False,) -> None:
         """
         Create GIS data from a water network model.
         
@@ -118,14 +118,11 @@ class WaterNetworkGIS:
         wn : WaterNetworkModel
             Water network model
         crs : str, optional
-            the coordinate reference system, such as by default None (use internal object attribute value).
-            If set, this will update the object's internal attribute
+            Coordinate reference system, by default None
         pumps_as_points : bool, optional
-            create pumps as points (True) or lines (False), by default None (use internal object attribute value).
-            If set, this will update the object's internal attribute
+            Create pumps as points (True) or lines (False), by default False
         valves_as_points : bool, optional
-            create valves as points (True) or lines (False), by default None (use internal object attribute value).
-            If set, this will update the object's internal attribute
+            Create valves as points (True) or lines (False), by default False
         """
         ### Junctions
         data = list()
@@ -424,65 +421,58 @@ class WaterNetworkGIS:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value
 
-    def write(self, prefix: str, path: str = None, suffix: str = None, driver="GeoJSON") -> None:
+    def write(self, prefix: str, crs: str = None, driver="GeoJSON") -> None:
         """
         Write the Geometry object to GIS file(s) with names constructed from parameters.
 
-        The file name is of the format
-
-            [ ``{path}/`` ] ``{prefix}_$elementType`` [ ``_{suffix}`` ] ``.$extensionByDriver``
-
-        where parameters surrounded by brackets "[]" are optional parameters and the ``$`` indicates
-        parts of the filename determined by the function. One file will be created for each type of
-        network element (junctions, pipes, etc.) assuming that the element exists in the network;
-        i.e., blank files will not be created. Drivers available are any of the geopandas valid
-        drivers.
-
+        One file will be created for each type of network element (junctions, 
+        pipes, etc.) if those elements exists in the network
+        
 
         Parameters
         ----------
         prefix : str
-            the filename prefix, will have the element type (junctions, valves) appended
-        path : str, optional
-            the path to write the file, by default None (current directory)
-        suffix : str, optional
-            if desired, an indicator such as the timestep or other string, by default None
+            Filename prefix, will have the element type (junctions, 
+            pipes, etc.) appended
+        crs : str, optional
+            Coordinate reference system, by default None
         driver : str, optional
-            one of the geopandas drivers (use :code:`None` for ESRI shapefile folders), by default "GeoJSON",
+            Geopandas driver (use :code:`None` for ESRI shapefile folders), 
+            by default "GeoJSON",
         """
-        if path is None:
-            path = "."
-        if suffix is None:
-            suffix = ""
-        prefix = os.path.join(path, prefix)
+        
+        def write_gdf(gdf, crs, filename, driver):
+            if crs is not None:
+                gdf.to_crs(crs).to_file(filename, driver=driver)
+            else:
+                gdf.to_file(filename, driver=driver)
+                
         if driver is None or driver == "":
             extension = ""
         else:
             extension = "." + driver.lower()
+        
         if len(self.junctions) > 0:
-            self.junctions.to_file(
-                prefix + "_junctions" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_junctions" + extension
+            write_gdf(self.junctions, crs, filename, driver)
+                
         if len(self.tanks) > 0:
-            self.tanks.to_file(
-                prefix + "_tanks" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_tanks" + extension
+            write_gdf(self.tanks, crs, filename, driver)
+            
         if len(self.reservoirs) > 0:
-            self.reservoirs.to_file(
-                prefix + "_reservoirs" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_reservoirs" + extension
+            write_gdf(self.reservoirs, crs, filename, driver)
+            
         if len(self.pipes) > 0:
-            self.pipes.to_file(
-                prefix + "_pipes" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_pipes" + extension
+            write_gdf(self.pipes, crs, filename, driver)
+            
         if len(self.pumps) > 0:
-            self.pumps.to_file(
-                prefix + "_pumps" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_pumps" + extension
+            write_gdf(self.pumps, crs, filename, driver)
+            
         if len(self.valves) > 0:
-            self.valves.to_file(
-                prefix + "_valves" + suffix + extension, driver=driver,
-            )
+            filename = prefix + "_valves" + extension
+            write_gdf(self.valves, crs, filename, driver)
     
-
-

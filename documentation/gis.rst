@@ -88,7 +88,7 @@ The following example creates GeoDataFrames from a water network model.  Note th
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
-    >>> wn_gis = wntr.gis.wn_to_gis(wn)
+    >>> wn_gis = wntr.gis.wn_to_gis(wn, crs='EPSG:4326')
 	
 Individual GeoDataFrames are obtained as follows (Note that Net1 has no valves and the GeoDataFrame for valves is empty).
 

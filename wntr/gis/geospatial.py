@@ -65,6 +65,7 @@ def snap(A, B, tolerance):
     assert(A['geometry'].geom_type).isin(['Point']).all()
     isinstance(B, gpd.GeoDataFrame)
     assert (B['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
+    assert A.crs == B.crs
     
     # Modify B to include "indexB" as a separate column
     B = B.reset_index()
@@ -200,6 +201,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         assert B_value in B.columns
     isinstance(include_background, bool)
     isinstance(background_value, (int, float))
+    assert A.crs == B.crs
     
     if include_background:
         background = _backgound(A, B)
@@ -237,12 +239,12 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         stats['weighted_mean'] = 0
         A_length = A.length
         for i in B.index:
-            B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=None)
+            B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
             val = float(B_geom[B_value])
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
             clip = gpd.clip(A_subset, B_geom) 
-                
+            
             if len(clip.index) > 0:
                 weighed_val = clip.length/A_length[clip.index]*val
                 stats.loc[clip.index, 'weighted_mean'] = stats.loc[clip.index, 'weighted_mean'] + weighed_val
