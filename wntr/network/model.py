@@ -15,9 +15,14 @@ model.
 
 """
 from ctypes import ArgumentError
+from functools import partial
 import logging
 from collections import OrderedDict
-from typing import Union
+import os
+from tkinter import E
+from typing import Type
+import pyproj
+from wntr.utils.constants import *
 
 import geopandas as gpd
 import networkx as nx
@@ -25,9 +30,13 @@ import numpy as np
 import pandas as pd
 from shapely.geometry.linestring import LineString
 import six
+from tqdm.contrib.concurrent import process_map
+from tqdm import tqdm
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
+
+from constants import IN_TO_FT
 
 from .base import AbstractModel, Link, LinkStatus, Node, Registry
 from .controls import Control, Rule
@@ -39,7 +48,13 @@ from .options import Options
 
 
 logger = logging.getLogger(__name__)
-
+ 
+def get_pipe_hyd(links, g):
+    dists = links.distance(g)
+    if dists.min() < 100:
+        return dists.argmin()
+    else:
+        return None
 
 class WaterNetworkModel(AbstractModel):
     """
@@ -74,6 +89,8 @@ class WaterNetworkModel(AbstractModel):
         # NetworkX Graph to store the pipe connectivity and node coordinates
 
         self._labels = None
+        self._nodes_gis = None
+        self._links_gis = None
 
         self._inpfile = None
         if inp_file_name:
@@ -303,6 +320,18 @@ class WaterNetworkModel(AbstractModel):
     def gpvs(self):
         """Iterator over all general purpose valves (GPVs)"""        
         return self._link_reg.gpvs
+    
+    @property
+    def nodes_gis(self) -> gpd.GeoDataFrame:
+        return self._nodes_gis
+
+    @property
+    def links_gis(self) -> gpd.GeoDataFrame:
+        return self._links_gis
+
+    @property
+    def hydrants_gis(self) -> gpd.GeoDataFrame:
+        return self._hydrants_gis
     
     """
     ### # 
@@ -784,6 +813,17 @@ class WaterNetworkModel(AbstractModel):
         
         """
         return list(self._node_reg.junction_names)
+
+    @property
+    def potential_hydrant_name_list(self):
+        """Get a list of names of hydrants in GIS
+        
+        Returns
+        -------
+        list of strings
+        
+        """
+        return list(self._hydrants_gis.index)
 
     @property
     def tank_name_list(self): 
@@ -1522,15 +1562,140 @@ class WaterNetworkModel(AbstractModel):
         """
         wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
 
-    def create_model_gis(self, gis_path: str, pressure_zone_layer: str) -> None:
-        self._gis_pzone = gpd.read_file(gis_path, layer=pressure_zone_layer)
+    def add_hydrants_from_gis(self, hydrants_layer: gpd.GeoDataFrame=None, hyd_branch_line_layer: gpd.GeoDataFrame=None, add_all_to_network=False, hyd_juncs_gis: str=None):
+        self._hyd_branch_line = hyd_branch_line_layer.set_index('EAMID')
+        if hyd_juncs_gis is not None and os.path.isfile(hyd_juncs_gis + '_hyds.shp'):
+            self._hydrants_gis = gpd.read_file(hyd_juncs_gis + '_hyds.shp').set_index('EAMID')
+            self._hyd_juncs_gis = gpd.read_file(hyd_juncs_gis + '_hyd_juncs.shp').set_index('EAMID_hyd')
+        else:
+            hyds_to_branch = hyd_branch_line_layer.sjoin(hydrants_layer, lsuffix='bran', rsuffix='hyd').drop(columns=['index_hyd'])
+            # hyds_to_branch['hyd_geom'] = hyds_raw.geometry[hyds_to_branch.EAMID_hyd].values
+
+            dup_hyds = hydrants_layer.EAMID.duplicated(keep='first')
+            if dup_hyds.sum() > 0:
+                hydrants_layer.loc[dup_hyds, 'EAMID'] = hydrants_layer[dup_hyds].EAMID.apply(lambda x: x + '_dup').values
+            self._hydrants_gis = hydrants_layer.set_index('EAMID')
+
+            def get_branch_end(b):
+                try:
+                    start = b.geometry[0].coords[0]
+                    end = b.geometry[-1].coords[-1]
+                except TypeError as e:
+                    start = b.geometry.coords[0]
+                    end = b.geometry.coords[-1]
+
+                choose_start = b.geometry.project(self._hydrants_gis.loc[b.EAMID_hyd].geometry) > 0.1
+
+                return start if choose_start else end
+
+            new_hydrants_coords = np.array(
+                [np.array(get_branch_end(l)) for _, l in hyds_to_branch.iterrows()]
+            ).T
+            hyd_coords = gpd.points_from_xy(
+                new_hydrants_coords[0],
+                new_hydrants_coords[1]
+            )
+            new_hydrants = gpd.GeoDataFrame(
+                data=hyds_to_branch[['EAMID_hyd', 'EAMID_bran']],
+                geometry=hyd_coords,
+            )
+            self._hyd_juncs_gis = new_hydrants.set_index('EAMID_hyd')
+
+            get_pipe_hyd_partial = partial(get_pipe_hyd, self.links_gis)
+            pipes_to_hyds = process_map(get_pipe_hyd_partial, self._hyd_juncs_gis.geometry, chunksize=50)
+            
+            self._hyd_juncs_gis['pipe_id'] = [self._links_gis.index[p] if p is not None else None for p in pipes_to_hyds]
+            
+            if hyd_juncs_gis is not None:
+                self._hydrants_gis.to_file(hyd_juncs_gis + '_hyds.shp')
+                self._hyd_juncs_gis.to_file(hyd_juncs_gis + '_hyd_juncs.shp')
+
+        self._pipe_basis_dict = {pid: [pid] for pid in self._hyd_juncs_gis.pipe_id.values if pid is not None}
+
+        # add_all_to_network = True
+        if add_all_to_network:
+            print('Adding all hydrants to model')
+            for ix, hyd in tqdm(self._hyd_juncs_gis.iterrows(), total=len(self._hyd_juncs_gis)):
+                if hyd.pipe_id is not None:
+                    self.add_hydrant_to_pipe_gis(ix)
+        pass
+
+        # cx0=2239496
+        # cy0=355550
+        # cx1=2240539
+        # cy1=356296
+        # fig, ax = plt.subplots(figsize=(20, 20))
+        # self._links_gis.cx[cx0:cx1, cy0:cy1].plot(ax=ax, color='grey')
+        # hydrants_layer.cx[cx0:cx1, cy0:cy1].plot(ax=ax)
+        # self._hyds_gis.cx[cx0:cx1, cy0:cy1].plot(ax=ax, color='firebrick')
+        # plt.savefig('hyds.png')
+
+    def add_hydrant_to_pipe_gis(self, hydrant_id, branch_id=None, pipe_id=None, hydrant_height=0.6):
+        hyd = self._hyd_juncs_gis.loc[hydrant_id]
+        if pipe_id is None:
+            pipe_id = hyd.pipe_id
+        if branch_id is None:
+            branch_id = hyd.EAMID_bran
+        hydrant_intersect_point = hyd.geometry
+
+        potential_pipes_hyd = self._links_gis.loc[self._pipe_basis_dict[pipe_id]]
+        pipe_ix = potential_pipes_hyd.distance(hydrant_intersect_point).argmin()
+        updated_pipe_id = potential_pipes_hyd.iloc[pipe_ix].name
+            
+        # Figure out how far into the main the lateral is placed
+        pipe_line = self._links_gis.loc[updated_pipe_id].geometry
+        dist_to_split = self._links_gis.loc[updated_pipe_id].geometry.project(hydrant_intersect_point)
+        split_at_point = dist_to_split / pipe_line.length
+
+        lateral_junc = None
+        if split_at_point == 0.:
+            lateral_junc = self.get_link(pipe_id).start_node.name
+        elif split_at_point == 1.:
+            lateral_junc = self.get_link(pipe_id).end_node.name
+        else:
+            # Create new pipe ID that does not yet exist in model
+            pipe_id_new = pipe_id + '_2'
+            count = 1
+            while pipe_id_new in self.pipe_name_list:
+                count += 1
+                pipe_id_new = f'{pipe_id}_{count}'
+
+            self._pipe_basis_dict[pipe_id].append(pipe_id_new)
+
+            # Create junction for hydrant lateral
+            lateral_junc = hydrant_id + '_junc'
+            wntr.morph.link.split_pipe(self, updated_pipe_id, pipe_id_new, lateral_junc, split_at_point=split_at_point, return_copy=False)
+
+            new_links_gis = self._epanet_links_to_gis([updated_pipe_id, pipe_id_new])
+            self._links_gis.drop(index=updated_pipe_id, inplace=True)
+            self._links_gis = gpd.GeoDataFrame(pd.concat((self._links_gis, new_links_gis)))
+
+        # Add hydrant
+        x, y = self._hydrants_gis.loc[hydrant_id].geometry.coords.xy
+        self.add_junction(hydrant_id, coordinates=(x[0], y[0]), elevation=self.get_node(lateral_junc).elevation + hydrant_height)
+
+        # Add lateral
+        bline = self._hyd_branch_line.loc[branch_id]
+        self.add_pipe(branch_id, lateral_junc, hydrant_id, length=bline.geometry.length, diameter=bline.DIAMETER * IN_TO_FT * FT_TO_M)
+
+    def create_model_gis(self, crs: pyproj.crs.crs.CRS=None, pressure_zone_layer: gpd.GeoDataFrame=None) -> None:
         self._results = None
         self._demands_pzone = None
         self._date = None
+        self._gis_pzone = None
+        self._crs = crs
+
+        if (crs is None) and (pressure_zone_layer is not None):
+            self._gis_pzone = pressure_zone_layer
+            self._crs = self._gis_pzone.crs
+        elif (crs is None) and (pressure_zone_layer is None):
+            raise Exception('Either "crs" or "pressure_zone_layer" must be provided.')
+        elif (crs is not None) and (pressure_zone_layer is not None):
+            raise Exception('If "pressure_zone_layer" is provided its crs will be used, so do not pass a "crs."')
 
         # Create gis of nodes from EPANET
         coords_raw = np.array(
-            [self._wn.nodes[n].coordinates for n in self._wn.nodes]
+            [self.nodes[n].coordinates for n in self.nodes]
         ).T
         nodes_points = gpd.points_from_xy(
             coords_raw[0],
@@ -1538,9 +1703,10 @@ class WaterNetworkModel(AbstractModel):
         )
 
         self._nodes_gis = gpd.GeoDataFrame(
-            data=[n for n in self._wn.nodes],
-            geometry=nodes_points, crs=self._gis_pzone.crs.srs
+            data=[n for n in self.nodes],
+            geometry=nodes_points, crs=self._crs.srs
         ).set_index(0)
+        self._nodes_gis.index.name = 'name'
 
         # Add pattern names to nodes
         def get_pattern(node):
@@ -1554,26 +1720,34 @@ class WaterNetworkModel(AbstractModel):
         self._nodes_gis['pattern'] = self._nodes_gis.apply(get_pattern, axis=1)
 
         # Create gis of pipes from EPANET
+        link_names = self.link_name_list
+        self._links_gis = self._epanet_links_to_gis(link_names)
+
+        # Set pressure zones
+        if pressure_zone_layer is not None:
+            self._assign_pressure_zones()
+
+            self._all_dmas = self._nodes_gis.pzone.unique()
+            self._all_dmas = np.delete(self._all_dmas, self._all_dmas==None) # Remove None DMA
+
+            # Set original demand multiplier for each DMA
+            self._dma_demand_multipliers = {dma: 1. for dma in self._all_dmas}
+
+    def _epanet_links_to_gis(self, link_names):
         link_geometry = []
-        for link_name in self.link_name_list:
+        for link_name in link_names:
             link = self.get_link(link_name)
             coords = [self.nodes[link.start_node].coordinates]
             coords += link.vertices
             coords += [self.nodes[link.end_node].coordinates]
             link_geometry.append(LineString(coords))
 
-        self._links_gis = gpd.GeoDataFrame(
-            data=self.link_name_list,
-            geometry=link_geometry, crs=self._gis_pzone.crs.srs).set_index(0)
+        links_gis = gpd.GeoDataFrame(
+            data=link_names,
+            geometry=link_geometry, crs=self._crs.srs).set_index(0)
+        links_gis.index.name = 'name'
 
-        # Set pressure zones
-        self._assign_pressure_zones()
-
-        self._all_dmas = self._nodes_gis.pzone.unique()
-        self._all_dmas = np.delete(self._all_dmas, self._all_dmas==None) # Remove None DMA
-
-        # Set original demand multiplier for each DMA
-        self._dma_demand_multipliers = {dma: 1. for dma in self._all_dmas}
+        return links_gis
 
     def _assign_pressure_zones(self):
         """Assign pressure zone to nodes in EPANET GIS.
@@ -1586,39 +1760,31 @@ class WaterNetworkModel(AbstractModel):
                 self.get_node(n).pressure_zone = pz.NAME
 
     def update_base_demands_dict(self, new_demands_junctions: dict=None, 
-            new_demands_dmas: dict=None, all_junctions_demand_mult: float=None, 
-            dma_demand_mult: dict=None):
+            all_junctions_demand_mult: float=None, 
+            dma_demand_mult: dict=None, units='GPM'):
         """Apply either new demands or a DMA-based multiplier to all nodes in
         the network.
 
         Args:
             new_demands_junctions (Dict, optional): Keys as nodes and values 
             as demands. Defaults to None.
-            new_demands_dmas (Dict, optional): Keys as DMA names as in the GIS 
+            all_junctions_demand_mult (float, optional): Demand multiplier for all nodes
             and values as demand multipliers. Defaults to None.
+            dma_demand_mult (Dict, optional): Demand multiplier for all nodes within DMAs
 
         Raises:
-            ArgumentError: Neither input is passed.
+            ArgumentError: No input is passed.
         """
+
+        assert (units == 'GPM') or (units == 'CMS')
 
         # If DMA demands are passed and junction demand dictionary is not 
         # provided, create with multiplied demands for all nodes within each DMA.
-        if new_demands_dmas is not None:
-            ndd = {k: v for k, v in new_demands_dmas.items()
-                   if k in self._all_dmas}
-            new_demands_junctions = {
-                n: self.get_node(n).base_demand \
-                for n in self._nodes_gis.index \
-                if self.get_node(n).node_type == 'Junction'
-            }
-            for dma, mult in ndd.items():
-                for n in self._nodes_gis.loc[self._nodes_gis.pzone == dma].index:
-                    if self.get_node(n).node_type == 'Junction':
-                        new_demands_junctions[n] *= mult
-        elif new_demands_junctions is not None:
+        unit_mult = 1. if units == 'CMS' else CMS_TO_GPM
+        if new_demands_junctions is not None:
             for k, v in new_demands_junctions.items():
                 try:
-                    self.get_node(k).demand_timeseries_list[0].base_value = v
+                    self.get_node(k).demand_timeseries_list[0].base_value = v / unit_mult
                 except AttributeError as e:
                     print(
                         f'Could not attribute demand of {v} to node {k} of ' +
@@ -1627,7 +1793,7 @@ class WaterNetworkModel(AbstractModel):
             for k in self.node_name_list:
                 if self.get_node(k).node_type == 'Junction':
                     self.get_node(k).demand_timeseries_list[0].base_value *= \
-                        new_demands_junctions
+                        all_junctions_demand_mult
         elif dma_demand_mult is not None:
             for k in self.node_name_list:
                 if self.get_node(k).node_type == 'Junction':
