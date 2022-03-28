@@ -128,13 +128,12 @@ class TestGIS(unittest.TestCase):
         
         bv = 0
         stats = wntr.gis.intersect(self.gis_data.pipes, self.polygons, 'value', True, bv)
-        print(stats)
 
         ax = self.polygons.plot(column='value', alpha=0.5)
         ax = wntr.graphics.plot_network(self.wn, ax=ax)
         
         # Pipe 22 intersects poly2 100%, val=20, intersects poly3 50%, val=30
-        expected_weighted_mean = 20*1+30*0.5
+        expected_weighted_mean = (20*1+30*0.5)/1.5
         expected = pd.Series({'intersections': ['3','2'], 'values': [30,20], 'weighted_mean': expected_weighted_mean})
         expected['n'] = len(expected['values'])
         expected['sum'] = float(sum(expected['values']))
@@ -155,8 +154,8 @@ class TestGIS(unittest.TestCase):
         # Pipe 122
         self.assertEqual(stats.loc['122','intersections'], ['BACKGROUND', '3', '2'])
         # total length = 30
-        expected_weighted_mean = bv*(5/30) + 30*(25/30) + 20*(10/30)
-        self.assertEqual(stats.loc['122','weighted_mean'], expected_weighted_mean)
+        expected_weighted_mean = (bv*(5/30) + 30*(25/30) + 20*(10/30))/(40/30)
+        self.assertAlmostEqual(stats.loc['122','weighted_mean'], expected_weighted_mean, 2)
         
     
     def test_intersect_polygons_with_lines(self):
@@ -169,6 +168,30 @@ class TestGIS(unittest.TestCase):
         expected.index=['1', '2', '3']
         
         assert_frame_equal(stats, expected, check_dtype=False)
+        
+    def test_intersect_polygons_with_lines_zero_length(self):
+        
+        wn = wntr.morph.break_pipe(self.wn, '22', '22_A', '22_A','22_B', split_at_point=0.5)
+        wn.add_pipe('22_0', '22_A', '22_B', length=0)
+        
+        gis_data = wntr.gis.wn_to_gis(wn)
+        assert gis_data.pipes.length['22_0'] == 0
+        
+        # No value
+        stats = wntr.gis.intersect(gis_data.pipes, self.polygons)
+        assert stats.shape == (14,2)
+        
+        # With value
+        stats = wntr.gis.intersect(gis_data.pipes, self.polygons, 'value')
+        assert stats.shape == (14,8)
+        
+        assert stats.loc['22_0', 'weighted_mean'] == stats.loc['22_0', 'mean'] # zero length pipe
+        assert stats.loc['22_A', 'weighted_mean'] == 20 # overlaps with 20 and 30, but zero length with 30
+        assert stats.loc['22', 'weighted_mean'] == 25 # overlaps with 20 and 30 across the entire pipe
+        
+        assert (stats.loc[stats['n']>0, 'weighted_mean'] >= stats.loc[stats['n']>0, 'min']).all()
+        assert (stats.loc[stats['n']>0, 'weighted_mean'] <= stats.loc[stats['n']>0, 'max']).all()
+        
         
     def test_add_attributes_and_write(self):
         

@@ -235,22 +235,36 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
             weighted_mean = True
             
-    if weighted_mean:
+    if weighted_mean and B_value is not None:
         stats['weighted_mean'] = 0
         A_length = A.length
+        covered_length = pd.Series(0, index = A.index)
+        
         for i in B.index:
             B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
             val = float(B_geom[B_value])
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
-            clip = gpd.clip(A_subset, B_geom) 
+            A_clip = gpd.clip(A_subset, B_geom) 
+            A_clip_length = A_clip.length
+            A_clip_index = A_clip.index
             
-            if len(clip.index) > 0:
-                weighed_val = clip.length/A_length[clip.index]*val
-                stats.loc[clip.index, 'weighted_mean'] = stats.loc[clip.index, 'weighted_mean'] + weighed_val
-                
-        #stats['weighted_mean'] = stats['weighted_mean']/stats['n']
-    
+            if A_clip_length.shape[0] > 0:
+                fraction_length = A_clip_length/A_length[A_clip_index]
+                covered_length[A_clip_index] = covered_length[A_clip_index] + fraction_length
+                weighed_val = fraction_length*val
+                stats.loc[A_clip_index, 'weighted_mean'] = stats.loc[A_clip_index, 'weighted_mean'] + weighed_val
+        
+        # Normalize weighted mean by covered length (can be over 1 if polygons overlap)
+        # Can be less than 1 if there are gaps (when background is not used)
+        stats['weighted_mean'] = stats['weighted_mean']/covered_length
+        
+        # Covered_length is NaN if length A is 0, set weighted mean to mean
+        stats.loc[covered_length.isna(), 'weighted_mean'] = stats.loc[covered_length.isna(), 'mean']
+        
+        # No intersection, set weighted mean to NaN
+        stats.loc[stats['n']==0, 'weighted_mean'] = np.NaN
+        
     stats.index.name = None
     
     return stats
