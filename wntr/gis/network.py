@@ -22,7 +22,6 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
-
 def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
     """
     Convert a WaterNetworkModel into GeoDataFrames
@@ -306,6 +305,7 @@ class WaterNetworkGIS:
             attributes = list(wn.add_junction.__code__.co_varnames)
             valid_attributes = set(self.junctions.columns) & set(attributes)
             valid_attributes.update(['coordinates'])
+            valid_attributes = list(valid_attributes)
             # TODO: we could also set additional attributes....
             # additional_attributes = set(self.junctions.columns) - set(attributes)
             
@@ -320,6 +320,7 @@ class WaterNetworkGIS:
             attributes = list(wn.add_tank.__code__.co_varnames)
             valid_attributes = set(self.tanks.columns) & set(attributes)
             valid_attributes.update(['coordinates'])
+            valid_attributes = list(valid_attributes)
             
             for name, element in self.tanks.iterrows():
                 element['coordinates'] = (element.geometry.xy[0][0],
@@ -332,6 +333,7 @@ class WaterNetworkGIS:
             attributes = list(wn.add_reservoir.__code__.co_varnames)
             valid_attributes = set(self.reservoirs.columns) & set(attributes)
             valid_attributes.update(['coordinates'])
+            valid_attributes = list(valid_attributes)
             
             for name, element in self.reservoirs.iterrows():
                 element['coordinates'] = (element.geometry.xy[0][0],
@@ -344,6 +346,7 @@ class WaterNetworkGIS:
             assert 'end_node_name' in self.pipes.columns
             attributes = list(wn.add_pipe.__code__.co_varnames)
             valid_attributes = set(self.pipes.columns) & set(attributes)
+            valid_attributes = list(valid_attributes)
     
             for name, element in self.pipes.iterrows():
                 # TODO save vertices to the water network       
@@ -355,6 +358,7 @@ class WaterNetworkGIS:
             assert 'end_node_name' in self.pumps.columns
             attributes = list(wn.add_pump.__code__.co_varnames)
             valid_attributes = set(self.pumps.columns) & set(attributes)
+            valid_attributes = list(valid_attributes)
             
             for name, element in self.pumps.iterrows():
                 wn.add_pump(name, **element[valid_attributes].to_dict())
@@ -365,6 +369,7 @@ class WaterNetworkGIS:
             assert 'end_node_name' in self.valves.columns
             attributes = list(wn.add_valve.__code__.co_varnames)
             valid_attributes = set(self.valves.columns) & set(attributes)
+            valid_attributes = list(valid_attributes)
             
             for name, element in self.valves.iterrows():
                 wn.add_valve(name, **element[valid_attributes].to_dict())

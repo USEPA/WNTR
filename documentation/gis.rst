@@ -237,6 +237,7 @@ The data, water network model, and snapped points can be plotted as follows.
 .. doctest::
     :hide:
     
+    >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('snap_points.png', dpi=300)
 
@@ -293,6 +294,7 @@ The data, water network model, and valve layer can be plotted as follows.
 .. doctest::
     :hide:
     
+    >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('snap_lines.png', dpi=300)
 
@@ -377,6 +379,7 @@ Pipes are colored with their max probability.
 .. doctest::
     :hide:
     
+    >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_earthquake.png', dpi=300)
 	
@@ -454,6 +457,7 @@ Pipes are colored with the weighted mean probability.
 .. doctest::
     :hide:
     
+    >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_landslide.png', dpi=300)
 	
@@ -549,6 +553,7 @@ Junctions and pipes are colored with their average value (weighted average for p
 .. doctest::
     :hide:
     
+    >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_demographics.png', dpi=300)
 
