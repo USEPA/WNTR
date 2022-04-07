@@ -63,7 +63,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
-                version=2.2, convergence_error=False):
+                version=2.2, convergence_error=False, clean_temp=False):
 
         """
         Run the EPANET simulator.
@@ -102,7 +102,6 @@ class EpanetSimulator(WaterNetworkSimulator):
         if isinstance(version, str):
             version = float(version)
 
-        clean_temp = False
         if file_prefix == 'random':
             file_prefix = f'temp{np.random.randint(1, high=1e9)}.inp'
             clean_temp = True

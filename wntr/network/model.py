@@ -22,6 +22,8 @@ import os
 from tkinter import E
 from typing import Type
 import pyproj
+import requests
+import urllib
 from wntr.utils.constants import *
 
 import geopandas as gpd
@@ -35,8 +37,6 @@ from tqdm import tqdm
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
-
-from constants import IN_TO_FT
 
 from .base import AbstractModel, Link, LinkStatus, Node, Registry
 from .controls import Control, Rule
@@ -1790,18 +1790,61 @@ class WaterNetworkModel(AbstractModel):
                         f'Could not attribute demand of {v} to node {k} of ' +
                         'type {self.get_node(k).node_type}')
         elif all_junctions_demand_mult is not None:
-            for k in self.node_name_list:
-                if self.get_node(k).node_type == 'Junction':
-                    self.get_node(k).demand_timeseries_list[0].base_value *= \
-                        all_junctions_demand_mult
+            for k in self.junction_name_list:
+                self.get_node(k).demand_timeseries_list[0].base_value *= \
+                    all_junctions_demand_mult
         elif dma_demand_mult is not None:
-            for k in self.node_name_list:
-                if self.get_node(k).node_type == 'Junction':
-                    self.get_node(k).demand_timeseries_list[0].base_value *= dma_demand_mult[self._nodes_gis[k]]
+            for k in self.junction_name_list:
+                self.get_node(k).demand_timeseries_list[0].base_value *= dma_demand_mult[self._nodes_gis[k]]
             
         else:
             raise ArgumentError('Either new_demands_junctions, new_demands_dmas, all_junctions_demand_mult, or dma_demand_mult must be provided.')
 
+    def _elevation_function(self, df, url, lat_column, lon_column):
+        """Query service using lat, lon. add the elevation values as a new column."""
+        elevations = []
+        for lat, lon in zip(df[lat_column], df[lon_column]):
+
+            # define rest query params
+            params = {
+                'output': 'json',
+                'x': lon,
+                'y': lat,
+                'units': 'Meters'
+            }
+
+            # format query string and return query value
+            result = requests.get((url + urllib.parse.urlencode(params)))
+            elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
+
+        df['elev_meters'] = elevations
+
+    def assign_elevation(self):        
+        # USGS Elevation Point Query Service
+        url = r'https://nationalmap.gov/epqs/pqs.php?'
+
+        nodes_nad83 = self.nodes_gis.to_crs('epsg:4269')
+
+        nodes_no_elev = [j for j in self.junction_name_list if self.get_node(j).elevation < 1e-6]
+        for junc in nodes_no_elev:
+            lat, lon = nodes_nad83.loc[junc].geometry.coords.xy
+            # define rest query params
+            params = {
+                'output': 'json',
+                'y': lon[0],
+                'x': lat[0],
+                'units': 'Meters'
+            }
+
+            # format query string and return query value
+            result = requests.get((url + urllib.parse.urlencode(params)))
+            # elevations.append(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
+            elev = result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation']
+            if elev > 0:
+                self.get_node(junc).elevation = elev
+                print(f'Assigned elevation of {elev} to junction {junc}.')
+            else:
+                print(f'Unable to assign elevation to junction {junc}.')
 
 class PatternRegistry(Registry):
     """A registry for patterns."""

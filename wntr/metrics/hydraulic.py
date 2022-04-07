@@ -27,7 +27,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=None):
+def expected_demand(wn: wntr.network.WaterNetworkModel, start_time=None, end_time=None, timestep=None, category=None):
     """
     Compute expected demand at each junction and time using base demands
     and demand patterns along with the demand multiplier

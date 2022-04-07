@@ -1,0 +1,75 @@
+[TITLE]
+Scenario: Test Elevation
+Date: 04/06/2022 5:48:14 PM
+
+[JUNCTIONS]
+;ID                      Elevation       Demand Pattern                 
+ 4143                    0.00    0.4158601325 23357                      ; The actual elevation is 484.39116796 ft
+ 6268                    0.00   0.57180768219 23357                      ; The actual elevation is 504.10092766 ft
+ 23109                   0.00   0.37130368973 23357                      ; The actual elevation is 510.86746795 ft
+
+[PIPES]
+;ID                   Node1                Node2                              Length             Diameter            Roughness           Minor Loss               Status
+ 6266                 23109                6268                    231.76647103               8             135               0                 Open   ;
+ 9733                 6268                 4143                    258.78278809               8             135               0                 Open   ;
+
+
+[COORDINATES]
+;Node      X-Coord    Y-Coord   
+23109         2233695.960000000     342886.720000000
+6268          2233603.560000000     343099.270000000
+4143          2233490.510000000     343330.500000000
+
+[VERTICES]
+;Link      X-Coord    Y-Coord  
+6266          2233605.200000000     343095.590000000
+6266          2233604.230000000     343097.850000000
+9733          2233601.640000000     343102.540000000
+9733          2233501.880000000     343321.050000000
+
+[REACTIONS]
+ WALL 6266 -0.0800   
+ WALL 9733 -0.0800   
+
+[TIMES]
+DURATION             24:00:00
+HYDRAULIC TIMESTEP   00:15:00
+QUALITY TIMESTEP     00:00:00
+PATTERN TIMESTEP     00:30:00
+PATTERN START        00:00:00
+REPORT TIMESTEP      01:00:00
+REPORT START         00:00:00
+START CLOCKTIME      00:00:00 AM
+RULE TIMESTEP        00:06:00
+STATISTIC            NONE      
+
+[REPORT]
+STATUS     FULL
+SUMMARY    NO
+PAGE       0
+
+[OPTIONS]
+UNITS                GPM                 
+HEADLOSS             H-W                 
+SPECIFIC GRAVITY     0.998
+VISCOSITY            0.98215786064
+TRIALS               1000
+ACCURACY             0.001
+CHECKFREQ            7
+MAXCHECK             100
+DAMPLIMIT            0.002
+UNBALANCED           CONTINUE 10
+DEMAND MULTIPLIER    1
+EMITTER EXPONENT     0.5
+QUALITY              NONE                
+DIFFUSIVITY          1
+TOLERANCE            0.01
+
+[LABELS]
+
+[BACKDROP]
+DIMENSIONS    2171987.490    312605.060    2268627.100    385579.760
+UNITS    NONE
+OFFSET    0.00    0.00
+
+[END]
