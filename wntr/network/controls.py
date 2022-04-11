@@ -913,6 +913,93 @@ class TankLevelCondition(ValueCondition):
 
 
 @DocInheritor({'requires', 'evaluate', 'name'})
+class StatusChangeCondition(ControlCondition):
+    """Compare a network element attribute to a set value.
+
+    Parameters
+    ----------
+    source_obj : object
+        The link (Pipe, Valve or Pump) to use in the comparison
+    status : LinkStatus or None
+        A status value, where the condition becomes true if the status
+        changes to this value from a different value; use None to trigger
+        on any status change
+    """
+    def __init__(self, source_obj, status):
+        self._source_obj = source_obj
+        if status is not None and not isinstance(status, LinkStatus):
+            if isinstance(status, int): status = LinkStatus(status)
+            elif isinstance(status, str): status = LinkStatus[status]
+            else: status = LinkStatus(int(status))
+        self._activation = status
+        self._prev_status = source_obj.initial_status
+
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: StatusChangeCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._source_obj._compare(other._source_obj):
+            return False
+        if self._activation != other._activation:
+            return False
+        return True
+
+    def requires(self):
+        return OrderedSet([self._source_obj])
+
+    @property
+    def name(self):
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        else:
+            obj = str(self._source_obj)
+
+        return '{}:{}{}'.format(obj, "status->",
+                                str(self._activation) if self._activation else 'ANY')
+
+    def __repr__(self):
+        return "<StatusChangeCondition: {}, {}>".format(str(self._source_obj),
+                                                       str(self._activation))
+
+    def __str__(self):
+        typ = self._source_obj.__class__.__name__
+        if 'Pump' in typ:
+            typ = 'Pump'
+        elif 'Valve' in typ:
+            typ = 'Valve'
+        obj = str(self._source_obj)
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        att = "STATUS"
+        rel = "CHANGES TO"
+        val = str(self._activation).upper() if self._activation else 'ANY'
+        return "{} {} {} {} {}".format(typ.upper(), obj, att.upper(), rel.upper(), val)
+
+    def evaluate(self):
+        status = getattr(self._source_obj, 'status')
+        state = False
+        if not isinstance(status, LinkStatus):
+            if isinstance(status, int): status = LinkStatus(status)
+            elif isinstance(status, str): status = LinkStatus[status]
+            else: status = LinkStatus(int(status))
+        if status != self._prev_status:
+            if self._activation is None:
+                state = True
+            elif self._activation == status:
+                state = True
+        self._prev_status = status
+        return bool(state)
+
+
+@DocInheritor({'requires', 'evaluate', 'name'})
 class RelativeCondition(ControlCondition):
     """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
@@ -2527,9 +2614,8 @@ class StopControl(ControlBase):
 
     def __str__(self):
         text = 'IF {}'.format(str(self._condition))
-        if self._then_actions is not None and len(self._then_actions) > 0:
-            then_text = ' THEN STOP PRIORITY 100'
-        return text
+        then_text = ' THEN STOP PRIORITY 100'
+        return text + then_text
 
     def is_control_action_required(self):
         do = self._condition.evaluate()

@@ -17,12 +17,11 @@ The main difficulty is determining how long that step should be for. There are m
 time steps defined in WNTR and EPANET - hydraulic, water quality, rule, report, etc.
 Rather than picking one of these, the stepwise simulators simply treat the current duration
 as the step size, and simply do not close the internal or EPANET simulator at the end
-when the duration has been reached. This means that for each step in an outer, user defined
-loop, the user must change the duration by using either "set_new_duration" or "add_more_time"
-functions.
+when the duration has been reached. 
 """
 
 import logging
+from re import S
 import warnings
 
 import numpy as np
@@ -437,6 +436,22 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     def _copy_results_object(self):
         if len(self._temp_index) == 0:
             return
+        if (max(self._temp_index) > self._results.node['head'].index.max()):
+            # add more chunks if max index exceeded
+            last_index = self._results.node['head'].index.max()
+            next_start = last_index + self._report_timestep
+            next_end = max(self._temp_index) + 1
+            nnodes = self._wn.num_nodes
+            nlinks = self._wn.num_links
+            index = np.arange(next_start, next_end, self._report_timestep)
+            dfna = pd.DataFrame(np.nan * np.zeros([len(index), nnodes]), index=index, columns=self._results.node['head'].columns)
+            for _, _, name, _ in self._node_attributes:
+                df2 = pd.concat([self._results.node[name], dfna])
+                self._results.node[name] = df2
+            dfla = pd.DataFrame(np.nan * np.zeros([len(index), nlinks]), index=index, columns=self._results.link['flowrate'].columns)
+            for _, _, name, _ in self._link_attributes:
+                df2 = pd.concat([self._results.link[name], dfla])
+                self._results.link[name] = df2
         for _, _, name, f in self._node_attributes:
             df2 = np.array(self._temp_node_report_lines[name])
             if f is not None:
@@ -463,7 +478,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         if results_size > 0:
             index = np.arange(
                 self._report_start,
-                self._report_start + (results_size + 1) * self._report_timestep,
+                self._report_start + 1 + (results_size) * self._report_timestep,
                 self._report_timestep,
             )
         for node_name in self._node_name_str:
@@ -494,8 +509,40 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             setattr(link, attr, value)
 
     def initialize(
-        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, result_size=0
+        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=None, 
     ):
+        # TODO: change chunk size to 1 day in report steps, only input is estimated number of days in simulation.
+        # TODO: initial chunks based on wn.options.time.duration (in days), change the name to "estimated_days_in_simulation"
+        """
+        _summary_
+
+        Parameters
+        ----------
+        file_prefix : str, optional
+            _description_, by default "temp"
+        version : float, optional
+            _description_, by default 2.2
+        save_hyd : bool, optional
+            _description_, by default False
+        use_hyd : bool, optional
+            _description_, by default False
+        hydfile : _type_, optional
+            _description_, by default None
+        estimated_results_size : int, optional
+            initial days of results to create in memory, by default None, which will set it to 
+            the number of days in the WaterNetworkModel's options.time.duration value.
+
+        .. warning::
+
+            **Adding chunks is slow,** if you know the number of results rows you will need, it is far better to start
+            with that many rows: initial_rows = chunk_size * initial_chunks. Additional results by appending chunk_size rows at a time.
+
+
+        Raises
+        ------
+        SimulatorError
+            _description_
+        """
         if self._en is not None:
             raise SimulatorError(self.__class__.__name__ + " already initialized")
         inpfile = file_prefix + ".inp"
@@ -508,6 +555,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._en = enData
         self._flow_units = FlowUnits(self._en.ENgetflowunits())
         self._mass_units = MassUnits.mg
+        self._chunk_size = int(np.ceil(86400 / self._wn.options.time.report_timestep))
+        initial_chunks = estimated_results_size if estimated_results_size is not None else 1
 
         enData.ENsettimeparam(EN.DURATION, int(86400 * 365.25 * 10))
         self._t = 0
@@ -545,7 +594,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                     QualParam.WaterAge._to_si,
                 )
 
-        self._setup_results_object(result_size)
+        self._setup_results_object(initial_chunks * self._chunk_size)
         # setup intermediate sensors indices from names to internal EPANET numbers
         new_link_sensors = dict()
         new_node_sensors = dict()
@@ -592,8 +641,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             return True, []
         while True:
             # Run hydraulic TS and quality TS
+            self._wn._prev_sim_time = self._t
             enData.ENrunH()
             enData.ENrunQ()
+            self._wn.sim_time = enData.ENgettimeparam(EN.HTIME)
 
             # Read all sensors in the _node and _link sensors list
             self._save_intermediate_values()
@@ -607,7 +658,6 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                 completed = False
 
             self._t = enData.ENgettimeparam(EN.HTIME)
-
             # Move EPANET forward in time
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
@@ -635,6 +685,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
             self._save_report_step()
+            self._nt = self._t + tstep
         enData.ENcloseH()
         enData.ENcloseQ()
         logger.debug("Solved quality")
@@ -645,4 +696,14 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._en = None
         # results = wntr.epanet.io.BinFile().read(self.outfile)
         self._copy_results_object()
+        for _, _, name, _ in self._node_attributes:
+            df2 = self._results.node[name]
+            mask = df2.index <= self._nt
+            df2 = df2.loc[mask,:]
+            self._results.node[name] = df2
+        for _, _, name, _ in self._link_attributes:
+            df2 = self._results.link[name]
+            mask = df2.index <= self._nt
+            df2 = df2.loc[mask,:]
+            self._results.link[name] = df2
         return self._results
