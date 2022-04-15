@@ -29,7 +29,7 @@ import pandas as pd
 import wntr.epanet.io
 from wntr.epanet.toolkit import ENepanet
 from wntr.epanet.util import EN, FlowUnits, HydParam, LinkTankStatus, MassUnits, QualParam, to_si
-from wntr.network.base import Link, LinkStatus
+from wntr.network.base import Link, LinkStatus, Node
 from wntr.network.controls import StopControl, StopCriteria
 from wntr.network.model import WaterNetworkModel
 from wntr.sim.core import WaterNetworkSimulator
@@ -91,6 +91,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def add_stop_criterion(self, control: StopControl) -> int:
         self._stop_criteria.register_criterion(control)
+        for obj in self._stop_criteria.requires():
+            if isinstance(obj, Node):
+                self.add_node_sensor(obj.name)
+            elif isinstance(obj, Link):
+                self.add_link_sensor(obj.name)
 
     def remove_stop_criterion(self, control):
         self._stop_criteria.deregister(control)
