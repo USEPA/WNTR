@@ -431,11 +431,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     def _copy_results_object(self):
         if len(self._temp_index) == 0:
             return
-        if (max(self._temp_index) > self._results.node['head'].index.max()):
+        while (max(self._temp_index) > self._results.node['head'].index.max()):
             # add more chunks if max index exceeded
             last_index = self._results.node['head'].index.max()
             next_start = last_index + self._report_timestep
-            next_end = max(self._temp_index) + 1
+            next_end = next_start + self._chunk_size * self._report_timestep + 1
             nnodes = self._wn.num_nodes
             nlinks = self._wn.num_links
             index = np.arange(next_start, next_end, self._report_timestep)
@@ -491,7 +491,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def _setup_overrides(self):
         require_override = set()
-        for key, ctrl in self._wn.controls.items():
+        for key, ctrl in self._wn.controls():
             for obj in ctrl.requires():
                 if isinstance(obj, Link):
                     require_override.add(obj)
