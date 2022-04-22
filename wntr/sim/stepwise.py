@@ -30,7 +30,7 @@ import wntr.epanet.io
 from wntr.epanet.toolkit import ENepanet
 from wntr.epanet.util import EN, FlowUnits, HydParam, LinkTankStatus, MassUnits, QualParam, to_si
 from wntr.network.base import Link, LinkStatus, Node
-from wntr.network.controls import StopControl, StopCriteria
+from wntr.network.controls import StopControl, StopCriteria, Control
 from wntr.network.model import WaterNetworkModel
 from wntr.sim.core import WaterNetworkSimulator
 from wntr.sim.results import SimulationResults
@@ -298,7 +298,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             self._en.ENsettimeparam(EN.DURATION, seconds)
             return self._en.ENgettimeparam(EN.DURATION)
 
-    def set_link_status(self, link_name: str, value: float, override=False):
+    def set_link_status(self, link_name: str, value: float, override=True):
         """
         _summary_
 
@@ -324,16 +324,12 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             logger.error(w)
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
-        if not override:
-            self._en.ENsetlinkvalue(link_num, EN.STATUS, value)
-        elif link_name in self._overrides:
+        self._en.ENsetlinkvalue(link_num, EN.STATUS, value)
+        if link_name in self._overrides:
             control_number = self._overrides[link_name]
             self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
-        else:
-            control_number = self._en.ENaddcontrol(EN.LOWLEVEL, link_num, value, 1, 1e30)
-            self._overrides[link_name] = control_number
 
-    def set_link_setting(self, link_name: str, value: float, override=False):
+    def set_link_setting(self, link_name: str, value: float, override=True):
         """
         _summary_
 
@@ -359,14 +355,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             logger.error(w)
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
-        if not override:
-            self._en.ENsetlinkvalue(link_num, EN.SETTING, value)
-        elif link_name in self._overrides:
+        self._en.ENsetlinkvalue(link_num, EN.SETTING, value)
+        if link_name in self._overrides:
             control_number = self._overrides[link_name]
             self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
-        else:
-            control_number = self._en.ENaddcontrol(EN.LOWLEVEL, link_num, value, 1, 1e30)
-            self._overrides[link_name] = control_number
 
     def release_override(self, link_name: str):
         """
@@ -386,12 +378,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             w = SimulatorError("The simulation has not been initialized")
             logger.error(w)
             raise w
+        link_num = self._en.ENgetlinkindex(link_name)
         if link_name in self._overrides.keys():
             control_number = self._overrides[link_name]
-            self._en.ENdeletecontrol(control_number)
-            for k, v in self._overrides.items():
-                if v > control_number:
-                    self._overrides[k] = v - 1
+            self._en.ENsetcontrol(control_number, EN.HILEVEL, link_num, 1, 1, 1e30)
         else:
             w = SimulatorWarning("No override set on the specified link")
             warnings.warn(w)
@@ -457,6 +447,8 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             for _, _, name, _ in self._link_attributes:
                 df2 = pd.concat([self._results.link[name], dfla])
                 self._results.link[name] = df2
+        if len(self._temp_index) == 1:
+            self._temp_index = self._temp_index[0]
         for _, _, name, f in self._node_attributes:
             df2 = np.array(self._temp_node_report_lines[name])
             if f is not None:
@@ -496,6 +488,19 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         for _, _, name, _ in self._link_attributes:
             self._results.link[name] = pd.DataFrame([], columns=self._link_name_str, index=index)
             self._temp_link_report_lines[name] = list()
+
+    def _setup_overrides(self):
+        require_override = set()
+        for key, ctrl in self._wn.controls.items():
+            for obj in ctrl.requires():
+                if isinstance(obj, Link):
+                    require_override.add(obj)
+        for link in require_override:
+            link_name = link.name
+            link_num = self._en.ENgetlinkindex(link_name)
+            if link_name not in self._overrides:
+                control_number = self._en.ENaddcontrol(EN.HILEVEL, link_num, 1, 1, 1e30)
+                self._overrides[link_name] = control_number
 
     def _save_intermediate_values(self):
         for name, vals in self._node_sensors.items():
@@ -552,6 +557,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             raise SimulatorError(self.__class__.__name__ + " already initialized")
         inpfile = file_prefix + ".inp"
         enData = wntr.epanet.toolkit.ENepanet(version=version)
+        orig_duration = self._wn.options.time.duration
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         rptfile = file_prefix + ".rpt"
         outfile = file_prefix + ".bin"
@@ -561,14 +567,14 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._flow_units = FlowUnits(self._en.ENgetflowunits())
         self._mass_units = MassUnits.mg
         self._chunk_size = int(np.ceil(86400 / self._wn.options.time.report_timestep))
-        initial_chunks = estimated_results_size if estimated_results_size is not None else 1
+        initial_chunks = estimated_results_size if estimated_results_size is not None else orig_duration //86400 + 1
 
-        enData.ENsettimeparam(EN.DURATION, int(86400 * 365.25 * 10))
+        enData.ENsettimeparam(EN.DURATION, int(2^30))
         self._t = 0
         self._report_timestep = enData.ENgettimeparam(EN.REPORTSTEP)
         self._report_start = enData.ENgettimeparam(EN.REPORTSTART)
         self._last_line_added = -1
-
+        self._setup_overrides()
         if self._wn.options.quality.parameter is not None:
             if self._wn.options.quality.parameter.upper() == "CHEMICAL":
                 if self._wn.options.quality.inpfile_units.lower().startswith("ug"):
