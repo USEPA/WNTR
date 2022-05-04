@@ -6,7 +6,6 @@ import numpy as np
 import geopandas as gpd
 from wntr.utils.constants import *
 import pyproj
-import matplotlib.pyplot as plt
 
 testdir = dirname(abspath(str(__file__)))
 test_network_dir = join(testdir, "networks_for_testing")
@@ -44,3 +43,4 @@ def test_assign_elevation():
     assert wn.get_node('4143').elevation == pytest.approx(147.64242799420802, 0.5) # 484.39 ft
     assert wn.get_node('6268').elevation == pytest.approx(153.64996275076803, 0.5) # 504.10 ft
     assert wn.get_node('23109').elevation == pytest.approx(155.71240423116, 0.5) # 510.86 ft
+

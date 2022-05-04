@@ -351,6 +351,8 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
                 if words[1] == 'PM':
                     PM = 86400 / 2
             hms = words[0].split(':')
+            if hms[0] == '12' and words[1] == 'AM':
+                hms[0] = '0'
             v = 0
             if len(hms) > 2:
                 v += int(hms[2])

@@ -16,14 +16,19 @@ model.
 """
 from ctypes import ArgumentError
 from functools import partial
+from itertools import combinations
+from lib2to3.pytree import BasePattern
 import logging
 from collections import OrderedDict
+from copy import deepcopy
 import os
 from tkinter import E
-from typing import Type
+from typing import Iterable, Type
+import warnings
 import pyproj
 import requests
 import urllib
+
 from wntr.utils.constants import *
 
 import geopandas as gpd
@@ -33,7 +38,8 @@ import pandas as pd
 from shapely.geometry.linestring import LineString
 import six
 from tqdm.contrib.concurrent import process_map
-from tqdm import tqdm
+# from tqdm import tqdm
+from tqdm.auto import tqdm
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
@@ -91,6 +97,7 @@ class WaterNetworkModel(AbstractModel):
         self._labels = None
         self._nodes_gis = None
         self._links_gis = None
+        self._junctions_pressure_zone = {}
 
         self._inpfile = None
         if inp_file_name:
@@ -425,7 +432,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
                  diameter=0.3048, roughness=100, minor_loss=0.0, initial_status='OPEN', 
-                 check_valve=False):
+                 check_valve=False, vertices=None):
         """
         Adds a pipe to the water network model
 
@@ -455,6 +462,20 @@ class WaterNetworkModel(AbstractModel):
         self._link_reg.add_pipe(name, start_node_name, end_node_name, length, 
                                 diameter, roughness, minor_loss, initial_status, 
                                 check_valve)
+
+        if vertices is not None:
+            self.get_link(name).vertices = vertices
+
+        if self._links_gis is not None:
+            pipe_gis = self._epanet_links_to_gis([name])
+            self._links_gis.loc[name] = pipe_gis.loc[name]
+            if self._gis_pzone is not None:
+                try:
+                    in_pz = self._gis_pzone.contains(self._links_gis.loc[name].geometry)
+                    pz = self._gis_pzone.loc[in_pz].NAME.values[0]
+                    self._links_gis.loc[name, 'pzone'] = pz
+                except IndexError:
+                    pass
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
                  pump_parameter=50.0, speed=1.0, pattern=None, initial_status='OPEN'):
@@ -616,7 +637,6 @@ class WaterNetworkModel(AbstractModel):
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
         self._controls[name] = control_object
     
-    
     ### # 
     ### Remove elements from the model
     def remove_node(self, name, with_control=False, force=False):
@@ -632,9 +652,12 @@ class WaterNetworkModel(AbstractModel):
                 for i in x:
                     self.remove_control(i)
             else:
+                used_controls = []
                 for control_name, control in self._controls.items():
                     if node in control.requires():
-                        raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
+                        used_controls.append(control_name)
+                if len(used_controls) > 0:
+                    raise RuntimeError('Cannot remove node {0} without first removing controls/rules {1}'.format(name, used_controls))
         self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=False, force=False):
@@ -650,10 +673,16 @@ class WaterNetworkModel(AbstractModel):
                 for i in x:
                     self.remove_control(i)
             else:
+                used_controls = []
                 for control_name, control in self._controls.items():
                     if link in control.requires():
-                        raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
+                        used_controls.append(control_name)
+                if len(used_controls) > 0:
+                    raise RuntimeError('Cannot remove link {0} without first removing controls/rules {1}'.format(name, used_controls))
         self._link_reg.__delitem__(name)
+
+        if self._links_gis is not None:
+            self._links_gis = self._links_gis.drop(index=[name])
 
     def remove_pattern(self, name): 
         """Removes a pattern from the water network model"""
@@ -1562,21 +1591,71 @@ class WaterNetworkModel(AbstractModel):
         """
         wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
 
-    def add_hydrants_from_gis(self, hydrants_layer: gpd.GeoDataFrame=None, hyd_branch_line_layer: gpd.GeoDataFrame=None, add_all_to_network=False, hyd_juncs_gis: str=None):
-        self._hyd_branch_line = hyd_branch_line_layer.set_index('EAMID')
-        if hyd_juncs_gis is not None and os.path.isfile(hyd_juncs_gis + '_hyds.shp'):
-            self._hydrants_gis = gpd.read_file(hyd_juncs_gis + '_hyds.shp').set_index('EAMID')
-            self._hyd_juncs_gis = gpd.read_file(hyd_juncs_gis + '_hyd_juncs.shp').set_index('EAMID_hyd')
-        else:
-            hyds_to_branch = hyd_branch_line_layer.sjoin(hydrants_layer, lsuffix='bran', rsuffix='hyd').drop(columns=['index_hyd'])
-            # hyds_to_branch['hyd_geom'] = hyds_raw.geometry[hyds_to_branch.EAMID_hyd].values
+    def parse_hydrants_from_gis(self, hydrants_layer: gpd.GeoDataFrame=None, 
+            hyd_branch_line_layer: gpd.GeoDataFrame=None, add_all_to_network=False, 
+            hyd_juncs_gis: str=None, parallel=True) -> None:
+        """Create GIS layers with hydrants and junctions where hydrant branch lines are connected to and keep them ready to be added to model one by one or in batch.
 
+        Parameters
+        ----------
+        hydrants_layer : gpd.GeoDataFrame, optional
+            GIS hydrant layer, by default None
+        hyd_branch_line_layer : gpd.GeoDataFrame, optional
+            GIS branch line layer (linestrings), by default None
+        add_all_to_network : bool, optional
+            Wether to add all hydrants to model, by default False
+        hyd_juncs_gis : str, optional
+            Location of model hydrants and model hydrant branch line junction shapefiles, by default None
+        parallel : bool, optional
+            Whether to match branch lines to pipes in parallel or in serial, by default True
+
+        Returns
+        -------
+        None
+            None
+
+        Raises
+        ------
+        RuntimeError
+            GIS has not been initialized
+        """
+
+        if self.links_gis is None:
+            raise RuntimeError('GIS not initialized. Call wn.create_model_gis(<crs>) where "crs" is a coordinate reference system.')
+
+        # Reproject hydrants and branch lines if needed.
+        if self.links_gis.crs != hyd_branch_line_layer.crs:
+            hyd_branch_line_layer.to_crs(self.links_gis.crs, inplace=True)
+            hydrants_layer.to_crs(self.links_gis.crs, inplace=True)
+
+        self._hyd_branch_line = hyd_branch_line_layer.set_index('EAMID')
+
+        if hyd_juncs_gis is not None and os.path.isfile(hyd_juncs_gis + '_hyds.shp'):
+            # If model GIS layer for hydrants and hydrant junctions exist, load them.
+            self._hydrants_gis = gpd.read_file(hyd_juncs_gis + '_hyds.shp')
+            self._hydrants_gis = self._hydrants_gis.set_index('EAMID')
+            self._hyd_juncs_gis = gpd.read_file(hyd_juncs_gis + '_hyd_juncs.shp')
+            self._hyd_juncs_gis = self._hyd_juncs_gis.set_index('EAMID_hyd')
+        else:
+            # Pair hydrants with branch lines
+            hyds_to_branch = hyd_branch_line_layer.sjoin(hydrants_layer, lsuffix='bran', rsuffix='hyd')
+            hyds_to_branch = hyds_to_branch.drop(columns=['index_hyd'])
+
+            # Add "_dup" to the end of duplicated hydrants' EAMIDs
             dup_hyds = hydrants_layer.EAMID.duplicated(keep='first')
             if dup_hyds.sum() > 0:
                 hydrants_layer.loc[dup_hyds, 'EAMID'] = hydrants_layer[dup_hyds].EAMID.apply(lambda x: x + '_dup').values
             self._hydrants_gis = hydrants_layer.set_index('EAMID')
 
             def get_branch_end(b):
+                """Get coordinates of branch line connection to main.
+
+                Args:
+                    b (shapely.geometry.LineString): Branch line geometry
+
+                Returns:
+                    tuple: coordinates.
+                """
                 try:
                     start = b.geometry[0].coords[0]
                     end = b.geometry[-1].coords[-1]
@@ -1588,49 +1667,72 @@ class WaterNetworkModel(AbstractModel):
 
                 return start if choose_start else end
 
+            # Create hydrant junction layer based on branch line connection to main.
             new_hydrants_coords = np.array(
                 [np.array(get_branch_end(l)) for _, l in hyds_to_branch.iterrows()]
             ).T
             hyd_coords = gpd.points_from_xy(
                 new_hydrants_coords[0],
-                new_hydrants_coords[1]
+                new_hydrants_coords[1],
+                crs=hyd_branch_line_layer.crs
             )
             new_hydrants = gpd.GeoDataFrame(
                 data=hyds_to_branch[['EAMID_hyd', 'EAMID_bran']],
-                geometry=hyd_coords,
+                geometry=hyd_coords, crs=hyd_branch_line_layer.crs
             )
             self._hyd_juncs_gis = new_hydrants.set_index('EAMID_hyd')
 
-            get_pipe_hyd_partial = partial(get_pipe_hyd, self.links_gis)
-            pipes_to_hyds = process_map(get_pipe_hyd_partial, self._hyd_juncs_gis.geometry, chunksize=50)
+            # Add to hydrant layer the ID of pipe the branch line is connected to.
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                if parallel:
+                    get_pipe_hyd_partial = partial(get_pipe_hyd, self.links_gis)
+                    pipes_to_hyds = process_map(get_pipe_hyd_partial, self._hyd_juncs_gis.geometry, chunksize=50)
+                else:
+                    pipes_to_hyds = [get_pipe_hyd(self.links_gis, g) for g in self._hyd_juncs_gis.geometry]
             
-            self._hyd_juncs_gis['pipe_id'] = [self._links_gis.index[p] if p is not None else None for p in pipes_to_hyds]
+            self._hyd_juncs_gis['pipe_id'] = [self._links_gis.index[p] if p else None for p in pipes_to_hyds]
             
+            # Save new hydrant and branch line GIS.
             if hyd_juncs_gis is not None:
                 self._hydrants_gis.to_file(hyd_juncs_gis + '_hyds.shp')
                 self._hyd_juncs_gis.to_file(hyd_juncs_gis + '_hyd_juncs.shp')
 
+        # Create dictionary of hydrants connected to pipes
         self._pipe_basis_dict = {pid: [pid] for pid in self._hyd_juncs_gis.pipe_id.values if pid is not None}
 
-        # add_all_to_network = True
         if add_all_to_network:
+            # Add all hydrants to model, if user so desires.
             print('Adding all hydrants to model')
             for ix, hyd in tqdm(self._hyd_juncs_gis.iterrows(), total=len(self._hyd_juncs_gis)):
                 if hyd.pipe_id is not None:
-                    self.add_hydrant_to_pipe_gis(ix)
-        pass
+                    self.add_hydrant_to_pipe(ix)
 
-        # cx0=2239496
-        # cy0=355550
-        # cx1=2240539
-        # cy1=356296
-        # fig, ax = plt.subplots(figsize=(20, 20))
-        # self._links_gis.cx[cx0:cx1, cy0:cy1].plot(ax=ax, color='grey')
-        # hydrants_layer.cx[cx0:cx1, cy0:cy1].plot(ax=ax)
-        # self._hyds_gis.cx[cx0:cx1, cy0:cy1].plot(ax=ax, color='firebrick')
-        # plt.savefig('hyds.png')
+        return 
 
-    def add_hydrant_to_pipe_gis(self, hydrant_id, branch_id=None, pipe_id=None, hydrant_height=0.6):
+    def add_hydrant_to_pipe(self, hydrant_id: str, branch_id: str=None, pipe_id: str=None, hydrant_height=0.6) -> None:
+        """Adds one hydrant from the model's GIS to the network. Model's GIS needs to be initialized first and hydrants parsed.
+
+        Parameters
+        ----------
+        hydrant_id : str
+            Hydrant id in the original shapefile
+        branch_id : str, optional
+            Hydrant id branch line in the original shapefile, by default None
+        pipe_id : _type_, optional
+            ID of pipe to which the hydrant is connected in the original shapefile, by default None
+        hydrant_height : float, optional
+            Height of the hydrant, by default 0.6
+
+        Raises
+        ------
+        RuntimeError
+            There is no column named "DIAMETER" in the branch line shapefile
+        """
+
+        if 'DIAMETER' not in self._hyd_branch_line.columns:
+            raise RuntimeError('Hydrant branch lines must have a field called "DIAMETER."')
+
         hyd = self._hyd_juncs_gis.loc[hydrant_id]
         if pipe_id is None:
             pipe_id = hyd.pipe_id
@@ -1639,7 +1741,9 @@ class WaterNetworkModel(AbstractModel):
         hydrant_intersect_point = hyd.geometry
 
         potential_pipes_hyd = self._links_gis.loc[self._pipe_basis_dict[pipe_id]]
-        pipe_ix = potential_pipes_hyd.distance(hydrant_intersect_point).argmin()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            pipe_ix = potential_pipes_hyd.distance(hydrant_intersect_point).argmin()
         updated_pipe_id = potential_pipes_hyd.iloc[pipe_ix].name
             
         # Figure out how far into the main the lateral is placed
@@ -1649,8 +1753,10 @@ class WaterNetworkModel(AbstractModel):
 
         lateral_junc = None
         if split_at_point == 0.:
+            # If hydrant at upstream junction
             lateral_junc = self.get_link(pipe_id).start_node.name
         elif split_at_point == 1.:
+            # If hydrant at downstream junction
             lateral_junc = self.get_link(pipe_id).end_node.name
         else:
             # Create new pipe ID that does not yet exist in model
@@ -1664,7 +1770,8 @@ class WaterNetworkModel(AbstractModel):
 
             # Create junction for hydrant lateral
             lateral_junc = hydrant_id + '_junc'
-            wntr.morph.link.split_pipe(self, updated_pipe_id, pipe_id_new, lateral_junc, split_at_point=split_at_point, return_copy=False)
+            wntr.morph.link.split_pipe(self, updated_pipe_id, pipe_id_new, lateral_junc, 
+                split_at_point=split_at_point, return_copy=False)
 
             new_links_gis = self._epanet_links_to_gis([updated_pipe_id, pipe_id_new])
             self._links_gis.drop(index=updated_pipe_id, inplace=True)
@@ -1672,13 +1779,39 @@ class WaterNetworkModel(AbstractModel):
 
         # Add hydrant
         x, y = self._hydrants_gis.loc[hydrant_id].geometry.coords.xy
-        self.add_junction(hydrant_id, coordinates=(x[0], y[0]), elevation=self.get_node(lateral_junc).elevation + hydrant_height)
+        self.add_junction(hydrant_id, coordinates=(x[0], y[0]), 
+            elevation=self.get_node(lateral_junc).elevation + hydrant_height)
 
         # Add lateral
         bline = self._hyd_branch_line.loc[branch_id]
-        self.add_pipe(branch_id, lateral_junc, hydrant_id, length=bline.geometry.length, diameter=bline.DIAMETER * IN_TO_FT * FT_TO_M)
+        self.add_pipe(branch_id, lateral_junc, hydrant_id, length=bline.geometry.length, 
+            diameter=bline.DIAMETER * IN_TO_FT * FT_TO_M)
+
+        return
 
     def create_model_gis(self, crs: pyproj.crs.crs.CRS=None, pressure_zone_layer: gpd.GeoDataFrame=None) -> None:
+        """Initializes the model's GIS with the coordinates specified in the EPANET file and either a specified coordinate system or the same coordinate system of the pressure zones shapefile, if the latter is passed to the function.
+
+        Parameters
+        ----------
+        crs : pyproj.crs.crs.CRS, optional
+            Projection of the coordinates in the EPANET file, by default None
+        pressure_zone_layer : gpd.GeoDataFrame, optional
+            Shapefile with the pressure zones as polygons, by default None
+
+        Returns
+        -------
+        None
+            None
+
+        Raises
+        ------
+        Exception
+            Either "crs" or "pressure_zone_layer" must be provided.
+        Exception
+            If "pressure_zone_layer" is provided its crs will be used, so do not pass a "crs.
+        """
+
         self._results = None
         self._demands_pzone = None
         self._date = None
@@ -1733,47 +1866,84 @@ class WaterNetworkModel(AbstractModel):
             # Set original demand multiplier for each DMA
             self._dma_demand_multipliers = {dma: 1. for dma in self._all_dmas}
 
-    def _epanet_links_to_gis(self, link_names):
+    def _epanet_links_to_gis(self, link_names: Iterable[str]) -> gpd.GeoDataFrame:
+        """Convert the vertex coordinates of links in the EPANET file model to GeoPandas GIS. 
+
+        Parameters
+        ----------
+        link_names : Iterable[str]
+            IDs of links to be added to the model's GIS
+
+        Returns
+        -------
+        GeoPandas.GeoDataFrame
+            GeoDataFrame of links
+        """
         link_geometry = []
         for link_name in link_names:
+            # Transform link vertices in the EPANET model into LineStrings
             link = self.get_link(link_name)
             coords = [self.nodes[link.start_node].coordinates]
             coords += link.vertices
             coords += [self.nodes[link.end_node].coordinates]
             link_geometry.append(LineString(coords))
 
+        # Create final GeoDataFrame
         links_gis = gpd.GeoDataFrame(
             data=link_names,
             geometry=link_geometry, crs=self._crs.srs).set_index(0)
         links_gis.index.name = 'name'
 
+        # Add to the GeoDataFrame start and end nodes of each link
+        for link in link_names:
+            l = self.get_link(link)
+            links_gis.loc[link, 'start_node'] = l.start_node_name
+            links_gis.loc[link, 'end_node'] = l.end_node_name
+
         return links_gis
 
-    def _assign_pressure_zones(self):
+    def _assign_pressure_zones(self) -> None:
         """Assign pressure zone to nodes in EPANET GIS.
         """
         self._nodes_gis['pzone'] = None
         for ix, pz in self._gis_pzone.iterrows():
+            # Assign pressure zone to nodes
             in_pz = self._nodes_gis.geometry.within(pz.geometry)
             self._nodes_gis.loc[in_pz, 'pzone'] = pz.NAME
             for n in self._nodes_gis.loc[in_pz].index:
                 self.get_node(n).pressure_zone = pz.NAME
 
+            # Assign pressure zone to links
+            in_pz = self._links_gis.geometry.within(pz.geometry)
+            self._links_gis.loc[in_pz, 'pzone'] = pz.NAME
+            for n in self._links_gis.loc[in_pz].index:
+                self.get_link(n).pressure_zone = pz.NAME
+
+            self._junctions_pressure_zone[pz.NAME] = list(in_pz[in_pz].index)
+
+        return
+
     def update_base_demands_dict(self, new_demands_junctions: dict=None, 
             all_junctions_demand_mult: float=None, 
-            dma_demand_mult: dict=None, units='GPM'):
+            dma_demand_mult: dict=None, units='GPM') -> None:
         """Apply either new demands or a DMA-based multiplier to all nodes in
         the network.
 
-        Args:
-            new_demands_junctions (Dict, optional): Keys as nodes and values 
-            as demands. Defaults to None.
-            all_junctions_demand_mult (float, optional): Demand multiplier for all nodes
-            and values as demand multipliers. Defaults to None.
-            dma_demand_mult (Dict, optional): Demand multiplier for all nodes within DMAs
+        Parameters
+        ----------
+        new_demands_junctions : dict, optional
+            Keys as nodes and values as demands, by default None
+        all_junctions_demand_mult : float, optional
+            Demand multiplier for all nodes and values as demand multipliers, by default None
+        dma_demand_mult : dict, optional
+            Demand multiplier for all nodes within DMAs, by default None
+        units : str, optional
+            Flow units, by default 'GPM'
 
-        Raises:
-            ArgumentError: No input is passed.
+        Raises
+        ------
+        ArgumentError
+            No input is passed.
         """
 
         assert (units == 'GPM') or (units == 'CMS')
@@ -1800,8 +1970,23 @@ class WaterNetworkModel(AbstractModel):
         else:
             raise ArgumentError('Either new_demands_junctions, new_demands_dmas, all_junctions_demand_mult, or dma_demand_mult must be provided.')
 
-    def _elevation_function(self, df, url, lat_column, lon_column):
-        """Query service using lat, lon. add the elevation values as a new column."""
+        return
+
+    def _elevation_function(self, df, url, lat_column, lon_column) -> None:
+        """Query service using lat, lon and add the elevation values to nodes DataFrame as a new column.
+
+        Parameters
+        ----------
+        df : _type_
+            _description_
+        url : _type_
+            _description_
+        lat_column : _type_
+            _description_
+        lon_column : _type_
+            _description_
+        """
+
         elevations = []
         for lat, lon in zip(df[lat_column], df[lon_column]):
 
@@ -1819,7 +2004,12 @@ class WaterNetworkModel(AbstractModel):
 
         df['elev_meters'] = elevations
 
-    def assign_elevation(self):        
+        return
+
+    def assign_elevation(self):  
+        """Assigns an elevation to nodes with zero elevation.
+        """
+
         # USGS Elevation Point Query Service
         url = r'https://nationalmap.gov/epqs/pqs.php?'
 
@@ -1842,9 +2032,380 @@ class WaterNetworkModel(AbstractModel):
             elev = result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation']
             if elev > 0:
                 self.get_node(junc).elevation = elev
-                print(f'Assigned elevation of {elev} to junction {junc}.')
+                print(f'Assigned elevation of {elev:.2f} ({elev / 0.3048:.2f} ft) to junction {junc}.')
             else:
                 print(f'Unable to assign elevation to junction {junc}.')
+
+    def paths_through_open_links(self, source: str, target: str, links_to_remove: Iterable[str], 
+            flow_for_direction: pd.Series=None, max_paths_to_return=200):
+        """Find paths from source node to target node through links with flow. To check if there 
+            are open paths between pressure zones, remove PRVs, pumps, and pipes with zero flows.
+
+        Parameters
+        ----------
+        source : str
+            Source node
+        target : str
+            Target node
+        links_to_remove : Iterable[str]
+            Links to consider closed.
+        flow_for_direction : pd.Series, optional
+            Use flow for directed graph to speed things up, by default None
+        max_paths_to_return : int, optional
+            Number of shortest paths to report, by default 200
+
+        Returns
+        -------
+        Tuple with list and generator
+            List with first *max_paths_to_return* paths and generator for others
+        """
+
+        if flow_for_direction is None:
+            g_raw = self.get_graph()
+        else:
+            g_raw = self.get_graph(link_weight=flow_for_direction, modify_direction=True)
+
+        for link in links_to_remove:
+            try:
+                g_raw.remove_edge(self.get_link(link).start_node_name, self.get_link(link).end_node_name)
+            except nx.exception.NetworkXError:
+                pass
+        
+        # TODO: ADD POSSIBILITY OF PATHS BEING DEPENDENT ON FLOW DIRECTION SO THAT USER CAN MORE EASILY FIND OUT WHERE WATER IS GOING.
+        g = nx.Graph(g_raw)
+
+        paths = []
+        paths_gen = nx.shortest_simple_paths(g, source, target)
+        
+        for i in range(max_paths_to_return):
+            try:
+                nodes = next(paths_gen)
+                paths.append(self.nodes_to_links(nodes))
+            except StopIteration as e:
+                print(F'Maximum number of shortest paths reached at {i}.')
+                break
+
+        return paths, paths_gen
+
+    def nodes_to_links(self, nodes):
+        """Converts path of nodes into path of links.
+
+        Parameters
+        ----------
+        nodes : list of str
+            List with nodes in the path
+
+        Returns
+        -------
+        list of str
+            List with links in the path
+        """
+
+        links = []
+        for i in range(len(nodes) - 1):
+            link = self.links_gis.loc[(self.links_gis.start_node == nodes[i]) & (self.links_gis.end_node == nodes[i + 1])]
+            if len(link) > 0:
+                links += list(link.index)
+            else:
+                link = self.links_gis.loc[(self.links_gis.start_node == nodes[i + 1]) & (self.links_gis.end_node == nodes[i])]
+                links += list(link.index)
+        
+        return links
+
+    def estimate_losses(self, service_lines_shp: gpd.GeoDataFrame, results: pd.DataFrame):
+        """Estimate unnavoidable annual real losses (URAL) using IWA's formula.
+
+        Parameters
+        ----------
+        service_lines_shp : gpd.GeoDataFrame
+            Shapefile with service lines
+        results : pd.DataFrame
+            WNTR simulation
+
+        Returns
+        -------
+        dictionary
+            Leaks by pressure zone and system-wide in gallons.
+
+        Raises
+        ------
+        RuntimeError
+            GIS not initialized.
+        """
+
+        #TODO: MOVE TO METRICS
+
+        if self._links_gis is None:
+            raise RuntimeError('GIS not initialized.')
+
+        self._service_lines = service_lines_shp
+
+        losses_pressure_zones = {'pressure_zone': [], 'leak_est': []}
+        if self._gis_pzone is not None:
+            for pz in self._nodes_gis.pzone.unique():
+                if pz is not None:
+                    links = self._links_gis.loc[self._links_gis.pzone == pz]
+                    service_lines = gpd.sjoin(
+                        self._service_lines, 
+                        self._gis_pzone.loc[self._gis_pzone.NAME == pz], 
+                        op='intersects'
+                    )
+
+                    losses = self._loss_estimate(results, links, service_lines)
+                    losses_pressure_zones['pressure_zone'].append(pz) 
+                    losses_pressure_zones['leak_est'].append(losses)
+
+            return pd.DataFrame.from_dict(losses_pressure_zones).set_index('pressure_zone')
+        else:
+            return pd.DataFrame(
+                data=[self._loss_estimate(
+                    results, 
+                    self._links_gis, 
+                    self._service_lines
+                )], 
+                columns=('system-wide',)
+            )
+
+    def _loss_estimate(self, results: pd.DataFrame, links: gpd.GeoDataFrame, 
+            service_lines: gpd.GeoDataFrame) -> float:
+        """Used the IWA's formula to calculate the unnavoidable annual real water losses.
+
+        Parameters
+        ----------
+        results : pd.DataFrame
+            WNTR simulation results
+        links : gpd.GeoDataFrame
+            Links GIS
+        service_lines : gpd.GeoDataFrame
+            Service lines GIS
+
+        Returns
+        -------
+        float
+            Losses in gallons.
+        """
+
+        #TODO: REMOVE MAGIC NUMBERS
+        length_mains = links.geometry.apply(lambda x: x.length).sum() / 1000
+        n_connections = len(service_lines)
+        length_serv_line = service_lines.geometry.apply(lambda x: x.length).sum() / 1000
+        ave_press = results.node['pressure'].mean()
+        ave_press = ave_press.loc[ave_press > 0].mean()
+        losses = (6.57 * length_mains + 0.256 * n_connections + 9.13 * length_serv_line) * ave_press / 3.79
+
+        return losses
+
+    def fix_overlapping_links_and_nodes(self, with_control=False) -> None:
+        #TODO: DOCUMENT THIS FUNCTION
+        self.fix_overlapping_junctions(with_control=with_control)
+        self.fix_overlapping_pipes(with_control=with_control)
+
+    def fix_overlapping_pipes(self, with_control=False) -> None:
+        #TODO: DOCUMENT THIS FUNCTION
+        if self._links_gis is None:
+            raise RuntimeError('GIS must be initialized for overlapping lines to be removed. Run wn.create_model_gis(<crs>).')
+
+        links_gis_buff = deepcopy(self._links_gis)
+        links_gis_buff['geometry'] = links_gis_buff.geometry.buffer(JUNC_PIPE_OVERLAY_THRESHOLD)
+        def get_overlap(x): 
+            return [ix for ix, v in gpd.clip(self._links_gis, x.geometry).length.items() if v > 1]
+        tqdm.pandas(desc="Progress")
+        links_in_buffer = links_gis_buff.progress_apply(get_overlap, axis=1)
+        potentially_dupplicated = links_in_buffer.apply(lambda x: len(x) > 1)
+        potentially_dupplicated = potentially_dupplicated.loc[potentially_dupplicated].index
+
+        graph = self.get_graph().to_undirected()
+        dead_ends = [k for k, v in graph.degree() if (v == 1) and (k in self.junction_name_list)]
+
+        print('Potentially duplicated pipes as dead ends')
+        dup_dead_ends = []
+        for pipe_id in potentially_dupplicated:
+            pipe = self.get_link(pipe_id)
+            if (pipe.start_node_name in dead_ends) or (pipe.end_node_name in dead_ends):
+                dup_dead_ends.append(pipe_id)
+
+        merged_pipes = self._merge_overlapping_dead_ends(links_gis_buff, dead_ends, dup_dead_ends)
+
+        artificial_dead_ends = set(dup_dead_ends) - set(merged_pipes)
+        
+        self.remove_orphan_nodes(with_control=with_control)
+
+    def remove_orphan_nodes(self, with_control=False) -> None:
+        """Remove orphan nodes
+
+        Parameters
+        ----------
+        with_control : bool, optional
+            Remove controls associated with orphan nodes, by default False
+        """
+        graph = self.get_graph().to_undirected()
+        for on in nx.isolates(graph):
+            self.remove_node(on, with_control=with_control)
+
+        return
+
+    def _merge_overlapping_dead_ends(self, links_gis_buff, dead_ends, dup_dead_ends) -> list:
+        #TODO: DOCUMENT THIS FUNCTION
+        merged_pipes = []
+        for pipe1, pipe2 in combinations(dup_dead_ends, 2):
+            if len(links_gis_buff.loc[[pipe1]].overlay(links_gis_buff.loc[[pipe2]], how='intersection')) > 0:
+                p1 = self.get_link(pipe1)
+                p2 = self.get_link(pipe2)
+
+                base_pipe = p1 if p1.length > p2.length else p2
+
+                p1_start_node_name = p1.start_node_name
+                p2_start_node_name = p2.start_node_name
+
+                new_start_node_name = p1_start_node_name if p1_start_node_name not in dead_ends else p1.end_node_name
+                new_end_node_name = p2_start_node_name if p2_start_node_name not in dead_ends else p2.end_node_name
+
+                vertices = [] 
+                vertices += p1.vertices if new_start_node_name == p1_start_node_name else p1.vertices[::-1] 
+                vertices += p2.vertices[::-1] if new_end_node_name == p2_start_node_name else p2.vertices  #TODO: REVERSE AND MERGE VERTICES AS DEPENDING ON START AND END NODES.
+
+                new_pipe_name=base_pipe.name
+                new_pipe_start_node_name=new_start_node_name
+                new_pipe_end_node_name=new_end_node_name
+                new_pipe_diameter=base_pipe.diameter
+                new_pipe_roughness=base_pipe.roughness
+                new_pipe_initial_status=base_pipe.initial_status
+                new_pipe_check_valve=base_pipe.check_valve
+
+                self.remove_link(p1.name)
+                self.remove_link(p2.name)
+
+                self.add_pipe(
+                    name=new_pipe_name, 
+                    start_node_name=new_pipe_start_node_name, 
+                    end_node_name=new_pipe_end_node_name, 
+                    diameter=new_pipe_diameter, 
+                    roughness=new_pipe_roughness, 
+                    initial_status=new_pipe_initial_status, 
+                    check_valve=new_pipe_check_valve,
+                    vertices=vertices
+                )
+
+                self.get_link(base_pipe.name).length = self._links_gis.loc[[base_pipe.name]].length.values[0] * FT_TO_M
+
+                print(f'Pipes {pipe1} and {pipe2} were merged for being overlapping dead ends.')
+
+                merged_pipes += [pipe1, pipe2]
+
+        return merged_pipes
+
+    def fix_overlapping_junctions(self, with_control=False) -> None:
+        #TODO: DOCUMENT THIS FUNCTION
+        juncs_buff = self._nodes_gis.buffer(JUNC_PIPE_OVERLAY_THRESHOLD)
+        juncs_buff = gpd.GeoDataFrame(geometry=juncs_buff)
+        
+        juncs_sjoin = gpd.sjoin(self._nodes_gis, juncs_buff)
+        unique, count = np.unique(juncs_sjoin.index, return_counts=True)
+        overlapping_juncs = [j for j in unique[count > 1] if '-' not in j]
+
+        for junc in overlapping_juncs:
+            keep = []
+            remove = []
+            for j in juncs_sjoin.loc[junc].index_right:
+                if j in self.junction_name_list:
+                    if self.get_node(j).base_demand > 0:
+                        keep.append(j)
+                    else:
+                        remove.append(j)
+            if len(keep) > 1:
+                raise RuntimeError('Overlapping junctions with demands found. Solution to dealing with those not yet implemented.')
+            elif len(keep) == 1:
+                for j in remove:
+                    links_dup_start = self.query_link_attribute('start_node_name', lambda x, y: x == y, j)
+                    for l in links_dup_start.index:
+                        if self.get_link(l).link_type == 'Pipe':
+                            self._fix_duplicate_junction(l, start_node_name=keep[0])
+                        else:
+                            print(f'Link {l} is connected to nodes with overlaps but since it is not a pipe it cannot be fixed.')
+
+                    links_dup_end = self.query_link_attribute('end_node_name', lambda x, y: x == y, j)
+                    for l in links_dup_end.index:
+                        if self.get_link(l).link_type == 'Pipe':
+                            self._fix_duplicate_junction(l, end_node_name=keep[0])
+                        else:
+                            print(f'Link {l} is connected to nodes with overlaps but since it is not a pipe it cannot be fixed.')
+                for j in remove:
+                    self.remove_node(j, with_control=with_control)
+                    print(f'None {j} removed as duplicate.')
+            else:
+                pass
+
+    def _fix_duplicate_junction(self, l: str, start_node_name: str=None, 
+            end_node_name: str=None) -> None:
+        """Fixes a duplicate junction by deleting a pipe connecting to the
+        duplicate junction and recreating it connecting to the correct junction.
+
+        Parameters
+        ----------
+        l : str
+            Link ID
+        start_node_name : str, optional
+            Junction to be kept, if at the start of the link, by default None
+        end_node_name : str, optional
+            Junction to be kept, if at the end of the link, by default None
+        """
+        
+        name=self.get_link(l).name
+        start_node_name=start_node_name if start_node_name is not None else self.get_link(l).start_node_name
+        end_node_name=end_node_name if end_node_name is not None else self.get_link(l).end_node_name
+        length=self.get_link(l).length
+        diameter=self.get_link(l).diameter
+        roughness=self.get_link(l).roughness
+        minor_loss=self.get_link(l).minor_loss
+        initial_status=self.get_link(l).initial_status
+        check_valve=self.get_link(l).check_valve
+        vertices=self.get_link(l).vertices
+
+        if start_node_name == end_node_name:
+            junc = self.get_node(end_node_name)
+            end_node_name  += '_2'
+            self.add_junction(
+                end_node_name, 
+                elevation=junc.elevation, 
+                coordinates=junc.coordinates
+            )
+            self.add_pipe(start_node_name + '_ghost', start_node_name, 
+                end_node_name, length=0.1, diameter=4, roughness=200)
+                            
+        self.remove_link(l)
+        self.add_pipe(
+            name=name,
+            start_node_name=start_node_name,
+            end_node_name=end_node_name,
+            length=length,
+            diameter=diameter,
+            roughness=roughness,
+            minor_loss=minor_loss,
+            initial_status=initial_status,
+            check_valve=check_valve,
+        )
+        self.get_link(l).vertices = vertices
+
+    def find_disconnected_subnetworks(self, delete_small_subnetworks=False, n_nodes_del_threshold=10):
+        graph = self.get_graph().to_undirected()
+        sub_networks = [{'graph': graph.subgraph(c), 'nodes': None, 'links': []} for c in nx.connected_components(graph)]
+        for sub_graph in sub_networks:
+            sub_networks['nodes'] = sub_graph['graph'].nodes
+            for n in sub_networks['nodes']:
+                links_with_node = list(self.query_link_attribute('start_node_name', lambda x, y: x == y, n).index)
+                links_with_node += list(self.query_link_attribute('end_node_name', lambda x, y: x == y, n).index)
+                sub_networks['links'] += links_with_node
+                if delete_small_subnetworks and sub_graph.number_of_nodes() < n_nodes_del_threshold:
+                    for link in links_with_node:
+                        self.remove_link(link)
+                    self.remove_node(n)
+
+        return sub_networks
+
+    @property
+    def junctions_pressure_zone(self):
+        return self._junctions_pressure_zone
+
 
 class PatternRegistry(Registry):
     """A registry for patterns."""

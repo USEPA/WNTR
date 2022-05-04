@@ -125,6 +125,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
+        self._pressure_zone = None
         self._leak = False
         self._leak_status = False
         self._leak_area = 0.0
@@ -138,7 +139,6 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
         self._is_isolated = False
-        self._pressure_zone = None
 
     def _compare(self, other):
         """
@@ -377,6 +377,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._initial_setting = None
         self._vertices = []
         self._tag = None
+        self._pressure_zone = None
         # Model state variables
         self._user_status = LinkStatus.Opened
         self._internal_status = LinkStatus.Active
@@ -532,6 +533,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @tag.setter
     def tag(self, tag):
         self._tag = tag
+
+    @property
+    def pressure_zone(self):
+        """str: Pressure zone where link is. Links spanning two or more pressure zones are considered in."""
+        return self._pressure_zone
+    @pressure_zone.setter
+    def pressure_zone(self, pressure_zone):
+        self._pressure_zone = pressure_zone
         
     @property
     def vertices(self):
