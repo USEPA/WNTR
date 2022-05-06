@@ -1597,7 +1597,7 @@ class InpFile(object):
                 elif key == 'SPECIFIC':
                     opts.hydraulic.specific_gravity = float(words[2])
                 elif key == 'TRIALS':
-                    opts.hydraulic.trials = int(words[1])
+                    opts.hydraulic.trials = int(float(words[1]))
                 elif key == 'ACCURACY':
                     opts.hydraulic.accuracy = float(words[1])
                 elif key == 'HEADERROR':
