@@ -1756,7 +1756,7 @@ class ControlAction(BaseControlAction):
         if target_obj is None:
             raise ValueError('target_obj is None in ControlAction::__init__. A valid target_obj is needed.')
         if not hasattr(target_obj, attribute):
-            raise ValueError('attribute given in ControlAction::__init__ is not valid for target_obj')
+            raise ValueError('attribute given in ControlAction::__init__ is not valid for {}'.format(target_obj))
 
         self._target_obj = target_obj
         self._attribute = attribute

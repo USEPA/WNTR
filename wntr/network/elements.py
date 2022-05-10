@@ -118,7 +118,7 @@ class Junction(Node):
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
         
     def __repr__(self):
-        return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
+        return "<Junction '{}', elevation={}, demand_timeseries_list={}, pressure_zone={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list), self.pressure_zone)
 
     def _compare(self, other):
         if not super(Junction, self)._compare(other):

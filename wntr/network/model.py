@@ -1789,7 +1789,7 @@ class WaterNetworkModel(AbstractModel):
 
         return
 
-    def create_model_gis(self, crs: pyproj.crs.crs.CRS=None, pressure_zone_layer: gpd.GeoDataFrame=None) -> None:
+    def create_model_gis(self, crs: pyproj.crs.crs.CRS=None, pressure_zone_layer: gpd.GeoDataFrame=None, assign_missing_elevation: bool=True) -> None:
         """Initializes the model's GIS with the coordinates specified in the EPANET file and either a specified coordinate system or the same coordinate system of the pressure zones shapefile, if the latter is passed to the function.
 
         Parameters
@@ -1851,6 +1851,10 @@ class WaterNetworkModel(AbstractModel):
                 pattern = ''
             return pattern  # colors[pattern]
         self._nodes_gis['pattern'] = self._nodes_gis.apply(get_pattern, axis=1)
+        self._nodes_gis['elevation'] = 0
+        self._nodes_gis['elevation'] = self.query_node_attribute('elevation', np.greater, 0)
+        if assign_missing_elevation:
+            self.assign_elevation()
 
         # Create gis of pipes from EPANET
         link_names = self.link_name_list
@@ -1902,6 +1906,20 @@ class WaterNetworkModel(AbstractModel):
 
         return links_gis
 
+    def assign_highest_diameter_link(self) -> None:
+        """Registers in each node the diameter of the largest pipe connected to it.
+        """
+        for link_name in self.link_name_list:
+            link = self.get_link(link_name)
+            if link.link_type == 'Pipe':
+                start_node_name = link.start_node_name
+                end_node_name = link.end_node_name
+                start_diameter = self.get_node(start_node_name).highest_link_diameter 
+                end_diameter = self.get_node(end_node_name).highest_link_diameter 
+
+                self.get_node(start_node_name).highest_link_diameter = link.diameter if start_diameter is None else max(start_diameter, link.diameter)
+                self.get_node(end_node_name).highest_link_diameter = link.diameter if end_diameter is None else max(end_diameter, link.diameter)
+
     def _assign_pressure_zones(self) -> None:
         """Assign pressure zone to nodes in EPANET GIS.
         """
@@ -1913,13 +1931,13 @@ class WaterNetworkModel(AbstractModel):
             for n in self._nodes_gis.loc[in_pz].index:
                 self.get_node(n).pressure_zone = pz.NAME
 
+            self._junctions_pressure_zone[pz.NAME] = list(in_pz[in_pz].index)
+
             # Assign pressure zone to links
             in_pz = self._links_gis.geometry.within(pz.geometry)
             self._links_gis.loc[in_pz, 'pzone'] = pz.NAME
             for n in self._links_gis.loc[in_pz].index:
                 self.get_link(n).pressure_zone = pz.NAME
-
-            self._junctions_pressure_zone[pz.NAME] = list(in_pz[in_pz].index)
 
         return
 
@@ -1966,7 +1984,6 @@ class WaterNetworkModel(AbstractModel):
         elif dma_demand_mult is not None:
             for k in self.junction_name_list:
                 self.get_node(k).demand_timeseries_list[0].base_value *= dma_demand_mult[self._nodes_gis[k]]
-            
         else:
             raise ArgumentError('Either new_demands_junctions, new_demands_dmas, all_junctions_demand_mult, or dma_demand_mult must be provided.')
 
@@ -2033,6 +2050,7 @@ class WaterNetworkModel(AbstractModel):
             if elev > 0:
                 self.get_node(junc).elevation = elev
                 print(f'Assigned elevation of {elev:.2f} ({elev / 0.3048:.2f} ft) to junction {junc}.')
+                self._nodes_gis.loc[junc, 'elevation'] = elev
             else:
                 print(f'Unable to assign elevation to junction {junc}.')
 
@@ -2388,14 +2406,15 @@ class WaterNetworkModel(AbstractModel):
 
     def find_disconnected_subnetworks(self, delete_small_subnetworks=False, n_nodes_del_threshold=10):
         graph = self.get_graph().to_undirected()
-        sub_networks = [{'graph': graph.subgraph(c), 'nodes': None, 'links': []} for c in nx.connected_components(graph)]
+        sub_networks = [{'graph': graph.subgraph(c), 'nodes': None} for c in nx.connected_components(graph)]
         for sub_graph in sub_networks:
-            sub_networks['nodes'] = sub_graph['graph'].nodes
-            for n in sub_networks['nodes']:
-                links_with_node = list(self.query_link_attribute('start_node_name', lambda x, y: x == y, n).index)
-                links_with_node += list(self.query_link_attribute('end_node_name', lambda x, y: x == y, n).index)
-                sub_networks['links'] += links_with_node
-                if delete_small_subnetworks and sub_graph.number_of_nodes() < n_nodes_del_threshold:
+            sub_graph['nodes'] = sub_graph['graph'].nodes
+
+            if delete_small_subnetworks and sub_graph['graph'].number_of_nodes() < n_nodes_del_threshold:
+                for n in sub_graph['nodes']:
+                    links_with_node = list(self.query_link_attribute('start_node_name', lambda x, y: x == y, n).index)
+                    links_with_node += list(self.query_link_attribute('end_node_name', lambda x, y: x == y, n).index)
+
                     for link in links_with_node:
                         self.remove_link(link)
                     self.remove_node(n)

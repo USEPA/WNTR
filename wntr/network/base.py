@@ -139,6 +139,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
         self._is_isolated = False
+        self._highest_link_diameter = None
 
     def _compare(self, other):
         """
@@ -188,6 +189,14 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def pressure(self):
         """float : (read-only) the current simulation pressure at the node"""
         return self._pressure
+
+    @property
+    def highest_link_diameter(self):
+        """float: diameter of the link with the highest diameter connected to it"""
+        return self._highest_link_diameter
+    @highest_link_diameter.setter
+    def highest_link_diameter(self, value):
+        self._highest_link_diameter = value
     
     @property
     def pressure_zone(self):
