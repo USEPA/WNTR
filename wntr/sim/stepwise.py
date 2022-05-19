@@ -437,39 +437,40 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     def _copy_results_object(self):
         if len(self._temp_index) == 0:
             return
-        while (max(self._temp_index) > self._results.node['head'].index.max()):
-            # add more chunks if max index exceeded
-            last_index = self._results.node['head'].index.max()
-            next_start = last_index + self._report_timestep
-            next_end = next_start + self._chunk_size * self._report_timestep + 1
-            nnodes = self._wn.num_nodes
-            nlinks = self._wn.num_links
-            index = np.arange(next_start, next_end, self._report_timestep)
-            dfna = pd.DataFrame(np.nan * np.zeros([len(index), nnodes]), index=index, columns=self._results.node['head'].columns)
-            for _, _, name, _ in self._node_attributes:
-                df2 = pd.concat([self._results.node[name], dfna])
-                self._results.node[name] = df2
-            dfla = pd.DataFrame(np.nan * np.zeros([len(index), nlinks]), index=index, columns=self._results.link['flowrate'].columns)
-            for _, _, name, _ in self._link_attributes:
-                df2 = pd.concat([self._results.link[name], dfla])
-                self._results.link[name] = df2
-        if len(self._temp_index) == 1:
-            self._temp_index = self._temp_index[0]
+        # while (max(self._temp_index) > self._results.node['head'].index.max()):
+        #     # add more chunks if max index exceeded
+        #     last_index = self._results.node['head'].index.max()
+        #     next_start = last_index + self._report_timestep
+        #     next_end = next_start + self._chunk_size * self._report_timestep + 1
+        #     nnodes = self._wn.num_nodes
+        #     nlinks = self._wn.num_links
+        #     index = np.arange(next_start, next_end, self._report_timestep)
+        #     dfna = pd.DataFrame(np.nan * np.zeros([len(index), nnodes]), index=index, columns=self._results.node['head'].columns)
+        #     for _, _, name, _ in self._node_attributes:
+        #         df2 = pd.concat([self._results.node[name], dfna])
+        #         self._results.node[name] = df2
+        #     dfla = pd.DataFrame(np.nan * np.zeros([len(index), nlinks]), index=index, columns=self._results.link['flowrate'].columns)
+        #     for _, _, name, _ in self._link_attributes:
+        #         df2 = pd.concat([self._results.link[name], dfla])
+        #         self._results.link[name] = df2
+        # if len(self._temp_index) == 1:
+        #     self._temp_index = self._temp_index[0]
         for _, _, name, f in self._node_attributes:
             df2 = np.array(self._temp_node_report_lines[name])
             if f is not None:
                 df2 = f(self._flow_units, df2, mass_units=self._mass_units)
-            self._results.node[name].loc[self._temp_index, :] = df2
+            self._results.node[name] = pd.DataFrame(df2,index=self._temp_index, columns=self._wn.node_name_list ) #.loc[self._temp_index, :] = df2
             self._temp_node_report_lines[name] = list()
         for _, _, name, f in self._link_attributes:
             df2 = np.array(self._temp_link_report_lines[name])
             if f is not None:
                 df2 = f(self._flow_units, df2, mass_units=self._mass_units)
-            self._results.link[name].loc[self._temp_index, :] = df2
+            self._results.link[name] = pd.DataFrame(df2,index=self._temp_index,columns=self._wn.link_name_list)  #.loc[self._temp_index, :] = df2
             self._temp_link_report_lines[name] = list()
         self._temp_index = list()
 
     def _setup_results_object(self, results_size):
+        results_size = 1
         self._results = SimulationResults()
         self._results.node = dict()
         self._results.link = dict()
@@ -541,7 +542,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             setattr(link, attr, value)
 
     def initialize(
-        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=None, 
+        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=1, 
     ):
         # TODO: change chunk size to 1 day in report steps, only input is estimated number of days in simulation.
         # TODO: initial chunks based on wn.options.time.duration (in days), change the name to "estimated_days_in_simulation"
