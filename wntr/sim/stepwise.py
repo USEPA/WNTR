@@ -326,8 +326,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         link_num = self._en.ENgetlinkindex(link_name)
         self._en.ENsetlinkvalue(link_num, EN.STATUS, value)
         if link_name in self._overrides:
-            control_number = self._overrides[link_name]
-            self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
+            # FIXME: handle overrides
+            controls = self._overrides[link_name]
+            for ctrl_data in controls:
+                self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
 
     def set_link_setting(self, link_name: str, value: float, override=True):
         """
@@ -357,8 +359,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         link_num = self._en.ENgetlinkindex(link_name)
         self._en.ENsetlinkvalue(link_num, EN.SETTING, value)
         if link_name in self._overrides:
-            control_number = self._overrides[link_name]
-            self._en.ENsetcontrol(control_number, EN.LOWLEVEL, link_num, value, 1, 1e30)
+            # FIXME: handle overrides
+            controls = self._overrides[link_name]
+            for ctrl_data in controls:
+                self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
 
     def release_override(self, link_name: str):
         """
@@ -380,8 +384,10 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
         if link_name in self._overrides.keys():
-            control_number = self._overrides[link_name]
-            self._en.ENsetcontrol(control_number, EN.HILEVEL, link_num, 1, 1, 1e30)
+            # FIXME: handle overrides
+            controls = self._overrides[link_name]
+            for ctrl_data in controls:
+                self._en.ENsetcontrol(ctrl_data['index'], ctrl_data['type'], ctrl_data['linkindex'], ctrl_data['setting'], ctrl_data['nodeindex'], ctrl_data['level'])
         else:
             w = SimulatorWarning("No override set on the specified link")
             warnings.warn(w)
@@ -495,12 +501,28 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             for obj in ctrl.requires():
                 if isinstance(obj, Link):
                     require_override.add(obj)
+        numctrls = self._en.ENgetcount(EN.CONTROLCOUNT)
+        link_indexes = dict()
         for link in require_override:
             link_name = link.name
             link_num = self._en.ENgetlinkindex(link_name)
-            if link_name not in self._overrides:
+            link_indexes[link_num] = link_name
+            self._overrides[link_name] = list()
+        for i in range(1, numctrls+1):
+            print('Control {}'.format(i))
+            ctrl_data = self._en.ENgetcontrol(i)
+            print('Control data', ctrl_data)
+            if ctrl_data['linkindex'] not in link_indexes:
+                warnings.warn('Found a control that isn\' in the water network model!')
+            link_name = link_indexes[ctrl_data['linkindex']]
+            self._overrides[link_name].append(ctrl_data)
+        for link in require_override:
+            link_name = link.name
+            link_num = self._en.ENgetlinkindex(link_name)
+            if len(self._overrides[link_name]) < 1:
                 control_number = self._en.ENaddcontrol(EN.HILEVEL, link_num, 1, 1, 1e30)
-                self._overrides[link_name] = control_number
+                ctrl_data = self._en.ENgetcontrol(control_number)
+                self._overrides[link_name].append(ctrl_data)
 
     def _save_intermediate_values(self):
         for name, vals in self._node_sensors.items():
@@ -569,7 +591,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._chunk_size = int(np.ceil(86400 / self._wn.options.time.report_timestep))
         initial_chunks = estimated_results_size if estimated_results_size is not None else orig_duration //86400 + 1
 
-        enData.ENsettimeparam(EN.DURATION, int(2^30))
+        enData.ENsettimeparam(EN.DURATION, int(2**30))
         self._t = 0
         self._report_timestep = enData.ENgettimeparam(EN.REPORTSTEP)
         self._report_start = enData.ENgettimeparam(EN.REPORTSTART)

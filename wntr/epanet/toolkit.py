@@ -761,6 +761,42 @@ class ENepanet:
         self._error()
         return lValue.value
 
+    def ENgetcontrol(self, iIndex: int):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        """
+        iType = ctypes.c_int()
+        iLinkIndex = ctypes.c_int()
+        dSetting = ctypes.c_double()
+        iNodeIndex = ctypes.c_int()
+        dLevel = ctypes.c_double()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getcontrol(
+                self._project, 
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        else:
+            self.errcode = self.ENlib.ENgetcontrol(
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        self._error()
+        return dict(index=iIndex, type=iType.value, linkindex=iLinkIndex.value, setting=dSetting.value, nodeindex=iNodeIndex.value, level=dLevel.value)
+
     def ENsetcontrol(self, iIndex: int, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float):
         """
         Add a new simple control
