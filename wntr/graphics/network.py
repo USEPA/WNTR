@@ -242,7 +242,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     
     if filename:
         plt.savefig(filename)
-        
+    
+    plt.show(block=False)
+    
     return ax
 
 def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Value', title=None,

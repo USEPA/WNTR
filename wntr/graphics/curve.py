@@ -68,6 +68,8 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     ax.set_ylabel(ylabel)
     ax.legend()
     
+    plt.show(block=False)
+    
     return ax
 
 def plot_pump_curve(pump, title='Pump curve', 
@@ -142,6 +144,8 @@ def plot_pump_curve(pump, title='Pump curve',
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.legend()
+    
+    plt.show(block=False)
     
     return ax
 
@@ -235,5 +239,7 @@ def plot_tank_volume_curve(tank, title='Tank volume curve',
     ax[1].set_xlim(xlim)
     ax[1].set_ylim(ylim)
     ax[1].legend()
+    
+    plt.show(block=False)
     
     return ax
