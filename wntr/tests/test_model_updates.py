@@ -33,6 +33,7 @@ def test_create_model_gis():
 
     assert wn.get_node('225').pressure_zone == 'PZ1'
     assert wn.get_node('15').pressure_zone is None
+    assert len(wn.nodes_gis) == len(wn.node_name_list)
 
 def test_assign_elevation():
     inp_file = join(ex_datadir, 'Net4.inp')

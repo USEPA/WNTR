@@ -63,7 +63,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
-                version=2.2, convergence_error=False, clean_temp=False):
+                version=2.2, convergence_error=False, clean_temp='none'):
 
         """
         Run the EPANET simulator.
@@ -98,6 +98,10 @@ class EpanetSimulator(WaterNetworkSimulator):
             simulation does not converge. If convergence_error is False, partial results are returned, 
             a warning will be issued, and results.error_code will be set to 0
             if the simulation does not converge.  Default = False.
+        clean_temp: str (optional)
+            Whether to delete EPANET files. If "all", delete the inp file, the results binary, and the report. 
+            If "results", delete only results binary and report (leaves the inp file). If "none", none of 
+            the three will be deleted.
         """
         if isinstance(version, str):
             version = float(version)
@@ -106,47 +110,55 @@ class EpanetSimulator(WaterNetworkSimulator):
             file_prefix = f'temp{np.random.randint(1, high=1e9)}.inp'
             clean_temp = True
 
-        inpfile = file_prefix + '.inp'
-        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
-        enData = wntr.epanet.toolkit.ENepanet(version=version)
-        rptfile = file_prefix + '.rpt'
-        outfile = file_prefix + '.bin'
-        
-        if hydfile is None:
-            hydfile = file_prefix + '.hyd'
-        enData.ENopen(inpfile, rptfile, outfile)
-        if use_hyd:
-            enData.ENusehydfile(hydfile)
-            logger.debug('Loaded hydraulics')
-        else:
-            enData.ENsolveH()
-            logger.debug('Solved hydraulics')
-        if save_hyd:
-            enData.ENsavehydfile(hydfile)
-            logger.debug('Saved hydraulics')
-        enData.ENsolveQ()
-        logger.debug('Solved quality')
-        enData.ENreport()
-        logger.debug('Ran quality')
-        enData.ENclose()
-        logger.debug('Completed run')
-        #os.sys.stderr.write('Finished Closing\n')            
-        
-        results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+        try:
+            inpfile = file_prefix + '.inp'
+            self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
+            enData = wntr.epanet.toolkit.ENepanet(version=version)
+            rptfile = file_prefix + '.rpt'
+            outfile = file_prefix + '.bin'
+            
+            if hydfile is None:
+                hydfile = file_prefix + '.hyd'
+            enData.ENopen(inpfile, rptfile, outfile)
+            if use_hyd:
+                enData.ENusehydfile(hydfile)
+                logger.debug('Loaded hydraulics')
+            else:
+                enData.ENsolveH()
+                logger.debug('Solved hydraulics')
+            if save_hyd:
+                enData.ENsavehydfile(hydfile)
+                logger.debug('Saved hydraulics')
+            enData.ENsolveQ()
+            logger.debug('Solved quality')
+            enData.ENreport()
+            logger.debug('Ran quality')
+            enData.ENclose()
+            logger.debug('Completed run')
+            #os.sys.stderr.write('Finished Closing\n')            
+            
+            results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+            
+            return results
 
-        if clean_temp:
-            try:
-                os.remove(inpfile)
-            except:
-                pass
-            try:
-                os.remove(rptfile)
-            except:
-                pass
-            try:
-                os.remove(outfile)
-            except:
-                pass
+        except Exception as e:
+            print(e)
+            return None
 
-        return results
+        finally:
+            if clean_temp == 'all':
+                try:
+                    os.remove(inpfile)
+                except:
+                    pass
+            if clean_temp in ['all', 'results']:
+                try:
+                    os.remove(rptfile)
+                except:
+                    pass
+                try:
+                    os.remove(outfile)
+                except:
+                    pass
+
 

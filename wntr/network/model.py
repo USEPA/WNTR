@@ -331,10 +331,16 @@ class WaterNetworkModel(AbstractModel):
     @property
     def nodes_gis(self) -> gpd.GeoDataFrame:
         return self._nodes_gis
+    @nodes_gis.setter
+    def nodes_gis(self, value):
+        self._nodes_gis = value
 
     @property
     def links_gis(self) -> gpd.GeoDataFrame:
         return self._links_gis
+    @links_gis.setter
+    def links_gis(self, value):
+        self._links_gis = value
 
     @property
     def hydrants_gis(self) -> gpd.GeoDataFrame:
@@ -651,6 +657,8 @@ class WaterNetworkModel(AbstractModel):
                         x.append(control_name)
                 for i in x:
                     self.remove_control(i)
+                if self._nodes_gis is not None:
+                    self._nodes_gis.drop(index=name)
             else:
                 used_controls = []
                 for control_name, control in self._controls.items():
@@ -658,6 +666,8 @@ class WaterNetworkModel(AbstractModel):
                         used_controls.append(control_name)
                 if len(used_controls) > 0:
                     raise RuntimeError('Cannot remove node {0} without first removing controls/rules {1}'.format(name, used_controls))
+                if self._nodes_gis is not None:
+                    self._nodes_gis.drop(index=name)
         self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=False, force=False):
@@ -672,6 +682,8 @@ class WaterNetworkModel(AbstractModel):
                         x.append(control_name)
                 for i in x:
                     self.remove_control(i)
+                if self._links_gis is not None:
+                    self._links_gis.drop(index=name)
             else:
                 used_controls = []
                 for control_name, control in self._controls.items():
@@ -679,10 +691,9 @@ class WaterNetworkModel(AbstractModel):
                         used_controls.append(control_name)
                 if len(used_controls) > 0:
                     raise RuntimeError('Cannot remove link {0} without first removing controls/rules {1}'.format(name, used_controls))
+                if self._links_gis is not None:
+                    self._links_gis.drop(index=name)
         self._link_reg.__delitem__(name)
-
-        if self._links_gis is not None:
-            self._links_gis = self._links_gis.drop(index=[name])
 
     def remove_pattern(self, name): 
         """Removes a pattern from the water network model"""
