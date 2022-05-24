@@ -658,7 +658,7 @@ class WaterNetworkModel(AbstractModel):
                 for i in x:
                     self.remove_control(i)
                 if self._nodes_gis is not None:
-                    self._nodes_gis.drop(index=name)
+                    self._nodes_gis = self._nodes_gis.drop(index=name)
             else:
                 used_controls = []
                 for control_name, control in self._controls.items():
@@ -667,7 +667,7 @@ class WaterNetworkModel(AbstractModel):
                 if len(used_controls) > 0:
                     raise RuntimeError('Cannot remove node {0} without first removing controls/rules {1}'.format(name, used_controls))
                 if self._nodes_gis is not None:
-                    self._nodes_gis.drop(index=name)
+                    self._nodes_gis = self._nodes_gis.drop(index=name)
         self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=False, force=False):
@@ -683,7 +683,7 @@ class WaterNetworkModel(AbstractModel):
                 for i in x:
                     self.remove_control(i)
                 if self._links_gis is not None:
-                    self._links_gis.drop(index=name)
+                    self._links_gis = self._links_gis.drop(index=name)
             else:
                 used_controls = []
                 for control_name, control in self._controls.items():
@@ -692,7 +692,7 @@ class WaterNetworkModel(AbstractModel):
                 if len(used_controls) > 0:
                     raise RuntimeError('Cannot remove link {0} without first removing controls/rules {1}'.format(name, used_controls))
                 if self._links_gis is not None:
-                    self._links_gis.drop(index=name)
+                    self._links_gis = self._links_gis.drop(index=name)
         self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
