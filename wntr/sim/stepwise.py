@@ -325,11 +325,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
         self._en.ENsetlinkvalue(link_num, EN.STATUS, value)
-        if link_name in self._overrides:
-            # FIXME: handle overrides
-            controls = self._overrides[link_name]
-            for ctrl_data in controls:
-                self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
+        # if link_name in self._overrides:
+        #     # FIXME: handle overrides
+        #     controls = self._overrides[link_name]
+        #     for ctrl_data in controls:
+        #         self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
 
     def set_link_setting(self, link_name: str, value: float, override=True):
         """
@@ -358,11 +358,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
         self._en.ENsetlinkvalue(link_num, EN.SETTING, value)
-        if link_name in self._overrides:
-            # FIXME: handle overrides
-            controls = self._overrides[link_name]
-            for ctrl_data in controls:
-                self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
+        # if link_name in self._overrides:
+        #     # FIXME: handle overrides
+        #     controls = self._overrides[link_name]
+        #     for ctrl_data in controls:
+        #         self._en.ENsetcontrol(ctrl_data['index'], EN.LOWLEVEL, ctrl_data['linkindex'], value, ctrl_data['nodeindex'], 1e30)
 
     def release_override(self, link_name: str):
         """
@@ -383,14 +383,14 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             logger.error(w)
             raise w
         link_num = self._en.ENgetlinkindex(link_name)
-        if link_name in self._overrides.keys():
-            # FIXME: handle overrides
-            controls = self._overrides[link_name]
-            for ctrl_data in controls:
-                self._en.ENsetcontrol(ctrl_data['index'], ctrl_data['type'], ctrl_data['linkindex'], ctrl_data['setting'], ctrl_data['nodeindex'], ctrl_data['level'])
-        else:
-            w = SimulatorWarning("No override set on the specified link")
-            warnings.warn(w)
+        # if link_name in self._overrides.keys():
+        #     # FIXME: handle overrides
+        #     controls = self._overrides[link_name]
+        #     for ctrl_data in controls:
+        #         self._en.ENsetcontrol(ctrl_data['index'], ctrl_data['type'], ctrl_data['linkindex'], ctrl_data['setting'], ctrl_data['nodeindex'], ctrl_data['level'])
+        # else:
+        #     w = SimulatorWarning("No override set on the specified link")
+        #     warnings.warn(w)
 
     def _save_report_step(self):
         t = self._en.ENgettimeparam(EN.HTIME)
@@ -510,9 +510,9 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             link_indexes[link_num] = link_name
             self._overrides[link_name] = list()
         for i in range(1, numctrls+1):
-            print('Control {}'.format(i))
+            self.logger.info('Control {}'.format(i))
             ctrl_data = self._en.ENgetcontrol(i)
-            print('Control data', ctrl_data)
+            self.logger.info('Control data {}'.format(ctrl_data))
             if ctrl_data['linkindex'] not in link_indexes:
                 warnings.warn('Found a control that isn\' in the water network model!')
             link_name = link_indexes[ctrl_data['linkindex']]
@@ -542,7 +542,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             setattr(link, attr, value)
 
     def initialize(
-        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=1, 
+        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=None, 
     ):
         # TODO: change chunk size to 1 day in report steps, only input is estimated number of days in simulation.
         # TODO: initial chunks based on wn.options.time.duration (in days), change the name to "estimated_days_in_simulation"
@@ -581,6 +581,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         inpfile = file_prefix + ".inp"
         enData = wntr.epanet.toolkit.ENepanet(version=version)
         orig_duration = self._wn.options.time.duration
+        self._wn.options.time.duration = int(2**30)
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         rptfile = file_prefix + ".rpt"
         outfile = file_prefix + ".bin"
