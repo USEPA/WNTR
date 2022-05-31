@@ -88,7 +88,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
     
    :class:`~wntr.sim.core.WNTRSimulator`              The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks.
                                                       The simulator includes an algebraic model, which can be extended to simulate additional components or behaviors in water network models.	
-                                                      The WNTRSimulator does not perform water quality simulations. The WNTRSimulator does not perform water quality simulations.
+                                                      The WNTRSimulator does not perform water quality simulations.
 
    =================================================  =============================================================================================================================================================================================================================================================================
 
