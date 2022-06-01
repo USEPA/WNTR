@@ -266,8 +266,17 @@ in the following example.
     
     >>> wn.options.hydraulic.required_pressure = 21.097 # 30 psi = 21.097 m
     >>> wn.options.hydraulic.minimum_pressure  = 3.516 # 5 psi = 3.516 m
-    >>> wn.options.hydraulic.minimum_pressure = 0.55
-	
+    >>> wn.options.hydraulic.pressure_exponent = 0.55
+
+.. note:: 
+   The default values for required pressure, minimum pressure 
+   and pressure exponent are 0.07 m (0.1 psi), 0 m (0 psi), and 0.5, respectively. 
+   This matches EPANET specifications. 
+   If the user does not increase the default required pressure value, then a 
+   PDD simulation will be very similar to a DD simulation.  WNTR also enforces 
+   0.07 m (0.1 psi) as the lowest value for required pressure to match
+   EPANET specifications.
+   
 When using the WNTRSimulator, the required pressure, minimum pressure, and pressure exponent can vary throughout the network.  
 By default, each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value
 in the hydraulic options are used to define the PDD constraint for that junction. 
