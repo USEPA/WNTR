@@ -95,7 +95,7 @@ class TestPerformance(unittest.TestCase):
 
     def test_Net1_charset(self):
         """Only needs to test that runs successfully with latin-1 character set."""
-        inp_file = join(ex_datadir, "latin1.inp")
+        inp_file = join(test_datadir, "latin1.inp")
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         epa_sim = self.wntr.sim.EpanetSimulator(wn)

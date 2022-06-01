@@ -153,6 +153,10 @@ Discrepancies
 -------------------------------------------
 Known discrepancies between the WNTRSimulator and EpanetSimulator are listed below.
 
+* **Tank draining**: The EpanetSimulator (and EPANET) continue to supply water from tanks after they reach their 
+  minimum elevation.  This can result in incorrect system pressures.
+  See issues https://github.com/USEPA/WNTR/issues/210 and https://github.com/OpenWaterAnalytics/EPANET/issues/623
+  The EPANET dll in WNTR will be updated when an EPANET release is available.
 * **Pump controls and patterns**: Pumps have speed settings which are adjustable 
   by controls and/or patterns.  With the EpanetSimulator, 
   controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' 
