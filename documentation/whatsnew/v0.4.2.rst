@@ -1,0 +1,10 @@
+.. _whatsnew_042:
+
+v0.4.2 (main)
+---------------------------------------------------
+
+* Added plt.show to graphics functions so that the graphics display properly outside Spyder
+  `#265 <https://github.com/USEPA/WNTR/pull/265>`_
+
+* Updated documentation
+ 
