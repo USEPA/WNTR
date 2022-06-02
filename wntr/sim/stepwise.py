@@ -457,6 +457,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         #     self._temp_index = self._temp_index[0]
         for _, _, name, f in self._node_attributes:
             df2 = np.array(self._temp_node_report_lines[name])
+            # logger.info('Size of df2: {}'.format(df2.shape))
             if f is not None:
                 df2 = f(self._flow_units, df2, mass_units=self._mass_units)
             self._results.node[name] = pd.DataFrame(df2,index=self._temp_index, columns=self._wn.node_name_list ) #.loc[self._temp_index, :] = df2
