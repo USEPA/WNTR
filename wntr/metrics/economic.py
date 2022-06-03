@@ -293,28 +293,30 @@ def pump_power(flowrate, head, wn):
     pumps = wn.pump_name_list
     time = flowrate.index
     
-    headloss = pd.DataFrame(data=None, index=time, columns=pumps)
+    # headloss = pd.DataFrame(data=None, index=time, columns=pumps)
+    headloss = {}
     for pump_name, pump in wn.pumps():
         start_node = pump.start_node_name
         end_node = pump.end_node_name
         start_head = head.loc[:,start_node]
         end_head = head.loc[:,end_node]
-        headloss.loc[:,pump_name] = end_head - start_head
+        headloss[pump_name] = end_head - start_head
+    headloss = pd.DataFrame(headloss, index=time)    
 
-    efficiency_dict = {}
-    for pump_name, pump in wn.pumps():
-        if pump.efficiency is None:
-            efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in time]
-        else:
-            raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
-            # TODO: WNTR does not support pump efficiency curves yet
-            # curve = wn.get_curve(pump.efficiency)
-            # x = [point[0] for point in curve.points]
-            # y = [point[1]/100.0 for point in curve.points]
-            # interp = scipy.interpolate.interp1d(x, y, kind='linear')
-            # efficiency_dict[pump_name] = interp(np.array(flowrate.loc[:, pump_name]))
+    # efficiency_dict = {}
+    # for pump_name, pump in wn.pumps():
+    #     if pump.efficiency is None:
+    #         efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in time]
+    #     else:
+    #         raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
+    #         # TODO: WNTR does not support pump efficiency curves yet
+    #         # curve = wn.get_curve(pump.efficiency)
+    #         # x = [point[0] for point in curve.points]
+    #         # y = [point[1]/100.0 for point in curve.points]
+    #         # interp = scipy.interpolate.interp1d(x, y, kind='linear')
+    #         # efficiency_dict[pump_name] = interp(np.array(flowrate.loc[:, pump_name]))
 
-    efficiency = pd.DataFrame(data=efficiency_dict, index=time, columns=pumps)
+    efficiency = wn.options.energy.global_efficiency/100.0  #pd.DataFrame(data=efficiency_dict, index=time, columns=pumps)
 
     power = 1000.0 * 9.81 * headloss * flowrate / efficiency # Watts = J/s
 
