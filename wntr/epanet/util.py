@@ -638,8 +638,9 @@ class HydParam(enum.Enum):
             if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
                     # flowunit/sqrt(psi) from flowunit/sqrt(m), i.e.,
-                    # flowunit/sqrt(m) * sqrt( m/ft / psi/ft ) = flowunit/sqrt(psi)
-                    data = data * np.sqrt(0.3048 / 0.4333)
+                    # flowunit/sqrt(m) * sqrt( m/ft / psi/ft ) = flowunit/sqrt(psi), same as
+                    # flowunit/sqrt(m) / sqrt( psi/ft / m/ft ) = flowunit/sqrt(psi)
+                    data = data / np.sqrt( 0.4333 / 0.3048 )
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
                 data = data / 0.0254  # in from m
@@ -678,8 +679,9 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                # psi from m, i.e., m * (psi/ft / m/ft) = psi
-                data = data * (0.4333 / 0.3048 )  
+                # psi from m, i.e., m * (psi/ft / m/ft) = psi, same as
+                # m / ( m/ft / psi/m ) = psi
+                data = data / (0.3048 / 0.4333 )  
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
