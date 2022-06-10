@@ -41,8 +41,38 @@ class TestEpanetUnits(unittest.TestCase):
                     data = 86400.0  # m3/d
                 self.execute_check(typestring, flowunit, data, data_expected)
 
-    def test_emitter_coefficient(self):
-        pass
+    def test_Emitter_Coeff(self):
+        data_expected = 1.0  # (m3/s)/sqrt(m)
+        typestring = "EmitterCoeff"
+        data_expected = 1  # m
+        for flowunit in range(10):
+            if flowunit == 0:
+                data = 35.3146667  # ft3/s
+            elif flowunit == 1:
+                data = 15850.3231  # gall/min
+            elif flowunit == 2:
+                data = 22.8244653  # million gall/d
+            elif flowunit == 3:
+                data = 19.0  # million imperial gall/d
+            elif flowunit == 4:
+                data = 70.0456199  # acre-feet/day
+            elif flowunit == 5:
+                data = 1000.0  # L/s
+            elif flowunit == 6:
+                data = 60000.0  # L/min
+            elif flowunit == 7:
+                data = 86.4  # million L/d
+            elif flowunit == 8:
+                data = 3600.0  # m3/h
+            elif flowunit == 9:
+                data = 86400.0  # m3/d
+
+            if flowunit in [0, 1, 2, 3, 4]:
+                data = data/np.sqrt(1.421970206324753)  # flowrate/sqrt(psi)
+            else:
+                data = data # flowrate/sqrt(m)
+                
+            self.execute_check(typestring, flowunit, data, data_expected)
 
     def test_Pipe_Diameter(self):
         typestring = "PipeDiameter"

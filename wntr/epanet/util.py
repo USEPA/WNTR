@@ -544,8 +544,9 @@ class HydParam(enum.Enum):
             data = data * flow_units.factor
             if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
-                    data = data * np.sqrt(0.7032)  # flowunit/psi0.5 to flowunit/m0.5
-
+                    # flowunit/sqrt(psi) to flowunit/sqrt(m), i.e.,
+                    # flowunit/sqrt(psi) * sqrt(psi/ft / m/ft ) = flowunit/sqrt(m)
+                    data = data * np.sqrt(0.4333 / 0.3048)   
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
                 data = data * 0.0254  # in to m
@@ -584,8 +585,8 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                #                data = data * 0.703249614902
-                data = data * (0.3048 / 0.4333)  # psi * (m/ft / psi/ft)
+                # psi to m, i.e., psi * (m/ft / psi/ft) = m
+                data = data * (0.3048 / 0.4333)  
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
@@ -636,8 +637,10 @@ class HydParam(enum.Enum):
             data = data / flow_units.factor
             if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
-                    data = data / np.sqrt(0.7032)  # flowunit/psi0.5 from flowunit/m0.5
-
+                    # flowunit/sqrt(psi) from flowunit/sqrt(m), i.e.,
+                    # flowunit/sqrt(m) * sqrt( m/ft / psi/ft ) = flowunit/sqrt(psi), same as
+                    # flowunit/sqrt(m) / sqrt( psi/ft / m/ft ) = flowunit/sqrt(psi)
+                    data = data / np.sqrt( 0.4333 / 0.3048 )
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
                 data = data / 0.0254  # in from m
@@ -676,10 +679,9 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                #                data = data / 0.703249614902
-                data = data / (
-                    0.3048 / 0.4333
-                )  # psi from mH2O, i.e. psi / (m/ft / psi/ft) )
+                # psi from m, i.e., m * (psi/ft / m/ft) = psi, same as
+                # m / ( m/ft / psi/m ) = psi
+                data = data / (0.3048 / 0.4333 )  
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
