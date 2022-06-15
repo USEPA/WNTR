@@ -61,6 +61,6 @@ WNTR comes with additional examples that illustrate advanced use cases, includin
   This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
 * `Fire flow example <https://github.com/USEPA/WNTR/blob/main/examples/fire_flow.py>`_: 
   This example runs hydraulic simulations with and without fire fighting flow demand.
-* `Sensor placement example <https://github.com/USEPA/WNTR/blob/main/examples/sensor_placement.py>`_: 
-  This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 
+* `Sensor placement example <https://github.com/sandialabs/chama/blob/main/examples/water_network_example.py>`_: 
+  This example is hosted in Chama repository (https://github.com/sandialabs/chama) and uses WNTR to optimize the placement of sensors that minimizes detection time. 
   Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.

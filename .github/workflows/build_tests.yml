@@ -133,19 +133,17 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
-    - name: Setup conda
-      uses: s-weigand/setup-conda@v1
+    - name: Setup Python
+      uses: actions/setup-python@v2
       with:
         update-conda: true
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        conda config --set always_yes yes --set changeps1 no
         python --version
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        conda install -c conda-forge glpk
-        pip install chama coveralls
+        pip install coveralls
         python setup.py develop
     - name: Run Tests
       run: |
