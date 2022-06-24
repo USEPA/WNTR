@@ -969,6 +969,12 @@ class TestNetworkDict(unittest.TestCase):
             B = self.wntr.network.read_json('temp.json')
             assert(wn._compare(B))
 
+    def test_json_pattern_dump(self):
+        wn = wntr.network.WaterNetworkModel()
+        wn.add_pattern('pat0', [0,1,0,1,0,1,0])
+        wn.write_json(f'temp.json')
+        
+
 
 if __name__ == "__main__":
     unittest.main()
