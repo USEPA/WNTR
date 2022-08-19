@@ -13,6 +13,7 @@ on:
 
 jobs:
   test:
+  
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -31,7 +32,7 @@ jobs:
         python setup.py develop
     - name: Run tests and coverage
       run: |
-        coverage run -m pytest --doctest-modules wntr
+        coverage run -m pytest --doctest-modules -m "not no_workflow" wntr
         coverage report --fail-under=70        
-    # pytest --doctest-modules wntr/tests/test_times.py
+    # pytest --doctest-modules wntr/tests/test_examples.py --ignore=test_examples
     # nose -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
