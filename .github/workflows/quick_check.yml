@@ -24,8 +24,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install --upgrade coverage nose
-        python setup.py develop
-    - name: Run tests
+        pip install --upgrade coverage pytest
+    # Build extensions are accessible from package level, similar to python setup.py build_ext --inplace
+    - name: Install package for development
       run: |
-        nosetests -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
+        python setup.py develop
+    - name: Run tests and coverage
+      run: |
+        coverage run -m pytest --doctest-modules wntr
+        coverage report --fail-under=70        
+    # pytest --doctest-modules wntr/tests/test_times.py
+    # nose -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
