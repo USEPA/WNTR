@@ -4,3 +4,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 markers = ["no_workflow:excluded from ci worflows due to historical reasons"]
+addopts = "--doctest-modules"

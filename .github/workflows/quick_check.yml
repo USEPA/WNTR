@@ -32,9 +32,10 @@ jobs:
     - name: Install package for development
       run: |
         python setup.py develop
-    - name: Run tests and coverage
+    - name: Run tests and coverage (unittests plus doctests)
       run: |
-        coverage run -m pytest --doctest-modules -m "not no_workflow" wntr
+        coverage run --source=wntr --omit="*/tests/*" -m pytest --doctest-modules --doctest-glob="*.rst" -m "not no_workflow" wntr
+        coverage run --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation 
         coverage report --fail-under=70        
     # pytest --doctest-modules wntr/tests/test_examples.py --ignore=test_examples
     # nose -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr

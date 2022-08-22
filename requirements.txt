@@ -17,3 +17,4 @@ pytest
 ipykernel
 nbformat
 nbconvert
+coverage
