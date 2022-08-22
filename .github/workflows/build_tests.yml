@@ -39,6 +39,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
+        path: dist/
 
   test:
     name: Test install and usage of wntr
