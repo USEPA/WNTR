@@ -34,8 +34,7 @@ jobs:
         python setup.py develop
     - name: Run tests and coverage (unittests plus doctests)
       run: |
-        coverage run --source=wntr --omit="*/tests/*" -m pytest -m "not no_workflow" --doctest-modules --doctest-glob="*.rst" wntr
-        coverage run --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation 
+        coverage run --source=wntr --omit="*/tests/*" -m pytest -m "not no_workflow" --doctest-modules --doctest-glob="*.rst" wntr        
         coverage report --fail-under=70        
-    # pytest --doctest-modules wntr/tests/test_examples.py --ignore=test_examples
-    # nose -v --nologcapture --with-doctest --exclude=test_examples --with-coverage --cover-package=wntr --cover-min-percentage=70 wntr
+    # coverage run --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation 
+

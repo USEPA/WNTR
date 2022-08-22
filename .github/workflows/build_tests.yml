@@ -175,7 +175,7 @@ jobs:
   coverage:
     needs : [linux]
     # needs: [ windows, macOS, linux ]
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
