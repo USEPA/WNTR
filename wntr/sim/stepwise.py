@@ -49,7 +49,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         _description_
     """
 
-    def __init__(self, wn: WaterNetworkModel):
+    def __init__(self, wn: WaterNetworkModel, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, maximum_duration=None):
         WaterNetworkSimulator.__init__(self, wn)
         self._en: ENepanet = None
         self._t: int = 0
@@ -69,6 +69,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             (EN.STATUS, "_user_status", "status", None),
             (EN.SETTING, "_setting", "setting", None),
         ]
+        self.logger = logger
         self._link_sensors = dict()
         self._node_sensors = dict()
         self._stop_criteria = StopCriteria()  # node/link, name, attribute, comparison, level
@@ -77,6 +78,13 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._temp_node_report_lines = dict()
         self._next_stop_time: int = None
         self._overrides = dict()
+        self._file_prefix = file_prefix
+        self._version = version
+        self._save_hyd = save_hyd
+        self._use_hyd = use_hyd
+        self._hydfile = hydfile
+        self._duration = wn.options.time.duration
+        self._max_duration = maximum_duration
 
     @property
     def current_time(self):
@@ -85,6 +93,20 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     @property
     def next_time(self):
         return self._en.ENgettimeparam(EN.HTIME)
+
+    @property
+    def duration(self):
+        return self._duration
+    @duration.setter
+    def duration(self, seconds):
+        self._duration = seconds
+
+    @property
+    def step_size(self):
+        return self._delta_t
+    @step_size.setter
+    def step_size(self, seconds):
+        self._delta_t = seconds
 
     def get_results(self):
         return self._results
@@ -288,15 +310,15 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         elif self._t > seconds:
             w = SimulatorWarning("Current simulation has passed time {} (current is {})".format(seconds, self._t))
             warnings.warn(w)
-            return self._en.ENgettimeparam(EN.DURATION)
+            return self._t  # self._en.ENgettimeparam(EN.DURATION)
         elif self._t == seconds:
             w = SimulatorWarning("The simulation is already at time {}".format(seconds))
             warnings.warn(w)
-            return self._en.ENgettimeparam(EN.DURATION)
+            return self._t  # self._en.ENgettimeparam(EN.DURATION)
         else:
             self._next_stop_time = seconds
-            self._en.ENsettimeparam(EN.DURATION, seconds)
-            return self._en.ENgettimeparam(EN.DURATION)
+            #self._en.ENsettimeparam(EN.DURATION, seconds)
+            return self._next_stop_time  # self._en.ENgettimeparam(EN.DURATION)
 
     def set_link_status(self, link_name: str, value: float, override=True):
         """
@@ -542,8 +564,12 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                 value = f(self._flow_units, value, mass_units=self._mass_units)
             setattr(link, attr, value)
 
+    def __enter__(self):
+        self.initialize(self._file_prefix, self._version, self._save_hyd, self._use_hyd, self._hydfile)
+        return self
+
     def initialize(
-        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=None, 
+        self, file_prefix: str = "temp", version=2.2, save_hyd=False, use_hyd=False, hydfile=None, estimated_results_size=None
     ):
         # TODO: change chunk size to 1 day in report steps, only input is estimated number of days in simulation.
         # TODO: initial chunks based on wn.options.time.duration (in days), change the name to "estimated_days_in_simulation"
@@ -582,19 +608,23 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         inpfile = file_prefix + ".inp"
         enData = wntr.epanet.toolkit.ENepanet(version=version)
         orig_duration = self._wn.options.time.duration
-        self._wn.options.time.duration = int(2**30)
+        if self._max_duration is None:
+            self._max_duration = int(2**30)
+        self._wn.options.time.duration = self._max_duration
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         rptfile = file_prefix + ".rpt"
         outfile = file_prefix + ".bin"
         self.outfile = outfile
         enData.ENopen(inpfile, rptfile, outfile)
+        self._wn.options.time.duration = orig_duration
         self._en = enData
         self._flow_units = FlowUnits(self._en.ENgetflowunits())
         self._mass_units = MassUnits.mg
         self._chunk_size = int(np.ceil(86400 / self._wn.options.time.report_timestep))
         initial_chunks = estimated_results_size if estimated_results_size is not None else orig_duration //86400 + 1
 
-        enData.ENsettimeparam(EN.DURATION, int(2**30))
+        if self._max_duration is None:
+            enData.ENsettimeparam(EN.DURATION, self._max_duration)
         self._t = 0
         self._report_timestep = enData.ENgettimeparam(EN.REPORTSTEP)
         self._report_start = enData.ENgettimeparam(EN.REPORTSTART)
@@ -655,17 +685,62 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         enData.ENinitQ(1)
         enData.ENrunH()
         enData.ENrunQ()
-
+        self._duration = orig_duration
+        self._delta_t = enData.ENgettimeparam(EN.REPORTSTEP)
         # Load initial time-0 results into results (if reporting)
         self._save_report_step()  # saves on internal temp results lists
         # Load initial time-0 results into intermediate sensors
         self._save_intermediate_values()  # stores on WaterNetworkModel
         self._t = enData.ENgettimeparam(EN.HTIME)
         tstep = enData.ENnextH()
+        self._tstep = tstep
         qstep = enData.ENnextQ()
         self._nt = self._t + tstep
         self._copy_results_object()
         logger.debug("Initialized stepwise run")
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        # self.logger.debug("Next time {}, next stop {}, duration {}", self.next_time, self._next_stop_time, self._duration)
+        if (self.next_time > self._duration) or self.next_time <= 0 or self._tstep <= 0:
+            raise StopIteration
+        self._tstep, conditions = self._step()
+        self._copy_results_object()
+        return len(conditions) > 0, conditions        
+
+    def _step(self):
+        enData = self._en
+        completed = True
+        conditions = list()
+        if enData is None:
+            raise SimulatorError(self.__class__.__name__ + " not initialized before use")
+        self._wn._prev_sim_time = self._t
+        enData.ENrunH()
+        enData.ENrunQ()
+        self._wn.sim_time = enData.ENgettimeparam(EN.HTIME)
+
+        # Read all sensors in the _node and _link sensors list
+        self._save_intermediate_values()
+        self._save_report_step()
+        logger.debug("Ran 1 step")
+
+        # Check on stop criteria
+        conditions = self._stop_criteria.check()
+        # if len(conditions) > 0:
+        #     # enData.ENsettimeparam(EN.DURATION, enData.ENgettimeparam(EN.HTIME))
+        #     completed = False
+
+        self._t = enData.ENgettimeparam(EN.HTIME)
+        # Move EPANET forward in time
+        tstep = enData.ENnextH()
+        qstep = enData.ENnextQ()
+
+        self._nt = self._t + tstep
+
+        # if tstep < 1, duration has been reached
+        return tstep, conditions    
 
     def run_sim(self):
         enData = self._en
@@ -677,32 +752,16 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             return True, []
         while True:
             # Run hydraulic TS and quality TS
-            self._wn._prev_sim_time = self._t
-            enData.ENrunH()
-            enData.ENrunQ()
-            self._wn.sim_time = enData.ENgettimeparam(EN.HTIME)
-
-            # Read all sensors in the _node and _link sensors list
-            self._save_intermediate_values()
-            self._save_report_step()
-            logger.debug("Ran 1 step")
-
-            # Check on stop criteria
-            conditions = self._stop_criteria.check()
+            tstep, conditions = self._step()
             if len(conditions) > 0:
-                enData.ENsettimeparam(EN.DURATION, enData.ENgettimeparam(EN.HTIME))
-                completed = False
-
-            self._t = enData.ENgettimeparam(EN.HTIME)
-            # Move EPANET forward in time
-            tstep = enData.ENnextH()
-            qstep = enData.ENnextQ()
-
-            self._nt = self._t + tstep
+                completetd = False
 
             # if tstep < 1, duration has been reached
             if tstep <= 0 or self._t > self._next_stop_time:
                 self._save_report_step()
+                break
+        
+            if len(conditions) > 0:
                 break
 
             # Update time
@@ -710,11 +769,16 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._copy_results_object()
         return completed, conditions
 
+    def __exit__(self, type, value, traceback):
+        res = self.close()
+
     def close(self):
         enData = self._en
         if enData is None:
             raise SimulatorError(self.__class__.__name__ + " not initialized before use")
         tstep = 1
+        self.set_next_stop_time(self.next_time)
+        self._en.ENsettimeparam(EN.DURATION, self.next_time)
         while tstep > 0:
             enData.ENrunH()
             enData.ENrunQ()
