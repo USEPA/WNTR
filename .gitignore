@@ -3,6 +3,7 @@
 _build/
 build/
 wntr.egg-info/
+dist/
 
 *.pyc
 *.egg
