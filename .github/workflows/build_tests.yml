@@ -34,7 +34,7 @@ jobs:
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
-      uses: actions/actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3
       with:
         name: wheel_${{ matrix.python-version }}_${{ matrix.os }}
         path: dist/wntr*.whl
