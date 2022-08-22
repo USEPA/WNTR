@@ -15,10 +15,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.7', '3.10']
-        os: [ubuntu-latest]
-        # python-version: ['3.7', '3.8', '3.9']
-        # os: [windows-latest, macOS-latest, ubuntu-latest] 
+        # python-version: ['3.7', '3.10']
+        # os: [ubuntu-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        os: [windows-latest, macOS-latest, ubuntu-latest] 
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -47,10 +47,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.7', '3.10']
-        os: [ubuntu-latest]
-        # python-version: ['3.7', '3.8', '3.9']
-        # os: [windows-latest, macOS-latest, ubuntu-latest]    
+        # python-version: ['3.7', '3.10']
+        # os: [ubuntu-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        os: [windows-latest, macOS-latest, ubuntu-latest]    
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
@@ -74,69 +74,72 @@ jobs:
 
 
 
-  # windows:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       python-version: ['3.7', '3.8', '3.9']
-  #       os: [windows-latest]
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Install dependencies
-  #     run: |
-  #       python --version
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       pip install coveralls
-  #       python setup.py develop
-  #   - name: Run Tests
-  #     run: |
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose2 -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace wntr
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Save coverage
-  #     uses: actions/upload-artifact@v2
-  #     # if: ${{ matrix.os != 'windows-latest' }}
-  #     with:
-  #       name: coverage
-  #       path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+  windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.10']
+        os: [windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python setup.py develop
+    # pip install coveralls
+    - name: Run Tests
+      run: |
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m pytest -m "not no_workflow" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      # if: ${{ matrix.os != 'windows-latest' }}
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
-  # macOS:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       python-version: ['3.7', '3.8', '3.9']
-  #       os: [macOS-latest]
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Install dependencies
-  #     run: |
-  #       python --version
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       pip install coveralls
-  #       python setup.py develop
-  #   - name: Run Tests
-  #     run: |
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/aml/evaluator.py","*/network_isolation/network_isolation.py" -m nose2 -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace --doctest-extension=.rst documentation/*.rst wntr
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Save coverage
-  #     uses: actions/upload-artifact@v2
-  #     # if: ${{ matrix.os != 'windows-latest' }}
-  #     with:
-  #       name: coverage
-  #       path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+  macOS:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.10']
+        # python-version: ['3.7', '3.8', '3.9']
+        os: [macOS-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python setup.py develop
+    # pip install coveralls
+    - name: Run Tests
+      run: |
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m pytest -m "not no_workflow" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      # if: ${{ matrix.os != 'windows-latest' }}
+      with:
+        name: coverage
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   linux:
     runs-on: ${{ matrix.os }}
@@ -173,8 +176,8 @@ jobs:
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   coverage:
-    needs : [linux]
-    # needs: [ windows, macOS, linux ]
+    #needs : [linux]
+    needs: [ windows, macOS, linux ]
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
@@ -219,8 +222,8 @@ jobs:
         path: htmlcov
 
   coveralls:
-    needs: [linux]
-    # needs: [ windows, macOS, linux ]
+    # needs: [linux]
+    needs: [ windows, macOS, linux ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
