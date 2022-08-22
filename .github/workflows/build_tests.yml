@@ -60,9 +60,9 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-    - name: Discover
-      run: |
-        ls .
+    # - name: Discover
+    #   run: |
+    #     ls .
     - name: Install wntr
       run: |
         python -m pip install --upgrade pip

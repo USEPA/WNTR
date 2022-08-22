@@ -18,3 +18,4 @@ ipykernel
 nbformat
 nbconvert
 coverage
+sphinx_rtd_theme
