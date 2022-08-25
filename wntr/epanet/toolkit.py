@@ -824,7 +824,7 @@ class ENepanet:
                 ctypes.c_int(iLinkIndex), 
                 ctypes.c_double(dSetting), 
                 ctypes.c_int(iNodeIndex), 
-                ctypes.c_double(dLevel)
+                ctypes.c_float(dLevel)
             )
         else:
             self.errcode = self.ENlib.ENsetcontrol(

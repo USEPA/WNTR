@@ -446,11 +446,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             for ctrl_data in controls:
                 self._en.ENsetcontrol(
                     ctrl_data["index"],
-                    ctrl_data["type"],
+                    EN.LOWLEVEL,
                     ctrl_data["linkindex"],
                     ctrl_data["setting"],
                     ctrl_data["nodeindex"],
-                    1e30 if ctrl_data["type"] == EN.HILEVEL else -1e30,
+                    0.0,
                 )
         else:
             w = SimulatorWarning("No override set on the specified link")
@@ -489,11 +489,11 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             for ctrl_data in controls:
                 self._en.ENsetcontrol(
                     ctrl_data["index"],
-                    ctrl_data["type"],
+                    EN.LOWLEVEL,
                     ctrl_data["linkindex"],
                     ctrl_data["setting"],
                     ctrl_data["nodeindex"],
-                    1e30 if ctrl_data["type"] == EN.HILEVEL else -1e30,
+                    0.0,
                 )
         else:
             w = SimulatorWarning("No override set on the specified link")
@@ -522,14 +522,14 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             # FIXME: handle overrides
             controls = self._overrides[link_name]
             for ctrl_data in controls:
-                self._en.ENsetcontrol(
-                    ctrl_data["index"],
+                index = self._en.ENaddcontrol(
                     ctrl_data["type"],
                     ctrl_data["linkindex"],
                     ctrl_data["setting"],
                     ctrl_data["nodeindex"],
                     ctrl_data["level"],
                 )
+                ctrl_data["index"] = index
         else:
             w = SimulatorWarning("No override set on the specified link")
             warnings.warn(w)
