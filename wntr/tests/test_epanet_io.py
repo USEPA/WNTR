@@ -632,7 +632,37 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                     ),
                     0.00001,
                 )
+    
+    def test_link_headloss_units_convert(self):
+        
+        # headloss = per unit length for pipes and CVs
+        pipe_name = '123'
+        pipe = self.wn.get_link(pipe_name)
+        delta_h = abs(self.results.node["head"].loc[0,pipe.end_node_name] - 
+                      self.results.node["head"].loc[0,pipe.start_node_name])
+        delta_l = pipe.length
+        pipe_headloss = delta_h/delta_l
+        
+        self.assertLessEqual(
+            abs(pipe_headloss - self.results.link["headloss"].loc[0, pipe_name]
+            ),
+            0.00001,
+        )
+        
+        # headloss = Negative of head gain
+        pump_name = '335'
+        pump = self.wn.get_link(pump_name)
+        delta_h = self.results.node["head"].loc[0,pump.end_node_name] - \
+                self.results.node["head"].loc[0,pump.start_node_name]
+            
+        pump_headloss = - delta_h
 
+        self.assertLessEqual(
+            abs(pump_headloss - self.results.link["headloss"].loc[0, pump_name]
+            ),
+            0.00001,
+        )
+        
 
 if __name__ == "__main__":
     unittest.main()

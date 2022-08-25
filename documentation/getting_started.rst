@@ -7,7 +7,7 @@
 Getting started
 ======================================
 
-To start using WNTR, open a Python console and import the package::
+To start using WNTR, open a Python console or IDE like Spyder and import the package::
 
 	import wntr	
 
@@ -30,13 +30,26 @@ This example demonstrates how to:
 Additional examples are included throughout the WNTR documentation. The examples provided in the documentation assume
 that a user has experience using EPANET (https://www.epa.gov/water-research/epanet) and Python (https://www.python.org/), including the ability to install and use additional Python packages, such as those listed in :ref:`requirements` and :ref:`optional_dependencies`.
 
-
 Several EPANET INP files and example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/main/examples>`_.
 Example networks range from a simple 9 node network to a 3,000 node network.
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at
 https://uknowledge.uky.edu/wdsrd.
 
+Example files can be run as follows:
+
+* Open a command line or PowerShell prompt and run the example file using Python in interactive mode.  
+  This will keep Python open so that graphics can be viewed.  Use ``exit()`` to close Python when done.  
+  For example, the getting started example can be run as follows::
+  
+      python -i getting_started.py
+      
+* Open a Python console in script mode (no -i) and copy/paste lines of code into the Python console. 
+  Use ``exit()`` to close Python when done.
+
+* Open the example file within an IDE like Spyder and run or step through the file. 
+
+    
 Additional examples
 -----------------------
 
@@ -48,6 +61,6 @@ WNTR comes with additional examples that illustrate advanced use cases, includin
   This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
 * `Fire flow example <https://github.com/USEPA/WNTR/blob/main/examples/fire_flow.py>`_: 
   This example runs hydraulic simulations with and without fire fighting flow demand.
-* `Sensor placement example <https://github.com/USEPA/WNTR/blob/main/examples/sensor_placement.py>`_: 
-  This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 
+* `Sensor placement example <https://github.com/sandialabs/chama/blob/main/examples/water_network_example.py>`_: 
+  This example is hosted in Chama repository (https://github.com/sandialabs/chama) and uses WNTR to optimize the placement of sensors that minimizes detection time. 
   Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.

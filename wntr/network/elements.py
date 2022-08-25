@@ -1964,7 +1964,7 @@ class Pattern(object):
         self.name = name
         if isinstance(multipliers, (int, float)):
             multipliers = [multipliers]
-        self._multipliers = np.array(multipliers)
+        self._multipliers = np.array(multipliers, dtype=np.float64)
         if time_options:
             if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
                 tmp = TimeOptions()

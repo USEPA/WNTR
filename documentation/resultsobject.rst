@@ -65,7 +65,7 @@ Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as sho
 Node results include DataFrames for each of the following attributes:
 
 * Demand
-* Leak demand (only when the WNTRSimulator is used)
+* Leak demand (only when the WNTRSimulator is used, see the Note below)
 * Head
 * Pressure
 * Quality (only when the EpanetSimulator is used. Water age, tracer percent, or chemical concentration is stored, depending on the mode of water quality analysis)
@@ -77,7 +77,11 @@ For example, node results generated with the EpanetSimulator have the following 
     >>> node_keys = results.node.keys()
     >>> print(node_keys) # doctest: +SKIP
     dict_keys(['demand', 'head', 'pressure', 'quality']) 
-	
+
+.. note:: 
+   When using the WNTRSimulator, leak demand is distinct from demand, therefore **total demand = demand + leak demand**. 
+   When using the EpanetSimulator, emitters are included in demand, therefore **total demand = demand**.
+   
 Link results include DataFrames for each of the following attributes:
 
 * Velocity
