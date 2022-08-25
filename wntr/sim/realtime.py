@@ -45,7 +45,7 @@ class RealtimeProvider:
     def proc_sensors(self, t: int, values: dict):
         with open(self._outfile, "a") as out:
             for k, v in values.items():
-                out.write("{},{},{}\n".format(t,k,v))
+                out.write("{},{},{}\n".format(t, k, v))
                 self._current[k] = v
 
     def proc_controllers(self, t: int) -> dict:
@@ -73,13 +73,13 @@ class AbstractRealtimeSimulator(WaterNetworkSimulator):
         Parameters
         ----------
         transmit : function
-            a function that accepts an integer time and a dictionary 
+            a function that accepts an integer time and a dictionary
             of sensor IDs and values
         receive : function
-            a function that accepts an integer time returns and a dictionary 
+            a function that accepts an integer time returns and a dictionary
             of controller IDs and values
         stop : function
-            a function that accepts an integer of the current time and returns 
+            a function that accepts an integer of the current time and returns
             a boolean indicating whether to stop the simulation
         **kwargs
             other keyword arguments that are passed to the simulator
@@ -107,8 +107,8 @@ class EpanetSimulator_RT(AbstractRealtimeSimulator):
     """
     A real-time simulator to provide a system model for use with other models.
 
-    Unlike the other WaterNetworkSimulator classes, the LoopedSimulator requires 
-    an additional configuration 
+    Unlike the other WaterNetworkSimulator classes, the LoopedSimulator requires
+    an additional configuration
 
     """
 
@@ -127,14 +127,18 @@ class EpanetSimulator_RT(AbstractRealtimeSimulator):
         self.stop = None
 
     def add_sensor_instrument(
-        self, name: str, wn_type: str, wn_name: str, attribute: str,
+        self,
+        name: str,
+        wn_type: str,
+        wn_name: str,
+        attribute: str,
     ):
         """
         Add a read-only sensor instrument to the simulator.
 
         Instrument names must be unique across both read-only and read-write
-        instruments. Read-only instruments are sensors which return values 
-        to the outside observer. 
+        instruments. Read-only instruments are sensors which return values
+        to the outside observer.
 
         Parameters
         ----------
@@ -145,24 +149,27 @@ class EpanetSimulator_RT(AbstractRealtimeSimulator):
         wn_name : str
             name of the node or link within the wn
         attribute : str
-            the attribute name (or wntr.epanet.util.EN enum value) 
+            the attribute name (or wntr.epanet.util.EN enum value)
             for the attribute to be read
         """
         self.sensors[name] = (wn_type, wn_name, attribute)
 
     def add_controller_instrument(
-        self, name: str, wn_name: str, attribute: str,
+        self,
+        name: str,
+        wn_name: str,
+        attribute: str,
     ):
         """
         Add a read-write instrument to the system.
 
         Instrument names must be unique across both read-only and read-write
-        instruments. Read-write instruments are combined sensors/controllers 
+        instruments. Read-write instruments are combined sensors/controllers
         which both return values to the outside and allow the outside to set
         values on statuses and settings.
 
         Controllers can only be added to pipes, pumps, and valves.
-        It is assumed that controllers will output their status along with 
+        It is assumed that controllers will output their status along with
         sensors at every timestep, as it is important for a control system
         to know whether a command has been obeyed.
 
@@ -216,9 +223,7 @@ class EpanetSimulator_RT(AbstractRealtimeSimulator):
         self.stop = stop
         inpfile = file_prefix + ".inp"
         enData = wntr.epanet.toolkit.ENepanet(version=version)
-        self._wn.write_inpfile(
-            inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version
-        )
+        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         rptfile = file_prefix + ".rpt"
         outfile = file_prefix + ".bin"
         self.outfile = outfile
@@ -269,24 +274,24 @@ class EpanetSimulator_RT(AbstractRealtimeSimulator):
 
             # Query the SCADA/RTU provider for new status/setting values from outside world
             values = self.receive(self._t)
-            
+
             # Set those values in EPANET
             self.set_sensor_values(values)
-            
+
             # Run hydraulic TS and quality TS
             enData.ENrunH()
             enData.ENrunQ()
 
             ## values = self.receive(self._t)
             ## self.set_sensor_values(values)
-            
+
             logger.debug("Ran 1 step")
-            
-            # Check for time limits or for a KILL signal from the Cyber Simulation software 
+
+            # Check for time limits or for a KILL signal from the Cyber Simulation software
             if self._t >= until or self.stop(self._t):
                 enData.ENsettimeparam(EN.DURATION, self._t)
 
-            # Move EPANET forward in time    
+            # Move EPANET forward in time
             tstep = enData.ENnextH()
             qstep = enData.ENnextQ()
 
