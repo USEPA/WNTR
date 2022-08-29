@@ -22,7 +22,7 @@ class TestExamples(unittest.TestCase):
     def tearDownClass(self):
         pass
     
-    @pytest.mark.no_workflow
+    @pytest.mark.time_consuming
     def test_that_examples_run(self):
         cwd = os.getcwd()
         os.chdir(examplesdir)

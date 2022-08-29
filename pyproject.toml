@@ -3,5 +3,5 @@ requires = ["setuptools", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-markers = ["no_workflow:excluded from ci worflows due to historical reasons"]
+markers = ["time_consuming:excluded from ci quick test"]
 addopts = "--doctest-modules"
