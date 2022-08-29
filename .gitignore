@@ -4,6 +4,7 @@ _build/
 build/
 wntr.egg-info/
 dist/
+docker/
 
 *.pyc
 *.egg
