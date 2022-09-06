@@ -88,7 +88,7 @@ Conditions define when an action should occur. The condition classes are listed 
 All of the above conditions are valid EpanetSimulator conditions except :class:`~wntr.network.controls.RelativeCondition`.
 The EpanetSimulator is also limited to always
 repeat conditions that are defined with :class:`~wntr.network.controls.TimeOfDayCondition` and 
-not repeat conditions that are defined with in :class:`~wntr.network.controls.SimTimeCondition`.
+not repeat conditions that are defined within :class:`~wntr.network.controls.SimTimeCondition`.
 The WNTRSimulator can handle repeat or not repeat options for both of these conditions.
 
 Controls
