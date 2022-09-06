@@ -815,17 +815,36 @@ class ENepanet:
             Set to 0 for time of day or timer
         dLevel : float
             _description_
+
+        Warning
+        ------- 
+        There is an error in EPANET 2.2 that sets the :param:`dLevel` to 0.0 on Macs
+        regardless of the value the user passes in. This means that to use this toolkit
+        functionality on a Mac, the user must delete and create a new control to change
+        the level.
+        
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_setcontrol(
-                self._project, 
-                ctypes.c_int(iIndex), 
-                ctypes.c_int(iType), 
-                ctypes.c_int(iLinkIndex), 
-                ctypes.c_double(dSetting), 
-                ctypes.c_int(iNodeIndex), 
-                ctypes.c_float(dLevel)
-            )
+            try:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_double(dLevel)
+                )
+            except:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_float(dLevel)
+                )
         else:
             self.errcode = self.ENlib.ENsetcontrol(
                 ctypes.c_int(iIndex), 

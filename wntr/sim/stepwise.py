@@ -5,6 +5,7 @@ A stepwise simulator using EPANET 2.2 as the execcution engine.
 
 import logging
 from re import S
+from typing import Union
 import warnings
 
 import numpy as np
@@ -41,8 +42,6 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         A maximum duration can be set, otherwise the stop time can be arbitrarily
         set, and even changed mid simulation, by the user.
 
-
-
         Parameters
         ----------
         wn : WaterNetworkModel
@@ -60,6 +59,48 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         maximum_duration : int, optional
             a maximum duration this run could go, by default None (the wn duration);
             use a value of -1 to set to the maximum possible run length (2**31 seconds)
+
+
+        Examples
+        --------
+        There are two methods to use the stepwise simulator. The first mode is useful
+        for loops where interaction will occur at regular time steps. The second mode
+        is more useful when the simulation may be called at irregular steps, from 
+        another function e.g.
+
+        Both the two examples below show a simple 1-day simulation
+
+        Method one
+
+        .. code::
+
+            with EpanetSimulator_Stepwise(wn, file_prefix="temp1") as sim:
+                sim.step_size = 3600
+                sim.duration = 86400
+                for success, stop_conditions in sim:
+                    step_results = sim.get_results()
+                    # do something
+            results = wntr.epanet.io.BinFile().read("temp1.bin")
+
+        Method two
+
+        .. code::
+
+            sim = EpanetSimulator_Stepwise(wn, file_prefix="temp2")
+            sim.initialize()
+            for i in range(24):
+                sim.set_next_stop_time(3600*(i+1))
+                success = True
+                while not success:
+                    success, stop_conditions = sim.run_sim()
+                    # do something
+            sim.close()
+            results = wntr.epanet.io.BinFile().read("temp2.bin")
+        
+
+        Because of the way EPANET binary files are written, a warning will be issued
+        when reading in the results - this is normal and is not a problem.
+
         """
         super().__init__(wn)
         self._en: ENepanet = None
@@ -98,39 +139,45 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         self._max_duration = maximum_duration
 
     @property
-    def current_time(self):
-        """int: the last time solved (read-only, in seconds)"""
+    def current_time(self) -> int:
+        """the last time solved, in seconds (read-only)"""
         return self._t
 
     @property
-    def next_time(self):
-        """int: the next time to be solved (read-only, in secconds)"""
+    def next_time(self) -> int:
+        """the next time to be solved, in seconds (read-only)"""
         return self._en.ENgettimeparam(EN.HTIME)
 
     @property
-    def duration(self):
-        """int: the duration of the simulation, i.e. when to stop taking steps"""
+    def duration(self) -> int:
+        """Time when a generator loop will stop simulation"""
         return self._duration
 
     @duration.setter
-    def duration(self, seconds):
+    def duration(self, seconds: int) -> None:
         self._duration = seconds
 
     @property
-    def step_size(self):
-        """int: the duration of the next step, which may be several hydraulic, waterquality or report steps"""
+    def step_size(self) -> int:
+        """Length of each simulation step within a generator loop, in seconds"""
         return self._delta_t
 
     @step_size.setter
-    def step_size(self, seconds):
+    def step_size(self, seconds: int) -> None:
         self._delta_t = seconds
 
-    def get_results(self):
-        """list: get any results (at report steps) that have been collected since the last step"""
+    def get_results(self) -> list:
+        """Get results that have been collated since the last run_sim or step call.
+
+        Returns
+        -------
+        list
+            dataframes of results for each attribute
+        """
         return self._results
 
     def add_stop_criterion(self, control: StopControl):
-        """Add a stop criterion for this simulator
+        """Add a stop criterion for this simulator.
 
         A stop control will stop the simulator before a step has completed if the
         criterion has been met. The criteria
@@ -147,7 +194,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             elif isinstance(obj, Link):
                 self.add_link_sensor(obj.name)
 
-    def remove_stop_criterion(self, control):
+    def remove_stop_criterion(self, control: Union[StopControl, str]):
         """Unregister a stop criteria control
 
         Parameters
@@ -178,7 +225,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         Returns
         -------
         float
-            value
+            value of node/attribute
 
         Raises
         ------
@@ -213,7 +260,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         Returns
         -------
         float
-            value
+            value of link/attribute
 
         Raises
         ------
@@ -348,6 +395,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
     def set_hydraulic_timestep(self, seconds: int) -> int:
         """
         Set the hydraulic timestep to the specified number of seconds.
+
         The hydraulic timestep must be an integer greater than or equal to 1 second.
         This value is limited on the upper end by the report step size, among others.
         If it is set to be too large, then it will simply be truncated.
@@ -376,7 +424,7 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
 
     def set_next_stop_time(self, seconds: int) -> int:
         """
-        Set the next time when the :func:`run_sim` call will stop
+        Set the next time when the :method:`run_sim` call will stop.
 
         Parameters
         ----------
@@ -419,20 +467,15 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
         ----------
         link_name : str
             the name of the link to change
-        value : _type_
-            _description_
+        value : float
+            the status value to assign to the link
         override : bool
-
-
-        Returns
-        -------
-        _type_
-            _description_
+            whether controls or rules which change the link should be disabled, be default ``True``
 
         Raises
         ------
-        NotImplementedError
-            _description_
+        SimulatorError
+            if the simulation has not been initialized
         """
         if self._en is None:
             w = SimulatorError("The simulation has not been initialized")
@@ -448,34 +491,31 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                     ctrl_data["index"],
                     EN.LOWLEVEL,
                     ctrl_data["linkindex"],
-                    ctrl_data["setting"],
+                    value,
                     ctrl_data["nodeindex"],
                     0.0,
                 )
-        else:
-            w = SimulatorWarning("No override set on the specified link")
-            warnings.warn(w)
+        # else:
+        #     w = SimulatorWarning("No override set on the specified link")
+        #     warnings.warn(w)
 
     def set_link_setting(self, link_name: str, value: float, override=True):
         """
-        _summary_
+        Change the setting of a link (pump power or valve setting).
 
         Parameters
         ----------
         link_name : str
-            _description_
+            the name of the link to set
         value : float
-            _description_
-
-        Returns
-        -------
-        _type_
-            _description_
+            the setting value
+        override : bool
+            whether controls or rules which change the link should be disabled, be default ``True``
 
         Raises
         ------
-        NotImplementedError
-            _description_
+        SimulationError
+            if the simulation has not been initialized
         """
         if self._en is None:
             w = SimulatorError("The simulation has not been initialized")
@@ -491,17 +531,17 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
                     ctrl_data["index"],
                     EN.LOWLEVEL,
                     ctrl_data["linkindex"],
-                    ctrl_data["setting"],
+                    value,
                     ctrl_data["nodeindex"],
                     0.0,
                 )
-        else:
-            w = SimulatorWarning("No override set on the specified link")
-            warnings.warn(w)
+        # else:
+        #     w = SimulatorWarning("No override set on the specified link")
+        #     warnings.warn(w)
 
     def release_override(self, link_name: str):
         """
-        _summary_
+        Release a link override and reenable appropriate controls
 
         Parameters
         ----------
@@ -706,12 +746,6 @@ class EpanetSimulator_Stepwise(WaterNetworkSimulator):
             _description_, by default "temp"
         version : float, optional
             _description_, by default 2.2
-        save_hyd : bool, optional
-            _description_, by default False
-        use_hyd : bool, optional
-            _description_, by default False
-        hydfile : _type_, optional
-            _description_, by default None
         estimated_results_size : int, optional
             initial days of results to create in memory, by default None, which will set it to
             the number of days in the WaterNetworkModel's options.time.duration value.
