@@ -40,7 +40,7 @@ The following example builds a water network model.
     >>> import matplotlib as mpl
     >>> try:
     ...     mpl.use('Agg')
-    >>> except:
+    ... except:
     ...     pass
 
 .. note:: 
