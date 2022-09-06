@@ -37,6 +37,11 @@ The following example builds a water network model.
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+    >>> import matplotlib as mpl
+    >>> try:
+    ...     mpl.use('Agg')
+    >>> except:
+    ...     pass
 
 .. note:: 
   Unless otherwise noted, examples in the WNTR documentation use Net3.inp to build the
