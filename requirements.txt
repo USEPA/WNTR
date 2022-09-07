@@ -12,8 +12,10 @@ utm
 openpyxl
 
 # Testing
-nose
+# nose
+pytest
 ipykernel
 nbformat
 nbconvert
- 
+coverage
+sphinx_rtd_theme
