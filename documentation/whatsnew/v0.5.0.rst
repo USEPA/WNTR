@@ -1,0 +1,12 @@
+.. _whatsnew_050:
+
+v0.5.0 (main)
+---------------------------------------------------
+
+* Added support for Python 3.10, dropped support for Python 3.6.  
+
+* The build workflow now creates wheel artifacts.  
+  The `_evaluator` and `_network_isolation` binaries are also distributed with the code.
+
+* Updated documentation
+ 
