@@ -376,7 +376,7 @@ network operations can be modified between simulations.
     >>> wn.options.time.duration = 10*3600
     >>> sim = wntr.sim.WNTRSimulator(wn)
     >>> first_10_hours_results = sim.run_sim()
-    >>> wn.options.time.duration = 24*3600
+    >>> wn.options.time.duration = 14*3600
     >>> sim = wntr.sim.WNTRSimulator(wn)
     >>> last_14_hours_results = sim.run_sim()
     
