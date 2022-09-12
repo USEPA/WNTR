@@ -617,6 +617,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
+        i=0
 
     @classmethod
     def tearDownClass(self):

@@ -15,25 +15,21 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 def test_create_model_hydrant_gis():
     inp_file = join(ex_datadir, 'Net3.inp')
-    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file, crs='epsg:4326')
 
-    with pytest.raises(RuntimeError):
-        wn.parse_hydrants_from_gis(gpd.read_file(join(ex_datadir, 'Net3_hydrants.shp')),
-                gpd.read_file(join(ex_datadir, 'Net3_hydrant_branch_lines.shp')), parallel=False)
+    hydrants_gis = gpd.read_file(join(ex_datadir, 'Net3_hydrants.shp'))
+    branch_line_gis = gpd.read_file(join(ex_datadir, 'Net3_hydrant_branch_lines.shp'))
 
-    wn.create_model_gis(crs=pyproj.CRS('epsg:4326'))
-    wn.parse_hydrants_from_gis(gpd.read_file(join(ex_datadir, 'Net3_hydrants.shp')),
-            gpd.read_file(join(ex_datadir, 'Net3_hydrant_branch_lines.shp')), parallel=False)
+    wn.parse_hydrants_from_gis(hydrants_gis, branch_line_gis, parallel=False)
 
-    assert wn._hyd_juncs_gis.loc['hydrant3'].pipe_id == '131'
-    assert wn._hyd_juncs_gis.loc['hydrant1'].pipe_id == '131'
-    assert wn._hyd_juncs_gis.loc['hydrant2'].pipe_id == '163'
+    assert wn.hydrants_parser.hyd_juncs_gis.loc['hydrant3'].pipe_id == '131'
+    assert wn.hydrants_parser.hyd_juncs_gis.loc['hydrant1'].pipe_id == '131'
+    assert wn.hydrants_parser.hyd_juncs_gis.loc['hydrant2'].pipe_id == '163'
 
 def test_add_hydrant_to_model():
     inp_file = join(ex_datadir, 'Net3.inp')
-    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file, crs='epsg:4326')
 
-    wn.create_model_gis(crs=pyproj.CRS('epsg:4326'))
     wn.parse_hydrants_from_gis(gpd.read_file(join(ex_datadir, 'Net3_hydrants.shp')),
             gpd.read_file(join(ex_datadir, 'Net3_hydrant_branch_lines.shp')), parallel=False)
 

@@ -852,9 +852,9 @@ class Pipe(Link):
         self._reaction_rate = None
         
     def __repr__(self):
-        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
+        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}, pressure_zone={}>".format(self._link_name,
                        self.start_node, self.end_node, self.length, self.diameter, 
-                       self.roughness, self.minor_loss, self.check_valve, str(self.status))
+                       self.roughness, self.minor_loss, self.check_valve, str(self.status), self.pressure_zone)
     
     def _compare(self, other):
         if not super(Pipe, self)._compare(other):

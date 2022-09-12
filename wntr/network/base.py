@@ -125,7 +125,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._leak_demand = None
         self._initial_quality = None
         self._tag = None
-        self._pressure_zone = None
+        self._pressure_zone = ''
         self._leak = False
         self._leak_status = False
         self._leak_area = 0.0
@@ -386,7 +386,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._initial_setting = None
         self._vertices = []
         self._tag = None
-        self._pressure_zone = None
+        self._pressure_zone = ''
         # Model state variables
         self._user_status = LinkStatus.Opened
         self._internal_status = LinkStatus.Active

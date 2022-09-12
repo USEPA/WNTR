@@ -138,6 +138,18 @@ class EpanetSimulator(WaterNetworkSimulator):
             #os.sys.stderr.write('Finished Closing\n')            
             
             results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+
+            try:
+                nsteps = int(86400 / self._wn.options.time.report_timestep)
+                self._wn.nodes_gis['min_pressure'] = results.node['pressure'].iloc[-nsteps:].min()
+                self._wn.nodes_gis['max_pressure'] = results.node['pressure'].iloc[-nsteps:].max()
+                self._wn.nodes_gis['min_head'] = results.node['head'].iloc[-nsteps:].min()
+                self._wn.nodes_gis['max_head'] = results.node['head'].iloc[-nsteps:].max()
+                self._wn.links_gis['min_flow'] = results.link['flowrate'].iloc[-nsteps:].min()
+                self._wn.links_gis['max_flow'] = results.link['flowrate'].iloc[-nsteps:].max()
+                self._wn.links_gis['max_flow_abs'] = results.link['flowrate'].iloc[-nsteps:].abs().max()
+            except RuntimeError:
+                pass
             
             return results
 
@@ -160,5 +172,3 @@ class EpanetSimulator(WaterNetworkSimulator):
                     os.remove(outfile)
                 except:
                     pass
-
-
