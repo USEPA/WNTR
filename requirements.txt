@@ -14,7 +14,6 @@ geopandas
 rtree
 
 # Testing
-# nose
 pytest
 ipykernel
 nbformat
