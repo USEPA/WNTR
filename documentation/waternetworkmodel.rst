@@ -37,6 +37,11 @@ The following example builds a water network model.
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+    >>> import matplotlib as mpl
+    >>> try:
+    ...     mpl.use('Agg')
+    ... except:
+    ...     pass
 
 .. note:: 
   Unless otherwise noted, examples in the WNTR documentation use Net3.inp to build the
@@ -252,7 +257,7 @@ Reset initial conditions
 
 When using the same water network model to run multiple simulations using the WNTRSimulator, initial conditions need to be reset between simulations.  
 Initial conditions include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
-When using the EpanetSimualtor, this step is not needed since EPANET starts at the initial conditions each time it is run.
+When using the EpanetSimulator, this step is not needed since EPANET starts at the initial conditions each time it is run.
 
 .. doctest::
 

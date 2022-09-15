@@ -2,6 +2,7 @@
 import os
 import sys
 import unittest
+import pytest
 from os import listdir
 from os.path import abspath, dirname, isfile, join
 from subprocess import call
@@ -20,7 +21,8 @@ class TestExamples(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         pass
-
+    
+    @pytest.mark.time_consuming
     def test_that_examples_run(self):
         cwd = os.getcwd()
         os.chdir(examplesdir)

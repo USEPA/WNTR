@@ -1,15 +1,21 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-import numpy
 import os
 import re
+import sys
 
 use_swig = False
-build = False
+build = True
 
 extension_modules = list()
 
+# if sys.version_info.major >= 3 and sys.version_info.minor >= 10:
+#     print("Python version >= 3.10.x")
+#     build = True
+
 if build:
+    import numpy
+
     try:
         numpy_include = numpy.get_include()
     except AttributeError:
@@ -83,6 +89,8 @@ with open(os.path.join(file_dir, 'wntr', '__init__.py')) as f:
         VERSION = version_match.group(1)
     else:
         raise RuntimeError("Unable to find version string.")
+
+print(extension_modules)
 
 setup(name=DISTNAME,
       version=VERSION,
