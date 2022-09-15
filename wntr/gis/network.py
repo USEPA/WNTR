@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
-def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
+def wn_to_gis(wn, crs=None, pump_as_point_geometry=False, valve_as_point_geometry=False):
     """
     Convert a WaterNetworkModel into GeoDataFrames
     
@@ -32,9 +32,9 @@ def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
         Water network model
     crs : str, optional
         Coordinate reference system, by default None
-    pumps_as_points : bool, optional
+    pump_as_point_geometry : bool, optional
         Create pumps as points (True) or lines (False), by default False
-    valves_as_points : bool, optional
+    valve_as_point_geometry : bool, optional
         Create valves as points (True) or lines (False), by default False
         
     Returns
@@ -44,7 +44,7 @@ def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
         
     """
     gis_data = WaterNetworkGIS()
-    gis_data.create_gis(wn, crs, pumps_as_points, valves_as_points)
+    gis_data.create_gis(wn, crs, pump_as_point_geometry, valve_as_point_geometry)
     
     return gis_data
 
@@ -104,8 +104,8 @@ class WaterNetworkGIS:
         self.pumps = None
         self.valves = None
 
-    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = False, 
-                   valves_as_points: bool = False,) -> None:
+    def create_gis(self, wn, crs: str = None, pump_as_point_geometry: bool = False, 
+                   valve_as_point_geometry: bool = False,) -> None:
         """
         Create GIS data from a water network model.
         
@@ -118,9 +118,9 @@ class WaterNetworkGIS:
             Water network model
         crs : str, optional
             Coordinate reference system, by default None
-        pumps_as_points : bool, optional
+        pump_as_point_geometry : bool, optional
             Create pumps as points (True) or lines (False), by default False
-        valves_as_points : bool, optional
+        valve_as_point_geometry : bool, optional
             Create valves as points (True) or lines (False), by default False
         """
         ### Junctions
@@ -212,7 +212,7 @@ class WaterNetworkGIS:
                 initial_setting=link.initial_setting,
             )
             data.append(dd)
-            if valves_as_points:
+            if valve_as_point_geometry:
                 geometry.append(g2)
             else:
                 geometry.append(g)
@@ -245,7 +245,7 @@ class WaterNetworkGIS:
                 initial_setting=link.initial_setting,
             )
             data.append(dd)
-            if pumps_as_points:
+            if pump_as_point_geometry:
                 geometry.append(g2)
             else:
                 geometry.append(g)
@@ -442,8 +442,9 @@ class WaterNetworkGIS:
         crs : str, optional
             Coordinate reference system, by default None
         driver : str, optional
-            Geopandas driver (use :code:`None` for ESRI shapefile folders), 
-            by default "GeoJSON",
+            Geopandas driver. Use "GeoJSON" for GeoJSON files, use :code:`None` 
+            for ESRI shapefile folders, use GPKG for GeoPackage, by default 
+            "GeoJSON"
         """
         
         def write_gdf(gdf, crs, filename, driver):

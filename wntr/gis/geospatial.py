@@ -26,20 +26,18 @@ def snap(A, B, tolerance):
     """
     Returns new points with coordinates snapped to the nearest points or lines.
     
-    The function returns a new 'POINT' geometry and associated element in B
-    for each 'POINT' geometry in A.
+    The function returns Point geometry and associated element in B
+    for each Point geometry in A. Note the CRS of A must equal the CRS of B.
     
     Parameters
     ----------
     A : geopandas GeoDataFrame
-        A pandas.DataFrame object with a 'geometry' column populated by 
-        'POINT' geometries.
+        GeoDataFrame containing Point geometries.
     B : geopandas GeoDataFrame
-        A pandas.DataFrame object with a 'geometry' column populated by 
-        'POINT' or 'LINESTRING' and 'MULTILINESTRING' geometries.
+        GeoDataFrame containing Point, LineString, or MultiLineString geometries.
     tolerance : float
-        the maximum allowable distance (in the line coordinate system) 
-        between a point and element to move the point.
+        Maximum allowable distance (in the coordinate reference system units) 
+        between Points in A and element in B.  
     
     Returns
     -------
@@ -51,12 +49,12 @@ def snap(A, B, tolerance):
             - snap_distance: distance between original and snapped points
             - geometry: GeoPandas Point object of each point snapped to the nearest node
         
-        If B contains Lines, columns include:
+        If B contains Lines or MultiLineString, columns include:
             - link: closest line to each point
             - node: start or end node closest to the point along the line
             - snap_distance: distance between original and snapped points
             - line_position: normalized distance of snapped points along the lines from the start node (0.0) and end node (1.0)
-            - geometry: GeoPandas Point object each point snapped to the nearest point on closest lines
+            - geometry: GeoPandas Point object of each point snapped to the nearest line
     """   
     if not has_shapely or not has_geopandas:
         raise ModuleNotFoundError('shapley and geopandas are required')
@@ -153,7 +151,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     
     The function returns information about the intersection for each geometry 
     in A. Each geometry in B is assigned a value based on a column of data in 
-    that GeoDataFrame.  
+    that GeoDataFrame.  Note the CRS of A must equal the CRS of B.
     
     Parameters
     ----------
@@ -171,6 +169,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     background_value : int or float (optional)
         The value given to background space. This value is used in the intersection 
         statistics if a B_value colunm name is provided. Default is 0.
+        
     Returns
     -------
     pandas DataFrame

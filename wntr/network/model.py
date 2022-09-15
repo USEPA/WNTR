@@ -1226,7 +1226,8 @@ class WaterNetworkModel(AbstractModel):
 
     def to_gis_data(self, pump_as_point_geometry=True, valve_as_point_geometry=True, crs=""):
         """
-        Get the data in geoPandas data frames for each network element.
+        Return the WaterNetworkModel in GeoDataFrame format, one for each network element.
+        
         Once obtained, additional information can be added (such as results)
         to the GIS data for output. By default, pumps and valves are represented as
         points in the GIS geometry to aid visibility, as they are frequently zero-length
@@ -1235,11 +1236,11 @@ class WaterNetworkModel(AbstractModel):
         Parameters
         ----------
         pump_as_point_geometry : bool, optional
-            represent pumps as GIS points instead of lines, by default True (points)
+            Represent pumps as GIS points instead of lines, by default True (points)
         valve_as_point_geometry : bool, optional
-            represent valves as GIS points instead of lines, by default True (points)
+            Represent valves as GIS points instead of lines, by default True (points)
         crs : str, optional
-            the coordinate system, by default ""
+            Coordinate reference system, by default "" 
         """
         from wntr.gis import wn_to_gis
         return wn_to_gis(
@@ -1257,24 +1258,26 @@ class WaterNetworkModel(AbstractModel):
         driver="GeoJSON",
     ):
         """
-        [summary]
+        Write the WaterNetworkModel to a GIS formatted files
 
         Parameters
         ----------
         prefix : str
-            [description]
+            File prefix name
         path : str, optional
-            [description], by default "."
+            File path, by default "."
         suffix : str, optional
-            [description], by default ""
+            File suffix, by default ""
         pump_as_point_geometry : bool, optional
-            [description], by default True
+            Represent pumps as GIS points instead of lines, by default True (points)
         valve_as_point_geometry : bool, optional
-            [description], by default True
+            Represent valves as GIS points instead of lines, by default True (points)
         crs : str, optional
-            [description], by default ""
+            Coordinate reference system, by default "" 
         driver : str, optional
-            [description], by default "GeoJSON"
+            Geopandas driver. Use "GeoJSON" for GeoJSON files, use :code:`None` 
+            for ESRI shapefile folders, use GPKG for GeoPackage, by default 
+            "GeoJSON"
         """
         from wntr.gis import wn_to_gis
         obj = wn_to_gis(

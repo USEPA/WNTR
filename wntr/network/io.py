@@ -33,12 +33,12 @@ def to_dict(wn) -> dict:
     Parameters
     ----------
     wn : WaterNetworkModel
-        the water network model to convert to a dictionary
+        Water network model to convert to a dictionary
 
     Returns
     -------
     dict
-        dictionary representation of the water network model
+        Dictionary representation of the water network model
     """
     from wntr import __version__
 
@@ -72,14 +72,14 @@ def from_dict(
     Parameters
     ----------
     d : dict
-        dictionary representation of the water network model
+        Dictionary representation of the water network model
     append : WaterNetworkModel, optional
-        an existing water network model to append results to
+        Existing water network model to append results to
 
     Returns
     -------
     WaterNetworkModel
-        a new water network model or the appended existing model
+        New water network model or the appended existing model
     """
     from wntr.epanet.io import _read_control_line, _EpanetRule
 
@@ -296,7 +296,7 @@ def write_json(
     path_or_buf : str or IO stream
         Name of the file or file pointer
     kw_json : keyword arguments
-        arguments to pass directly to `json.dump`
+        Arguments to pass directly to `json.dump`
     """
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "w") as fout:
@@ -316,7 +316,7 @@ def read_json(
     f : str
         Name of the file or file pointer
     kw_json : keyword arguments
-        keyword arguments to pass to `json.load`
+        Keyword arguments to pass to `json.load`
 
     Returns
     -------
@@ -347,8 +347,8 @@ def write_inpfile(
 
     Parameters
     ----------
-    wn : WaterNetworkModel
-        model object to write INP file for
+    wn : wntr WaterNetworkModel
+        Water network model
 
     filename : string
         Name of the inp file.
@@ -416,14 +416,20 @@ def write_geojson(
 
     Parameters
     ----------
-    wn : wntr.network.WaterNetworkModel
-        [description]
+    wn : wntr WaterNetworkModel
+        Water network model
     prefix : str
-        [description]
+        File prefix
     path : str, optional
-        [description], by default the current directory
+        File path, by default the current directory
     suffix : str, optional
-        [description], by default None
+        File suffix, by default None
+    pumps_as_points : bool, optional
+        Represent pumps as GIS points instead of lines, by default True (points)
+    valve_as_point_geometry : bool, optional
+        Represent valves as GIS points instead of lines, by default True (points)
+    crs : str, optional
+        Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
         crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
@@ -455,14 +461,20 @@ def write_shapefiles(
 
     Parameters
     ----------
-    wn : wntr.network.WaterNetworkModel
-        [description]
+    wn : wntr WaterNetworkModel
+        Water network model
     prefix : str
-        [description]
+        File prefix
     path : str, optional
-        [description], by default the current directory
+        File path, by default the current directory
     suffix : str, optional
-        [description], by default None
+        File suffix, by default None
+    pump_as_point_geometry : bool, optional
+        Represent pumps as GIS points instead of lines, by default True (points)
+    valve_as_point_geometry : bool, optional
+        Represent valves as GIS points instead of lines, by default True (points)
+    crs : str, optional
+        Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
         crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
@@ -494,14 +506,20 @@ def write_gpkg(
 
     Parameters
     ----------
-    wn : wntr.network.WaterNetworkModel
-        [description]
+    wn : wntr WaterNetworkModel
+        Water network model
     prefix : str
-        [description]
+        File prefix
     path : str, optional
-        [description], by default the current directory
+        File path, by default the current directory
     suffix : str, optional
-        [description], by default None
+        File suffix, by default None
+    pump_as_point_geometry : bool, optional
+        Represent pumps as GIS points instead of lines, by default True (points)
+    valve_as_point_geometry : bool, optional
+        Represent valves as GIS points instead of lines, by default True (points)
+    crs : str, optional
+        Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
         crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
