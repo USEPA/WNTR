@@ -69,7 +69,7 @@ WNTR to add attributes to the water network model and the analysis.  Example ext
   These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
 * LineString or MultiLineString geometries that contain street layout, or earthquake fault lines.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
-* Polygon geometries that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability
+* Polygon geometries that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
 
 Convert a water network model to GeoDataFrames
@@ -78,10 +78,13 @@ Convert a water network model to GeoDataFrames
 A water network model can be converted to a group of GeoDataFrames using the function
 :class:`~wntr.gis.network.wn_to_gis`.
 One GeoDataFrame is created for each type of model component (Junction, Tank, Reservoir, Pipe, Pump, Valve).
-Component attributes (e.g., junction elevation) is stored in the GeoDataFrame along with the 
-components geometry.
+Component attributes (e.g., junction elevation) are stored in the GeoDataFrame along with the 
+component's geometry.
 
 The following example creates GeoDataFrames from a water network model.  Note that Net1 is used in the following example.
+The coordinate reference system (CRS) EPSG:4326 is used in the example.  
+This assumes that the coordinates are in degrees latitude and degrees longitude (which is not realistic for this network).  
+In practice, the user should know the CRS for the network coordinates.
 
 .. doctest::
 
@@ -114,13 +117,13 @@ For example, the junctions GeoDataFrame contains the following information
     13    Junction    211.836  ...    0.006309  POINT (70.00000 70.00000)
     21    Junction    213.360  ...    0.009464  POINT (30.00000 40.00000)
 
-The GeoDataFrames can be saved to GEOJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
+The GeoDataFrames can be saved to GeoJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
 
 .. doctest::
 
-    >>> wn_gis.write('Net1')
+    >>> wn_gis.write('Net1', driver='GeoJSON')
 	
-This creates the following GEOJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
+This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
 
 * Net1_junctions.geojson
 * Net1_tanks.geojson
@@ -129,8 +132,12 @@ This creates the following GEOJSON files for junctions, tanks, reservoirs, pipes
 * Net1_pumps.geojson
 * Net1_valves.geojson
 
+The `write` method includes an optional argument that sets the GeoPandas driver.  
+This allows the user to create Shapefiles and GeoPackage (GPKG) files in addition to GeoJSON files.
 These files can be loaded into GIS platforms for further analysis and visualization.
 
+The water network model also contains methods to write GeoJSON, Shapefile, and GPKG files directly.
+See :ref:`giswrite` for more information.
 
 Add attributes to the GeoDataFrames
 ----------------------------------------
@@ -154,6 +161,9 @@ Attributes can also be added directly to individual GeoDataFrames, as shown belo
 
     >>> wn_gis.junctions['new attribute'] = 10
 	
+
+.. _gisread:
+
 Convert GeoDataFrames to a water network model
 ----------------------------------------------
 
@@ -176,6 +186,7 @@ junctions, tanks, reservoirs, pipes, pumps, valves.
    The network will **NOT** contain patterns, curves, rules, controls, 
    or sources.  Water network model options are set to default values. 
    Additional functionality could be added to WNTR in a future release.
+
 
 The following example creates a water network model from the group of GeoDataFrames created above.
 

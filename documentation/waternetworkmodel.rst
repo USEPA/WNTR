@@ -277,7 +277,7 @@ EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
     >>> wn.write_inpfile('filename.inp', version=2.2)
 
 Read and write a model to a dictionary or JSON file
----------------------------------------------------
+---------------------------------------------------------
 
 The water network model can be converted to a dictionary representation.
 The dictionary contains keys for each of the following water network model objects: 
@@ -303,6 +303,24 @@ the dictionary representation with the Python standard library JSON loader and d
 Note that these methods do not check for a valid dictionary/JSON schema prior to building a model.
 They simply ignore extraneous or invalid dictionary keys.
 
+.. _giswrite:
+
+Write a model to GIS files
+--------------------------
+
+The water network model can also be converted to GIS formatted files, including 
+GeoJSON files,
+Shapefiles,
+and a GeoPackage using the method :class:`~wntr.network.model.WaterNetworkModel.write_gis_data`.
+
+.. doctest::
+
+    >>> wn.write_gis_data('Net3', driver='GeoJSON')
+
+.. note:: 
+   Water network models can be created from a collection of GeoDataFrames.  See :ref:`gisread` for more information.  
+   geopandas ``read_file`` method can be used to read GeoJSON, Shapefiles, and GeoPackage into GeoDataFrames.
+   
 Build a model from scratch
 ---------------------------------
 
