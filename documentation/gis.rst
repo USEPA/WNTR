@@ -22,6 +22,8 @@
     >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
     >>> valve_data = gpd.read_file(examples_dir+'/data/Net1_valve_data.geojson')
 
+.. _geospatial:
+
 Geospatial capabilities
 ======================================
 
@@ -208,7 +210,7 @@ the function returns the following information (one entry for each point in A):
 * If B is a line, the relative distance from the line's start node (line position)
 
 The following examples used geospatial data stored in the `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
-The  geopandas ``read_file`` method is used to read the GeoJSON files into GeoDataFrames.
+The geopandas ``read_file`` method is used to read the GeoJSON files into GeoDataFrames.
 
 Snap hydrants to junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
