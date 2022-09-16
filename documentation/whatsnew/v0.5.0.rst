@@ -2,15 +2,15 @@
 
 v0.5.0 (main)
 ---------------------------------------------------
-* Added GIS capabilities, including the following:
+* Added GIS capabilities in a `wntr.gis` module, which includes the following:
 
   * Convert between water network models and GIS formatted data (GeoPandas) 
     and GIS formatted files (GeoJSON, Shapefiles, GeoPackage)
   
   * Snap GeoPandas point data to elements in a water network model
   
-  * Find the intersection between GeoPandas polygons and elements in a 
-    water network model
+  * Find the intersection between GeoPandas points, line or polygons and 
+    elements in a water network model
   
   * See :ref:`geospatial` section of the user manual for more information.
   

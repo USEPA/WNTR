@@ -226,8 +226,6 @@ The following Python packages are optional:
   https://openpyxl.readthedocs.io
 * numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
-* nose: used to run software tests,
-  http://nose.readthedocs.io
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.
 

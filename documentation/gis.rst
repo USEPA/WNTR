@@ -34,8 +34,12 @@ in Python with geospatial packages such as geopandas and shapely, and
 in geographic information system (GIS) platforms.
 Open source GIS platforms include QGIS and GRASS GIS.
 
-The following capabilities depend on the geopandas Python package
-which stores data in GeoDataFrames.  
+.. note:: 
+   The GIS capabilities described below require the Python packages **geopandas** [JVFM21]_ 
+   and **rtree** [rtree]_, both are optional dependencies of WNTR.
+   Note that **shapely** is installed with geopandas.
+	
+The following capabilities use data stored in geopandas GeoDataFrames.  
 Each GeoDataFrame contain a `geometry` column which contains 
 geometric objects commonly used in geospatial analysis.
 
