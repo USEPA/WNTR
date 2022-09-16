@@ -3,14 +3,11 @@ The wntr.gis.network module contains methods to convert between water network
 models and GIS formatted data
 """
 
-import os.path
-import warnings
-
 import pandas as pd
 import numpy as np
 
 try:
-    from shapely.geometry import LineString, Point, shape
+    from shapely.geometry import LineString, Point
     has_shapely = True
 except ModuleNotFoundError:
     has_shapely = False
@@ -22,7 +19,7 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
 
-def wn_to_gis(wn, crs=None, pump_as_point_geometry=False, valve_as_point_geometry=False):
+def wn_to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
     """
     Convert a WaterNetworkModel into GeoDataFrames
     
@@ -32,10 +29,10 @@ def wn_to_gis(wn, crs=None, pump_as_point_geometry=False, valve_as_point_geometr
         Water network model
     crs : str, optional
         Coordinate reference system, by default None
-    pump_as_point_geometry : bool, optional
-        Create pumps as points (True) or lines (False), by default False
-    valve_as_point_geometry : bool, optional
-        Create valves as points (True) or lines (False), by default False
+    pumps_as_points : bool, optional
+        Represent pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Represent valves as points (True) or lines (False), by default False
         
     Returns
     -------
@@ -44,7 +41,7 @@ def wn_to_gis(wn, crs=None, pump_as_point_geometry=False, valve_as_point_geometr
         
     """
     gis_data = WaterNetworkGIS()
-    gis_data.create_gis(wn, crs, pump_as_point_geometry, valve_as_point_geometry)
+    gis_data.create_gis(wn, crs, pumps_as_points, valves_as_points)
     
     return gis_data
 
@@ -104,8 +101,8 @@ class WaterNetworkGIS:
         self.pumps = None
         self.valves = None
 
-    def create_gis(self, wn, crs: str = None, pump_as_point_geometry: bool = False, 
-                   valve_as_point_geometry: bool = False,) -> None:
+    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = False, 
+                   valves_as_points: bool = False,) -> None:
         """
         Create GIS data from a water network model.
         
@@ -118,10 +115,10 @@ class WaterNetworkGIS:
             Water network model
         crs : str, optional
             Coordinate reference system, by default None
-        pump_as_point_geometry : bool, optional
-            Create pumps as points (True) or lines (False), by default False
-        valve_as_point_geometry : bool, optional
-            Create valves as points (True) or lines (False), by default False
+        pumps_as_points : bool, optional
+            Represent pumps as points (True) or lines (False), by default False
+        valves_as_points : bool, optional
+            Represent valves as points (True) or lines (False), by default False
         """
         ### Junctions
         data = list()
@@ -212,7 +209,7 @@ class WaterNetworkGIS:
                 initial_setting=link.initial_setting,
             )
             data.append(dd)
-            if valve_as_point_geometry:
+            if valves_as_points:
                 geometry.append(g2)
             else:
                 geometry.append(g)
@@ -245,7 +242,7 @@ class WaterNetworkGIS:
                 initial_setting=link.initial_setting,
             )
             data.append(dd)
-            if pump_as_point_geometry:
+            if pumps_as_points:
                 geometry.append(g2)
             else:
                 geometry.append(g)
@@ -289,7 +286,7 @@ class WaterNetworkGIS:
         
     def create_wn(self):
         """
-        Create a water network model from GIS data
+        Create a WaterNetworkModel from GIS data
         
         Note: The water network model will not include patterns, curves, rules, 
         controls, or sources.  Options will be set to default values.
@@ -428,7 +425,8 @@ class WaterNetworkGIS:
 
     def write(self, prefix: str, crs: str = None, driver="GeoJSON") -> None:
         """
-        Write the Geometry object to GIS file(s) with names constructed from parameters.
+        Write the WaterNetworkGIS object to GIS file(s) with names 
+        constructed from parameters.
 
         One file will be created for each type of network element (junctions, 
         pipes, etc.) if those elements exists in the network

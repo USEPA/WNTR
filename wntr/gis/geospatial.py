@@ -2,8 +2,6 @@
 The wntr.gis.geospatial module contains functions to snap data and find 
 intersects with polygons.
 """
-import os.path
-import warnings
 
 import pandas as pd
 import numpy as np
@@ -24,10 +22,10 @@ except ModuleNotFoundError:
 
 def snap(A, B, tolerance):  
     """
-    Returns new points with coordinates snapped to the nearest points or lines.
-    
-    The function returns Point geometry and associated element in B
-    for each Point geometry in A. Note the CRS of A must equal the CRS of B.
+    Snap Points in A to Points or Lines in B
+
+    For each Point geometry in A, the function returns snapped Point geometry 
+    and associated element in B. Note the CRS of A must equal the CRS of B.
     
     Parameters
     ----------
@@ -37,24 +35,24 @@ def snap(A, B, tolerance):
         GeoDataFrame containing Point, LineString, or MultiLineString geometries.
     tolerance : float
         Maximum allowable distance (in the coordinate reference system units) 
-        between Points in A and element in B.  
+        between Points in A and Points or Lines in B.  
     
     Returns
     -------
     GeoPandas GeoDataFrame
-        Snapped points (index = A.index, columns = stats)
+        Snapped points (index = A.index, columns = defined below)
         
         If B contains Points, columns include:
-            - node: closest node to each point
-            - snap_distance: distance between original and snapped points
-            - geometry: GeoPandas Point object of each point snapped to the nearest node
+            - node: closest Point in B to Point in A
+            - snap_distance: distance between Point in A and snapped point
+            - geometry: GeoPandas Point object of the snapped point
         
         If B contains Lines or MultiLineString, columns include:
-            - link: closest line to each point
-            - node: start or end node closest to the point along the line
-            - snap_distance: distance between original and snapped points
-            - line_position: normalized distance of snapped points along the lines from the start node (0.0) and end node (1.0)
-            - geometry: GeoPandas Point object of each point snapped to the nearest line
+            - link: closest Line in B to Point in A
+            - node: start or end node of Line in B that is closest to the snapped point
+            - snap_distance: distance between Point A and snapped point
+            - line_position: normalized distance of snapped point along Line in B from the start node (0.0) and end node (1.0)
+            - geometry: GeoPandas Point object of the snapped point
     """   
     if not has_shapely or not has_geopandas:
         raise ModuleNotFoundError('shapley and geopandas are required')
@@ -69,7 +67,7 @@ def snap(A, B, tolerance):
     B = B.reset_index()
     B.rename(columns={'index':'indexB'}, inplace=True)
     
-    # Define the coordinate referece system, based on B
+    # Define the coordinate reference system, based on B
     crs = B.crs
     
     # Determine which Bs are closest to each A
@@ -146,8 +144,8 @@ def _backgound(A, B):
 
 def intersect(A, B, B_value=None, include_background=False, background_value=0):
     """
-    Identify geometries that intersect and return statistics on the 
-    intersecting values.
+    Intersect Points, Lines or Polygons in A with Points, Lines, or Polygons in B.
+    Return statistics on the intersection.
     
     The function returns information about the intersection for each geometry 
     in A. Each geometry in B is assigned a value based on a column of data in 
@@ -160,7 +158,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     B : geopandas GeoDataFrame
         GeoDataFrame containing  Point, LineString, or Polygon geometries
     B_value : str or None (optional)
-        Column name in the B GeoDataFrame used to assign a value to each geometry.
+        Column name in B used to assign a value to each geometry.
         Default is None.
     include_background : bool (optional) 
          Include background, defined as space covered by A that is not covered by B 
@@ -168,34 +166,38 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
          to B and is given the name 'BACKGROUND'. Default is False.
     background_value : int or float (optional)
         The value given to background space. This value is used in the intersection 
-        statistics if a B_value colunm name is provided. Default is 0.
+        statistics if a B_value column name is provided. Default is 0.
         
     Returns
     -------
     pandas DataFrame
-        Intersection statistics (index = A.index, columns = stats)
+        Intersection statistics (index = A.index, columns = defined below)
         Columns include:
             - n: number of intersecting B geometries
-            - intersections: list of intersecting B geometry indicies
+            - intersections: list of intersecting B indices
             
         If B_value is given:
-            - values: list of intersecting B geometry values
-            - sum: sum of the intersecting B geometry values
-            - min: minimum of the intersecting B geometry values
-            - max: maximum value of the intersecting B geometry values
-            - mean: mean value of the intersecting B geometry values
+            - values: list of intersecting B values
+            - sum: sum of the intersecting B values
+            - min: minimum of the intersecting B values
+            - max: maximum of the intersecting B values
+            - mean: mean of the intersecting B values
             
         If A contains Lines and B contains Polygons:
-            - weighted_mean: weighted mean of intersecting B geometry values
+            - weighted_mean: weighted mean of intersecting B values
 
     """
     if not has_shapely or not has_geopandas:
         raise ModuleNotFoundError('shapley and geopandas are required')
         
     isinstance(A, gpd.GeoDataFrame)
-    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']).all()
+    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 
+                                           'MultiLineString', 'Polygon', 
+                                           'MultiPolygon']).all()
     isinstance(B, gpd.GeoDataFrame)
-    assert (B['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']).all()
+    assert (B['geometry'].geom_type).isin(['Point', 'LineString', 
+                                           'MultiLineString', 'Polygon', 
+                                           'MultiPolygon']).all()
     if isinstance(B_value, str):
         assert B_value in B.columns
     isinstance(include_background, bool)

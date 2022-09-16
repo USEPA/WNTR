@@ -1224,7 +1224,7 @@ class WaterNetworkModel(AbstractModel):
         """
         return wntr.network.io.read_json(f, append=self, **kw_json)
 
-    def to_gis_data(self, pump_as_point_geometry=True, valve_as_point_geometry=True, crs=""):
+    def to_gis_data(self, pumps_as_points=True, valves_as_points=True, crs=""):
         """
         Return the WaterNetworkModel in GeoDataFrame format, one for each network element.
         
@@ -1235,16 +1235,16 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        pump_as_point_geometry : bool, optional
-            Represent pumps as GIS points instead of lines, by default True (points)
-        valve_as_point_geometry : bool, optional
-            Represent valves as GIS points instead of lines, by default True (points)
+        pumps_as_points : bool, optional
+            Represent pumps as points (True) or lines (False), by default False
+        valves_as_points : bool, optional
+            Represent valves as points (True) or lines (False), by default False
         crs : str, optional
             Coordinate reference system, by default "" 
         """
         from wntr.gis import wn_to_gis
         return wn_to_gis(
-            self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+            self, crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
         )
 
     def write_gis_data(
@@ -1252,8 +1252,8 @@ class WaterNetworkModel(AbstractModel):
         prefix: str,
         path: str = ".",
         suffix: str = "",
-        pump_as_point_geometry=True,
-        valve_as_point_geometry=True,
+        pumps_as_points=True,
+        valves_as_points=True,
         crs="",
         driver="GeoJSON",
     ):
@@ -1268,10 +1268,10 @@ class WaterNetworkModel(AbstractModel):
             File path, by default "."
         suffix : str, optional
             File suffix, by default ""
-        pump_as_point_geometry : bool, optional
-            Represent pumps as GIS points instead of lines, by default True (points)
-        valve_as_point_geometry : bool, optional
-            Represent valves as GIS points instead of lines, by default True (points)
+        pumps_as_points : bool, optional
+            Represent pumps as points (True) or lines (False), by default False
+        valves_as_points : bool, optional
+            Represent valves as points (True) or lines (False), by default False
         crs : str, optional
             Coordinate reference system, by default "" 
         driver : str, optional
@@ -1281,7 +1281,7 @@ class WaterNetworkModel(AbstractModel):
         """
         from wntr.gis import wn_to_gis
         obj = wn_to_gis(
-            self, crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+            self, crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
         )
         obj.write(prefix, path=path, suffix=suffix, driver=driver)
 

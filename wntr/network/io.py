@@ -397,8 +397,8 @@ def write_geojson(
     prefix: str,
     path: str = ".",
     suffix: str = "",
-    pump_as_point_geometry=True,
-    valve_as_point_geometry=True,
+    pumps_as_points=True,
+    valves_as_points=True,
     crs="",
 ):
     """
@@ -425,14 +425,14 @@ def write_geojson(
     suffix : str, optional
         File suffix, by default None
     pumps_as_points : bool, optional
-        Represent pumps as GIS points instead of lines, by default True (points)
-    valve_as_point_geometry : bool, optional
-        Represent valves as GIS points instead of lines, by default True (points)
+        Represent pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Represent valves as points (True) or lines (False), by default False
     crs : str, optional
         Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
-        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
     )
     geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GeoJSON")
 
@@ -442,8 +442,8 @@ def write_shapefiles(
     prefix: str,
     path: str = ".",
     suffix: str = "",
-    pump_as_point_geometry=True,
-    valve_as_point_geometry=True,
+    pumps_as_points=True,
+    valves_as_points=True,
     crs="",
 ):
     """
@@ -469,15 +469,15 @@ def write_shapefiles(
         File path, by default the current directory
     suffix : str, optional
         File suffix, by default None
-    pump_as_point_geometry : bool, optional
-        Represent pumps as GIS points instead of lines, by default True (points)
-    valve_as_point_geometry : bool, optional
-        Represent valves as GIS points instead of lines, by default True (points)
+    pumps_as_points : bool, optional
+        Represent pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Represent valves as points (True) or lines (False), by default False
     crs : str, optional
         Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
-        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
     )
     geometry.write(prefix=prefix, path=path, suffix=suffix, driver=None)
 
@@ -487,8 +487,8 @@ def write_gpkg(
     prefix: str,
     path: str = ".",
     suffix: str = "",
-    pump_as_point_geometry=True,
-    valve_as_point_geometry=True,
+    pumps_as_points=True,
+    valves_as_points=True,
     crs="",
 ):
     """
@@ -514,15 +514,15 @@ def write_gpkg(
         File path, by default the current directory
     suffix : str, optional
         File suffix, by default None
-    pump_as_point_geometry : bool, optional
-        Represent pumps as GIS points instead of lines, by default True (points)
-    valve_as_point_geometry : bool, optional
-        Represent valves as GIS points instead of lines, by default True (points)
+    pumps_as_points : bool, optional
+        Represent pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Represent valves as points (True) or lines (False), by default False
     crs : str, optional
         Coordinate reference system, by default "" 
     """
     geometry = wn.get_gis_data(
-        crs, pump_as_point_geometry=pump_as_point_geometry, valve_as_point_geometry=valve_as_point_geometry
+        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
     )
     geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GPKG")
 
