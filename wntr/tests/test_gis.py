@@ -213,13 +213,12 @@ class TestGIS(unittest.TestCase):
             if isfile(filename):
                 os.remove(filename)
             
-        self.gis_data.write(prefix)
+        self.gis_data.write(abspath(join(testdir, prefix)))
 
         for component in components:
             if component == 'valves':
                 continue # Net1 has no valves
             filename = abspath(join(testdir, prefix+'_'+component+'.geojson'))
-            print(filename)
             self.assertTrue(isfile(filename))
 
     def test_snap_points_to_points(self):
