@@ -18,7 +18,7 @@ jobs:
         # python-version: ['3.7', '3.10']
         # os: [ubuntu-latest]
         python-version: ['3.7', '3.8', '3.9', '3.10']
-        os: [windows-latest, macOS-latest, ubuntu-latest] 
+        os: [macOS-latest, ubuntu-latest] #[windows-latest, macOS-latest, ubuntu-latest] 
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -50,7 +50,7 @@ jobs:
         # python-version: ['3.7', '3.10']
         # os: [ubuntu-latest]
         python-version: ['3.7', '3.8', '3.9', '3.10']
-        os: [windows-latest, macOS-latest, ubuntu-latest]    
+        os: [macOS-latest, ubuntu-latest] #[windows-latest, macOS-latest, ubuntu-latest]    
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
@@ -78,7 +78,7 @@ jobs:
       matrix:
         python-version: ['3.7', '3.10']
         # os: [ubuntu-latest]
-        os: [windows-latest, macOS-latest, ubuntu-latest]
+        os: [macOS-latest, ubuntu-latest] #[windows-latest, macOS-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
