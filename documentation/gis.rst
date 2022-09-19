@@ -284,6 +284,7 @@ Note that the tolerance is increased to ensure all junctions are assigned a hydr
 .. doctest::
 
     >>> snapped_to_hydrants = wntr.gis.snap(wn_gis.junctions, hydrant_data, tolerance=100.0)
+    >>> print(snapped_to_hydrants)
         node  snap_distance                   geometry
     10     2      31.219385  POINT (51.20000 71.10000)
     11     2      21.228519  POINT (51.20000 71.10000)

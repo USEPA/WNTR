@@ -1250,11 +1250,9 @@ class WaterNetworkModel(AbstractModel):
     def write_gis_data(
         self,
         prefix: str,
-        path: str = ".",
-        suffix: str = "",
         pumps_as_points=True,
         valves_as_points=True,
-        crs="",
+        crs=None,
         driver="GeoJSON",
     ):
         """
@@ -1264,10 +1262,6 @@ class WaterNetworkModel(AbstractModel):
         ----------
         prefix : str
             File prefix name
-        path : str, optional
-            File path, by default "."
-        suffix : str, optional
-            File suffix, by default ""
         pumps_as_points : bool, optional
             Represent pumps as points (True) or lines (False), by default False
         valves_as_points : bool, optional
@@ -1283,7 +1277,7 @@ class WaterNetworkModel(AbstractModel):
         obj = wn_to_gis(
             self, crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
         )
-        obj.write(prefix, path=path, suffix=suffix, driver=driver)
+        obj.write(prefix, crs=crs, driver=driver)
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
