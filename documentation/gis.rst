@@ -8,6 +8,7 @@
     >>> import wntr
     >>> import numpy as np
     >>> import pandas as pd
+    >>> pd.options.display.max_columns = None
     >>> import geopandas as gpd
     >>> import shapely
     >>> import matplotlib.pylab as plt
