@@ -30,7 +30,7 @@ Geospatial capabilities
 The junctions, tanks, reservoirs, pipes, pumps, and valves in a water network model can be converted to 
 geospatial data objects. These objects can be used 
 directly within WNTR, 
-in Python with geospatial packages such as geopandas and shapely, and 
+in Python with geospatial packages such as GeoPandas and Shapely, and 
 in geographic information system (GIS) platforms.
 Open source GIS platforms include QGIS and GRASS GIS.
 
@@ -39,7 +39,7 @@ Open source GIS platforms include QGIS and GRASS GIS.
    and **rtree** [rtree]_, both are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
 	
-The following capabilities use data stored in geopandas GeoDataFrames.  
+The following capabilities use data stored in GeoPandas GeoDataFrames.  
 Each GeoDataFrame contain a `geometry` column which contains 
 geometric objects commonly used in geospatial analysis.
 
@@ -71,9 +71,9 @@ A few components can be defined using multiple types:
 External datasets that are defined using geospatial data objects can be utilized within 
 WNTR to add attributes to the water network model and the analysis.  Example external datasets include:
 
-* Point geometries that contain utility billing data, hydrant locations, or valve locations. 
+* Point geometries that contain utility billing data, hydrant locations, isolation valve locations, or the location of emergency services.
   These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
-* LineString or MultiLineString geometries that contain street layout, or earthquake fault lines.
+* LineString or MultiLineString geometries that contain street layout or earthquake fault lines.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
 * Polygon geometries that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
@@ -87,10 +87,18 @@ One GeoDataFrame is created for each type of model component (Junction, Tank, Re
 Component attributes (e.g., junction elevation) are stored in the GeoDataFrame along with the 
 component's geometry.
 
+.. note:: 
+   When converting a water network model into GeoDataFrames, the user can specify the 
+   coordinate reference system (CRS) for the node coordinates.
+   By default, the CRS is not specified (and is set to None).  
+   CRSs can be geographic (e.g., latitude/longitude where the units are in degrees) or 
+   projected (e.g., Universal Transverse Mercator where units are in meters).
+   Projected CRSs are preferred for more accurate distance calculations.  
+   GeoPandas includes documentation on managing projections and includes the ``to_crs`` method to convert between CRSs 
+   Additionally, WNTR includes methods to modify coordinates, see :ref:`modify_node_coords` for more information.
+   
 The following example creates GeoDataFrames from a water network model.  Note that Net1 is used in the following example.
-The coordinate reference system (CRS) EPSG:4326 is used in the example.  
-This assumes that the coordinates are in degrees latitude and degrees longitude (which is not realistic for this network).  
-In practice, the user should know the CRS for the network coordinates.
+The CRS EPSG:4326 assumes that the coordinates are in degrees latitude and degrees longitude (which is not realistic for this network).  
 
 .. doctest::
 
@@ -136,13 +144,13 @@ This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes
 * Net1_reservoirs.geojson
 * Net1_pipes.geojson
 * Net1_pumps.geojson
-* Net1_valves.geojson
+* Note, Net1_valves.geojson not created since Net1 has no valves
 
 The `write` method includes an optional argument that sets the GeoPandas driver.  
 This allows the user to create Shapefiles and GeoPackage (GPKG) files in addition to GeoJSON files.
 These files can be loaded into GIS platforms for further analysis and visualization.
 
-The water network model also contains methods to write GeoJSON, Shapefile, and GPKG files directly.
+The water network model also contains methods to write GeoJSON, Shapefile, and GPKG files directly (without converting the water network model to GeoDataFrames).
 See :ref:`giswrite` for more information.
 
 Add attributes to the GeoDataFrames
@@ -180,7 +188,7 @@ junctions, tanks, reservoirs, pipes, pumps, valves.
 
 .. note:: 
    A water network model created from GeoDataFrames contains only topography and 
-   a subset of attributes.  The attributes are limited to those included in the following methods:
+   select attributes.  The attributes are limited to those included in the following methods:
 
    * :class:`~wntr.network.WaterNetworkModel.add_junction`
    * :class:`~wntr.network.WaterNetworkModel.add_tank`
@@ -204,17 +212,19 @@ Snap point geometries to the nearest point or line
 ----------------------------------------------------
 
 The :class:`~wntr.gis.snap` function is used to find the nearest point or line to a set of points. 
-When snapping Point geometries in A to Point or Line geometries in B, 
+This functionality can be used to assign hydrants to junctions or assign isolation valves to pipes.
+
+When snapping Point geometries in GeoDataFrame A to Point or Line geometries in GeoDataFrame B, 
 the function returns the following information (one entry for each point in A):
 
 * Nearest point or line in B
 * Distance between original and snapped point
 * Coordinates of the snapped point
-* If B is a line, the nearest endpoint along the nearest line
-* If B is a line, the relative distance from the line's start node (line position)
+* If B contains Lines, the nearest endpoint along the nearest line
+* If B contains Lines, the relative distance from the line's start node (line position)
 
 The following examples used geospatial data stored in the `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
-The geopandas ``read_file`` method is used to read the GeoJSON files into GeoDataFrames.
+The GeoPandas ``read_file`` method is used to read the GeoJSON files into GeoDataFrames.  
 
 Snap hydrants to junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -258,15 +268,33 @@ The data, water network model, and snapped points can be plotted as follows.
     >>> plt.tight_layout()
     >>> plt.savefig('snap_points.png', dpi=300)
 
-:numref:`fig-snap-points` illustrates points snapped to junctions.
+:numref:`fig-snap-points` illustrates hydrants snapped to junctions.
 
 .. _fig-snap-points:
 .. figure:: figures/snap_points.png
    :width: 800
    :alt: napped points to points
 
-   Example points snapped to junctions
+   Example hydrants snapped to junctions
+
+** By reversing the order of GeoDataFrames in the snap function**,
+the nearest hydrant to each junction can also be identified.
+Note that the tolerance is increased to ensure all junctions are assigned a hydrant.
    
+.. doctest::
+
+    >>> snapped_to_hydrants = wntr.gis.snap(wn_gis.junctions, hydrant_data, tolerance=100.0)
+        node  snap_distance                   geometry
+    10     2      31.219385  POINT (51.20000 71.10000)
+    11     2      21.228519  POINT (51.20000 71.10000)
+    12     2       1.627882  POINT (51.20000 71.10000)
+    13     1       2.475884  POINT (71.80000 68.30000)
+    21     0      18.414125  POINT (48.20000 37.20000)
+    22     0       3.328663  POINT (48.20000 37.20000)
+    23     0      21.979081  POINT (48.20000 37.20000)
+    31     0      32.727359  POINT (48.20000 37.20000)
+    32     0      27.259494  POINT (48.20000 37.20000)
+
 Snap valves to pipes
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -327,8 +355,11 @@ The data, water network model, and valve layer can be plotted as follows.
 Find the intersect between geometries
 --------------------------------------
 
-The :class:`~wntr.gis.intersect`  function returns s used to find the intersection between geometries.
-When finding the intersection of A with B (where A and B can be Points, Lines, or Polygons),
+The :class:`~wntr.gis.intersect`  function is used to find the intersection between geometries.
+This functionality can be used to identify faults or landslides that intersect pipes,
+or assign demographic data to network components.
+
+When finding the intersection of GeoDataFrame A with GeoDataFrame B (where A and B can contain Points, Lines, or Polygons),
 the function returns the following information (one entry for each geometry in A):
 
 * List of intersecting B geometry indices
@@ -340,7 +371,7 @@ The following additional information is returned when geometries in B are assign
 * Minimum B geometry value
 * Maximum B geometry value
 * Mean B geometry value
-* If A is a Line and B is a Polygon, weighted mean value (weighted by intersecting length)
+* If A contains Lines and B contains Polygons, weighted mean value (weighted by intersecting length)
 
 When the B geometry contains Polygons, the user can optionally include the background in the intersection.
 This is useful when working with geometries that do not cover the entire region of interest.
@@ -487,7 +518,7 @@ Pipes are colored with the weighted mean probability.
 
    Example intersection of pipes with landslide zones
    
-By reversing the order of intersection, the pipes that intersect each landslide zone and information about 
+**By reversing the order of GeoDataFrames in the intersection function**, the pipes that intersect each landslide zone and information about 
 the intersecting pipe diameters can also be identified:
 
 .. doctest::
