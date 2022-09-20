@@ -28,6 +28,8 @@ datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
+@unittest.skipIf(not has_geopandas,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestGIS(unittest.TestCase):
     @classmethod
     def setUpClass(self):
