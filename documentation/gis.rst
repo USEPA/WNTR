@@ -8,6 +8,8 @@
     >>> import wntr
     >>> import numpy as np
     >>> import pandas as pd
+    >>> pd.options.display.expand_frame_repr = False
+    >>> pd.options.display.precision = 3
     >>> try:
     ...    import geopandas as gpd
     ...    has_geopandas = True
@@ -263,9 +265,9 @@ The following example uses the function :class:`~wntr.gis.snap` to snap hydrant 
     >>> snapped_to_junctions = wntr.gis.snap(hydrant_data, wn_gis.junctions, tolerance=5.0)
     >>> print(snapped_to_junctions)
       node  snap_distance                   geometry
-    0   22       3.328663  POINT (50.00000 40.00000)
-    1   13       2.475884  POINT (70.00000 70.00000)
-    2   12       1.627882  POINT (50.00000 70.00000)
+    0   22          3.329  POINT (50.00000 40.00000)
+    1   13          2.476  POINT (70.00000 70.00000)
+    2   12          1.628  POINT (50.00000 70.00000)
 
 The data, water network model, and snapped points can be plotted as follows.
 
@@ -302,15 +304,15 @@ Note that the tolerance is increased to ensure all junctions are assigned a hydr
     >>> snapped_to_hydrants = wntr.gis.snap(wn_gis.junctions, hydrant_data, tolerance=100.0)
     >>> print(snapped_to_hydrants)
         node  snap_distance                   geometry
-    10     2      31.219385  POINT (51.20000 71.10000)
-    11     2      21.228519  POINT (51.20000 71.10000)
-    12     2       1.627882  POINT (51.20000 71.10000)
-    13     1       2.475884  POINT (71.80000 68.30000)
-    21     0      18.414125  POINT (48.20000 37.20000)
-    22     0       3.328663  POINT (48.20000 37.20000)
-    23     0      21.979081  POINT (48.20000 37.20000)
-    31     0      32.727359  POINT (48.20000 37.20000)
-    32     0      27.259494  POINT (48.20000 37.20000)
+    10     2         31.219  POINT (51.20000 71.10000)
+    11     2         21.229  POINT (51.20000 71.10000)
+    12     2          1.628  POINT (51.20000 71.10000)
+    13     1          2.476  POINT (71.80000 68.30000)
+    21     0         18.414  POINT (48.20000 37.20000)
+    22     0          3.329  POINT (48.20000 37.20000)
+    23     0         21.979  POINT (48.20000 37.20000)
+    31     0         32.727  POINT (48.20000 37.20000)
+    32     0         27.259  POINT (48.20000 37.20000)
 
 Snap valves to pipes
 ^^^^^^^^^^^^^^^^^^^^^
@@ -508,19 +510,19 @@ the background conditions are included in the intersection function.
     >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', include_background=True, 
     ...    background_value=0)
     >>> print(pipe_Pr)
-              intersections            values  n   sum  min   max      mean  weighted_mean
-    10         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
-    11      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375000       0.200916
-    12         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
-    21   [BACKGROUND, 1, 0]  [0.0, 0.75, 0.5]  3  1.25  0.0  0.75  0.416667       0.394106
-    22      [BACKGROUND, 2]        [0.0, 0.9]  2  0.90  0.0  0.90  0.450000       0.246219
-    31      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375000       0.212106
-    110        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
-    111     [BACKGROUND, 0]        [0.0, 0.5]  2  0.50  0.0  0.50  0.250000       0.351759
-    112        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
-    113        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
-    121     [BACKGROUND, 0]        [0.0, 0.5]  2  0.50  0.0  0.50  0.250000       0.250000
-    122        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000000       0.000000
+              intersections            values  n   sum  min   max   mean  weighted_mean
+    10         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
+    11      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.201
+    12         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
+    21   [BACKGROUND, 1, 0]  [0.0, 0.75, 0.5]  3  1.25  0.0  0.75  0.417          0.394
+    22      [BACKGROUND, 2]        [0.0, 0.9]  2  0.90  0.0  0.90  0.450          0.246
+    31      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.212
+    110        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
+    111     [BACKGROUND, 0]        [0.0, 0.5]  2  0.50  0.0  0.50  0.250          0.352
+    112        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
+    113        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
+    121     [BACKGROUND, 0]        [0.0, 0.5]  2  0.50  0.0  0.50  0.250          0.250
+    122        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
 
 The data and water network model can be plotted as follows.  
 Pipes are colored with the weighted mean probability.
@@ -557,10 +559,10 @@ the intersecting pipe diameters can also be identified:
 
     >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
-        intersections                                             values  n     sum     min     max      mean
-    0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.7112  0.2032  0.2540  0.237067
-    1    [21, 11, 31]  [0.254, 0.35559999999999997, 0.15239999999999998]  3  0.7620  0.1524  0.3556  0.254000
-    2            [22]                              [0.30479999999999996]  1  0.3048  0.3048  0.3048  0.304800
+        intersections                                             values  n    sum    min    max   mean
+    0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.711  0.203  0.254  0.237
+    1    [21, 11, 31]  [0.254, 0.35559999999999997, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
+    2            [22]                              [0.30479999999999996]  1  0.305  0.305  0.305  0.305
 	
 Assign demographic data to pipes and junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -609,18 +611,18 @@ to assign demographic data to junctions and pipes.
     >>> pipe_demographics = wntr.gis.intersect(wn_gis.pipes, demographic_data, 'mean_income')
     >>> print(pipe_demographics)
         intersections              values  n       sum      min      max     mean  weighted_mean
-    10            [0]           [63326.0]  1   63326.0  63326.0  63326.0  63326.0   63326.000000
-    11         [0, 5]  [63326.0, 57620.0]  2  120946.0  57620.0  63326.0  60473.0   61002.920197
-    12            [5]           [57620.0]  1   57620.0  57620.0  57620.0  57620.0   57620.000000
-    21            [3]           [54040.0]  1   54040.0  54040.0  54040.0  54040.0   54040.000000
-    22         [3, 6]  [54040.0, 44871.0]  2   98911.0  44871.0  54040.0  49455.5   47067.894876
-    31            [2]           [91452.0]  1   91452.0  91452.0  91452.0  91452.0   91452.000000
-    110        [5, 7]  [57620.0, 69067.0]  2  126687.0  57620.0  69067.0  63343.5   60580.117330
-    111        [0, 3]  [63326.0, 54040.0]  2  117366.0  54040.0  63326.0  58683.0   60953.558146
-    112        [5, 3]  [57620.0, 54040.0]  2  111660.0  54040.0  57620.0  55830.0   56596.727809
-    113        [5, 6]  [57620.0, 44871.0]  2  102491.0  44871.0  57620.0  51245.5   53707.369923
-    121        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0   73586.481794
-    122        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0   66314.036586
+    10            [0]           [63326.0]  1   63326.0  63326.0  63326.0  63326.0      63326.000
+    11         [0, 5]  [63326.0, 57620.0]  2  120946.0  57620.0  63326.0  60473.0      61002.920
+    12            [5]           [57620.0]  1   57620.0  57620.0  57620.0  57620.0      57620.000
+    21            [3]           [54040.0]  1   54040.0  54040.0  54040.0  54040.0      54040.000
+    22         [3, 6]  [54040.0, 44871.0]  2   98911.0  44871.0  54040.0  49455.5      47067.895
+    31            [2]           [91452.0]  1   91452.0  91452.0  91452.0  91452.0      91452.000
+    110        [5, 7]  [57620.0, 69067.0]  2  126687.0  57620.0  69067.0  63343.5      60580.117
+    111        [0, 3]  [63326.0, 54040.0]  2  117366.0  54040.0  63326.0  58683.0      60953.558
+    112        [5, 3]  [57620.0, 54040.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
+    113        [5, 6]  [57620.0, 44871.0]  2  102491.0  44871.0  57620.0  51245.5      53707.370
+    121        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
+    122        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
 	
 The data and water network model can be plotted as follows. 
 Junctions and pipes are colored with their average value (weighted average for pipes).
