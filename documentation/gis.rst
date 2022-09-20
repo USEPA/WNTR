@@ -21,6 +21,11 @@
     >>> if not isdir(examples_dir):
     ...    examples_dir = 'examples'
     >>> wn = wntr.network.model.WaterNetworkModel(examples_dir+'/networks/Net1.inp')
+    
+.. doctest::
+    :skipif: not has_geopandas 
+    :hide:
+    
     >>> demographic_data = gpd.read_file(examples_dir+'/data/Net1_demographic_data.geojson')
     >>> landslide_data = gpd.read_file(examples_dir+'/data/Net1_landslide_data.geojson')
     >>> earthquake_data = gpd.read_file(examples_dir+'/data/Net1_earthquake_data.geojson')
