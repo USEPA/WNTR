@@ -211,6 +211,7 @@ def valve_segments(G, valve_layer):
     """
     # Convert the graph to an undirected graph
     uG = G.to_undirected()
+    print("Here i am!")
     
     # Node and link names
     nodes = list(uG.nodes()) # list of node names
@@ -248,30 +249,33 @@ def valve_segments(G, valve_layer):
     # pre-processing to find isolated elements before looping
     seg_label = {}
 
+    # find links with valves on either end -kb
     for start_node, end_node, link_name in links:
         link_valves = valve_layer[valve_layer['link']==link_name]
         if set(link_valves['node']) >= set([start_node, end_node]):
             seg_index += 1
             seg_label['L_'+link_name] = seg_index
-            
+
+    # find nodes with valves
     for node_name in nodes:
         node_valves = valve_layer[valve_layer['node']==node_name]
         node_links = [k for u,v,k in uG.edges(node_name, keys=True)]
         if set(node_valves['link']) >= set(node_links):
             seg_index += 1
             seg_label['N_'+node_name] = seg_index
-    
+
     # drop previously found isolated elements before looping
     DC = DC.drop(seg_label.keys())
     DC = DC.drop(seg_label.keys(), axis=1)   
     
     DC_np = DC.to_numpy() # requires Pandas v.0.24.0
+    # DC_sp = sp.sparse.lil_array(DC_np)
 
     # vector of length nodes+links where the ith entry is the segment number of node/link i
     seg_label_DC = np.zeros(shape=(len(DC.index)), dtype=int)
 
     # Loop over all nodes and links to grow segments
-    for i in range(len(seg_label_DC)):
+    for i in range(seg_label_DC.shape[0]):
         
         # Only assign a seg_label if node/link doesn't already have one
         if seg_label_DC[i] == 0:
@@ -315,18 +319,18 @@ def valve_segments(G, valve_layer):
                     flag = False
                 else:
                     seg_size = new_seg_size
-          
                 # Update seg_DC and DC_np
-                seg_DC = DC_np[:,i] + np.sum(
-                                        p_seg_DC[:,connected_to_seg],axis=1
-                                        ) # this is slow
-                seg_DC = np.clip(seg_DC,0,1)          
+                seg_DC = np.zeros(seg_DC.shape)
+                seg_DC[DC_np[:,[i]].nonzero()[0]] = 1
+                seg_DC[np.sum(p_seg_DC[:,connected_to_seg],axis=1).reshape(-1,1).nonzero()[0]] = 1
+
+                # seg_DC = np.clip(seg_DC,0,1)          
                 DC_np[:,connected_to_seg] = np.repeat(
                                             seg_DC,len(connected_to_seg)).reshape(
                                             len(seg_DC),len(connected_to_seg))
                                             # this is somewhat slow
     
-    #        print(i, seg_size)
+            print(i, seg_size)
     
     # combine pre-processed and looped results
     seg_labels = list(seg_label.values()) + list(seg_label_DC)
