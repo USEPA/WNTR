@@ -2,6 +2,15 @@
 
     \clearpage
 
+.. doctest::
+    :hide:
+	
+    >>> try:
+    ...    import geopandas as gpd
+    ... except ModuleNotFoundError:
+    ...    gpd = None
+
+
 Water network model
 ======================================
 
@@ -314,6 +323,7 @@ Shapefiles,
 and a GeoPackage using the method :class:`~wntr.network.model.WaterNetworkModel.write_gis_data`.
 
 .. doctest::
+    :skipif: gpd is None
 
     >>> wn.write_gis_data('Net3', driver='GeoJSON')
 

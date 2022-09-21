@@ -12,9 +12,8 @@
     >>> pd.options.display.precision = 3
     >>> try:
     ...    import geopandas as gpd
-    ...    has_geopandas = True
     ... except ModuleNotFoundError:
-    ...    has_geopandas = False
+    ...    gpd = None
     >>> import matplotlib.pylab as plt
     >>> from os.path import isdir
     >>> examples_dir = '../examples'
@@ -23,9 +22,9 @@
     >>> wn = wntr.network.model.WaterNetworkModel(examples_dir+'/networks/Net1.inp')
     
 .. doctest::
-    :skipif: not has_geopandas 
     :hide:
-    
+    :skipif: gpd is None
+	
     >>> demographic_data = gpd.read_file(examples_dir+'/data/Net1_demographic_data.geojson')
     >>> landslide_data = gpd.read_file(examples_dir+'/data/Net1_landslide_data.geojson')
     >>> earthquake_data = gpd.read_file(examples_dir+'/data/Net1_earthquake_data.geojson')
@@ -111,7 +110,7 @@ The following example creates GeoDataFrames from a water network model.  Note th
 The CRS EPSG:4326 assumes that the coordinates are in degrees latitude and degrees longitude (which is not realistic for this network).  
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> import wntr # doctest: +SKIP
 	
@@ -121,7 +120,7 @@ The CRS EPSG:4326 assumes that the coordinates are in degrees latitude and degre
 Individual GeoDataFrames are obtained as follows (Note that Net1 has no valves and the GeoDataFrame for valves is empty).
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> wn_gis.junctions # doctest: +SKIP
     >>> wn_gis.tanks # doctest: +SKIP
@@ -133,7 +132,7 @@ Individual GeoDataFrames are obtained as follows (Note that Net1 has no valves a
 For example, the junctions GeoDataFrame contains the following information
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head()) # doctest: +SKIP
               type  elevation  ... base_demand                   geometry
@@ -147,7 +146,7 @@ For example, the junctions GeoDataFrame contains the following information
 The GeoDataFrames can be saved to GeoJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> wn_gis.write('Net1', driver='GeoJSON')
 	
@@ -178,7 +177,7 @@ Additional attributes, such as simulation results or resilience metric, can be u
 The following example adds simulated pressure at hour 1 to nodes (which includes junctions, tanks, and reservoirs).
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
@@ -187,7 +186,7 @@ The following example adds simulated pressure at hour 1 to nodes (which includes
 Attributes can also be added directly to individual GeoDataFrames, as shown below.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> wn_gis.junctions['new attribute'] = 10
 	
@@ -221,7 +220,7 @@ junctions, tanks, reservoirs, pipes, pumps, valves.
 The following example creates a water network model from the group of GeoDataFrames created above.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> wn2 = wntr.gis.gis_to_wn(wn_gis)
 
@@ -251,7 +250,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 `demand` column that defines fire flow requirements.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
     
     >>> import geopandas as gpd # doctest: +SKIP
 	
@@ -265,7 +264,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 The following example uses the function :class:`~wntr.gis.snap` to snap hydrant locations to the nearest junction.
 	
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> snapped_to_junctions = wntr.gis.snap(hydrant_data, wn_gis.junctions, tolerance=5.0)
     >>> print(snapped_to_junctions)
@@ -277,13 +276,13 @@ The following example uses the function :class:`~wntr.gis.snap` to snap hydrant 
 The data, water network model, and snapped points can be plotted as follows.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> ax = hydrant_data.plot()
     >>> ax = wntr.graphics.plot_network(wn, node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
     :hide:
     
     >>> bounds = ax.axis('equal')
@@ -304,7 +303,7 @@ the nearest hydrant to each junction can also be identified.
 Note that the tolerance is increased to ensure all junctions are assigned a hydrant.
    
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> snapped_to_hydrants = wntr.gis.snap(wn_gis.junctions, hydrant_data, tolerance=100.0)
     >>> print(snapped_to_hydrants)
@@ -326,7 +325,7 @@ The dataset used in this example defines valve locations.
 The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Point`` geometries.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> valve_data = gpd.read_file('data/Net1_valve_data.geojson') # doctest: +SKIP
     >>> print(valve_data)
@@ -338,7 +337,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 The following example uses the function :class:`~wntr.gis.snap` to snap valve locations to the nearest pipe.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> snapped_to_pipes = wntr.gis.snap(valve_data, wn_gis.pipes, tolerance=5.0)
     >>> print(snapped_to_pipes)
@@ -350,7 +349,7 @@ The following example uses the function :class:`~wntr.gis.snap` to snap valve lo
 The snapped locations can be used to define a :ref:`valvelayer` and then create network segments.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> valve_layer = snapped_to_pipes[['link', 'node']]
     >>> G = wn.get_graph()
@@ -359,13 +358,13 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
 The data, water network model, and valve layer can be plotted as follows.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> ax = valve_data.plot()
     >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, add_colorbar=False, ax=ax)
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None 
     :hide:
     
     >>> bounds = ax.axis('equal')
@@ -415,7 +414,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 `Pr` column which contains probability of an earthquake over magnitude 7.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> earthquake_data = gpd.read_file('data/Net1_earthquake_data.geojson') # doctest: +SKIP
     >>> print(earthquake_data)
@@ -428,7 +427,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 The following example uses the function :class:`~wntr.gis.intersect` to assign earthquake probability to pipes. 
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, earthquake_data, 'Pr')
     >>> print(pipe_Pr)
@@ -450,14 +449,14 @@ The data and water network model can be plotted as follows.
 Pipes are colored with their max probability.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> ax = earthquake_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['max'], link_width=1.5, 
     ...     node_range=[0,1], link_range=[0,1], ax=ax)
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
     :hide:
     
     >>> bounds = ax.axis('equal')
@@ -477,7 +476,7 @@ The intersect function can also be used to identify pipes that cross each fault 
 the order in which the geometries intersect, as shown below:
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> pipes_that_intersect_each_fault = wntr.gis.intersect(earthquake_data, wn_gis.pipes)
     >>> print(pipes_that_intersect_each_fault)
@@ -495,7 +494,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 `Pr` column which contains probability of damage from a landslide in that zone.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> landslide_data = gpd.read_file('data/Net1_landslide_data.geojson') # doctest: +SKIP
     >>> print(landslide_data)
@@ -510,7 +509,7 @@ hazard map does not include a "background" value that defines the probability of
 the background conditions are included in the intersection function.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None 
 
     >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', include_background=True, 
     ...    background_value=0)
@@ -533,14 +532,14 @@ The data and water network model can be plotted as follows.
 Pipes are colored with the weighted mean probability.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], link_width=1.5, 
     ...     node_range=[0,1], link_range=[0,1], ax=ax)
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
     :hide:
     
     >>> bounds = ax.axis('equal')
@@ -560,7 +559,7 @@ Pipes are colored with the weighted mean probability.
 the intersecting pipe diameters can also be identified:
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None 
 
     >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
@@ -577,7 +576,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 columns that store mean income, mean age, and population.
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> demographic_data = gpd.read_file('data/Net1_demographic_data.geojson') # doctest: +SKIP
     >>> print(demographic_data)
@@ -595,7 +594,7 @@ The following example uses the function :class:`~wntr.gis.intersect`
 to assign demographic data to junctions and pipes.  
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 'mean_income')
     >>> print(junction_demographics)
@@ -611,7 +610,7 @@ to assign demographic data to junctions and pipes.
     32           [2]  [91452.0]  1  91452.0  91452.0  91452.0  91452.0
 	
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> pipe_demographics = wntr.gis.intersect(wn_gis.pipes, demographic_data, 'mean_income')
     >>> print(pipe_demographics)
@@ -633,7 +632,7 @@ The data and water network model can be plotted as follows.
 Junctions and pipes are colored with their average value (weighted average for pipes).
 
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
 
     >>> ax = demographic_data.plot(column='mean_income', alpha=0.5,  
     ...     cmap='bone', vmin=10000, vmax=100000)
@@ -642,7 +641,7 @@ Junctions and pipes are colored with their average value (weighted average for p
     ...     node_range=[40000,80000], link_range=[40000,80000], ax=ax)
 						   
 .. doctest::
-    :skipif: not has_geopandas 
+    :skipif: gpd is None
     :hide:
     
     >>> bounds = ax.axis('equal')
