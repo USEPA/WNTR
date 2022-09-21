@@ -272,8 +272,8 @@ def valve_segments(G, valve_layer):
     DC = DC.drop(seg_label.keys(), axis=1)   
     
     DC_np = DC.to_numpy() # requires Pandas v.0.24.0
-    # DC_sp = sp.sparse.lil_array(DC_np)
-
+    # transpose to align with numpy's row major default
+    DC_np = DC_np.transpose()
     # vector of length nodes+links where the ith entry is the segment number of node/link i
     seg_label_DC = np.zeros(shape=(len(DC.index)), dtype=int)
 
@@ -304,8 +304,9 @@ def valve_segments(G, valve_layer):
             while flag:          
                
                 # Potential connectivity of the segment      
-                p_seg_DC = DC_np + seg_DC[:,None] # this is slow
-                
+                # p_seg_DC = DC_np + seg_DC[:,None] # this is slow
+                # should be able to drop ,None from above with tranpose fix
+                p_seg_DC = DC_np + seg_DC # this is slow
                 # Nodes and links that are connected to the segment
                 temp = np.max(p_seg_DC,axis=0) # this is somewhat slow
                 connected_to_seg = np.where(temp > 1)[0]   
@@ -324,14 +325,11 @@ def valve_segments(G, valve_layer):
                     seg_size = new_seg_size
                 # Update seg_DC and DC_np
                 seg_DC = np.zeros(seg_DC.shape)
-                seg_DC[DC_np[:,[i]].nonzero()[0]] = 1
-                seg_DC[np.sum(p_seg_DC[:,connected_to_seg],axis=1).reshape(-1,1).nonzero()[0]] = 1
+                seg_DC[DC_np[i,:].nonzero()] = 1
+                seg_DC[np.sum(p_seg_DC[connected_to_seg,:],axis=1).reshape(-1,1).nonzero()[0]] = 1
 
                 # seg_DC = np.clip(seg_DC,0,1)          
-                DC_np[:,connected_to_seg] = np.repeat(
-                                            seg_DC,len(connected_to_seg)).reshape(
-                                            len(seg_DC),len(connected_to_seg))
-                                            # this is somewhat slow
+                DC_np[connected_to_seg,:] = seg_DC
     
             print(i, seg_size)
     
