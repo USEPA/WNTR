@@ -325,7 +325,7 @@ and a GeoPackage using the method :class:`~wntr.network.model.WaterNetworkModel.
 .. doctest::
     :skipif: gpd is None
 
-    >>> wn.write_gis_data('Net3', driver='GeoJSON')
+    >>> wn.write_gis_data('Net3', driver='GeoJSON') # doctest: +SKIP
 
 .. note:: 
    Water network models can be created from a collection of GeoDataFrames.  See :ref:`gisread` for more information.  
