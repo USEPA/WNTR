@@ -186,6 +186,7 @@ def _links_in_simple_paths(G, sources, sinks):
 
     return link_count
 
+@profile
 def valve_segments(G, valve_layer):
     """
     Valve segmentation
