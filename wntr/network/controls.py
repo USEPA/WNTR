@@ -344,7 +344,7 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
             if value == 'OPEN':
                 return 1
             if value == 'ACTIVE':
-                return np.nan
+                return 2
             PM = 0
             words = value.split()
             if len(words) > 1:
@@ -363,6 +363,8 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
             return v
 
     def _repr_value(self, attr, value):
+        if attr.lower() in ['status'] and isinstance(value, str):
+            return value.upper()
         if attr.lower() in ['status'] and int(value) == value:
             return LinkStatus(int(value)).name.upper()
         return value
