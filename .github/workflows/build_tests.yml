@@ -86,7 +86,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         python setup.py develop
-    # pip install coveralls
     - name: Run Tests
       if: "${{ matrix.os }}" != "windows-latest"
       run: | 
