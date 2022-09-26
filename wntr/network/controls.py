@@ -364,7 +364,7 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
             if value == 'OPEN':
                 return 1
             if value == 'ACTIVE':
-                return np.nan
+                return 2
             PM = 0
             words = value.split()
             if len(words) > 1:
