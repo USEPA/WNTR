@@ -5,7 +5,7 @@ name: build
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, geojson ]
   pull_request:
     branches: [ main, dev ]
 
@@ -86,20 +86,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         python setup.py develop
-    - name: Run Tests
-      if: "${{ matrix.os }}" != "windows-latest"
-      run: | 
-        coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation
-      env:
-        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Run Tests on Windows
-      if: "${{ matrix.os }}" == "windows-latest"
+      if: matrix.os == "windows-latest"
       run: | # the following skips windows rst doctests that rely on geopandas (gis.rst) because skipif is not working properly
         coverage erase
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" --ignore-glob="*gis.rst" documentation
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Run Tests
+      if: matrix.os != "windows-latest"
+      run: | 
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
         
