@@ -347,7 +347,7 @@ functions.  A file or directory prefix is given to name the files.
 
 .. doctest::
 
-    >>> wntr.network.write_geojson(wn, 'Net3')
+    >>> wntr.network.write_geojson(wn, 'Net3') # doctest: +SKIP
 
 Note, the GeoPandas ``read_file`` method can also be used to read GeoJSON and Shapefiles into GeoDataFrames.
    

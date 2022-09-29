@@ -148,186 +148,26 @@ class WaterNetworkGIS:
         # Junctions
         df = df_nodes[df_nodes['node_type'] == 'Junction']
         self.junctions = _extract_geodataframe(df, crs)
-            
+        
+        # Tanks
         df = df_nodes[df_nodes['node_type'] == 'Tank']
         self.tanks = _extract_geodataframe(df, crs)
             
+        # Reservoirs
         df = df_nodes[df_nodes['node_type'] == 'Reservoir']
         self.reservoirs = _extract_geodataframe(df, crs)
             
+        # Pipes
         df = df_links[df_links['link_type'] == 'Pipe']
         self.pipes = _extract_geodataframe(df, crs, False)
             
+        # Pumps
         df = df_links[df_links['link_type'] == 'Pump']
         self.pumps = _extract_geodataframe(df, crs, pumps_as_points)
             
+        # Valves
         df = df_links[df_links['link_type'] == 'Valve']
-        self.valves = _extract_geodataframe(df, crs, valves_as_points)
-            
-        """
-        ### Junctions
-        data = list()
-        geometry = list()
-        for node_name in wn.junction_name_list:
-            node = wn.get_node(node_name)
-            g = Point(node.coordinates)
-            dd = dict(
-                name=node.name,
-                type=node.node_type,
-                elevation=node.elevation,
-                tag=node.tag,
-                initial_quality=node.initial_quality,
-                base_demand=node.base_demand,
-            )
-            data.append(dd)
-            geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.junctions = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-        
-        ### Tanks
-        data = list()
-        geometry = list()
-        for node_name in wn.tank_name_list:
-            node = wn.get_node(node_name)
-            g = Point(node.coordinates)
-            dd = dict(
-                name=node.name,
-                type=node.node_type,
-                elevation=node.elevation,
-                tag=node.tag,
-                initial_quality=node.initial_quality,
-                initial_level=node.init_level,
-            )
-            data.append(dd)
-            geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.tanks = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-        
-        ### Reservoirs
-        data = list()
-        geometry = list()
-        for node_name in wn.reservoir_name_list:
-            node = wn.get_node(node_name)
-            g = Point(node.coordinates)
-            dd = dict(
-                name=node.name,
-                type=node.node_type,
-                elevation=node.base_head,
-                tag=node.tag,
-                initial_quality=node.initial_quality,
-                base_head=node.base_head,
-            )
-            data.append(dd)
-            geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.reservoirs = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
-        ### Valves
-        data = list()
-        geometry = list()
-        for link_name in wn.valve_name_list:
-            ls = list()
-            link = wn.get_link(link_name)
-            ls.append(link.start_node.coordinates)
-            for v in link.vertices:
-                ls.append(v)
-            ls.append(link.end_node.coordinates)
-            g = LineString(ls)
-            g2 = Point(link.start_node.coordinates)
-            dd = dict(
-                name=link.name,
-                start_node_name=link.start_node_name,
-                end_node_name=link.end_node_name,
-                type=link.link_type,
-                valve_type=link.valve_type,
-                tag=link.tag,
-                initial_status=link.initial_status,
-                initial_setting=link.initial_setting,
-            )
-            data.append(dd)
-            if valves_as_points:
-                geometry.append(g2)
-            else:
-                geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.valves = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-
-        ### Pumps
-        data = list()
-        geometry = list()
-        for link_name in wn.pump_name_list:
-            ls = list()
-            link = wn.get_link(link_name)
-            ls.append(link.start_node.coordinates)
-            for v in link.vertices:
-                ls.append(v)
-            ls.append(link.end_node.coordinates)
-            g = LineString(ls)
-            g2 = Point(link.start_node.coordinates)
-            dd = dict(
-                name=link.name,
-                start_node_name=link.start_node_name,
-                end_node_name=link.end_node_name,
-                type=link.link_type,
-                pump_type=link.pump_type,
-                tag=link.tag,
-                initial_status=link.initial_status,
-                initial_setting=link.initial_setting,
-            )
-            data.append(dd)
-            if pumps_as_points:
-                geometry.append(g2)
-            else:
-                geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.pumps = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-        
-        ### Pipes
-        data = list()
-        geometry = list()
-        for link_name in wn.pipe_name_list:
-            ls = list()
-            link = wn.get_link(link_name)
-            ls.append(link.start_node.coordinates)
-            for v in link.vertices:
-                ls.append(v)
-            ls.append(link.end_node.coordinates)
-            g = LineString(ls)
-            dd = dict(
-                name=link.name,
-                start_node_name=link.start_node_name,
-                end_node_name=link.end_node_name,
-                type=link.link_type,
-                tag=link.tag,
-                initial_status=link.initial_status,
-                length=link.length,
-                diameter=link.diameter,
-                roughness=link.roughness,
-                cv=link.cv,
-            )
-            data.append(dd)
-            geometry.append(g)
-        df = pd.DataFrame(data)
-        if len(df) > 0:
-            df.set_index("name", inplace=True)
-            df.index.name = None
-        self.pipes = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
-        """
+        self.valves = _extract_geodataframe(df, crs, valves_as_points) 
         
     def create_wn(self, append=None):
         """
@@ -366,89 +206,6 @@ class WaterNetworkGIS:
         # Create WaterNetworkModel from dictionary
         from wntr.network import from_dict
         wn = from_dict(wn_dict, append)
-        """
-        from wntr.network import WaterNetworkModel
-        
-        if append is None:
-            wn = WaterNetworkModel()
-        else:
-            wn = append
-            
-        ### Junctions
-        if self.junctions.shape[0] > 0:
-            assert (self.junctions['geometry'].geom_type).isin(['Point']).all()
-            attributes = list(wn.add_junction.__code__.co_varnames)
-            valid_attributes = set(self.junctions.columns) & set(attributes)
-            valid_attributes.update(['coordinates'])
-            valid_attributes = list(valid_attributes)
-            # TODO: we could also set additional attributes....
-            # additional_attributes = set(self.junctions.columns) - set(attributes)
-            
-            for name, element in self.junctions.iterrows():
-                element['coordinates'] = (element.geometry.xy[0][0],
-                                         element.geometry.xy[1][0])
-                wn.add_junction(name, **element[valid_attributes].to_dict())
-        
-        ### Tanks
-        if self.tanks.shape[0] > 0:
-            assert (self.tanks['geometry'].geom_type).isin(['Point']).all()
-            attributes = list(wn.add_tank.__code__.co_varnames)
-            valid_attributes = set(self.tanks.columns) & set(attributes)
-            valid_attributes.update(['coordinates'])
-            valid_attributes = list(valid_attributes)
-            
-            for name, element in self.tanks.iterrows():
-                element['coordinates'] = (element.geometry.xy[0][0],
-                                         element.geometry.xy[1][0])
-                wn.add_tank(name, **element[valid_attributes].to_dict())
-    
-        ### Reservoirs
-        if self.reservoirs.shape[0] > 0:
-            assert (self.reservoirs['geometry'].geom_type).isin(['Point']).all()
-            attributes = list(wn.add_reservoir.__code__.co_varnames)
-            valid_attributes = set(self.reservoirs.columns) & set(attributes)
-            valid_attributes.update(['coordinates'])
-            valid_attributes = list(valid_attributes)
-            
-            for name, element in self.reservoirs.iterrows():
-                element['coordinates'] = (element.geometry.xy[0][0],
-                                         element.geometry.xy[1][0])
-                wn.add_reservoir(name, **element[valid_attributes].to_dict())
-                
-        ### Pipes
-        if self.pipes.shape[0] > 0:
-            assert 'start_node_name' in self.pipes.columns
-            assert 'end_node_name' in self.pipes.columns
-            attributes = list(wn.add_pipe.__code__.co_varnames)
-            valid_attributes = set(self.pipes.columns) & set(attributes)
-            valid_attributes = list(valid_attributes)
-    
-            for name, element in self.pipes.iterrows():
-                # TODO save vertices to the water network       
-                wn.add_pipe(name, **element[valid_attributes].to_dict())
-
-        ### Pumps
-        if self.pumps.shape[0] > 0:
-            assert 'start_node_name' in self.pumps.columns
-            assert 'end_node_name' in self.pumps.columns
-            attributes = list(wn.add_pump.__code__.co_varnames)
-            valid_attributes = set(self.pumps.columns) & set(attributes)
-            valid_attributes = list(valid_attributes)
-            
-            for name, element in self.pumps.iterrows():
-                wn.add_pump(name, **element[valid_attributes].to_dict())
-            
-        ### Valves
-        if self.valves.shape[0] > 0:
-            assert 'start_node_name' in self.valves.columns
-            assert 'end_node_name' in self.valves.columns
-            attributes = list(wn.add_valve.__code__.co_varnames)
-            valid_attributes = set(self.valves.columns) & set(attributes)
-            valid_attributes = list(valid_attributes)
-            
-            for name, element in self.valves.iterrows():
-                wn.add_valve(name, **element[valid_attributes].to_dict())
-        """
         
         return wn
                 
