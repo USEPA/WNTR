@@ -41,7 +41,7 @@ class TestGIS(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
-        self.gis_data = self.wntr.gis.wn_to_gis(self.wn)
+        self.gis_data = self.wn.to_gis()
         
         polygon_pts = [[(25,80), (65,80), (65,60), (25,60)],
                        [(25,60), (80,60), (80,30), (25,30)],
@@ -85,19 +85,19 @@ class TestGIS(unittest.TestCase):
         assert self.gis_data.reservoirs.shape[0] == self.wn.num_reservoirs
         assert self.gis_data.pipes.shape[0] == self.wn.num_pipes
         assert self.gis_data.pumps.shape[0] == self.wn.num_pumps
-        assert self.gis_data.valves.shape[0] == self.wn.num_valves
+        #assert self.gis_data.valves.shape[0] == self.wn.num_valves
         
         # Check minimal set of attributes
-        assert set(['type', 'elevation', 'geometry']).issubset(self.gis_data.junctions.columns)
-        assert set(['type', 'elevation', 'geometry']).issubset(self.gis_data.tanks.columns)
-        assert set(['type', 'elevation', 'geometry']).issubset(self.gis_data.reservoirs.columns)
-        assert set(['type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pipes.columns)
-        assert set(['type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pumps.columns)
-        #assert set(['type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.valves.columns) # Net1 has no valves
+        assert set(['node_type', 'elevation', 'geometry']).issubset(self.gis_data.junctions.columns)
+        assert set(['node_type', 'elevation', 'geometry']).issubset(self.gis_data.tanks.columns)
+        assert set(['node_type', 'geometry']).issubset(self.gis_data.reservoirs.columns)
+        assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pipes.columns)
+        assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pumps.columns)
+        #assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.valves.columns) # Net1 has no valves
         
     def test_gis_to_wn(self):
         
-        wn2 = wntr.gis.gis_to_wn(self.gis_data)
+        wn2 = wntr.network.io.from_gis(self.gis_data)
         G1 = self.wn.get_graph()
         G2 = wn2.get_graph()
         
@@ -176,7 +176,7 @@ class TestGIS(unittest.TestCase):
         wn = wntr.morph.break_pipe(self.wn, '22', '22_A', '22_A','22_B', split_at_point=0.5)
         wn.add_pipe('22_0', '22_A', '22_B', length=0)
         
-        gis_data = wntr.gis.wn_to_gis(wn)
+        gis_data = wn.to_gis()
         assert gis_data.pipes.length['22_0'] == 0
         
         # No value
