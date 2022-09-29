@@ -272,18 +272,26 @@ When using the EpanetSimulator, this step is not needed since EPANET starts at t
 
     >>> wn.reset_initial_values()
 
-Write a model to an INP file
----------------------------------
+Read and write a model to an INP file
+--------------------------------------
 
-The water network model can be written to a file in EPANET INP format.
+As described above, the water network model can be created from an INP file.
+This can be accomplished by creating the `WaterNetworkModel` with an INP file (as shown above), 
+or using the function :class:`~wntr.network.io.read_inpfile`.
 
+.. doctest::
+
+    >>> wn = wntr.network.read_inpfile('networks/Net3.inp') # doctest: +SKIP
+	
+The water network model can also be written to a file in EPANET INP format
+using the :class:`~wntr.network.io.write_inpfile` function.
 By default, files are written in the LPS (liter per second) EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., custom element attributes).
 EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
 
 .. doctest::
 
-    >>> wn.write_inpfile('filename.inp', version=2.2)
+    >>> wntr.network.write_inpfile(wn, 'filename.inp', version=2.2)
 
 Read and write a model to a dictionary or JSON file
 ---------------------------------------------------------
@@ -302,34 +310,46 @@ To create a water network model from a dictionary, use the :class:`~wntr.network
 
 The water network model can also be converted to a JSON (JavaScript Object Notation) file.  
 The JSON file is a formatted version of the dictionary representation.
-The :class:`~wntr.network.model.WaterNetworkModel.write_json` and :class:`~wntr.network.model.WaterNetworkModel.read_json` methods wrap 
+The :class:`~wntr.network.io.write_json` and :class:`~wntr.network.io.read_json` methods wrap 
 the dictionary representation with the Python standard library JSON loader and dumper.
 
 .. doctest::
 
-    >>> wn.write_json('Net3.json')
+    >>> wntr.network.write_json(wn, 'Net3.json')
 	
 Note that these methods do not check for a valid dictionary/JSON schema prior to building a model.
 They simply ignore extraneous or invalid dictionary keys.
 
 .. _giswrite:
 
-Write a model to GIS files
---------------------------
+Read and write a model to GeoDataFrames, GeoJSON files, or Shapefiles
+----------------------------------------------------------------------
 
-The water network model can also be converted to GIS formatted files, including 
-GeoJSON files,
-Shapefiles,
-and a GeoPackage using the method :class:`~wntr.network.model.WaterNetworkModel.write_gis_data`.
+The water network model can also be converted to GeoDataFrames and GIS formatted files, including 
+GeoJSON files and Shapefiles. 
+See :ref:`geospatial` for more information.  
+
+To create GeoDataFrames, use the :class:`~wntr.network.model.WaterNetworkModel.to_gis` method on the water network model.
+To create a water network model from GeoDataFrames, use the :class:`~wntr.network.model.WaterNetworkModel.from_gis` method.
 
 .. doctest::
     :skipif: gpd is None
 
-    >>> wn.write_gis_data('Net3', driver='GeoJSON') # doctest: +SKIP
+    >>> wn_gis = wn.to_gis() # doctest: +SKIP
 
-.. note:: 
-   Water network models can be created from a collection of GeoDataFrames.  See :ref:`gisread` for more information.  
-   geopandas ``read_file`` method can be used to read GeoJSON, Shapefiles, and GeoPackage into GeoDataFrames.
+The water network model can also be saved as a series of GeoJSON files and Shapefiles and 
+created from a series of GeoJSON files and Shapefiles using the 
+:class:`~wntr.network.io.write_geojson`, 
+:class:`~wntr.network.io.read_geojson`, 
+:class:`~wntr.network.io.write_shapefile`, and 
+:class:`~wntr.network.io.read_shapefile`
+functions.  A file or directory prefix is given to name the files.
+
+.. doctest::
+
+    >>> wntr.network.write_geojson(wn, 'Net3')
+
+Note, the GeoPandas ``read_file`` method can also be used to read GeoJSON and Shapefiles into GeoDataFrames.
    
 Build a model from scratch
 ---------------------------------
