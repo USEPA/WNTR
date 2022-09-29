@@ -50,6 +50,7 @@ from .elements import (
 )
 
 from .options import Options
+from .io import read_inpfile
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +91,14 @@ class WaterNetworkModel(AbstractModel):
 
         self._inpfile = None
         if inp_file_name:
-            self.read_inpfile(inp_file_name)
+            read_inpfile(inp_file_name, append=self)
 
         # To be deleted and/or renamed and/or moved
         # Time parameters
         self.sim_time = 0.0
         self._prev_sim_time = None  # the last time at which results were accepted
 
-    def _compare(self, other):
+    def _compare(self, other, level=1):
         """
         Parameters
         ----------
@@ -122,20 +123,22 @@ class WaterNetworkModel(AbstractModel):
         for name, link in self.links():
             if not link._compare(other.get_link(name)):
                 return False
-        for name, pat in self.patterns():
-            if pat != other.get_pattern(name):
+            
+        if level > 0:
+            for name, pat in self.patterns():
+                if pat != other.get_pattern(name):
+                    return False
+            for name, curve in self.curves():
+                if curve != other.get_curve(name):
+                    return False
+            for name, source in self.sources():
+                if source != other.get_source(name):
+                    return False
+            if self.options != other.options:
                 return False
-        for name, curve in self.curves():
-            if curve != other.get_curve(name):
-                return False
-        for name, source in self.sources():
-            if source != other.get_source(name):
-                return False
-        if self.options != other.options:
-            return False
-        for name, control in self.controls():
-            if not control._compare(other.get_control(name)):
-                return False
+            for name, control in self.controls():
+                if not control._compare(other.get_control(name)):
+                    return False
         return True
 
     @property
@@ -1174,110 +1177,63 @@ class WaterNetworkModel(AbstractModel):
         return d
 
     def to_dict(self):
-        """Dictionary representation of the WaterNetworkModel.
+        """
+        Dictionary representation of the WaterNetworkModel.
         
         Returns
         -------
         dict
-            Dictionary representation of the WaterNetworkModel
         """
         return wntr.network.io.to_dict(self)
 
     def from_dict(self, d: dict):
         """
-        Append the model with elements from a water network model dictionary.
+        Append the model with elements from a dictionary.
 
         Parameters
         ----------
         d : dict
-            dictionary representation of the water network model to append to existing model
+            Dictionary representation of the WaterNetworkModel
         """
         wntr.network.io.from_dict(d, append=self)
 
-    def write_json(self, f, **kw_json):
+    def to_gis(self, crs=None, pumps_as_points=False, valves_as_points=False):
         """
-        Write the WaterNetworkModel to a JSON file
-
+        Convert a WaterNetworkModel into GeoDataFrames
+        
         Parameters
         ----------
-        f : str
-            Name of the file or file pointer
-        kw_json : keyword arguments
-            arguments to pass directly to `json.dump`
+        crs : str, optional
+            Coordinate reference system, by default None
+        pumps_as_points : bool, optional
+            Represent pumps as points (True) or lines (False), by default False
+        valves_as_points : bool, optional
+            Represent valves as points (True) or lines (False), by default False
+            
+        Returns
+        -------
+        WaterNetworkGIS object that contains junctions, tanks, reservoirs, pipes, 
+        pumps, and valves GeoDataFrames
         """
-        wntr.network.io.write_json(self, f, **kw_json)
-
-    def read_json(self, f, **kw_json):
+        return wntr.network.io.to_gis(self, crs, pumps_as_points, valves_as_points)
+    
+    def from_gis(self, gis_data):
         """
-        Create a WaterNetworkModel from a JSON file.
-
+        Append the model with elements from GeoDataFrames
+        
         Parameters
         ----------
-        f : str
-            Name of the file or file pointer
-        kw_json : keyword arguments
-            keyword arguments to pass to `json.load`
-
+        gis_data : WaterNetworkGIS or dictionary of GeoDataFrames
+            GeoDataFrames containing water network attributes. If gis_data is a 
+            dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
+            pumps, and valves. If the pumps or valves are Points, they will be 
+            converted to Lines with the same start and end node location.
+            
         Returns
         -------
         WaterNetworkModel
         """
-        return wntr.network.io.read_json(f, append=self, **kw_json)
-
-    def to_gis_data(self, pumps_as_points=True, valves_as_points=True, crs=""):
-        """
-        Return the WaterNetworkModel in GeoDataFrame format, one for each network element.
-        
-        Once obtained, additional information can be added (such as results)
-        to the GIS data for output. By default, pumps and valves are represented as
-        points in the GIS geometry to aid visibility, as they are frequently zero-length
-        which makes them impossible to see as lines.
-
-        Parameters
-        ----------
-        pumps_as_points : bool, optional
-            Represent pumps as points (True) or lines (False), by default False
-        valves_as_points : bool, optional
-            Represent valves as points (True) or lines (False), by default False
-        crs : str, optional
-            Coordinate reference system, by default "" 
-        """
-        from wntr.gis import wn_to_gis
-        return wn_to_gis(
-            self, crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-        )
-
-    def write_gis_data(
-        self,
-        prefix: str,
-        pumps_as_points=True,
-        valves_as_points=True,
-        crs=None,
-        driver="GeoJSON",
-    ):
-        """
-        Write the WaterNetworkModel to a GIS formatted files
-
-        Parameters
-        ----------
-        prefix : str
-            File prefix name
-        pumps_as_points : bool, optional
-            Represent pumps as points (True) or lines (False), by default False
-        valves_as_points : bool, optional
-            Represent valves as points (True) or lines (False), by default False
-        crs : str, optional
-            Coordinate reference system, by default "" 
-        driver : str, optional
-            Geopandas driver. Use "GeoJSON" for GeoJSON files, use :code:`None` 
-            for ESRI shapefile folders, use GPKG for GeoPackage, by default 
-            "GeoJSON"
-        """
-        from wntr.gis import wn_to_gis
-        obj = wn_to_gis(
-            self, crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-        )
-        obj.write(prefix, crs=crs, driver=driver)
+        return wntr.network.io.from_gis(gis_data, append=self)
 
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
@@ -1608,51 +1564,6 @@ class WaterNetworkModel(AbstractModel):
 
         for name, control in self.controls():
             control._reset()
-
-    def read_inpfile(self, filename):
-        """
-        Defines water network model components from an EPANET INP file
-
-        Parameters
-        ----------
-        filename : string
-            Name of the INP file.
-
-        """
-        return wntr.network.io.read_inpfile(filename, append=self)
-
-    def write_inpfile(self, filename, units=None, version=2.2, force_coordinates=False):
-        """
-        Writes the current water network model to an EPANET INP file
-
-        .. note::
-
-            By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
-            The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
-            Because the PDD analysis options will break EPANET 2.0, the ``version`` option will allow
-            the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
-            options being turned off.
-
-
-        Parameters
-        ----------
-        filename : string
-            Name of the inp file.
-
-        units : str, int or FlowUnits
-            Name of the units being written to the inp file.
-
-        version : float, {2.0, **2.2**}
-            Optionally specify forcing EPANET 2.0 compatibility.
-
-        force_coordinates : bool
-            This only applies if `self.options.graphics.map_filename` is not `None`,
-            and will force the COORDINATES section to be written even if a MAP file is
-            provided. False by default, but coordinates **are** written by default since
-            the MAP file is `None` by default.
-
-        """
-        wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
 
 
 class PatternRegistry(Registry):
@@ -2449,8 +2360,9 @@ class LinkRegistry(Registry):
         assert isinstance(roughness, (int, float)), "roughness must be a float"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
-        assert isinstance(check_valve, bool), "check_valve must be a Boolean"
-
+        assert isinstance(check_valve, (str, int, bool)), "check_valve must be a Boolean"
+        check_valve = bool(int(check_valve))
+        
         length = float(length)
         diameter = float(diameter)
         roughness = float(roughness)

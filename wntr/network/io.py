@@ -1,9 +1,9 @@
 # coding: utf-8
 
 """
-The wntr.network.elements module includes elements of a water network model, 
-including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
-demands, curves, and sources.
+The wntr.network.io module includes functions that convert the water network
+model to other data formats, create a water network model from file, and write 
+the water network model to a file.
 
 .. rubric:: Contents
 
@@ -11,10 +11,16 @@ demands, curves, and sources.
 
     to_dict
     from_dict
+    to_gis
+    from_gis
     write_json
     read_json
     write_inpfile
     read_inpfile
+    write_geojson
+    read_geojson
+    write_shapefile
+    read_shapefile
 
 """
 import logging
@@ -23,22 +29,31 @@ import json
 import wntr.epanet
 from wntr.epanet.util import FlowUnits
 import wntr.network.model
-
+from wntr.gis.network import WaterNetworkGIS
+try:
+    import geopandas as gpd
+    has_geopandas = True
+except ModuleNotFoundError:
+    gpd = None
+    has_geopandas = False
+    
 logger = logging.getLogger(__name__)
 
 
 def to_dict(wn) -> dict:
-    """Dictionary representation of the WaterNetworkModel.
+    """
+    Convert a WaterNetworkModel into a dictionary
     
     Parameters
     ----------
     wn : WaterNetworkModel
-        Water network model to convert to a dictionary
+        Water network model
 
     Returns
     -------
     dict
-        Dictionary representation of the water network model
+        Dictionary representation of the WaterNetworkModel
+        
     """
     from wntr import __version__
 
@@ -63,23 +78,22 @@ def to_dict(wn) -> dict:
     return d
 
 
-def from_dict(
-    d: dict, append=None,
-):
+def from_dict(d: dict, append=None):
     """
-    Create or append a water network model object from a dictionary.
+    Create or append a WaterNetworkModel from a dictionary
 
     Parameters
     ----------
     d : dict
         Dictionary representation of the water network model
-    append : WaterNetworkModel, optional
-        Existing water network model to append results to
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
 
     Returns
     -------
     WaterNetworkModel
-        New water network model or the appended existing model
+    
     """
     from wntr.epanet.io import _read_control_line, _EpanetRule
 
@@ -140,6 +154,9 @@ def from_dict(
                 j.pressure_exponent = node.setdefault("pressure_exponent")
                 j.required_pressure = node.setdefault("required_pressure")
                 j.tag = node.setdefault("tag")
+                # custom additional attributes
+                for attr in list(set(node.keys()) - set(dir(j))):
+                    setattr( j, attr, node[attr] )
                 if dl is not None and len(dl) > 1:
                     for i in range(1, len(dl)):
                         base_val = dl[i].setdefault("base_val", 0.0)
@@ -168,6 +185,9 @@ def from_dict(
                     t.mixing_model = node.setdefault("mixing_model")
                 t.tag = node.setdefault("tag")
                 t.bulk_coeff = node.setdefault("bulk_coeff")
+                # custom additional attributes
+                for attr in list(set(node.keys()) - set(dir(t))):
+                    setattr( t, attr, node[attr] )
             elif node["node_type"] == "Reservoir":
                 wn.add_reservoir(
                     name,
@@ -178,6 +198,9 @@ def from_dict(
                 r = wn.get_node(name)
                 r.initial_quality = node.setdefault("initial_quality", 0.0)
                 r.tag = node.setdefault("tag")
+                # custom additional attributes
+                for attr in list(set(node.keys()) - set(dir(r))):
+                    setattr( r, attr, node[attr] )
             else:
                 raise ValueError("Illegal node type '{}'".format(node["node_type"]))
     if "links" in d:
@@ -200,6 +223,9 @@ def from_dict(
                 p.tag = link.setdefault("tag")
                 p.vertices = link.setdefault("vertices", list())
                 p.wall_coeff = link.setdefault("wall_coeff")
+                # custom additional attributes
+                for attr in list(set(link.keys()) - set(dir(p))):
+                    setattr( p, attr, link[attr] )
             elif link["link_type"] == "Pump":
                 pump_type = link.setdefault("pump_type", "POWER")
                 wn.add_pump(
@@ -221,6 +247,9 @@ def from_dict(
                 p.initial_setting = link.setdefault("initial_setting")
                 p.tag = link.setdefault("tag")
                 p.vertices = link.setdefault("vertices", list())
+                # custom additional attributes
+                for attr in list(set(link.keys()) - set(dir(p))):
+                    setattr( p, attr, link[attr] )
             elif link["link_type"] == "Valve":
                 valve_type = link["valve_type"]
                 wn.add_valve(
@@ -236,6 +265,9 @@ def from_dict(
                 v = wn.get_link(name)
                 if valve_type.lower() == "gpv":
                     v.headloss_curve_name = link.setdefault("headloss_curve_name")
+                # custom additional attributes
+                for attr in list(set(link.keys()) - set(dir(v))):
+                    setattr( v, attr, link[attr] )
             else:
                 raise ValueError("Illegal link type '{}'".format(link["link_type"]))
     if "sources" in d:
@@ -284,6 +316,57 @@ def from_dict(
                 raise ValueError("Illegal control type '{}'".format(ctrl_type))
     return wn
 
+def to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
+    """
+    Convert a WaterNetworkModel into GeoDataFrames
+    
+    Parameters
+    ----------
+    wn : WaterNetworkModel
+        Water network model
+    crs : str, optional
+        Coordinate reference system, by default None
+    pumps_as_points : bool, optional
+        Represent pumps as points (True) or lines (False), by default False
+    valves_as_points : bool, optional
+        Represent valves as points (True) or lines (False), by default False
+        
+    Returns
+    -------
+    WaterNetworkGIS object that contains GeoDataFrames
+        
+    """
+    gis_data = WaterNetworkGIS()
+    gis_data.create_gis(wn, crs, pumps_as_points, valves_as_points)
+    
+    return gis_data
+
+def from_gis(gis_data, append=None):
+    """
+    Create or append a WaterNetworkModel from GeoDataFrames
+    
+    Parameters
+    ----------
+    gis_data : WaterNetworkGIS or dictionary of GeoDataFrames
+        GeoDataFrames containing water network attributes. If gis_data is a 
+        dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
+        pumps, and valves. If the pumps or valves are Points, they will be 
+        converted to Lines with the same start and end node location.
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
+        
+    Returns
+    -------
+    WaterNetworkModel
+        
+    """
+    if isinstance(gis_data, dict):
+        gis_data = WaterNetworkGIS(gis_data)
+
+    wn = gis_data.create_wn(append=append)
+    
+    return wn
 
 def write_json(
     wn, path_or_buf, **kw_json,
@@ -297,6 +380,7 @@ def write_json(
         Name of the file or file pointer
     kw_json : keyword arguments
         Arguments to pass directly to `json.dump`
+        
     """
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "w") as fout:
@@ -305,22 +389,24 @@ def write_json(
         json.dump(to_dict(wn), path_or_buf, **kw_json)
 
 
-def read_json(
-    path_or_buf, append=None, **kw_json,
-):
+def read_json(path_or_buf, append=None, **kw_json):
     """
-    Create a WaterNetworkModel from a JSON file.
+    Create or append a WaterNetworkModel from a JSON file
 
     Parameters
     ----------
     f : str
         Name of the file or file pointer
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
     kw_json : keyword arguments
         Keyword arguments to pass to `json.load`
 
     Returns
     -------
     WaterNetworkModel
+    
     """
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "r") as fin:
@@ -334,7 +420,7 @@ def write_inpfile(
     wn, filename: str, units=None, version: float = 2.2, force_coordinates: bool = False,
 ):
     """
-    Writes the current water network model to an EPANET INP file
+    Write the WaterNetworkModel to an EPANET INP file
 
     .. note::
 
@@ -344,21 +430,16 @@ def write_inpfile(
         the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
         options being turned off.
 
-
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         Water network model
-
     filename : string
         Name of the inp file.
-
     units : str, int or FlowUnits
         Name of the units being written to the inp file.
-
     version : float, {2.0, **2.2**}
         Optionally specify forcing EPANET 2.0 compatibility.
-
     force_coordinates : bool
         This only applies if `self.options.graphics.map_filename` is not `None`,
         and will force the COORDINATES section to be written even if a MAP file is
@@ -374,45 +455,91 @@ def write_inpfile(
     wn._inpfile.write(filename, wn, units=units, version=version, force_coordinates=force_coordinates)
 
 
-def read_inpfile(
-    filename, append=None,
-):
+def read_inpfile(filename, append=None):
     """
-    Defines water network model components from an EPANET INP file
+    Create or append a WaterNetworkModel from an EPANET INP file
 
     Parameters
     ----------
     filename : string
         Name of the INP file.
-
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
+        
+    Returns
+    -------
+    WaterNetworkModel
+    
     """
     inpfile = wntr.epanet.InpFile()
     wn = inpfile.read(filename, wn=append)
     wn._inpfile = inpfile
+    
     return wn
 
+def _write_geopandas(wn, prefix, crs=None, pumps_as_points=True,
+                     valves_as_points=True, driver="GeoJSON"):
+    wn_gis = wn.to_gis(crs, pumps_as_points=pumps_as_points, 
+                       valves_as_points=valves_as_points)
+    wn_gis.write(prefix=prefix, driver=driver)
+
+def _read_geopandas(files, index_col='index', append=None, field_name_map=None):
+    
+    gis_data = WaterNetworkGIS()
+    
+    if 'junctions' in files.keys():
+        gis_data.junctions = gpd.read_file(files['junctions']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.junctions.rename(columns=field_name_map['junctions'], inplace=True)
+            
+    if 'tanks' in files.keys():
+        gis_data.tanks = gpd.read_file(files['tanks']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.tanks.rename(columns=field_name_map['tanks'], inplace=True)
+            
+    if 'reservoirs' in files.keys():
+        gis_data.reservoirs = gpd.read_file(files['reservoirs']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.reservoirs.rename(columns=field_name_map['reservoirs'], inplace=True)
+            
+    if 'pipes' in files.keys():
+        gis_data.pipes = gpd.read_file(files['pipes']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.pipes.rename(columns=field_name_map['pipes'], inplace=True)
+    
+    if 'pumps' in files.keys():
+        gis_data.pumps = gpd.read_file(files['pumps']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.pumps.rename(columns=field_name_map['pumps'], inplace=True)
+    
+    if 'valves' in files.keys():
+        gis_data.valves = gpd.read_file(files['valves']).set_index(index_col)
+        if field_name_map is not None:
+            gis_data.valves.rename(columns=field_name_map['valves'], inplace=True)
+    
+    wn = gis_data.create_wn(append=append)
+        
+    return wn
 
 def write_geojson(
     wn,
     prefix: str,
-    path: str = ".",
-    suffix: str = "",
+    crs=None,
     pumps_as_points=True,
     valves_as_points=True,
-    crs="",
 ):
     """
-    Write a *set* of GeoJSON files for GIS processing, one file for each network element.
+    Write the WaterNetworkModel to a set of GeoJSON files, one file for each network element.
 
-    Please note that this is a simple export of the water network data, and it does not
-    include results or other analyses. To add results of a simulation or analysis, do:
+    Note that this is a simple export of the water network data.
+    To add results of a simulation or analysis, do:
 
     .. code::
 
-        wn_gisdata = wn.get_gis_data()
-        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
-        wn_gisdata.write(...)
-
+        wn_gis = wn.to_gis()
+        wn_gis.add_node_attributes(some_data_to_add, 'name_of_attribute')
+        wn_gis.write(...)
 
     Parameters
     ----------
@@ -420,109 +547,123 @@ def write_geojson(
         Water network model
     prefix : str
         File prefix
-    path : str, optional
-        File path, by default the current directory
-    suffix : str, optional
-        File suffix, by default None
+    crs : str, optional
+        Coordinate reference system, by default None
     pumps_as_points : bool, optional
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
-    crs : str, optional
-        Coordinate reference system, by default "" 
+        
     """
-    geometry = wn.get_gis_data(
-        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-    )
-    geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GeoJSON")
+    _write_geopandas(wn, prefix, crs, pumps_as_points, valves_as_points, "GeoJSON")
 
+def read_geojson(files, index_col='index', append=None):
+    """
+    Create or append a WaterNetworkModel from GeoJSON files
 
-def write_shapefiles(
+    Parameters
+    ----------
+    files : dictionary
+        Dictionary of GeoJSON filenames, where the keys are in the set 
+        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and 
+        values are the corresponding GeoJSON filename
+    index_col : str, optional
+        Column that contains the element name
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
+
+    Returns
+    -------
+    WaterNetworkModel
+    
+    """
+    return _read_geopandas(files, index_col, append)
+      
+def write_shapefile(
     wn,
     prefix: str,
-    path: str = ".",
-    suffix: str = "",
+    crs=None,
     pumps_as_points=True,
-    valves_as_points=True,
-    crs="",
+    valves_as_points=True
 ):
     """
-    Write a *set* of ESRI Shapefile directories for GIS processing, one file for each network element.
+    Write the WaterNetworkModel to a set of ESRI Shapefiles, one directory for each network element.
 
-    Please note that this is a simple export of the water network data, and it does not
-    include results or other analyses. To add results of a simulation or analysis, do:
+    Note that this is a simple export of the water network data.
+    To add results of a simulation or analysis, do:
 
     .. code::
 
-        wn_gisdata = wn.get_gis_data()
-        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
-        wn_gisdata.write(...)
-
+        wn_gis = wn.to_gis()
+        wn_gis.add_node_attributes(some_data_to_add, 'name_of_attribute')
+        wn_gis.write(...)
 
     Parameters
     ----------
     wn : wntr WaterNetworkModel
         Water network model
     prefix : str
-        File prefix
-    path : str, optional
-        File path, by default the current directory
-    suffix : str, optional
-        File suffix, by default None
+        File and directory prefix
+    crs : str, optional
+        Coordinate reference system, by default None
     pumps_as_points : bool, optional
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
-    crs : str, optional
-        Coordinate reference system, by default "" 
+        
     """
-    geometry = wn.get_gis_data(
-        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-    )
-    geometry.write(prefix=prefix, path=path, suffix=suffix, driver=None)
+    _write_geopandas(wn, prefix, crs, pumps_as_points, valves_as_points, None)
 
-
-def write_gpkg(
-    wn,
-    prefix: str,
-    path: str = ".",
-    suffix: str = "",
-    pumps_as_points=True,
-    valves_as_points=True,
-    crs="",
-):
+def read_shapefile(dirs, index_col='index', append=None):
     """
-    Write a *set* of GPKG files for GIS processing, one file for each network element.
-
-    Please note that this is a simple export of the water network data, and it does not
-    include results or other analyses. To add results of a simulation or analysis, do:
-
-    .. code::
-
-        wn_gisdata = wn.get_gis_data()
-        wn_gisdata.add_node_attributes(some_data_to_add, 'name_of_attribute')
-        wn_gisdata.write(...)
-
+    
+    Create or append a WaterNetworkModel from ESRI Shapefiles
 
     Parameters
     ----------
-    wn : wntr WaterNetworkModel
-        Water network model
-    prefix : str
-        File prefix
-    path : str, optional
-        File path, by default the current directory
-    suffix : str, optional
-        File suffix, by default None
-    pumps_as_points : bool, optional
-        Represent pumps as points (True) or lines (False), by default False
-    valves_as_points : bool, optional
-        Represent valves as points (True) or lines (False), by default False
-    crs : str, optional
-        Coordinate reference system, by default "" 
-    """
-    geometry = wn.get_gis_data(
-        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-    )
-    geometry.write(prefix=prefix, path=path, suffix=suffix, driver="GPKG")
+    dirs : dictionary
+        Dictionary of Shapefile directory names, where the keys are in the set 
+        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and 
+        values are the corresponding Shapefile directories
+    index_col : str, optional
+        Column that contains the element name
+    append : WaterNetworkModel or None, optional
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
+        is created.
 
+    Returns
+    -------
+    WaterNetworkModel
+    
+    """
+    # ESRI Shapefiles truncate field names to 10 characters. The field_name_map
+    # maps truncated names to long names.  The following code assumes the 
+    # first 10 characters are unique.
+    element_attributes = {
+        'junctions': dir(wntr.network.elements.Junction),
+        'tanks': dir(wntr.network.elements.Tank),
+        'reservoirs': dir(wntr.network.elements.Reservoir),
+        'pipes': dir(wntr.network.elements.Pipe),
+        'pumps': dir(wntr.network.elements.Pump) + 
+                 dir(wntr.network.elements.PowerPump) + 
+                 dir(wntr.network.elements.HeadPump),
+        'valves': dir(wntr.network.elements.Valve) + 
+                  dir(wntr.network.elements.PRValve) + 
+                  dir(wntr.network.elements.PSValve) + 
+                  dir(wntr.network.elements.PBValve) + 
+                  dir(wntr.network.elements.FCValve) + 
+                  dir(wntr.network.elements.TCValve) + 
+                  dir(wntr.network.elements.GPValve)}
+    
+    field_name_map = {}
+    for element,attribute in element_attributes.items():
+        field_name_map[element] = {}
+        for field_name in attribute:
+            if (len(field_name) > 10) and (not field_name.startswith('_')):
+                field_name_map[element][field_name[0:10]] = field_name
+    
+    # TODO: pipe property is cv instead of check_valve, this should be updated
+    field_name_map['pipes']['check_valv'] = 'check_valve'
+    
+    return _read_geopandas(dirs, index_col, append, field_name_map)
