@@ -20,6 +20,7 @@ NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scipy as sp
 import logging
 
 logger = logging.getLogger(__name__)
@@ -186,7 +187,7 @@ def _links_in_simple_paths(G, sources, sinks):
 
     return link_count
 
-@profile
+# @profile
 def valve_segments(G, valve_layer):
     """
     Valve segmentation
@@ -305,9 +306,10 @@ def valve_segments(G, valve_layer):
             while flag:          
                
                 # Potential connectivity of the segment      
-                # p_seg_DC = DC_np + seg_DC[:,None] # this is slow
-                # should be able to drop ,None from above with tranpose fix
                 p_seg_DC = DC_np + seg_DC # this is slow
+                print("log seg_DC nonzero: "+str(np.sum(seg_DC>0)/ seg_DC.size))
+                print("log DC_np nonzero: "+str(np.sum(DC_np>0) / DC_np.size))
+
                 # Nodes and links that are connected to the segment
                 temp = np.max(p_seg_DC,axis=1) # this is somewhat slow
                 connected_to_seg = np.where(temp > 1)[0]   
