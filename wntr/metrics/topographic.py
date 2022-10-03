@@ -187,7 +187,7 @@ def _links_in_simple_paths(G, sources, sinks):
 
     return link_count
 
-# @profile
+@profile
 def valve_segments(G, valve_layer):
     """
     Valve segmentation
@@ -273,6 +273,7 @@ def valve_segments(G, valve_layer):
     DC_np = DC.to_numpy() # requires Pandas v.0.24.0
     # transpose to align with numpy's row major default
     DC_np = DC_np.transpose()
+    DC_np_static = DC_np
     # vector of length nodes+links where the ith entry is the segment number of node/link i
     seg_label_DC = np.zeros(shape=(len(DC.index)), dtype=int)
 
@@ -303,13 +304,17 @@ def valve_segments(G, valve_layer):
             while flag:          
                
                 # Potential connectivity of the segment      
-                p_seg_DC = DC_np + seg_DC # this is slow
-                print("log seg_DC nonzero: "+str(np.sum(seg_DC>0)/ seg_DC.size))
-                print("log DC_np nonzero: "+str(np.sum(DC_np>0) / DC_np.size))
+                # p_seg_DC = DC_np + seg_DC # this is slow
+                connected_to_seg = np.sum(DC_np[:,seg_DC.nonzero()[0]],axis = 1).nonzero()[0]
+                # print("log seg_DC nonzero: "+str(np.sum(seg_DC>0)/ seg_DC.size))
+                # print("log DC_np nonzero: "+str(np.sum(DC_np>0) / DC_np.size))
 
                 # Nodes and links that are connected to the segment
-                temp = np.max(p_seg_DC,axis=1) # this is somewhat slow
-                connected_to_seg = np.where(temp > 1)[0]   
+                # temp = np.max(p_seg_DC,axis=1) # this is somewhat slow
+                # connected_to_seg = np.where(temp > 1)[0]   
+                # test = connected_to_seg == alt_connected_to_seg
+                # print("LOG compare cts:" +str(test))
+
                 seg_DC[connected_to_seg] = 1
       
                 # Label nodes/links connected to the segment
@@ -326,7 +331,9 @@ def valve_segments(G, valve_layer):
                 # Update seg_DC and DC_np
                 seg_DC = np.zeros(seg_DC.shape)
                 seg_DC[DC_np[i,:].nonzero()] = 1
-                seg_DC[np.sum(p_seg_DC[connected_to_seg,:],axis=0).nonzero()] = 1
+                seg_DC[np.sum(DC_np[connected_to_seg,:],axis=0).nonzero()[0]] = 1
+                # test = set(DC_np[i,:].nonzero()[0])<=set(np.sum(p_seg_DC[connected_to_seg,:],axis=0).nonzero()[0])
+                # print("LOG index comparison: "+str(test))
 
                 # seg_DC = np.clip(seg_DC,0,1)          
                 DC_np[connected_to_seg,:] = seg_DC
