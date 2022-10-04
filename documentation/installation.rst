@@ -218,15 +218,23 @@ The following Python packages are optional:
   http://python-visualization.github.io/folium/
 * utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
   https://pypi.org/project/utm/
+* geopandas [JVFM21]_: used to work with geospatial data,
+  https://geopandas.org/
+* rtree [rtree]_: used for overlay operations in geopandas,
+  https://rtree.readthedocs.io/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 * numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
-* nose: used to run software tests,
-  http://nose.readthedocs.io
 
-These packages are included in the Anaconda Python distribution.
+All of these packages **except geopandas** are included in the Anaconda Python distribution.
 
+.. note:: 
+   Proper installation of geopandas requires installing several geopandas dependencies, including 
+   fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
+   On Linux and Mac OS X, installing geopandas through the conda-forge channel will install the dependencies.
+   On Windows, the dependencies must be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
+   
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
    Pyomo, Interior Point OPTimizer (Ipopt), and HSL.

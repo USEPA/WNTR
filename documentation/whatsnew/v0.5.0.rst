@@ -2,11 +2,29 @@
 
 v0.5.0 (main)
 ---------------------------------------------------
+* Added GIS capabilities in a `wntr.gis` module, which includes the following:
 
-* Added support for Python 3.10, dropped support for Python 3.6.  
+  * Convert between water network models and GIS formatted data (GeoPandas) 
+    and GIS formatted files (GeoJSON and Shapefiles)
+  
+  * Snap GeoPandas point data to elements in a water network model
+  
+  * Find the intersection between GeoPandas points, line or polygons and 
+    elements in a water network model
+  
+  * See :ref:`geospatial` section of the user manual for more information.
 
-* The build workflow now creates wheel artifacts.  
-  The `_evaluator` and `_network_isolation` binaries are also distributed with the code.
+* Removed the `read_inpfile`, `write_inpfile`, `read_json`, and `write_json` methods from the WaterNetworkModel.  
+  This functionality is still available using `wntr.network.read_inpfile`, `wntr.network.write_inpfile`, 
+  `wntr.network.read_json` and `wntr.network.write_json`
+  and is located with other read/write functions.
 
-* Updated documentation
+* Added support for Python 3.10, dropped support for Python 3.6.
+  The build workflow now creates wheel artifacts.  
+  The `_evaluator` and `_network_isolation` binaries are also 
+  distributed with the code. `#287 <https://github.com/USEPA/WNTR/pull/287>`_, 
+  `#294 <https://github.com/USEPA/WNTR/pull/294>`_
+
+* Updated documentation `#291 <https://github.com/USEPA/WNTR/pull/291>`_, 
+  `#292 <https://github.com/USEPA/WNTR/pull/292>`_
  

@@ -520,8 +520,8 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Greenhouse gas emissions can be computed 
                                           using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.
 
-   Pump operating power, energy and       The power, energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy`, 
-   cost                                   :class:`~wntr.metrics.economic.pump_energy` and 
+   Pump operating power, energy and cost  The power, energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy`, 
+                                          :class:`~wntr.metrics.economic.pump_energy` and 
                                           :class:`~wntr.metrics.economic.pump_cost` methods. These
                                           use the flowrates and pressures from simulation results to compute pump power, energy and cost.
    =====================================  ================================================================================================================================================

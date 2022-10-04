@@ -939,7 +939,7 @@ class TestCase(unittest.TestCase):
                 )
 
 
-class TestNetworkDict(unittest.TestCase):
+class TestNetworkIO_Dict(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         import wntr
@@ -961,20 +961,122 @@ class TestNetworkDict(unittest.TestCase):
             assert(wn._compare(B))
 
     def test_json_roundtrip(self):
-        import json
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
             wn.convert_controls_to_rules()
-            wn.write_json('temp.json')
+            self.wntr.network.write_json(wn, 'temp.json')
             B = self.wntr.network.read_json('temp.json')
             assert(wn._compare(B))
 
     def test_json_pattern_dump(self):
         wn = wntr.network.WaterNetworkModel()
         wn.add_pattern('pat0', [0,1,0,1,0,1,0])
-        wn.write_json(f'temp.json')
+        self.wntr.network.write_json(wn, f'temp.json')
         
+class TestNetworkIO_GIS(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        import wntr
 
+        self.wntr = wntr
+
+        inp_file = join(ex_datadir, "Net6.inp")
+        self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp"]]
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_gis_additional_attributes(self):
+        wn = self.wntr.network.WaterNetworkModel(self.inp_files[0])
+        A = wn.to_gis(pumps_as_points=True, valves_as_points=True)
+        A.junctions['new'] = range(wn.num_junctions)
+        A.junctions['pressure_exponent'] = 0.45
+        A.tanks['new'] = 4
+        A.reservoirs['new'] = 5
+        A.pipes['new'] = 6
+        A.pumps['new'] = 7
+        A.valves['new'] = 8
+        B = self.wntr.network.from_gis(A)
+
+        node_attr = B.query_node_attribute('new')
+        assert((node_attr[wn.junction_name_list] == range(wn.num_junctions)).all())
+        assert((node_attr[wn.tank_name_list] == 4).all())
+        assert((node_attr[wn.reservoir_name_list] == 5).all())
+        
+        link_attr = B.query_link_attribute('new')
+        assert((link_attr[wn.pipe_name_list] == 6).all())
+        assert((link_attr[wn.pump_name_list] == 7).all())
+        assert((link_attr[wn.valve_name_list] == 8).all())
+        
+        pressure_exponent = B.query_node_attribute('pressure_exponent')
+        assert((pressure_exponent[wn.junction_name_list] == 0.45).all())
+        
+    def test_gis_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            A = wn.to_gis()
+            B = self.wntr.network.from_gis(A)
+            assert(wn._compare(B, level=0))
+    
+    def test_gis_point_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            A = wn.to_gis(pumps_as_points=True, valves_as_points=True)
+            B = self.wntr.network.from_gis(A)
+            assert(wn._compare(B, level=0))
+    
+    def test_gis_append_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            A = wn.to_gis(pumps_as_points=True, valves_as_points=True)
+            B = self.wntr.network.from_gis({'junctions': A.junctions})
+            B = self.wntr.network.from_gis({'tanks': A.tanks,
+                                            'reservoirs': A.reservoirs}, B)
+            B = self.wntr.network.from_gis({'pipes': A.pipes}, B)
+            B = self.wntr.network.from_gis({'pumps': A.pumps,
+                                            'valves': A.valves}, B)
+            assert(wn._compare(B, level=0))
+    
+    def test_geojson_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wntr.network.write_geojson(wn, 'temp', pumps_as_points=True, valves_as_points=False)
+            files = {}
+            if wn.num_junctions > 0:
+                files['junctions'] = 'temp_junctions.geojson'
+            if wn.num_tanks > 0:
+                files['tanks'] = 'temp_tanks.geojson'
+            if wn.num_reservoirs > 0:
+                files['reservoirs'] = 'temp_reservoirs.geojson'
+            if wn.num_pipes > 0:
+                files['pipes'] = 'temp_pipes.geojson'
+            if wn.num_pumps > 0:
+                files['pumps'] = 'temp_pumps.geojson'
+            if wn.num_valves > 0:
+                files['valves'] = 'temp_valves.geojson'
+            B = self.wntr.network.read_geojson(files)
+            assert(wn._compare(B, level=0))
+
+    def test_shapefile_roundtrip(self):
+        for inp_file in self.inp_files:
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wntr.network.write_shapefile(wn, 'temp')
+            files = {}
+            if wn.num_junctions > 0:
+                files['junctions'] = 'temp_junctions'
+            if wn.num_tanks > 0:
+                files['tanks'] = 'temp_tanks'
+            if wn.num_reservoirs > 0:
+                files['reservoirs'] = 'temp_reservoirs'
+            if wn.num_tanks > 0:
+                files['pipes'] = 'temp_pipes'
+            if wn.num_pumps > 0:
+                files['pumps'] = 'temp_pumps'
+            if wn.num_valves > 0:
+                files['valves'] = 'temp_valves'
+            B = self.wntr.network.read_shapefile(files)
+            assert(wn._compare(B, level=0))
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,7 +23,7 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
 
         results1 = sim.run_sim()
-        wn.write_inpfile("temp.inp", "CMH")
+        wntr.network.write_inpfile(wn, "temp.inp", "CMH")
 
         wn2 = wntr.network.WaterNetworkModel("temp.inp")
         sim = wntr.sim.EpanetSimulator(wn2)

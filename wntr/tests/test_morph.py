@@ -207,7 +207,7 @@ class TestMorph(unittest.TestCase):
 
             # Write skel_wn to an inp file, read it back in, then extract the demands
             skel_inp_file = "temp.inp"
-            skel_wn.write_inpfile(skel_inp_file, "GPM")
+            wntr.network.write_inpfile(skel_wn, skel_inp_file, "GPM")
             skel_wn_io = wntr.network.WaterNetworkModel(skel_inp_file)
             demand_io = wntr.metrics.expected_demand(skel_wn_io)
             total_demand_io = demand_io.loc[0, :].sum()

@@ -562,9 +562,9 @@ class Tank(Node):
     def overflow(self, value):
         if isinstance(value, six.string_types):
             value = value.upper()
-            if value in ["YES", "TRUE"]:
+            if value in ["YES", "TRUE", "1"]:
                 value = True
-            elif value in ["NO", "FALSE"]:
+            elif value in ["NO", "FALSE", "0"]:
                 value = False
             else:
                 raise ValueError('The overflow entry must "YES" or "NO"')
@@ -913,7 +913,7 @@ class Pipe(Link):
     @cv.setter
     def cv(self, value): 
         self._cv = value
-
+        
     @property
     def bulk_coeff(self):
         """float or None : if not None, then a pipe specific bulk reaction coefficient"""
@@ -1218,7 +1218,7 @@ class HeadPump(Pump):
         if not super(HeadPump, self)._compare(other):
             return False
         if self.pump_type == other.pump_type and \
-           self.get_pump_curve() == other.get_pump_curve():
+           self.pump_curve_name == other.pump_curve_name:
             return True
         return False
     
@@ -1429,7 +1429,7 @@ class PowerPump(Pump):
         if not super(PowerPump, self)._compare(other):
             return False
         if self.pump_type == other.pump_type and \
-           self.power == other.power:
+            abs(self.power - other.power)<1e-9:
             return True
         return False
     
