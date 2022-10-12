@@ -17,6 +17,8 @@ NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
     valve_segment_attributes
 
 """
+from platform import node
+from this import d
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -213,7 +215,6 @@ def valve_segments(G, valve_layer):
     """
     # Convert the graph to an undirected graph
     uG = G.to_undirected()
-    print("Here i am!")
     
     # Node and link names
     nodes = list(uG.nodes()) # list of node names
@@ -386,62 +387,127 @@ def dev_valve_segments(G, valve_layer):
         Number of nodes and links in each segment. The DataFrame is indexed by 
         segment number, with columns named 'node' and 'link'.
     """
+
+    ### DEV NOTES
+    # Might be clearer code to combine all_names and seg_label into a
+    # data frame. If not just simpler, this might also be faster (or slower) 
+    # depending on pandas.
+    # 
+    # Also, this code does not follow the convention of adding L_ and
+    # N_ to names of links and nodes, could be added in easily if needed.
+    ###
+
     # Convert the graph to an undirected graph
     uG = G.to_undirected()
+
     # Node and link names
     nodes = list(G.nodes()) # list of node names
     links = list(G.edges(keys=True)) # list of tuples with start node, end node, link name
+    node_names = [n for n in nodes]
+    link_names = [k for u,v,k in links]
+    all_names = node_names + link_names
+
+    # initialization for labelling
+    seg_index = 0
+    seg_label = np.zeros(shape=(len(all_names)), dtype=int)
+
+    # find and label links isolated by valves, EG 0|----|0
+    for start_node, end_node, link_name in links:
+        link_valves = valve_layer[valve_layer['link']==link_name]
+        if set(link_valves['node']) >= set([start_node, end_node]):
+            seg_index += 1
+            seg_label[all_names.index(link_name)] = seg_index
+
+    # find and label nodes isolated by valves, EG 0----|0|----0
+    for node_name in node_names:
+        node_valves = valve_layer[valve_layer['node']==node_name]
+        node_links = [k for u,v,k in uG.edges(node_name, keys=True)]
+        if set(node_valves['link']) >= set(node_links):
+            seg_index += 1
+            seg_label[all_names.index(node_name)] = seg_index
     
-    # Append N_ and L_ to node and link names, used in matrices
-    # matrix_node_names = ['N_'+n for n in nodes]
-    # matrix_link_names = ['L_'+k for u,v,k in links]
-    matrix_node_names = [n for n in nodes]
-    matrix_link_names = [k for u,v,k in links]
-    all_names = matrix_node_names + matrix_link_names
-    
+    #TODO simplify the following two sections. Might be able to
+    # delete edge directly from link name, rather than doing the second
+    # for loop.
+    # Though keep in mind that to_delete is used as a list of edges later
+
     # collect valved link names
-    valve_link_names = []    
+    valved_link_names = []    
     for i, row in valve_layer.iterrows():
-        valve_link_names.append(row[0])
+        valved_link_names.append(row[0])
 
     # remove valved links from G
     to_delete = []
     for edge in uG.edges:
         link_name = edge[2]
-        if link_name in valve_link_names:
+        if link_name in valved_link_names:
             to_delete.append(edge)
     uG.remove_edges_from(to_delete)
 
     # obtain connected components
+    # very fast - crux of the algorithm
     cc = nx.connected_components(uG)
     cc_list = [c for c in cc]
 
-    # create node_segments, link_segments, segment_size to match other alg
+    ## Label unvalved portion of graph
 
-    # make seg_label_DC
-    seg_label_DC = np.zeros(shape=(len(all_names)), dtype=int)
     # assign labels to nodes
     for i in range(len(cc_list)):
         segment = cc_list[i]
+        seg_index += 1
         for junc in segment:
             index = all_names.index(junc)
-            seg_label_DC[index] = i 
-    
-    # does not handle valved links correctly
-    for link in G.edges(keys=True):
-        link_index = all_names.index(link[2])
-        edge_index = all_names.index(link[0])
-        seg_label_DC[link_index] = seg_label_DC[edge_index]
+            seg_label[index] = seg_index
 
-    # combine pre-processed and looped results
-    seg_labels = list(seg_label_DC)
+    # assign lables to edges
+    for edge in uG.edges(keys=True):
+        u, v, k = edge
+        node_index = all_names.index(u)
+        edge_index = all_names.index(k)
+        seg_label[edge_index] = seg_label[node_index]
+
+    ## Label valved portion of graph
+    for unvalved_link in to_delete:
+        node1_name, node2_name, link_name = unvalved_link
+        link_valves = valve_layer[valve_layer['link']==link_name]
+        link_index = all_names.index(link_name)
+        node1_index = all_names.index(node1_name)
+        node2_index = all_names.index(node2_name)
+
+        if link_valves.shape[0] == 1:
+            valved_node = link_valves.iloc[0][1]
+            if valved_node == node1_name:
+                if seg_label[node2_index] == 0:
+                    seg_index += 1
+                    seg_label[node2_index] = seg_index
+                    seg_label[link_index] = seg_index
+                else:
+                    seg_label[link_index] = seg_label[node2_index]
+            else:
+                if seg_label[node1_index] == 0:
+                    seg_index += 1
+                    seg_label[node1_index] = seg_index
+                    seg_label[link_index] = seg_index
+                else:
+                    seg_label[link_index] = seg_label[node1_index]
+        # links with link_valves.size == 2 are already labelled
+        elif link_valves.shape[0] ==2:
+            continue
+        # if some other value occurs, something went wrong
+        # this exception may be raised if a valve layer has duplicates
+        # which has happened when generating a random layer
+        else:
+            raise Exception("Should have 1 or 2 valved nodes")
+
+
+    # finalize results
+    #TODO check if things work fine without listifying seg_label
+    seg_labels = list(seg_label)
     seg_labels_index = all_names
     seg_label = pd.Series(seg_labels, index=seg_labels_index, dtype=int)
 
-    node_segments = seg_label[matrix_node_names]
-    link_segments = seg_label[matrix_link_names]
-    # node_segments.index = node_segments.index.str[2::]
-    # link_segments.index = link_segments.index.str[2::]  
+    node_segments = seg_label[node_names]
+    link_segments = seg_label[link_names] 
     
     # Extract segment sizes, for nodes and links
     seg_link_sizes = link_segments.value_counts().rename('link')
