@@ -5,7 +5,8 @@ compute topographic metrics are included in the wntr.network.graph module.
 """
 from wntr.metrics.topographic import terminal_nodes, bridges, \
     central_point_dominance, spectral_gap, algebraic_connectivity, \
-    critical_ratio_defrag, valve_segments, valve_segment_attributes
+    critical_ratio_defrag, valve_segments, valve_segment_attributes, \
+        dev_valve_segments
 from wntr.metrics.hydraulic import expected_demand, average_expected_demand, \
     water_service_availability, todini_index, modified_resilience_index, \
     tank_capacity, entropy
