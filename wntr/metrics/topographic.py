@@ -17,12 +17,9 @@ NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
     valve_segment_attributes
 
 """
-from platform import node
-from this import d
 import networkx as nx
 import numpy as np
 import pandas as pd
-import scipy as sp
 import logging
 
 logger = logging.getLogger(__name__)
