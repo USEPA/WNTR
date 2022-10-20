@@ -25,4 +25,4 @@ jobs:
         CIBW_BUILD: cp37-* cp38-* cp39-* cp310-*
     - uses: actions/upload-artifact@v3
       with:
-        path: ./wheel_dir/*.whl
+        path: ./wheelhouse/*.whl
