@@ -4,10 +4,9 @@ name: release
 
 on:
   push:
-    #tags:
-    #  - '*'
-    #branches:
-    #  - main
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
 
 jobs:
 
