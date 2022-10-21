@@ -15,7 +15,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #python-version: ['3.7', '3.8', '3.9', '3.10']
         os: [windows-2019, macOS-11, ubuntu-20.04] 
     steps:
     - uses: actions/checkout@v3
@@ -42,3 +41,18 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
+
+  publish-to-pypi:
+    needs: [wheels, source]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
