@@ -13,8 +13,8 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 class CompareSegmentation(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
-        # wn_file = join(ex_datadir, "Net6.inp")
-        wn_file = join(test_datadir, "CCWI17-HermanMahmoud.inp")
+        wn_file = join(ex_datadir, "Net3.inp")
+        # wn_file = join(test_datadir, "CCWI17-HermanMahmoud.inp")
         self.wn = wntr.network.WaterNetworkModel(wn_file)
     
     @classmethod
@@ -26,19 +26,22 @@ class CompareSegmentation(unittest.TestCase):
         G = self.wn.get_graph()
         #temporary valve layer, should pin a fixed layer at some point
         strategic_valve_layer = wntr.network.generate_valve_layer(
-            self.wn, 'strategic', 2, seed = 123
+            self.wn, 'strategic', 1, seed = 123
+            )
+        strategic_valve_layer = wntr.network.generate_valve_layer(
+            self.wn, 'random',10, seed = 123
             )
 
         (dev_node_segments, 
         dev_link_segments, 
         dev_segment_size) = wntr.metrics.valve_segments(
-            G, strategic_valve_layer, alg = 'development'
+            G, strategic_valve_layer, algorithm = 'networkx'
             )
 
         (node_segments, 
         link_segments, 
         segment_size) = wntr.metrics.valve_segments(
-            G, strategic_valve_layer, alg = 'original'
+            G, strategic_valve_layer, algorithm = 'matrix'
             )
 
         # basic length checks
@@ -60,12 +63,12 @@ class CompareSegmentation(unittest.TestCase):
         # here for experimental purposes
         for node in node_segments.index:
             self.assertEqual(
-                node_segments.loc[link],
-                dev_node_segments.loc[link]
+                node_segments.loc[node],
+                dev_node_segments.loc[node]
                 )
 
         # check segment sizes
-        for k in range(len(segment_size)):
+        for k in segment_size.index:
             self.assertTrue(
                 (dev_segment_size.loc[k]==segment_size.loc[k]).all()
                 )
