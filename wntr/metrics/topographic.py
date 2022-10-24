@@ -222,9 +222,9 @@ def valve_segments(G, valve_layer, algorithm = 'original'):
     if algorithm == 'matrix':
         return matrix_valve_segments(G, valve_layer)
     elif algorithm == 'improved_matrix':
-        return improved_matrix_valve_segments(G, valve_layer)
+        return _improved_matrix_valve_segments(G, valve_layer)
     elif algorithm == 'networkx':
-        return networkx_valve_segments(G, valve_layer)
+        return _networkx_valve_segments(G, valve_layer)
     else:
         raise Exception("Algorithm type unknown")
 
@@ -395,7 +395,7 @@ def matrix_valve_segments(G, valve_layer):
     return node_segments, link_segments, seg_sizes
    
 
-def improved_matrix_valve_segments(G, valve_layer):
+def _improved_matrix_valve_segments(G, valve_layer):
     """
     Valve segmentation
 
@@ -567,7 +567,7 @@ def improved_matrix_valve_segments(G, valve_layer):
     return node_segments, link_segments, seg_sizes
 
 
-def networkx_valve_segments(G, valve_layer):
+def _networkx_valve_segments(G, valve_layer):
     """
     Valve segmentation
     This is an alternate implementation to valve_segments that
