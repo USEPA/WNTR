@@ -187,7 +187,7 @@ def _links_in_simple_paths(G, sources, sinks):
     return link_count
 
 
-def valve_segments(G, valve_layer, alg = 'original'):
+def valve_segments(G, valve_layer, algorithm = 'original'):
     """
     Valve segmentation
 
@@ -199,6 +199,15 @@ def valve_segments(G, valve_layer, alg = 'original'):
         Valve layer, defined by node and link pairs (for example, valve 0 is 
         on link A and protects node B). The valve_layer DataFrame is indexed by
         valve number, with columns named 'node' and 'link'.
+    algorithm: string
+        Choice of algorithm 
+        - 'matrix' uses original wntr method for 
+        segmentation which utilizes direct connectivity matrix.
+        - 'improved_matrix' follows the original wntr method, but
+        with improvements to speed.
+        - 'networkx' takes a different approach, utilizing networkx's
+        connected 
+
 
     Returns
     -------
@@ -210,14 +219,15 @@ def valve_segments(G, valve_layer, alg = 'original'):
         Number of nodes and links in each segment. The DataFrame is indexed by 
         segment number, with columns named 'node' and 'link'.
     """
-    if alg == 'matrix':
+    if algorithm == 'matrix':
         return matrix_valve_segments(G, valve_layer)
-    elif alg == 'improved_matrix':
+    elif algorithm == 'improved_matrix':
         return improved_matrix_valve_segments(G, valve_layer)
-    elif alg == 'networkx':
+    elif algorithm == 'networkx':
         return networkx_valve_segments(G, valve_layer)
     else:
         raise Exception("Algorithm type unknown")
+
 
 def matrix_valve_segments(G, valve_layer):
     """
@@ -534,7 +544,7 @@ def improved_matrix_valve_segments(G, valve_layer):
                 # seg_DC = np.clip(seg_DC,0,1)       
                 DC_np[connected_to_seg,:] = seg_DC
     
-            print(i, seg_size)
+            # print(i, seg_size)
     
     # combine pre-processed and looped results
     seg_labels = list(seg_label.values()) + list(seg_label_DC)
@@ -596,10 +606,12 @@ def networkx_valve_segments(G, valve_layer):
     uG = G.to_undirected()
 
     # Node and link names
-    nodes = list(G.nodes()) # list of node names
-    links = list(G.edges(keys=True)) # list of tuples with start node, end node, link name
-    node_names = [n for n in nodes]
-    link_names = [k for u,v,k in links]
+    nodes = list(uG.nodes()) # list of node names
+    links = list(uG.edges(keys=True)) # list of tuples with start node, end node, link name
+    
+    # Append N_ and L_ to node and link names, used in matrices
+    node_names = ['N_'+n for n in nodes]
+    link_names = ['L_'+k for u,v,k in links]
     all_names = node_names + link_names
 
     # initialization for labelling
@@ -611,12 +623,12 @@ def networkx_valve_segments(G, valve_layer):
         link_valves = valve_layer[valve_layer['link']==link_name]
         if set(link_valves['node']) >= set([start_node, end_node]):
             seg_index += 1
-            seg_label[all_names.index(link_name)] = seg_index
+            seg_label[all_names.index('L_'+link_name)] = seg_index
 
     # find and label nodes isolated by valves, EG 0----|0|----0
     for node_name in node_names:
         node_valves = valve_layer[valve_layer['node']==node_name]
-        node_links = [k for u,v,k in uG.edges(node_name, keys=True)]
+        node_links = [k for u,v,k in uG.edges(node_name[2:], keys=True)]
         if set(node_valves['link']) >= set(node_links):
             seg_index += 1
             seg_label[all_names.index(node_name)] = seg_index
@@ -651,23 +663,23 @@ def networkx_valve_segments(G, valve_layer):
         segment = cc_list[i]
         seg_index += 1
         for junc in segment:
-            index = all_names.index(junc)
+            index = all_names.index('N_'+junc)
             seg_label[index] = seg_index
 
     # assign lables to edges
     for edge in uG.edges(keys=True):
         u, v, k = edge
-        node_index = all_names.index(u)
-        edge_index = all_names.index(k)
+        node_index = all_names.index('N_'+u)
+        edge_index = all_names.index('L_'+k)
         seg_label[edge_index] = seg_label[node_index]
 
     ## Label valved portion of graph
     for unvalved_link in to_delete:
         node1_name, node2_name, link_name = unvalved_link
         link_valves = valve_layer[valve_layer['link']==link_name]
-        link_index = all_names.index(link_name)
-        node1_index = all_names.index(node1_name)
-        node2_index = all_names.index(node2_name)
+        link_index = all_names.index('L_'+link_name)
+        node1_index = all_names.index('N_'+node1_name)
+        node2_index = all_names.index('N_'+node2_name)
 
         if link_valves.shape[0] == 1:
             valved_node = link_valves.iloc[0][1]
@@ -703,7 +715,8 @@ def networkx_valve_segments(G, valve_layer):
 
     node_segments = seg_label[node_names]
     link_segments = seg_label[link_names] 
-    
+    node_segments.index = node_segments.index.str[2::]
+    link_segments.index = link_segments.index.str[2::]  
     # Extract segment sizes, for nodes and links
     seg_link_sizes = link_segments.value_counts().rename('link')
     seg_node_sizes = node_segments.value_counts().rename('node')
