@@ -63,8 +63,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install wheel
-        pip install wntr*.whl
-        #pip install --find-links=. wntr
+        if ( "${{matrix.TARGET}}" -eq "win" ) {
+            pip install --find-links=. wntr
+	}
+	else {
+            pip install wntr*.whl
+	}
     - name: Usage of wntr
       run: |
         python -c "import wntr"
