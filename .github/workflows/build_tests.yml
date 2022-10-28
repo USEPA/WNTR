@@ -63,7 +63,7 @@ jobs:
       run: |
         ls
         python -m pip install --upgrade pip
-        pip install wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
+        pip install dist/wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         #pip install --find-links=. wntr
     - name: Usage of wntr
       run: |
