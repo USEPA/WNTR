@@ -62,7 +62,7 @@ jobs:
     - name: Install wntr
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
+        pip install wheel numpy scipy networkx pandas matplotlib
         pip install --no-index --pre --find-links=. wntr
     - name: Usage of wntr
       run: |
