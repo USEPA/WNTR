@@ -26,9 +26,3 @@ wntr/tests/performance_results
 examples/signal.csv
 examples/temp.hyd
 
-examplePickle
-kirklocal/*
-wntr/metrics/cvalveseg.c
-wntr/metrics/cvalveseg.cpython-38-x86_64-linux-gnu.so
-.vscode/launch.json
-examples/kirkexample.py
