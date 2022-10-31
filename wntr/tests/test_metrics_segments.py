@@ -66,11 +66,11 @@ class TestSegmentation(unittest.TestCase):
         #        link_segments.to_csv('link_segments_random.csv')
 
         expected_node_segments = pd.read_csv(
-            join(test_datadir, "node_segments_random.csv"), index_col=0, squeeze=True
-        )
+            join(test_datadir, "node_segments_random.csv"), index_col=0
+        ).squeeze()
         expected_link_segments = pd.read_csv(
-            join(test_datadir, "link_segments_random.csv"), index_col=0, squeeze=True
-        )
+            join(test_datadir, "link_segments_random.csv"), index_col=0
+        ).squeeze()
         expected_node_segments.astype("int32")
         expected_link_segments.astype("int32")
 
@@ -108,11 +108,11 @@ class TestSegmentation(unittest.TestCase):
         #        link_segments.to_csv('link_segments_strategic.csv')
 
         expected_node_segments = pd.read_csv(
-            join(test_datadir, "node_segments_strategic.csv"), index_col=0, squeeze=True
-        )
+            join(test_datadir, "node_segments_strategic.csv"), index_col=0
+        ).squeeze()
         expected_link_segments = pd.read_csv(
-            join(test_datadir, "link_segments_strategic.csv"), index_col=0, squeeze=True
-        )
+            join(test_datadir, "link_segments_strategic.csv"), index_col=0
+        ).squeeze()
         expected_node_segments.astype("int32")
         expected_link_segments.astype("int32")
 
@@ -128,6 +128,63 @@ class TestSegmentation(unittest.TestCase):
 
         self.assertEqual(max_seg_size, 3)
         self.assertEqual(num_segments, 119)
+
+    def test_compare_segmentations(self):
+        #compare results from two segmentation algorithms
+        G = self.wn2.get_graph()
+        
+        strategic_valve_layer = wntr.network.generate_valve_layer(
+            self.wn2, 'strategic', 1, seed = 123
+            )
+
+        (node_segments, 
+        link_segments, 
+        segment_size) = wntr.metrics.valve_segments(
+            G, strategic_valve_layer, algorithm = 'cc'
+            )
+
+        (old_node_segments, 
+        old_link_segments, 
+        old_segment_size) = wntr.metrics.valve_segments(
+            G, strategic_valve_layer, algorithm = 'matrix'
+            )
+
+        # basic length checks
+        self.assertEqual(len(old_node_segments), len(node_segments))
+        self.assertEqual(len(old_link_segments), len(link_segments))
+        self.assertEqual(len(old_segment_size), len(segment_size))
+
+        """
+        Warning: the following test assumes that algorithms output 
+        same labels for segment classes, which may not always be the case.
+        If this test fails, consider looking into a comparison
+        that checks if segment groups are the same, rather
+        than exact labelling.
+        """
+        for link in link_segments.index:
+            self.assertEqual(
+                link_segments.loc[link],
+                old_link_segments.loc[link]
+                )
+
+        """
+        Warning: the following test assumes that algorithms output 
+        same labels for segment classes, which may not always be the case.
+        If this test fails, consider looking into a comparison
+        that checks if segment groups are the same, rather
+        than exact labelling.
+        """
+        for node in node_segments.index:
+            self.assertEqual(
+                node_segments.loc[node],
+                old_node_segments.loc[node]
+                )
+
+        # check segment sizes
+        for k in segment_size.index:
+            self.assertTrue(
+                (old_segment_size.loc[k]==segment_size.loc[k]).all()
+                )
 
 
 if __name__ == "__main__":
