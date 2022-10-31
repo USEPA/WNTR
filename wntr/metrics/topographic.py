@@ -201,11 +201,11 @@ def valve_segments(G, valve_layer, algorithm = 'cc'):
         valve number, with columns named 'node' and 'link'.
     algorithm: string
         Choice of algorithm
+        
         - 'cc' (Default) uses ``nx.connected_components`` for a fast,
           low-memory approach to the algorithm.
         - 'matrix' uses original wntr method for 
           segmentation which utilizes direct connectivity matrix.
-
 
     Returns
     -------
