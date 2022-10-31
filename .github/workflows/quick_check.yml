@@ -31,7 +31,7 @@ jobs:
     # Build extensions are accessible from package level, similar to python setup.py build_ext --inplace
     - name: Install package for development
       run: |
-        python setup.py develop
+        python setup.py develop --build
     - name: Run tests and coverage (unittests plus doctests)
       run: |
         coverage run --source=wntr --omit="*/tests/*" -m pytest -m "not time_consuming" --doctest-modules --doctest-glob="*.rst" wntr        
