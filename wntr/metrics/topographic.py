@@ -200,13 +200,11 @@ def valve_segments(G, valve_layer, algorithm = 'cc'):
         on link A and protects node B). The valve_layer DataFrame is indexed by
         valve number, with columns named 'node' and 'link'.
     algorithm: string
-        Choice of algorithm 
+        Choice of algorithm
+        - 'cc' (Default) uses ``nx.connected_components`` for a fast,
+          low-memory approach to the algorithm.
         - 'matrix' uses original wntr method for 
-        segmentation which utilizes direct connectivity matrix.
-        - 'improved_matrix' follows the original wntr method, but
-        with improvements to speed.
-        - 'networkx' takes a different approach, utilizing networkx's
-        connected 
+          segmentation which utilizes direct connectivity matrix.
 
 
     Returns
