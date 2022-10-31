@@ -317,7 +317,6 @@ def _matrix_valve_segments(G, valve_layer):
     DC_np = DC.to_numpy() # requires Pandas v.0.24.0
     # transpose to align with numpy's row major default
     DC_np = DC_np.transpose()
-    DC_np_static = DC_np
     # vector of length nodes+links where the ith entry is the segment number of node/link i
     seg_label_DC = np.zeros(shape=(len(DC.index)), dtype=int)
 
@@ -349,11 +348,9 @@ def _matrix_valve_segments(G, valve_layer):
                
                 # Potential connectivity of the segment      
                 # p_seg_DC = DC_np + seg_DC # this is slow
-                l = seg_DC.nonzero()[0]
-                ll = DC_np[:,l]
-                mm = DC_np[l,:]
-                lll = np.sum(ll,axis=1)
-                connected_to_seg = lll.nonzero()[0]
+                connected_to_seg = np.sum(
+                    DC_np[:,seg_DC.nonzero()[0]],axis=1
+                    ).nonzero()[0]
 
                 # Nodes and links that are connected to the segment
                 seg_DC[connected_to_seg] = 1
@@ -429,15 +426,6 @@ def _cc_valve_segments(G, valve_layer):
         segment number, with columns named 'node' and 'link'.
     """
 
-    ### DEV NOTES
-    # Might be clearer code to combine all_names and seg_label into a
-    # data frame. If not just simpler, this might also be faster (or slower) 
-    # depending on pandas.
-    # 
-    # Also, this code does not follow the convention of adding L_ and
-    # N_ to names of links and nodes, could be added in easily if needed.
-    ###
-
     # Convert the graph to an undirected graph
     uG = G.to_undirected()
 
@@ -450,18 +438,18 @@ def _cc_valve_segments(G, valve_layer):
     link_names = ['L_'+k for u,v,k in links]
     all_names = node_names + link_names
 
-    # initialization for labelling
+    # Initialization for labelling
     seg_index = 0
     seg_label = np.zeros(shape=(len(all_names)), dtype=int)
 
-    # find and label links isolated by valves, EG 0|----|0
+    # Find and label links isolated by valves, EG 0|----|0
     for start_node, end_node, link_name in links:
         link_valves = valve_layer[valve_layer['link']==link_name]
         if set(link_valves['node']) >= set([start_node, end_node]):
             seg_index += 1
             seg_label[all_names.index('L_'+link_name)] = seg_index
 
-    # find and label nodes isolated by valves, EG 0----|0|----0
+    # Find and label nodes isolated by valves, EG 0----|0|----0
     for node_name in node_names:
         node_valves = valve_layer[valve_layer['node']==node_name]
         node_links = [k for u,v,k in uG.edges(node_name[2:], keys=True)]
@@ -469,17 +457,12 @@ def _cc_valve_segments(G, valve_layer):
             seg_index += 1
             seg_label[all_names.index(node_name)] = seg_index
     
-    #TODO simplify the following two sections. Might be able to
-    # delete edge directly from link name, rather than doing the second
-    # for loop.
-    # Though keep in mind that to_delete is used as a list of edges later
-
-    # collect valved link names
+    # Collect valved link names
     valved_link_names = []    
     for i, row in valve_layer.iterrows():
         valved_link_names.append(row[0])
 
-    # remove valved links from G
+    # Remove valved links from G
     to_delete = []
     for edge in uG.edges:
         link_name = edge[2]
@@ -487,14 +470,13 @@ def _cc_valve_segments(G, valve_layer):
             to_delete.append(edge)
     uG.remove_edges_from(to_delete)
 
-    # obtain connected components
-    # very fast - crux of the algorithm
-    cc = nx.connected_components(uG)
+    # Obtain connected components
+    cc = nx.connected_components(uG) # very fast - crux of the algorithm
     cc_list = [c for c in cc]
 
     ## Label unvalved portion of graph
 
-    # assign labels to nodes
+    # Assign labels to nodes
     for i in range(len(cc_list)):
         segment = cc_list[i]
         seg_index += 1
@@ -502,7 +484,7 @@ def _cc_valve_segments(G, valve_layer):
             index = all_names.index('N_'+junc)
             seg_label[index] = seg_index
 
-    # assign lables to edges
+    # Assign lables to edges
     for edge in uG.edges(keys=True):
         u, v, k = edge
         node_index = all_names.index('N_'+u)
@@ -536,23 +518,22 @@ def _cc_valve_segments(G, valve_layer):
         # links with link_valves.size == 2 are already labelled
         elif link_valves.shape[0] ==2:
             continue
-        # if some other value occurs, something went wrong
-        # this exception may be raised if a valve layer has duplicates
-        # which has happened when generating a random layer
         else:
-            raise Exception("Should have 1 or 2 valved nodes")
+            raise Exception("Should only have 1 or 2 valved nodes")
 
 
-    # finalize results
-    #TODO check if things work fine without listifying seg_label
+    # Finalize results
     seg_labels = list(seg_label)
     seg_labels_index = all_names
     seg_label = pd.Series(seg_labels, index=seg_labels_index, dtype=int)
 
     node_segments = seg_label[node_names]
-    link_segments = seg_label[link_names] 
+    link_segments = seg_label[link_names]
+
+    # Remove "N_" and "L_" from nodes and links
     node_segments.index = node_segments.index.str[2::]
-    link_segments.index = link_segments.index.str[2::]  
+    link_segments.index = link_segments.index.str[2::]
+
     # Extract segment sizes, for nodes and links
     seg_link_sizes = link_segments.value_counts().rename('link')
     seg_node_sizes = node_segments.value_counts().rename('node')
