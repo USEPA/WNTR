@@ -31,7 +31,7 @@ jobs:
         pip install -r requirements.txt
     - name: Build wheel
       run: |
-        python setup.py bdist_wheel
+        python setup.py bdist_wheel --build
         ls dist/*
     - name: Save wheel
       uses: actions/upload-artifact@v3
