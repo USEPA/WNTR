@@ -28,7 +28,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install --upgrade coverage pytest
-    # Build extensions are accessible from package level, similar to python setup.py build_ext --inplace
     - name: Install package for development
       run: |
         python setup.py develop --build

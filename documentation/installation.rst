@@ -12,7 +12,8 @@ See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
-Users can install the latest release of WNTR from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
+Users can install the latest release of WNTR from PyPI or Anaconda using one of the 
+following commands in a terminal, command line, or PowerShell prompt. 
 
 .. only:: html
 
@@ -250,8 +251,8 @@ Developer instructions
 -------------------------
 
 Developers can clone and setup the main branch of WNTR from the GitHub 
-repository using the following commands in a command line or PowerShell prompt. 
-WNTR includes C++ code that can be built into pyd files using the optional ``--build`` command line argument.
+repository using the following commands in a terminal, command line, or PowerShell prompt. 
+WNTR includes C++ code that can be built into shared object files (e.g., pyd for Windows) using the optional ``--build`` command line argument.
 This requires that the developer has a C++ compiler on their path::
 
     git clone https://github.com/USEPA/WNTR
@@ -259,14 +260,16 @@ This requires that the developer has a C++ compiler on their path::
     python setup.py develop --build
 
 If the developer does NOT have a C++ compiler, or would rather use prebuilt wheels,
-the pyd files can be downloaded from WNTR GitHub Actions using the following steps:
+the shared object files can be downloaded from WNTR GitHub Actions using the following steps:
 
 * Clone and setup the main branch of WNTR from the GitHub repository as shown above, but omit the ``--build`` command line argument
 * Select the latest GitHub Actions build_tests that uses the main branch from https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml
 * Scroll down to "Artifacts"
 * Download the wheel that matches the desired operating system and Python version (for example, wntr_3.9_windows-latest.whl)
-* Unzip the wheel and locate the following files (which are named according to the operating system and Python version): wntr\sim\aml\_evaluator.cp39-win_amd64.pyd, wntr\sim\network_isolation\_network_isolation.cp39-win_amd64.pyd
-* Copy these files into the matching directly in the cloned version of WNTR
+* Unzip the wheel and locate the following files (which are named according to the operating system and Python version)
+   * wntr\sim\aml\_evaluator.cp39-win_amd64.pyd
+   * wntr\sim\network_isolation\_network_isolation.cp39-win_amd64.pyd
+* Copy these files into the matching directory in the cloned version of WNTR
 
 Note that users installing WNTR through PyPI or conda do not need to compile code.
 

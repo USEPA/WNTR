@@ -6,14 +6,14 @@ import sys
 
 use_swig = False
 
-extension_modules = list()
-
 if '--build' in sys.argv:
     build = True
     sys.argv.remove('--build')
 else:
     build = False
     
+
+extension_modules = list()
 if build:
     import numpy
 
