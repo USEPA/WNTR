@@ -21,10 +21,13 @@ v0.5.0 (main)
 
 * Added support for Python 3.10, dropped support for Python 3.6.
   The build workflow now creates wheel artifacts.  
-  The `_evaluator` and `_network_isolation` binaries are also 
-  distributed with the code. `#287 <https://github.com/USEPA/WNTR/pull/287>`_, 
+  `#287 <https://github.com/USEPA/WNTR/pull/287>`_, 
   `#294 <https://github.com/USEPA/WNTR/pull/294>`_
 
+* The `_evaluator` and `_network_isolation` binaries are no longer 
+  distributed with the code.  The setup.py file now includes an optional argument to build the binaries.
+  Developer installation instructions have been updated.
+  
 * Updated documentation `#291 <https://github.com/USEPA/WNTR/pull/291>`_, 
   `#292 <https://github.com/USEPA/WNTR/pull/292>`_
  

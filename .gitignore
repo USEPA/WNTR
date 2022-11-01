@@ -6,6 +6,7 @@ wntr.egg-info/
 dist/
 docker/
 
+*.pyd
 *.pyc
 *.egg
 *.coverage
