@@ -6,7 +6,8 @@ import sys
 
 use_swig = False
 
-if '--build' in sys.argv:
+# BUILD_WNTR_EXTENSIONS is defined as an environment variable for the project at readthedocs.org
+if '—-build' in sys.argv or 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'true':
     build = True
     sys.argv.remove('--build')
 else:
