@@ -267,7 +267,7 @@ class TestPerformance(unittest.TestCase):
         t1.join()
         t2.join()
         thr_time = time.time()-start_time
-        self.assertGreaterEqual(seq_time - thr_time, -0.1, 'EPANET threading took longer than sequential')
+        self.assertGreaterEqual(seq_time - thr_time, -1, 'EPANET threading took 1s longer than sequential')
 
         start_time = time.time()
         run_wntr(wn1, 'temp1')
@@ -282,7 +282,7 @@ class TestPerformance(unittest.TestCase):
         t1.join()
         t2.join()
         thr_time = time.time()-start_time
-        self.assertGreaterEqual(seq_time - thr_time, -0.1, 'WNTR threading took longer than sequential')
+        self.assertGreaterEqual(seq_time - thr_time, -1, 'WNTR threading took 1s longer than sequential')
 
     def test_Net6_mod_performance(self):
         head_diff_abs_threshold = 1e-3
