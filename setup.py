@@ -6,13 +6,15 @@ import sys
 
 use_swig = False
 
+# BUILD_WNTR_EXTENSIONS is defined as an environment variable for the project at readthedocs.org
 if '--build' in sys.argv:
     build = True
     sys.argv.remove('--build')
+elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'true':
+    build = True
 else:
     build = False
     
-
 extension_modules = list()
 if build:
     import numpy
