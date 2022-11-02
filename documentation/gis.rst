@@ -37,9 +37,10 @@ Geospatial capabilities
 ======================================
 
 The junctions, tanks, reservoirs, pipes, pumps, and valves in a water network model can be converted to 
-geospatial data objects. These objects can be used 
+GeoPandas GeoDataFrames as described in :ref:`model_io`.
+The GeoDataFrames can be used 
 directly within WNTR, 
-in Python with geospatial packages such as GeoPandas and Shapely, and 
+in Python with geospatial packages such as GeoPandas and Shapely, and saved to GeoJSON and Shapefiles for use
 in geographic information system (GIS) platforms.
 Open source GIS platforms include QGIS and GRASS GIS.
 
@@ -87,10 +88,12 @@ WNTR to add attributes to the water network model and the analysis.  Example ext
 * Polygon geometries that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
 
-Convert a water network model to GeoDataFrames
-----------------------------------------------
+.. _working_with_geodataframes:
 
-A water network model can be converted to a group of GeoDataFrames using the function
+Working with GeoDataFrames
+--------------------------
+
+A WaterNetworkModel can be converted to a collection of GeoDataFrames using the function
 :class:`~wntr.model.network.io.to_gis`.
 One GeoDataFrame is created for each type of model component (Junction, Tank, Reservoir, Pipe, Pump, Valve).
 Component attributes (e.g., junction elevation) are stored in the GeoDataFrame along with the 
@@ -143,32 +146,6 @@ For example, the junctions GeoDataFrame contains the following information
     13    Junction    211.836  ...    0.006309  POINT (70.00000 70.00000)
     21    Junction    213.360  ...    0.009464  POINT (30.00000 40.00000)
 
-The GeoDataFrames can be saved to GeoJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
-
-.. doctest::
-    :skipif: gpd is None
-
-    >>> wn_gis.write('Net1', driver='GeoJSON')
-	
-This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
-
-* Net1_junctions.geojson
-* Net1_tanks.geojson
-* Net1_reservoirs.geojson
-* Net1_pipes.geojson
-* Net1_pumps.geojson
-* Note, Net1_valves.geojson not created since Net1 has no valves
-
-The `write` method includes an optional argument that sets the GeoPandas driver.  
-This allows the user to create Shapefiles in addition to GeoJSON files.
-These files can be loaded into GIS platforms for further analysis and visualization.
-
-The water network model also contains methods to write GeoJSON and Shapefiles directly (without converting the water network model to GeoDataFrames).
-See :ref:`giswrite` for more information.
-
-Add attributes to the GeoDataFrames
-----------------------------------------
-
 Additional attributes can be added to the GeoDataFrames using the 
 :class:`~wntr.gis.network.WaterNetworkGIS.add_node_attributes` and 
 :class:`~wntr.gis.network.WaterNetworkGIS.add_link_attributes` methods.
@@ -189,26 +166,29 @@ Attributes can also be added directly to individual GeoDataFrames, as shown belo
     :skipif: gpd is None
 
     >>> wn_gis.junctions['new attribute'] = 10
+
+The GeoDataFrames can be saved to GeoJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> wn_gis.write('Net1', driver='GeoJSON')
 	
+This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
 
-.. _gisread:
+* Net1_junctions.geojson
+* Net1_tanks.geojson
+* Net1_reservoirs.geojson
+* Net1_pipes.geojson
+* Net1_pumps.geojson
+* Note, Net1_valves.geojson not created since Net1 has no valves
 
-Convert GeoDataFrames to a water network model
-----------------------------------------------
+The `write` method includes an optional argument that sets the GeoPandas driver.  
+This allows the user to create Shapefiles in addition to GeoJSON files.
+These files can be loaded into GIS platforms for further analysis and visualization.
 
-A water network model can be created from a group of GeoDataFrames using the function
-:class:`~wntr.network.io.from_gis`. The water network model can be created from 
-a :class:`~wntr.gis.network.WaterNetworkGIS` object or a dictionary of GeoDataFrames, with the following keys:
-junctions, tanks, reservoirs, pipes, pumps, valves.
-
-.. note:: 
-   A water network model created from GeoDataFrames only contains 
-   junction, tank, reservoir, pipe, pump and valve
-   attributes and topographic connectivity of the network.  
-   The network will **NOT** contain patterns, curves, rules, controls, 
-   or sources.  Water network model options are set to default values. 
-   Additional functionality could be added to WNTR in a future release.
-
+A water network model can also be created from a group of GeoDataFrames using the function
+:class:`~wntr.network.io.from_gis`.
 
 The following example creates a water network model from the group of GeoDataFrames created above.
 
