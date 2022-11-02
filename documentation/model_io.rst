@@ -152,7 +152,7 @@ Graph representation
 
 The :class:`~wntr.network.model.WaterNetworkModel.get_graph` method is used to 
 create a NetworkX graph from a WaterNetworkModel.
-See :ref:`networkx` for more information on the use of NetworkX graphs in WNTR.  
+See :ref:`networkx_graph` for more information on the use of NetworkX graphs in WNTR.  
 
 .. doctest::
 

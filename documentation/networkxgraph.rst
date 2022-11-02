@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _networkx_graph:
+
 NetworkX graph
 ======================================
 
