@@ -269,7 +269,7 @@ The GeoPandas ``read_file`` method is used to read the GeoJSON file into a GeoDa
     
     >>> import geopandas as gpd
 	
-    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson')
+    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
     >>> print(hydrant_data)
        demand                   geometry
     0    5000  POINT (48.20000 37.20000)
@@ -342,7 +342,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 .. doctest::
     :skipif: gpd is None
 
-    >>> valve_data = gpd.read_file('data/Net1_valve_data.geojson')
+    >>> valve_data = gpd.read_file('data/Net1_valve_data.geojson') # doctest: +SKIP
     >>> print(valve_data)
                         geometry
     0  POINT (56.50000 41.50000)
@@ -431,7 +431,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 .. doctest::
     :skipif: gpd is None
 
-    >>> earthquake_data = gpd.read_file('data/Net1_earthquake_data.geojson')
+    >>> earthquake_data = gpd.read_file('data/Net1_earthquake_data.geojson') # doctest: +SKIP
     >>> print(earthquake_data)
          Pr                                           geometry
     0  0.50  LINESTRING (36.00000 2.00000, 44.00000 44.0000...
@@ -511,7 +511,7 @@ The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.g
 .. doctest::
     :skipif: gpd is None
 
-    >>> landslide_data = gpd.read_file('data/Net1_landslide_data.geojson')
+    >>> landslide_data = gpd.read_file('data/Net1_landslide_data.geojson') # doctest: +SKIP
     >>> print(landslide_data)
          Pr                                           geometry
     0  0.50  POLYGON ((28.84615 22.23077, 28.76040 22.05079...
