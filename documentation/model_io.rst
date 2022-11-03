@@ -70,12 +70,14 @@ The dictionary contains the following keys:
 * options
 
 Each of these entries contains a dictionary or list of dictionaries with keys 
-corresponding to object attributes.
+corresponding to object attributes. A small subset of the dictionary is printed below.
 
 .. doctest::
 
     >>> wn_dict = wntr.network.to_dict(wn)
-
+    >>> wn_dict['links'][0] # doctest: +SKIP
+	{'name': '20', 'link_type': 'Pipe', 'start_node_name': '3', 'end_node_name': '20', ...
+	
 The :class:`~wntr.network.io.from_dict` function is used to 
 create a WaterNetworkModel from a dictionary.
 Dictionary representations of the model are always written in SI units (m, kg, s).
@@ -107,16 +109,28 @@ for each of the following model components:
 * valves
 
 Note that patterns, curves, sources, controls, and options are not stored in the GeoDataFrame representation.
-See :ref:`geospatial` for more information on the use of GeoDataFrames in WNTR. 
+See :ref:`geospatial` for more information on the the WaterNetworkGIS object and the use of GeoDataFrames in WNTR. 
 
 .. doctest::
     :skipif: gpd is None
 
     >>> wn_gis = wntr.network.to_gis(wn)
 
+Individual GeoDataFrames are obtained as follows (Note that Net3 has no valves and the GeoDataFrame for valves is empty).
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> wn_gis.junctions # doctest: +SKIP
+    >>> wn_gis.tanks # doctest: +SKIP
+    >>> wn_gis.reservoirs # doctest: +SKIP
+    >>> wn_gis.pipes # doctest: +SKIP
+    >>> wn_gis.pumps # doctest: +SKIP
+    >>> wn_gis.valves # doctest: +SKIP
+	
 The :class:`~wntr.network.io.from_gis` function is used to 
 create a WaterNetworkModel object from a collection of GeoDataFrames.  
-The GeoDataFrames can either be stored in a :class:`~wntr.gis.network.WaterNetworkGIS` object
+The GeoDataFrames can either be stored in a WaterNetworkGIS object
 or in a dictionary with keys for each model component (junctions, tanks, reservoirs, pipes, pumps, and valves).
 The function can also be used to append information from GeoDataFrames into an existing WaterNetworkModel.
 
@@ -128,7 +142,7 @@ The function can also be used to append information from GeoDataFrames into an e
 A WaterNetworkModel created from GeoDataFrames only contains 
 junction, tank, reservoir, pipe, pump and valve
 attributes and topographic connectivity of the network.  
-The network will **NOT** contain patterns, curves, rules, controls, 
+The network will not contain patterns, curves, rules, controls, 
 or sources.  Water network model options are set to default values. 
 Additional functionality could be added to WNTR in a future release.
    
@@ -136,16 +150,6 @@ Additional functionality could be added to WNTR in a future release.
    :class:`~wntr.network.model.WaterNetworkModel.to_gis` and  
    :class:`~wntr.network.model.WaterNetworkModel.from_gis` 
    are also methods on the WaterNetworkModel.  
-
-A WaterNetworkGIS object can also be written to GeoJSON and Shapefile files using 
-the object's :class:`~wntr.gis.network.WaterNetworkGIS.write` method. 
-
-.. doctest::
-    :skipif: gpd is None
-
-    >>> wn_gis.write('Net3', driver='GeoJSON')
-
-Note, the GeoPandas ``read_file`` and ``to_file`` methods can also be used to read and write GeoJSON and Shapefile files.
 
 Graph representation
 ---------------------
@@ -195,11 +199,19 @@ The GeoJSON files can be loaded into GIS platforms for further analysis and visu
 	
     >>> wntr.network.write_geojson(wn, 'Net3')
 
-This creates one file for each of model component (junctions, tanks, reservoirs, pipes, pumps, and valves).
+This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
+
+* Net3_junctions.geojson
+* Net3_tanks.geojson
+* Net3_reservoirs.geojson
+* Net3_pipes.geojson
+* Net3_pumps.geojson
+* Note, Net3_valves.geojson is not created since Net3 has no valves
+
 Note that patterns, curves, sources, controls, and options are not stored in the GeoJSON files.
 
 The :class:`~wntr.network.io.read_geojson` function creates a WaterNetworkModel from a 
-collection of GeoJSON files.
+dictionary of GeoJSON files.
 The function can also be used to append information from GeoJSON files into an existing WaterNetworkModel.
 
 .. doctest::
@@ -224,11 +236,18 @@ The Shapefiles can be loaded into GIS platforms for further analysis and visuali
 	
     >>> wntr.network.write_shapefile(wn, 'Net3')
 	
-This creates a directory for each model component (junctions, tanks, reservoirs, pipes, pumps, and valves)
-which contains a Shapefile and related files.
+This creates the following Shapefile directories for junctions, tanks, reservoirs, pipes, pumps, and valves:
+
+* Net3_junctions
+* Net3_tanks
+* Net3_reservoirs
+* Net3_pipes
+* Net3_pumps
+* Note, Net3_valves is not created since Net3 has no valves
+
 Note that patterns, curves, sources, controls, and options are not stored in the Shapefile files.
 
-The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a collection of
+The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a dictionary of
 Shapefile directories.
 The function can also be used to append information from Shapefiles into an existing WaterNetworkModel.
 
