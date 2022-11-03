@@ -51,7 +51,7 @@ The following section describes capabilities in WTNR that use GeoPandas GeoDataF
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.
-The snap and intersect examples also used geospatial data stored in the 
+The snap and intersect examples also use additional GIS data stored in the 
 `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
 
 .. doctest::
@@ -104,11 +104,11 @@ For example, the junctions GeoDataFrame contains the following information
 
     >>> print(wn_gis.junctions.head())
        node_type  elevation  initial_quality                   geometry
-    10  Junction    216.408           0.0005  POINT (20.00000 70.00000)
-    11  Junction    216.408           0.0005  POINT (30.00000 70.00000)
-    12  Junction    213.360           0.0005  POINT (50.00000 70.00000)
-    13  Junction    211.836           0.0005  POINT (70.00000 70.00000)
-    21  Junction    213.360           0.0005  POINT (30.00000 40.00000)
+    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
 
 Each GeoDataFrame contains attributes and geometry:
 
