@@ -51,8 +51,12 @@ The following section describes capabilities in WTNR that use GeoPandas GeoDataF
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.
-The snap and intersect examples also use additional GIS data stored in the 
+The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` examples 
+also use additional GIS data stored in the 
 `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
+For simplicity, the examples assume that all data coordinates are in 
+the EPSG:4326 coordinate reference system (CRS).  
+More information on setting and transforming CRS is included in :ref:`crs`.
 
 .. doctest::
     :skipif: gpd is None
@@ -156,8 +160,15 @@ Geometry
     ``shapely.geometry.Point``, ``shapely.geometry.LineString``, and ``shapely.geometry.MultiLineString``.
     A few components can be defined using multiple types:
 
-    * Pumps and valves can be stored as Points or LineStrings. While Pumps are defined as 
-      lines within WNTR (and EPANET), converting the geometry to Points can be useful for geospatial analysis and visualization.
+    * Pumps and valves can be stored as LineStrings (default) or Points. While pumps are defined as 
+      lines within WNTR (and EPANET), converting the geometry to Points can be useful for 
+      geospatial analysis and visualization. The following example stores pumps and valves as Points.
+	  
+      .. doctest::
+        :skipif: gpd is None
+
+          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, valves_as_points=True)
+		
     * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
       vertices are stored as a MultiLineString.
 
@@ -218,33 +229,121 @@ WNTR to add attributes to the water network model and analysis.  Example additio
 The snap and intersect examples below used additional GIS data stored in the 
 `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
 
-Note, the GeoPandas ``read_file`` and ``to_file`` methods can be used to read/write external GeoJSON and Shapefile files in Python.
+Note, the GeoPandas ``read_file`` and ``to_file`` functions can be used to read/write external GeoJSON and Shapefile files in Python.
+
+.. _crs:
 
 Coordinate reference system
 --------------------------------------
 
 It is important to understand the coordinate reference system (CRS) of geospatial data.
-Some geospatial operations, like the snap and intersect functions described below, require that
-datasets have the same CRS. 
-
-When converting a WaterNetworkModel into GeoDataFrames using :class:`~wntr.network.io.to_gis` and 
-when creating GeoJSON and Shapefiles using 
-:class:`~wntr.network.io.write_geojson` and :class:`~wntr.network.io.write_shapefile`, 
-the user can specify a CRS for the node coordinates.
-**Note this does NOT convert node coordinates to a different CRS, this only assigns a CRS to the data or file.**
-By default, the CRS is not specified (and is set to None).  
-
 CRSs can be geographic (e.g., latitude/longitude where the units are in degrees) or 
 projected (e.g., Universal Transverse Mercator where units are in meters).
-**Projected CRSs are preferred for more accurate distance calculations.**  
+GeoPandas includes documentation on managing projections at https://geopandas.org/en/stable/docs/user_guide/projections.html.
+Several important points on CRS are listed below.
 
-GeoPandas includes documentation on managing projections and includes the ``to_crs`` method to convert GeoDataFrame CRS.
-Additionally, WNTR includes methods to modify coordinates, see :ref:`modify_node_coords` for more information.
+* The GeoPandas ``set_crs`` and ``to_crs`` methods can be used to set and transform the CRS of GeoDataFrames.
+* WNTR includes additional methods to modify coordinates, see :ref:`modify_node_coords` for more information.
+* Projected CRSs are preferred for more accurate distance calculations.
+* The CRS for all GeoJSON files is assumed to be EPSG:4326 WGS84 (World Geodetic System 1984 in degrees latitude and degrees longitude).  
+  This means that when a GeoJSON file is read into Python using the GeoPandas ``read_file`` function, 
+  the CRS will always be EPSG:4326.  The user can override the CRS by changing the ``crs`` attribute directly 
+  (not using the ``set_crs`` and ``to_crs`` methods).
+* When converting a WaterNetworkModel into GeoDataFrames using :class:`~wntr.network.io.to_gis` and 
+  when creating Shapefiles from a WaterNetworkModel using :class:`~wntr.network.io.write_shapefile`, 
+  the user can specify a CRS for the node coordinates.
+  This does NOT convert node coordinates to a different CRS, this only assigns a CRS to the data or file.
+  By default, the CRS is not specified (and is set to None).  
+* The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` functions described 
+  in the following sections require that datasets have the same CRS.
+  
+The following example reads a GeoJSON file and overrides the CRS to change it from EPSG:4326 to EPSG:3857.
+(Note, this does not change the coordinates in the geometry column).
+
+.. doctest::
+    :skipif: gpd is None
+    
+    >>> import geopandas as gpd
+	
+    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
+    >>> print(hydrant_data.crs)
+    epsg:4326
+    >>> print(hydrant_data)
+       demand                   geometry
+    0    5000  POINT (48.20000 37.20000)
+    1    1500  POINT (71.80000 68.30000)
+    2    8000  POINT (51.20000 71.10000)
+	
+    >>> hydrant_data.crs = 'EPSG:3857'
+    >>> print(hydrant_data.crs)
+    EPSG:3857
+    >>> print(hydrant_data)
+       demand               geometry
+    0    5000  POINT (48.200 37.200)
+    1    1500  POINT (71.800 68.300)
+    2    8000  POINT (51.200 71.100)
+	
+.. doctest::
+    :hide:
+
+    >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
+
+The following example reads a GeoJSON file and transforms the CRS to EPSG:3857 
+(Note, this transforms the coordinates in the geometry column).
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
+	
+    >>> hydrant_data.to_crs('EPSG:3857', inplace=True)
+    >>> print(hydrant_data.crs)
+    EPSG:3857
+    >>> print(hydrant_data)
+       demand                          geometry
+    0    5000   POINT (5365599.456 4467020.994)
+    1    1500  POINT (7992739.439 10536729.551)
+    2    8000  POINT (5699557.929 11436551.505)
+
+.. doctest::
+    :hide:
+
+    >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
+
+The following example converts a WaterNetworkModel in EPSG:4326 coordinates into GeoDataFrames
+and then translates the GeoDataFrames coordinates to EPSG:3857.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+	
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+    >>> print(wn_gis.junctions.head())
+       node_type  elevation  initial_quality                   geometry
+    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+	
+    >>> wn_gis.junctions.to_crs('EPSG:3857', inplace=True)
+    >>> wn_gis.tanks.to_crs('EPSG:3857', inplace=True)
+    >>> wn_gis.reservoirs.to_crs('EPSG:3857', inplace=True)
+    >>> wn_gis.pipes.to_crs('EPSG:3857', inplace=True)
+    >>> wn_gis.pumps.to_crs('EPSG:3857', inplace=True)
+    >>> print(wn_gis.junctions.head())
+       node_type  elevation  initial_quality                          geometry
+    10  Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
+    11  Junction    216.408        5.000e-04  POINT (3339584.724 11068715.659)
+    12  Junction    213.360        5.000e-04  POINT (5565974.540 11068715.659)
+    13  Junction    211.836        5.000e-04  POINT (7792364.356 11068715.659)
+    21  Junction    213.360        5.000e-04   POINT (3339584.724 4865942.280)
 
 Snap point geometries to the nearest point or line
 ----------------------------------------------------
 
-The :class:`~wntr.gis.snap` function is used to find the nearest point or line to a set of points. 
+The :class:`~wntr.gis.geospatial.snap` function is used to find the nearest point or line to a set of points. 
 This functionality can be used to assign hydrants to junctions or assign isolation valves to pipes.
 
 When snapping Point geometries in GeoDataFrame A to Point or Line geometries in GeoDataFrame B, 
@@ -256,6 +355,16 @@ the function returns the following information (one entry for each point in A):
 * If B contains Lines, the nearest endpoint along the nearest line
 * If B contains Lines, the relative distance from the line's start node (line position)
 
+Net1.inp in EPSG:4326 CRS is used in the example below. 
+Additional data in GeoJSON format is always assumed to be in EPSG:4326.
+See :ref:`crs` for more information.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+	
 Snap hydrants to junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -398,7 +507,7 @@ The data, water network model, and valve layer can be plotted as follows.
 Find the intersect between geometries
 --------------------------------------
 
-The :class:`~wntr.gis.intersect`  function is used to find the intersection between geometries.
+The :class:`~wntr.gis.geospatial.intersect`  function is used to find the intersection between geometries.
 This functionality can be used to identify faults or landslides that intersect pipes,
 or assign demographic data to network components.
 
@@ -421,6 +530,16 @@ This is useful when working with geometries that do not cover the entire region 
 For example, while census tracts cover the entire region, hazard maps might contain gaps (regions with no hazard) 
 that the user might want to include in the intersection.
 
+Net1.inp in EPSG:4326 CRS is used in the example below. 
+Additional data in GeoJSON format is always assumed to be in EPSG:4326.
+See :ref:`crs` for more information.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+	
 Assign earthquake probability to pipes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
