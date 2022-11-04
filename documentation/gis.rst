@@ -243,8 +243,11 @@ GeoPandas includes documentation on managing projections at https://geopandas.or
 Several important points on CRS are listed below.
 
 * The GeoPandas ``set_crs`` and ``to_crs`` methods can be used to set and transform the CRS of GeoDataFrames.
-* WNTR includes additional methods to modify coordinates, see :ref:`modify_node_coords` for more information.
-* Projected CRSs are preferred for more accurate distance calculations.
+* The WNTR WaterNetworkGIS object also includes 
+  :class:`~wntr.gis.network.WaterNetworkGIS.set_crs` and 
+  :class:`~wntr.gis.network.WaterNetworkGIS.to_crs` methods to set and 
+  transform the CRS of the junctions, tanks, reservoirs, pipes, pumps, and valves GeoDataFrames.
+* WNTR includes additional methods to modify coordinates on the WaterNetworkModel object, see :ref:`modify_node_coords` for more information.
 * The CRS for all GeoJSON files is assumed to be EPSG:4326 WGS84 (World Geodetic System 1984 in degrees latitude and degrees longitude).  
   This means that when a GeoJSON file is read into Python using the GeoPandas ``read_file`` function, 
   the CRS will always be EPSG:4326.  The user can override the CRS by changing the ``crs`` attribute directly 
@@ -256,7 +259,8 @@ Several important points on CRS are listed below.
   By default, the CRS is not specified (and is set to None).  
 * The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` functions described 
   in the following sections require that datasets have the same CRS.
-  
+* Projected CRSs are preferred for more accurate distance calculations.
+
 The following example reads a GeoJSON file and overrides the CRS to change it from EPSG:4326 to EPSG:3857.
 (Note, this does not change the coordinates in the geometry column).
 
@@ -327,11 +331,7 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
     13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
     21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
 	
-    >>> wn_gis.junctions.to_crs('EPSG:3857', inplace=True)
-    >>> wn_gis.tanks.to_crs('EPSG:3857', inplace=True)
-    >>> wn_gis.reservoirs.to_crs('EPSG:3857', inplace=True)
-    >>> wn_gis.pipes.to_crs('EPSG:3857', inplace=True)
-    >>> wn_gis.pumps.to_crs('EPSG:3857', inplace=True)
+    >>> wn_gis.to_crs('EPSG:3857')
     >>> print(wn_gis.junctions.head())
        node_type  elevation  initial_quality                          geometry
     10  Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
