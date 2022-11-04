@@ -525,14 +525,17 @@ def _read_geopandas(files, index_col='index', append=None, field_name_map=None):
 def write_geojson(
     wn,
     prefix: str,
-    crs=None,
     pumps_as_points=True,
     valves_as_points=True,
 ):
     """
-    Write the WaterNetworkModel to a set of GeoJSON files, one file for each network element.
+    Write the WaterNetworkModel to a set of GeoJSON files, one file for each
+    network element.
 
-    Note that this is a simple export of the water network data.
+    Note GeoJSON files are always assumed to be in EPSG:4326. No CRS is
+    assigned.
+
+    The GeoJSON only includes information from the water network model.
     To add results of a simulation or analysis, do:
 
     .. code::
@@ -547,15 +550,13 @@ def write_geojson(
         Water network model
     prefix : str
         File prefix
-    crs : str, optional
-        Coordinate reference system, by default None
     pumps_as_points : bool, optional
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
         
     """
-    _write_geopandas(wn, prefix, crs, pumps_as_points, valves_as_points, "GeoJSON")
+    _write_geopandas(wn, prefix, None, pumps_as_points, valves_as_points, "GeoJSON")
 
 def read_geojson(files, index_col='index', append=None):
     """
@@ -588,9 +589,10 @@ def write_shapefile(
     valves_as_points=True
 ):
     """
-    Write the WaterNetworkModel to a set of ESRI Shapefiles, one directory for each network element.
+    Write the WaterNetworkModel to a set of ESRI Shapefiles, one directory for
+    each network element.
 
-    Note that this is a simple export of the water network data.
+    The Shapefiles only includes information from the water network model.
     To add results of a simulation or analysis, do:
 
     .. code::
