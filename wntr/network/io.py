@@ -337,7 +337,7 @@ def to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
         
     """
     gis_data = WaterNetworkGIS()
-    gis_data.create_gis(wn, crs, pumps_as_points, valves_as_points)
+    gis_data._create_gis(wn, crs, pumps_as_points, valves_as_points)
     
     return gis_data
 
@@ -364,7 +364,7 @@ def from_gis(gis_data, append=None):
     if isinstance(gis_data, dict):
         gis_data = WaterNetworkGIS(gis_data)
 
-    wn = gis_data.create_wn(append=append)
+    wn = gis_data._create_wn(append=append)
     
     return wn
 
@@ -518,7 +518,7 @@ def _read_geopandas(files, index_col='index', append=None, field_name_map=None):
         if field_name_map is not None:
             gis_data.valves.rename(columns=field_name_map['valves'], inplace=True)
     
-    wn = gis_data.create_wn(append=append)
+    wn = gis_data._create_wn(append=append)
         
     return wn
 
@@ -532,7 +532,7 @@ def write_geojson(
     Write the WaterNetworkModel to a set of GeoJSON files, one file for each
     network element.
 
-    Note GeoJSON files are always assumed to be in EPSG:4326. No CRS is
+    Note GeoJSON files are always assumed to be in CRS EPSG:4326. No CRS is
     assigned.
 
     The GeoJSON only includes information from the water network model.

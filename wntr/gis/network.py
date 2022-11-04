@@ -76,11 +76,12 @@ class WaterNetworkGIS:
                 assert isinstance(gis_data['valves'], gpd.GeoDataFrame)
                 self.valves = gis_data['valves']
 
-        
-    def create_gis(self, wn, crs: str = None, pumps_as_points: bool = False, 
+    def _create_gis(self, wn, crs: str = None, pumps_as_points: bool = False, 
                    valves_as_points: bool = False,) -> None:
         """
         Create GIS data from a water network model.
+        
+        This method is used by wntr.network.io.to_gis
         
         Note: patterns, curves, rules, controls, sources, and options are not 
         saved to the GIS data
@@ -169,12 +170,14 @@ class WaterNetworkGIS:
         df = df_links[df_links['link_type'] == 'Valve']
         self.valves = _extract_geodataframe(df, crs, valves_as_points) 
         
-    def create_wn(self, append=None):
+    def _create_wn(self, append=None):
         """
         Create or append a WaterNetworkModel from GeoDataFrames
         
-       Parameters
-       ----------
+        This method is used by wntr.network.io.from_gis
+
+        Parameters
+        ----------
         append : WaterNetworkModel or None, optional
             Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
             is created.
@@ -208,7 +211,45 @@ class WaterNetworkGIS:
         wn = from_dict(wn_dict, append)
         
         return wn
-                
+
+    def to_crs(self, crs):
+        """
+        Transform CRS of the junctions, tanks, reservoirs, pipes, pumps,
+        and valves GeoDataFrames.
+
+        Calls geopandas.GeoDataFrame.to_crs on each GeoDataFrame.
+
+        Parameters
+        ----------
+        crs : str
+            Coordinate reference system
+        """
+        for data in [self.junctions, self.tanks, self.reservoirs,
+                     self.pipes, self.pumps, self.valves]:
+            if 'geometry' in data.columns:
+                data = data.to_crs(crs, inplace=True)
+
+    def set_crs(self, crs, allow_override=False):
+        """
+        Set CRS of the junctions, tanks, reservoirs, pipes, pumps,
+        and valves GeoDataFrames.
+
+        Calls geopandas.GeoDataFrame.set_crs on each GeoDataFrame.
+
+        Parameters
+        ----------
+        crs : str
+            Coordinate reference system
+        allow_override : bool (optional)
+            Allow override of existing coordinate reference system
+        """
+
+        for data in [self.junctions, self.tanks, self.reservoirs,
+                     self.pipes, self.pumps, self.valves]:
+            if 'geometry' in data.columns:
+                data = data.set_crs(crs, inplace=True,
+                                    allow_override=allow_override)
+
     def add_node_attributes(self, values, name):
         """
         Add attribute to junctions, tanks, or reservoirs GeoDataFrames
