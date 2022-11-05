@@ -2,9 +2,10 @@
 
 v0.5.0 (main)
 ---------------------------------------------------
-* Added GIS capabilities in a `wntr.gis` module, which includes the following:
+* Added GIS capabilities in a `wntr.gis` module, which includes the following 
+  `#302 <https://github.com/USEPA/WNTR/pull/302>`_:
 
-  * Convert between water network models and GIS formatted data (GeoPandas) 
+  * Convert between water network models and GIS formatted data (GeoPandas GeoDataFrames) 
     and GIS formatted files (GeoJSON and Shapefiles)
   
   * Snap GeoPandas point data to elements in a water network model
@@ -12,12 +13,14 @@ v0.5.0 (main)
   * Find the intersection between GeoPandas points, line or polygons and 
     elements in a water network model
   
+  * Set and convert GeoDataFrame coordinate reference systems
+	
   * See :ref:`geospatial` section of the user manual for more information.
 
 * Removed the `read_inpfile`, `write_inpfile`, `read_json`, and `write_json` methods from the WaterNetworkModel.  
   This functionality is still available using `wntr.network.read_inpfile`, `wntr.network.write_inpfile`, 
   `wntr.network.read_json` and `wntr.network.write_json`
-  and is located with other read/write functions.
+  and is located with other read/write functions `#302 <https://github.com/USEPA/WNTR/pull/302>`_.
 
 * Added support for Python 3.10, dropped support for Python 3.6.
   The build workflow now creates wheel artifacts.  
@@ -27,7 +30,16 @@ v0.5.0 (main)
 * The `_evaluator` and `_network_isolation` binaries are no longer 
   distributed with the code.  The setup.py file now includes an optional argument to build the binaries.
   Developer installation instructions have been updated.
+  `#294 <https://github.com/USEPA/WNTR/pull/294>`_,
+  `#305 <https://github.com/USEPA/WNTR/pull/305>`_, 
+  `#311 <https://github.com/USEPA/WNTR/pull/311>`_, 
+  `#313 <https://github.com/USEPA/WNTR/pull/313>`_, 
+  `#314 <https://github.com/USEPA/WNTR/pull/314>`_
   
+* Bug fix in pump cost metric `#306 <https://github.com/USEPA/WNTR/pull/306>`_
+
+* Bug fix in rules when link is active `#301 <https://github.com/USEPA/WNTR/pull/301>`_
+
 * Updated documentation `#291 <https://github.com/USEPA/WNTR/pull/291>`_, 
   `#292 <https://github.com/USEPA/WNTR/pull/292>`_
  
