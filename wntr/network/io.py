@@ -13,6 +13,7 @@ the water network model to a file.
     from_dict
     to_gis
     from_gis
+    to_graph
     write_json
     read_json
     write_inpfile
