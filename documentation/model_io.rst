@@ -154,17 +154,21 @@ Additional functionality could be added to WNTR in a future release.
 Graph representation
 ---------------------
 
-The :class:`~wntr.network.model.WaterNetworkModel.get_graph` method is used to 
+The :class:`~wntr.network.io.to_graph` method is used to 
 create a NetworkX graph from a WaterNetworkModel.
 See :ref:`networkx_graph` for more information on the use of NetworkX graphs in WNTR.  
 
 .. doctest::
 
-    >>> G = wn.get_graph()  
+    >>> G = wntr.network.to_graph()  
 	
 The ability to create a WaterNetworkModel from 
 a NetworkX graph could be added in a future version of WNTR.
 
+.. note:: 
+   :class:`~wntr.network.model.WaterNetworkModel.to_graph`
+   is also a method on the WaterNetworkModel.  
+   
 JSON file
 ---------------------------------------------------------
 
