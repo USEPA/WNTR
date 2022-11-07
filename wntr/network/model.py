@@ -16,6 +16,7 @@ model.
 """
 import logging
 from collections import OrderedDict
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -1234,10 +1235,11 @@ class WaterNetworkModel(AbstractModel):
         WaterNetworkModel
         """
         return wntr.network.io.from_gis(gis_data, append=self)
-
-    def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
+    
+    def to_graph(self, node_weight=None, link_weight=None, 
+                 modify_direction=False):
         """
-        Returns a networkx MultiDiGraph of the water network model
+        Convert a WaterNetworkModel into a networkx MultiDiGraph
         
         Parameters
         ----------
@@ -1255,40 +1257,34 @@ class WaterNetworkModel(AbstractModel):
         --------
         networkx MultiDiGraph
         """
-        G = nx.MultiDiGraph()
-
-        for name, node in self.nodes():
-            G.add_node(name)
-            nx.set_node_attributes(G, name="pos", values={name: node.coordinates})
-            nx.set_node_attributes(G, name="type", values={name: node.node_type})
-
-            if node_weight is not None:
-                try:  # weight nodes
-                    value = node_weight[name]
-                    nx.set_node_attributes(G, name="weight", values={name: value})
-                except:
-                    pass
-
-        for name, link in self.links():
-            start_node = link.start_node_name
-            end_node = link.end_node_name
-            G.add_edge(start_node, end_node, key=name)
-            nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
-
-            if link_weight is not None:
-                try:  # weight links
-                    value = link_weight[name]
-                    if modify_direction and value < 0:  # change the direction of the link and value
-                        G.remove_edge(start_node, end_node, name)
-                        G.add_edge(end_node, start_node, name)
-                        nx.set_edge_attributes(G, name="type", values={(end_node, start_node, name): link.link_type})
-                        nx.set_edge_attributes(G, name="weight", values={(end_node, start_node, name): -value})
-                    else:
-                        nx.set_edge_attributes(G, name="weight", values={(start_node, end_node, name): value})
-                except:
-                    pass
-
-        return G
+        return wntr.network.io.to_graph(self, node_weight, link_weight, 
+                                        modify_direction)
+                                        
+                               
+    def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
+        """
+        Convert a WaterNetworkModel into a networkx MultiDiGraph
+        
+        Parameters
+        ----------
+        node_weight :  dict or pandas Series (optional)
+            Node weights
+        link_weight : dict or pandas Series (optional)
+            Link weights.  
+        modify_direction : bool (optional)
+            If True, than if the link weight is negative, the link start and 
+            end node are switched and the abs(weight) is assigned to the link
+            (this is useful when weighting graphs by flowrate). If False, link 
+            direction and weight are not changed.
+            
+        Returns
+        --------
+        networkx MultiDiGraph
+        """
+        warn("wntr.network.WaterNetworkModel.get_graph is deprecated, use wntr.network.WaterNetworkModel.to_graph instead", DeprecationWarning, stacklevel=2)
+        
+        return wntr.network.io.to_graph(self, node_weight, link_weight, 
+                                        modify_direction)
 
     def assign_demand(self, demand, pattern_prefix="ResetDemand"):
         """
