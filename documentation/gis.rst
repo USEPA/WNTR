@@ -187,13 +187,14 @@ Geometry
        ==============================  ===============================
    
 A WaterNetworkGIS object can also be written to GeoJSON and Shapefile files using 
-the object's :class:`~wntr.gis.network.WaterNetworkGIS.write` method. 
+the object's :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and 
+:class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` methods. 
 The GeoJSON and Shapefile files can be loaded into GIS platforms for further analysis and visualization.
 
 .. doctest::
     :skipif: gpd is None
 
-    >>> wn_gis.write('Net1', driver='GeoJSON')
+    >>> wn_gis.write_geojson('Net1')
 	
 This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
 
@@ -278,7 +279,7 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     1    1500  POINT (71.80000 68.30000)
     2    8000  POINT (51.20000 71.10000)
 	
-    >>> hydrant_data.crs = 'EPSG:3857'
+    >>> hydrant_data = hydrant_data.set_crs('EPSG:3857', allow_override=True)
     >>> print(hydrant_data.crs)
     EPSG:3857
     >>> print(hydrant_data)

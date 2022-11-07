@@ -226,7 +226,7 @@ class TestGIS(unittest.TestCase):
         assert 'Flowrate_1hr' in self.gis_data.pumps.columns
         assert 'Flowrate_1hr' not in self.gis_data.valves.columns # Net1 has no valves
     
-    def test_write(self):
+    def test_write_geojson(self):
         prefix = 'temp_Net1'
         components = ['junctions', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves']
         for component in components:
@@ -234,7 +234,7 @@ class TestGIS(unittest.TestCase):
             if isfile(filename):
                 os.remove(filename)
             
-        self.gis_data.write(abspath(join(testdir, prefix)))
+        self.gis_data.write_geojson(abspath(join(testdir, prefix)))
 
         for component in components:
             if component == 'valves':
