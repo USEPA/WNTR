@@ -224,6 +224,11 @@ The function can also be used to append information from GeoJSON files into an e
     ...                  'pumps': 'Net3_pumps.geojson'}
     >>> wn2 = wntr.network.read_geojson(geojson_files)
 
+.. note:: 
+   :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and
+   :class:`~wntr.gis.network.WaterNetworkGIS.read_geojson`
+   are also a methods on the WaterNetworkGIS object. 
+   
 Shapefile files
 -------------------
 
@@ -260,3 +265,9 @@ The function can also be used to append information from Shapefiles into an exis
     ...                   'pipes': 'Net3_pipes',
     ...                   'pumps': 'Net3_pumps'}
     >>> wn2 = wntr.network.read_shapefile(shapefile_dirs)
+
+.. note:: 
+   :class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` and
+   :class:`~wntr.gis.network.WaterNetworkGIS.read_shapefile`
+   are also a methods on the WaterNetworkGIS object. 
+   
