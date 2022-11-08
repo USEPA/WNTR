@@ -160,7 +160,7 @@ See :ref:`networkx_graph` for more information on the use of NetworkX graphs in 
 
 .. doctest::
 
-    >>> G = wntr.network.to_graph()  
+    >>> G = wntr.network.to_graph(wn)  
 	
 The ability to create a WaterNetworkModel from 
 a NetworkX graph could be added in a future version of WNTR.
