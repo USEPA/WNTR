@@ -541,9 +541,6 @@ def write_geojson(wn, prefix: str, crs=None, pumps_as_points=True,
     Write the WaterNetworkModel to a set of GeoJSON files, one file for each
     network element.
 
-    Note GeoJSON files are always assumed to be in CRS EPSG:4326. No CRS is
-    assigned.
-
     The GeoJSON only includes information from the water network model.
     To add results of a simulation or analysis, do:
 

@@ -1265,6 +1265,9 @@ class WaterNetworkModel(AbstractModel):
         """
         Convert a WaterNetworkModel into a networkx MultiDiGraph
         
+        .. deprecated:: 0.5.0
+        Use ``to_graph()`` instead
+        
         Parameters
         ----------
         node_weight :  dict or pandas Series (optional)
