@@ -477,7 +477,7 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
     :skipif: gpd is None
 
     >>> valve_layer = snapped_to_pipes[['link', 'node']]
-    >>> G = wn.get_graph()
+    >>> G = wn.to_graph()
     >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
 
 The data, water network model, and valve layer can be plotted as follows.

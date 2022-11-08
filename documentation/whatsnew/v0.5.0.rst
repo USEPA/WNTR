@@ -21,6 +21,8 @@ v0.5.0 (main)
   This functionality is still available using `wntr.network.read_inpfile`, `wntr.network.write_inpfile`, 
   `wntr.network.read_json` and `wntr.network.write_json`
   and is located with other read/write functions `#302 <https://github.com/USEPA/WNTR/pull/302>`_.
+ 
+* WaterNetworkModel method `get_graph` renamed `to_graph`.  Deprecation warning added.
 
 * Added support for Python 3.10, dropped support for Python 3.6.
   The build workflow now creates wheel artifacts.  
