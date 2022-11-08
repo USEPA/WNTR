@@ -40,7 +40,7 @@ class WaterNetworkGIS:
         if missing either shapely or geopandas
     """
     
-    def __init__(self, gis_data=None, index_col='index') -> None:
+    def __init__(self, gis_data=None) -> None:
         
         if not has_shapely or not has_geopandas:
             raise ModuleNotFoundError('shapley and geopandas are required')
