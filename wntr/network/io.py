@@ -535,7 +535,8 @@ def read_inpfile(filename, append=None):
     return wn
 
 
-def write_geojson(wn, prefix: str, pumps_as_points=True, valves_as_points=True):
+def write_geojson(wn, prefix: str, crs=None, pumps_as_points=True, 
+                  valves_as_points=True):
     """
     Write the WaterNetworkModel to a set of GeoJSON files, one file for each
     network element.
@@ -558,13 +559,15 @@ def write_geojson(wn, prefix: str, pumps_as_points=True, valves_as_points=True):
         Water network model
     prefix : str
         File prefix
+    crs : str, optional
+        Coordinate reference system, by default None
     pumps_as_points : bool, optional
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
         
     """
-    wn_gis = wn.to_gis(None, pumps_as_points=pumps_as_points, 
+    wn_gis = wn.to_gis(crs, pumps_as_points=pumps_as_points, 
                        valves_as_points=valves_as_points)
     wn_gis.write_geojson(prefix=prefix)
 
