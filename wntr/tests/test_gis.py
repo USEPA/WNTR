@@ -212,7 +212,7 @@ class TestGIS(unittest.TestCase):
         y1 = gis_data.junctions.loc['10','geometry'].y
         self.assertEqual(gis_data.junctions.crs, 'EPSG:3857')
         self.assertAlmostEqual(x1, 2226389.8158654715, 6)
-        self.assertEqual(y1, 11068715.659379493, 6)
+        self.assertAlmostEqual(y1, 11068715.659379493, 6)
         
     def test_add_attributes_and_write(self):
         
