@@ -440,9 +440,6 @@ class WaterNetworkGIS:
         Write the WaterNetworkGIS object to a set of GeoJSON files, one file
         for each network element.
 
-        Note GeoJSON files are always assumed to be in CRS EPSG:4326. No CRS is
-        assigned.
-
         Parameters
         ----------
         prefix : str
