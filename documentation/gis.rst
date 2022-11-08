@@ -249,12 +249,9 @@ Several important points on CRS are listed below.
   :class:`~wntr.gis.network.WaterNetworkGIS.to_crs` methods to set and 
   transform the CRS of the junctions, tanks, reservoirs, pipes, pumps, and valves GeoDataFrames.
 * WNTR includes additional methods to modify coordinates on the WaterNetworkModel object, see :ref:`modify_node_coords` for more information.
-* The CRS for all GeoJSON files is assumed to be EPSG:4326 WGS84 (World Geodetic System 1984 in degrees latitude and degrees longitude).  
-  This means that when a GeoJSON file is read into Python using the GeoPandas ``read_file`` function, 
-  the CRS will always be EPSG:4326.  The user can override the CRS by changing the ``crs`` attribute directly 
-  (not using the ``set_crs`` and ``to_crs`` methods).
 * When converting a WaterNetworkModel into GeoDataFrames using :class:`~wntr.network.io.to_gis` and 
-  when creating Shapefiles from a WaterNetworkModel using :class:`~wntr.network.io.write_shapefile`, 
+  when creating GeoJSON and Shapefiles from a WaterNetworkModel using 
+  :class:`~wntr.network.io.write_geojson` and :class:`~wntr.network.io.write_shapefile`, 
   the user can specify a CRS for the node coordinates.
   This does NOT convert node coordinates to a different CRS, this only assigns a CRS to the data or file.
   By default, the CRS is not specified (and is set to None).  
@@ -357,7 +354,7 @@ the function returns the following information (one entry for each point in A):
 * If B contains Lines, the relative distance from the line's start node (line position)
 
 Net1.inp in EPSG:4326 CRS is used in the example below. 
-Additional data in GeoJSON format is always assumed to be in EPSG:4326.
+Additional data in GeoJSON format is also in EPSG:4326 CRS.
 See :ref:`crs` for more information.
 
 .. doctest::
@@ -532,7 +529,7 @@ For example, while census tracts cover the entire region, hazard maps might cont
 that the user might want to include in the intersection.
 
 Net1.inp in EPSG:4326 CRS is used in the example below. 
-Additional data in GeoJSON format is always assumed to be in EPSG:4326.
+Additional data in GeoJSON format is also in EPSG:4326 CRS.
 See :ref:`crs` for more information.
 
 .. doctest::
