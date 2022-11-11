@@ -267,8 +267,10 @@ the shared object files can be downloaded from WNTR GitHub Actions using the fol
 * Scroll down to "Artifacts"
 * Download the wheel that matches the desired operating system and Python version (for example, wntr_3.9_windows-latest.whl)
 * Unzip the wheel and locate the following files (which are named according to the operating system and Python version)
-   * wntr\sim\aml\_evaluator.cp39-win_amd64.pyd
-   * wntr\sim\network_isolation\_network_isolation.cp39-win_amd64.pyd
+
+   * wntr/sim/aml/_evaluator.cp39-win_amd64.pyd
+   * wntr/sim/network_isolation/_network_isolation.cp39-win_amd64.pyd
+   
 * Copy these files into the matching directory in the cloned version of WNTR
 
 Note that users installing WNTR through PyPI or conda do not need to compile code.

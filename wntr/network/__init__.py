@@ -12,7 +12,7 @@ from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlChecker, \
     ControlChangeTracker, Rule
-from .io import to_dict, from_dict, to_gis, from_gis, \
+from .io import to_dict, from_dict, to_gis, from_gis, to_graph, \
     read_inpfile, write_inpfile, \
     read_json, write_json, \
     read_geojson, write_geojson, \
