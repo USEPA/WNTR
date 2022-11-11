@@ -570,7 +570,7 @@ class TestCase(unittest.TestCase):
     def test_Net1(self):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         node = G.nodes
         elevation = wn.query_node_attribute("elevation")
