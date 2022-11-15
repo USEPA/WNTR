@@ -84,7 +84,6 @@ def ENgetwarning(code, sec=-1):
     else:
         return header + "Unknown warning: %d" % code
 
-
 def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
     
