@@ -12,7 +12,8 @@ See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
-Users can install the latest release of WNTR from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
+Users can install the latest release of WNTR from PyPI or Anaconda using one of the 
+following commands in a terminal, command line, or PowerShell prompt. 
 
 .. only:: html
 
@@ -43,15 +44,6 @@ Users can install the latest release of WNTR from PyPI or Anaconda using one of 
 .. _anaconda version: https://anaconda.org/conda-forge/wntr
 .. |anaconda downloads| image:: https://anaconda.org/conda-forge/wntr/badges/downloads.svg
 .. _anaconda downloads: https://anaconda.org/conda-forge/wntr
-
-Developers can install the main branch of WNTR from the GitHub 
-repository using the following commands in a command line or PowerShell prompt::
-
-    git clone https://github.com/USEPA/WNTR
-    cd WNTR
-    python setup.py develop
-
-More information for developers can be found in the :ref:`developers` section.
 
 .. _detailed_instructions:
 
@@ -218,15 +210,23 @@ The following Python packages are optional:
   http://python-visualization.github.io/folium/
 * utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
   https://pypi.org/project/utm/
+* geopandas [JVFM21]_: used to work with geospatial data,
+  https://geopandas.org/
+* rtree [rtree]_: used for overlay operations in geopandas,
+  https://rtree.readthedocs.io/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 * numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
-* nose: used to run software tests,
-  http://nose.readthedocs.io
 
-These packages are included in the Anaconda Python distribution.
+All of these packages **except geopandas** are included in the Anaconda Python distribution.
 
+.. note:: 
+   Proper installation of geopandas requires installing several geopandas dependencies, including 
+   fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
+   On Linux and Mac OS X, installing geopandas through the conda-forge channel will install the dependencies.
+   On Windows, the dependencies must be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
+   
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
    Pyomo, Interior Point OPTimizer (Ipopt), and HSL.
@@ -246,3 +246,33 @@ These packages are included in the Anaconda Python distribution.
 	* Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
 	  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
 	  C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.
+
+Developer instructions
+-------------------------
+
+Developers can clone and setup the main branch of WNTR from the GitHub 
+repository using the following commands in a terminal, command line, or PowerShell prompt. 
+WNTR includes C++ code that can be built into shared object files (e.g., pyd for Windows) using the optional ``--build`` command line argument.
+This requires that the developer has a C++ compiler on their path::
+
+    git clone https://github.com/USEPA/WNTR
+    cd WNTR
+    python setup.py develop --build
+
+If the developer does NOT have a C++ compiler, or would rather use prebuilt wheels,
+the shared object files can be downloaded from WNTR GitHub Actions using the following steps:
+
+* Clone and setup the main branch of WNTR from the GitHub repository as shown above, but omit the ``--build`` command line argument
+* Select the latest GitHub Actions build_tests that uses the main branch from https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml
+* Scroll down to "Artifacts"
+* Download the wheel that matches the desired operating system and Python version (for example, wntr_3.9_windows-latest.whl)
+* Unzip the wheel and locate the following files (which are named according to the operating system and Python version)
+
+   * wntr/sim/aml/_evaluator.cp39-win_amd64.pyd
+   * wntr/sim/network_isolation/_network_isolation.cp39-win_amd64.pyd
+   
+* Copy these files into the matching directory in the cloned version of WNTR
+
+Note that users installing WNTR through PyPI or conda do not need to compile code.
+
+More information for developers can be found in the :ref:`developers` section.

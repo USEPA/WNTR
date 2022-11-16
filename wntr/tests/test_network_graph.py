@@ -19,7 +19,7 @@ class TestNetworkGraphs(unittest.TestCase):
         node_weight = wn.query_node_attribute("elevation")
         link_weight = wn.query_link_attribute("length")
 
-        G = wn.get_graph(node_weight, link_weight)
+        G = wn.to_graph(node_weight, link_weight)
 
         self.assertEqual(G.nodes["111"]["weight"], 10 * 0.3048)
         self.assertEqual(G["159"]["161"]["177"]["weight"], 2000 * 0.3048)
@@ -30,7 +30,7 @@ class TestNetworkGraphs(unittest.TestCase):
         sim = wntr.sim.EpanetSimulator(wn)
         results = sim.run_sim()
         flowrate = results.link['flowrate'].iloc[-1,:]
-        G = wn.get_graph(link_weight=flowrate, modify_direction=True)
+        G = wn.to_graph(link_weight=flowrate, modify_direction=True)
         
         # Positive flow, flowrate == graph weight
         name = '173'
@@ -49,7 +49,7 @@ class TestNetworkGraphs(unittest.TestCase):
     def test_terminal_nodes(self):
         inp_file = join(netdir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         terminal_nodes = wntr.metrics.terminal_nodes(G)
         expected = set(["2", "9"])
@@ -58,7 +58,7 @@ class TestNetworkGraphs(unittest.TestCase):
     def test_bridges(self):
         inp_file = join(netdir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         bridges = wntr.metrics.bridges(G)
         expected = set(["9", "10", "110"])
@@ -69,7 +69,7 @@ class TestNetworkGraphs(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         for pump in wn.pump_name_list[:-1]:  # remove 2 of the 3 pumps
             wn.remove_link(pump)
-        G = wn.get_graph()
+        G = wn.to_graph()
         udG = G.to_undirected()
         val = nx.diameter(udG)
         excepted = 7  # Davide Soldi et al. (2015) Procedia Engineering
@@ -80,7 +80,7 @@ class TestNetworkGraphs(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         for pump in wn.pump_name_list[:-1]:  # remove 2 of the 3 pumps
             wn.remove_link(pump)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         val = wntr.metrics.central_point_dominance(G)
         expected = 0.23  # Davide Soldi et al. (2015) Procedia Engineering
@@ -92,7 +92,7 @@ class TestNetworkGraphs(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         for pump in wn.pump_name_list[:-1]:  # remove 2 of the 3 pumps
             wn.remove_link(pump)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         val = wntr.metrics.spectral_gap(G)
         expected = 1.5149  # Davide Soldi et al. (2015) Procedia Engineering
@@ -104,7 +104,7 @@ class TestNetworkGraphs(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         for pump in wn.pump_name_list[:-1]:  # remove 2 of the 3 pumps
             wn.remove_link(pump)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         val = wntr.metrics.algebraic_connectivity(G)
         expected = 0.1708  # Davide Soldi et al. (2015) Procedia Engineering
@@ -117,7 +117,7 @@ class TestNetworkGraphs(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         for pump in wn.pump_name_list[:-1]:  # remove 2 of the 3 pumps
             wn.remove_link(pump)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         val = wntr.metrics.critical_ratio_defrag(G)
         expected = 0.63  # Pandit et al. (2012) Critical Infrastucture Symposium
@@ -128,7 +128,7 @@ class TestNetworkGraphs(unittest.TestCase):
     def test_Net1_MultiDiGraph(self):
         inp_file = join(netdir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         node = {
             "11": {"pos": (30.0, 70.0), "type": "Junction"},

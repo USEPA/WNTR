@@ -26,7 +26,7 @@ class TestSegmentation(unittest.TestCase):
 
     def test_segmentation_small(self):
         # test a small network
-        G = self.wn1.get_graph()
+        G = self.wn1.to_graph()
 
         valves = [
             ["p1", "n1"],  # valve 0 is on link p1 and protects node n1
@@ -49,7 +49,7 @@ class TestSegmentation(unittest.TestCase):
 
     def test_segmentation_random(self):
         # test Net3
-        G = self.wn2.get_graph()
+        G = self.wn2.to_graph()
         valves = pd.read_csv(
             join(test_datadir, "valve_layer_random.csv"), index_col=0, dtype="object"
         )
@@ -89,7 +89,7 @@ class TestSegmentation(unittest.TestCase):
 
     def test_segmentation_strategic(self):
         # test Net3
-        G = self.wn2.get_graph()
+        G = self.wn2.to_graph()
         valves = pd.read_csv(
             join(test_datadir, "valve_layer_stategic_1.csv"),
             index_col=0,

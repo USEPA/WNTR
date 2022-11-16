@@ -150,6 +150,14 @@ The method :class:`~wntr.network.elements.Pump.add_outage` adds time controls to
 When simulating power outages, consider placing check bypasses around pumps 
 and check valves next to reservoirs.
 
+.. note:: 
+   The power outage is added to the WaterNetworkModel as a Rule.  
+   If the WaterNetworkModel includes Controls that impact pumps, 
+   it is recommended that those Controls are converted to Rules using 
+   to ensure that the power outage is evaluated in a consistent manner.  
+   The method :class:`~wntr.network.model.WaterNetworkModel.convert_controls_to_rules`
+   converts all Controls to Rules, with an option input argument to set priority.  
+   
 Fires
 ----------------
 WNTR can be used to simulate damage caused to system components due to fire and/or to simulate water usage due to fighting fires. To fight fires, additional water is drawn from the system. Fire codes vary by 

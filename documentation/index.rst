@@ -14,6 +14,7 @@ designed to simulate and analyze resilience of water distribution networks.
    units
    getting_started
    waternetworkmodel
+   model_io
    controls
    networkxgraph
    layers
@@ -27,6 +28,7 @@ designed to simulate and analyze resilience of water distribution networks.
    fragility
    morph
    graphics
+   gis
    advancedsim
    license
    whatsnew
