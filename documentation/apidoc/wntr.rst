@@ -16,6 +16,7 @@ Subpackages
     
     wntr.epanet
     wntr.graphics
+    wntr.gis
     wntr.metrics
     wntr.morph
     wntr.network

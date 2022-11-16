@@ -15,7 +15,7 @@ class TestSegmentation(unittest.TestCase):
     def setUpClass(self):
         inp_file = join(ex_datadir, "Net3.inp")
         self.wn = wntr.network.WaterNetworkModel(inp_file)
-        G = self.wn.get_graph()
+        G = self.wn.to_graph()
         self.valves = pd.read_csv(
             join(test_datadir, "valve_layer_stategic_1.csv"),
             index_col=0,

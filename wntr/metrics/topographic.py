@@ -1,7 +1,7 @@
 """
 The wntr.metrics.topographic module contains topographic metrics that are not
 available directly with NetworkX.  Functions in this module operate on a 
-NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
+NetworkX MultiDiGraph, which can be created by calling ``G = wn.to_graph()``
 
 .. rubric:: Contents
 
@@ -221,8 +221,8 @@ def valve_segments(G, valve_layer):
     matrix_link_names = ['L_'+k for u,v,k in links]
 
     # Pipe-node connectivity matrix
-    A = nx.incidence_matrix(uG).todense().T
-    AC = pd.DataFrame(A, columns=matrix_node_names, index=matrix_link_names, dtype=int)
+    AC = nx.incidence_matrix(uG).astype('int').todense().T
+    AC = pd.DataFrame(AC, columns=matrix_node_names, index=matrix_link_names, dtype=int)
     
     # Valve-node connectivity matrix
     VC = pd.DataFrame(0, columns=matrix_node_names, index=matrix_link_names)
@@ -231,7 +231,8 @@ def valve_segments(G, valve_layer):
     
     # Valve deficient matrix (anti-valve matrix)
     VD = AC - VC
-
+    del AC, VC
+    
     # Direct connectivity matrix
     NI = pd.DataFrame(np.identity(len(matrix_node_names)),
                       index = matrix_node_names, columns = matrix_node_names)
@@ -239,7 +240,9 @@ def valve_segments(G, valve_layer):
                       index = matrix_link_names, columns = matrix_link_names)
     DC_left = pd.concat([NI, VD], sort=False)
     DC_right = pd.concat([VD.T, LI], sort=False)
+    del LI, VD
     DC = pd.concat([DC_left, DC_right], axis=1, sort=False)
+    del DC_left, DC_right
     DC = DC.astype(int)
 
     # initialization for looping routine

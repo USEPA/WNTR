@@ -18,7 +18,7 @@ class TestWriter(unittest.TestCase):
 
         inp_file = join(test_datadir, "io.inp")
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        self.wn.write_inpfile("temp.inp", "GPM")
+        self.wntr.network.write_inpfile(self.wn, "temp.inp", "GPM")
         self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
 
     @classmethod
@@ -100,7 +100,7 @@ class TestInpFileWriter(unittest.TestCase):
         self.wntr = wntr
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
-        self.wn.write_inpfile("temp.inp", units="LPM")
+        self.wntr.network.write_inpfile(self.wn, "temp.inp", units="LPM")
         self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
@@ -449,7 +449,7 @@ RULE control_124_Rule IF Tank TANK-3324 level < 26.5 THEN Pipe LINK-1827 status 
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.convert_controls_to_rules()
-        self.wn.write_inpfile('temp2.inp')
+        self.wntr.network.write_inpfile(self.wn, 'temp2.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('temp2.inp')
         for control_name in self.wn.control_name_list:
             ctrl1 = self.wn.get_control(control_name)
@@ -460,11 +460,11 @@ RULE control_124_Rule IF Tank TANK-3324 level < 26.5 THEN Pipe LINK-1827 status 
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.convert_controls_to_rules()
-        self.wn.write_inpfile('temp2.inp')
+        self.wntr.network.write_inpfile(self.wn, 'temp2.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('temp2.inp')
         for control_name in [n for n in self.wn2.control_name_list]:
             self.wn2.remove_control(control_name)
-        self.wn2.write_inpfile('temp3.inp')
+        self.wntr.network.write_inpfile(self.wn2, 'temp3.inp')
         self.wn3 = self.wntr.network.WaterNetworkModel('temp3.inp')
         rules = self._rules.splitlines()
         new_rules = self.wntr.epanet.io._EpanetRule.parse_rules_lines(rules, self.wntr.epanet.util.FlowUnits.GPM)
@@ -488,7 +488,7 @@ class TestInp22FileWriter(unittest.TestCase):
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic.demand_model = "PDA"
         self.wn.options.hydraulic.required_pressure = 1.0
-        self.wn.write_inpfile("temp2.inp", units="LPM")
+        self.wntr.network.write_inpfile(self.wn, "temp2.inp", units="LPM")
         self.wn2 = self.wntr.network.WaterNetworkModel("temp2.inp")
 
     @classmethod
@@ -513,13 +513,13 @@ class TestNet3InpWriterResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wn.write_inpfile("temp.inp")
+        self.wntr.network.write_inpfile(self.wn, "temp.inp")
         self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
 
-        self.wn.write_inpfile("temp.inp")
+        self.wntr.network.write_inpfile(self.wn, "temp.inp")
         self.wn22 = self.wntr.network.WaterNetworkModel("temp.inp")
         self.wn22.options.hydraulic.demand_model = "PDA"
 
@@ -612,7 +612,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wn.write_inpfile("temp.inp", units="CMH")
+        self.wntr.network.write_inpfile(self.wn, "temp.inp", units="CMH")
         self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)

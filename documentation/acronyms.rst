@@ -18,6 +18,8 @@ Abbreviations
 
 **EPA**: Environmental Protection Agency
 
+**GIS**: Geographic information system
+ 
 **HDF**: Hierarchical Data Format
 
 **IDE**: Integrated development environment
