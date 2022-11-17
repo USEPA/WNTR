@@ -1,9 +1,10 @@
 .. _whatsnew_050:
 
-v0.5.0 (main)
+v0.5.0 (November 17, 2022)
 ---------------------------------------------------
 * Added GIS capabilities in a `wntr.gis` module, which includes the following 
-  `#302 <https://github.com/USEPA/WNTR/pull/302>`_:
+  `#302 <https://github.com/USEPA/WNTR/pull/302>`_,
+  `#315 <https://github.com/USEPA/WNTR/pull/315>`_:
 
   * Convert between water network models and GIS formatted data (GeoPandas GeoDataFrames) 
     and GIS formatted files (GeoJSON and Shapefiles)
@@ -24,6 +25,10 @@ v0.5.0 (main)
  
 * WaterNetworkModel method `get_graph` renamed `to_graph`.  Deprecation warning added.
 
+* Added additional options to the EPANET toolkit, including the ability to set size limits and hydraulic initialization.  
+  Added additional functions, including ENgetnodeid, ENgetnodetype, and ENgetlinktype.
+  `#298 <https://github.com/USEPA/WNTR/pull/298>`_
+  
 * Added support for Python 3.10, dropped support for Python 3.6.
   The build workflow now creates wheel artifacts.  
   `#287 <https://github.com/USEPA/WNTR/pull/287>`_, 
