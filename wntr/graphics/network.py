@@ -140,7 +140,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         ax = plt.gca()
         
     # Graph
-    G = wn.get_graph()
+    G = wn.to_graph()
     if not directed:
         G = G.to_undirected()
 
@@ -314,7 +314,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
         raise ImportError('plotly is required')
         
     # Graph
-    G = wn.get_graph()
+    G = wn.to_graph()
     
     # Node attribute
     if node_attribute is not None:
@@ -547,7 +547,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
             link_colors, link_bins  = pd.qcut(link_attribute, len(link_cmap), 
                                               labels=link_cmap, retbins =True)
         
-    G = wn.get_graph()
+    G = wn.to_graph()
     pos = nx.get_node_attributes(G,'pos')
     center = pd.DataFrame(pos).mean(axis=1)
     
