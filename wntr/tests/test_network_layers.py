@@ -38,7 +38,7 @@ class TestValveLayer(unittest.TestCase):
     def test_valve_layer_strategic(self):
 
         # Compute the expected number of valves for N-0, N-1, N-2, N-3, N-4
-        G = self.wn.get_graph()
+        G = self.wn.to_graph()
         node_degree = pd.Series(dict(G.degree()))
         expected_n_valves = pd.Series(index=[4, 3, 2, 1, 0])
         for N in [4, 3, 2, 1, 0]:
