@@ -36,78 +36,27 @@
 Geospatial capabilities
 ======================================
 
-The junctions, tanks, reservoirs, pipes, pumps, and valves in a water network model can be converted to 
-geospatial data objects. These objects can be used 
+The junctions, tanks, reservoirs, pipes, pumps, and valves in a :class:`~wntr.network.model.WaterNetworkModel` 
+can be converted to GeoPandas GeoDataFrames as described in :ref:`model_io`.
+The GeoDataFrames can be used 
 directly within WNTR, 
-in Python with geospatial packages such as GeoPandas and Shapely, and 
+with geospatial Python packages such as GeoPandas and Shapely, and saved to GeoJSON and Shapefiles for use
 in geographic information system (GIS) platforms.
 Open source GIS platforms include QGIS and GRASS GIS.
+The following section describes capabilities in WTNR that use GeoPandas GeoDataFrames.  
 
 .. note:: 
-   The GIS capabilities described below require the Python packages **geopandas** [JVFM21]_ 
+   Functions that use GeoDataFrames require the Python package **geopandas** [JVFM21]_ 
    and **rtree** [rtree]_, both are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
-	
-The following capabilities use data stored in GeoPandas GeoDataFrames.  
-Each GeoDataFrame contain a `geometry` column which contains 
-geometric objects commonly used in geospatial analysis.
 
-:numref:`table-geometry-type` includes water network model components and the 
-geometry type that defines each component.  
-Geometry types include 
-``shapely.geometry.Point``, ``shapely.geometry.LineString``, and ``shapely.geometry.MultiLineString``.
-A few components can be defined using multiple types:
-
-* Pumps and valves can be stored as Points or LineStrings. While Pumps are defined as 
-  lines within WNTR (and EPANET), converting the geometry to Points can be useful for geospatial analysis and visualization.
-* Pipes that do not contain vertices are stored as a LineString while pipes that contain 
-  vertices are stored as a MultiLineString.
-
-.. _table-geometry-type:
-.. table:: Geometry types for water network model components
-   
-   ==============================  ===============================
-   Water Network model component   Shapely geometry type
-   ==============================  ===============================
-   Junction                        Point
-   Tank                            Point
-   Reservoir                       Point
-   Pipe                            LineString or MultiLineString 
-   Pump                            LineString or Point
-   Valve                           LineString or Point
-   ==============================  ===============================
-
-External datasets that are defined using geospatial data objects can be utilized within 
-WNTR to add attributes to the water network model and the analysis.  Example external datasets include:
-
-* Point geometries that contain utility billing data, hydrant locations, isolation valve locations, or the location of emergency services.
-  These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
-* LineString or MultiLineString geometries that contain street layout or earthquake fault lines.
-  These geometries can be associated with points and lines in a water network model by finding the intersection.
-* Polygon geometries that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
-  These geometries can be associated with points and lines in a water network model by finding the intersection.
-
-Convert a water network model to GeoDataFrames
-----------------------------------------------
-
-A water network model can be converted to a group of GeoDataFrames using the function
-:class:`~wntr.model.network.io.to_gis`.
-One GeoDataFrame is created for each type of model component (Junction, Tank, Reservoir, Pipe, Pump, Valve).
-Component attributes (e.g., junction elevation) are stored in the GeoDataFrame along with the 
-component's geometry.
-
-.. note:: 
-   When converting a water network model into GeoDataFrames, the user can specify the 
-   coordinate reference system (CRS) for the node coordinates.
-   By default, the CRS is not specified (and is set to None).  
-   CRSs can be geographic (e.g., latitude/longitude where the units are in degrees) or 
-   projected (e.g., Universal Transverse Mercator where units are in meters).
-   Projected CRSs are preferred for more accurate distance calculations.  
-   GeoPandas includes documentation on managing projections and includes the ``to_crs`` method to convert between CRSs 
-   Additionally, WNTR includes methods to modify coordinates, see :ref:`modify_node_coords` for more information.
-   
-The following example creates GeoDataFrames from a water network model.  Note that Net1 is used in the following example.
-The CRS EPSG:4326 assumes that the coordinates are in degrees latitude and degrees longitude (which is not realistic for this network).  
+The following examples use a water network generated from Net1.inp.
+The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` examples 
+also use additional GIS data stored in the 
+`examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
+For simplicity, the examples assume that all data coordinates are in 
+the EPSG:4326 coordinate reference system (CRS).  
+More information on setting and transforming CRS is included in :ref:`crs`.
 
 .. doctest::
     :skipif: gpd is None
@@ -115,8 +64,31 @@ The CRS EPSG:4326 assumes that the coordinates are in degrees latitude and degre
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
-    >>> wn_gis = wn.to_gis(crs='EPSG:4326')
-	
+
+
+Water Network GIS data
+------------------------
+
+The :class:`~wntr.network.io.to_gis` function is used to 
+create a collection of GeoDataFrames from a WaterNetworkModel.
+The collection of GeoDataFrames is stored in a :class:`~wntr.gis.network.WaterNetworkGIS` object 
+which contains a GeoDataFrame
+for each of the following model components: 
+
+* junctions
+* tanks
+* reservoirs
+* pipes
+* pumps
+* valves
+
+Note that patterns, curves, sources, controls, and options are not stored in the GeoDataFrame representation.
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> wn_gis = wntr.network.to_gis(wn)
+
 Individual GeoDataFrames are obtained as follows (Note that Net1 has no valves and the GeoDataFrame for valves is empty).
 
 .. doctest::
@@ -134,21 +106,95 @@ For example, the junctions GeoDataFrame contains the following information
 .. doctest::
     :skipif: gpd is None
 
-    >>> print(wn_gis.junctions.head()) # doctest: +SKIP
-              type  elevation  ... base_demand                   geometry
-    name                       ...                                       
-    10    Junction    216.408  ...    0.000000  POINT (20.00000 70.00000)
-    11    Junction    216.408  ...    0.009464  POINT (30.00000 70.00000)
-    12    Junction    213.360  ...    0.009464  POINT (50.00000 70.00000)
-    13    Junction    211.836  ...    0.006309  POINT (70.00000 70.00000)
-    21    Junction    213.360  ...    0.009464  POINT (30.00000 40.00000)
+    >>> print(wn_gis.junctions.head())
+       node_type  elevation  initial_quality                   geometry
+    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
 
-The GeoDataFrames can be saved to GeoJSON files using the :class:`~wntr.gis.network.WaterNetworkGIS.write` method.
+Each GeoDataFrame contains attributes and geometry:
+
+Attributes
+^^^^^^^^^^
+
+    GeoDataFrame contains attributes that are generated 
+    from the WaterNetworkModel dictionary representation.
+    However, the GeoDataFrame only includes attributes that are stored as numerical values or strings 
+    (such as junction node type and elevation).  
+    Attributes that are stored as lists or other objects (such as demand timeseries) 
+    are not included in the GeoDataFrame.  
+    The index for each GeoDataFrame is the model component name.
+
+    Additional attributes can be added to the GeoDataFrames using the 
+    :class:`~wntr.gis.network.WaterNetworkGIS.add_node_attributes` and 
+    :class:`~wntr.gis.network.WaterNetworkGIS.add_link_attributes` methods.
+    Additional attributes, such as simulation results or resilience metric, can be used in further analysis and visualization.
+
+    The following example adds simulated pressure at hour 1 the water network GIS data 
+    (which includes pressure at junctions, tanks, and reservoirs).
+
+    .. doctest::
+       :skipif: gpd is None
+	   
+        >>> sim = wntr.sim.EpanetSimulator(wn)
+        >>> results = sim.run_sim()
+    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 'Pressure_1hr')
+
+    Attributes can also be added directly to individual GeoDataFrames, as shown below.
+
+    .. doctest::
+       :skipif: gpd is None
+
+        >>> wn_gis.junctions['new attribute'] = 10
+
+Geometry
+^^^^^^^^^^
+
+    Each GeoDataFrame also contains a `geometry` column which contains 
+    geometric objects commonly used in geospatial analysis.
+    :numref:`table-geometry-type` includes water network model components and the 
+    geometry type that defines each component.  
+    Geometry types include 
+    ``shapely.geometry.Point``, ``shapely.geometry.LineString``, and ``shapely.geometry.MultiLineString``.
+    A few components can be defined using multiple types:
+
+    * Pumps and valves can be stored as LineStrings (default) or Points. While pumps are defined as 
+      lines within WNTR (and EPANET), converting the geometry to Points can be useful for 
+      geospatial analysis and visualization. The following example stores pumps and valves as Points.
+	  
+      .. doctest::
+        :skipif: gpd is None
+
+          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, valves_as_points=True)
+		
+    * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
+      vertices are stored as a MultiLineString.
+
+    .. _table-geometry-type:
+    .. table:: Geometry types for water network model components
+   
+       ==============================  ===============================
+       Water Network model component   Shapely geometry type
+       ==============================  ===============================
+       Junction                        Point
+       Tank                            Point
+       Reservoir                       Point
+       Pipe                            LineString or MultiLineString 
+       Pump                            LineString or Point
+       Valve                           LineString or Point
+       ==============================  ===============================
+   
+A WaterNetworkGIS object can also be written to GeoJSON and Shapefile files using 
+the object's :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and 
+:class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` methods. 
+The GeoJSON and Shapefile files can be loaded into GIS platforms for further analysis and visualization.
 
 .. doctest::
     :skipif: gpd is None
 
-    >>> wn_gis.write('Net1', driver='GeoJSON')
+    >>> wn_gis.write_geojson('Net1')
 	
 This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
 
@@ -157,70 +203,145 @@ This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes
 * Net1_reservoirs.geojson
 * Net1_pipes.geojson
 * Net1_pumps.geojson
-* Note, Net1_valves.geojson not created since Net1 has no valves
+* Note, Net1_valves.geojson is not created since Net1 has no valves
 
-The `write` method includes an optional argument that sets the GeoPandas driver.  
-This allows the user to create Shapefiles in addition to GeoJSON files.
-These files can be loaded into GIS platforms for further analysis and visualization.
-
-The water network model also contains methods to write GeoJSON and Shapefiles directly (without converting the water network model to GeoDataFrames).
-See :ref:`giswrite` for more information.
-
-Add attributes to the GeoDataFrames
-----------------------------------------
-
-Additional attributes can be added to the GeoDataFrames using the 
-:class:`~wntr.gis.network.WaterNetworkGIS.add_node_attributes` and 
-:class:`~wntr.gis.network.WaterNetworkGIS.add_link_attributes` methods.
-Additional attributes, such as simulation results or resilience metric, can be used in further analysis and visualization.
-
-The following example adds simulated pressure at hour 1 to nodes (which includes junctions, tanks, and reservoirs).
-
-.. doctest::
-    :skipif: gpd is None
-
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
-    >>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 'Pressure_1hr')
-	
-Attributes can also be added directly to individual GeoDataFrames, as shown below.
-
-.. doctest::
-    :skipif: gpd is None
-
-    >>> wn_gis.junctions['new attribute'] = 10
-	
-
-.. _gisread:
-
-Convert GeoDataFrames to a water network model
-----------------------------------------------
-
-A water network model can be created from a group of GeoDataFrames using the function
-:class:`~wntr.network.io.from_gis`. The water network model can be created from 
-a :class:`~wntr.gis.network.WaterNetworkGIS` object or a dictionary of GeoDataFrames, with the following keys:
-junctions, tanks, reservoirs, pipes, pumps, valves.
-
-.. note:: 
-   A water network model created from GeoDataFrames only contains 
-   junction, tank, reservoir, pipe, pump and valve
-   attributes and topographic connectivity of the network.  
-   The network will **NOT** contain patterns, curves, rules, controls, 
-   or sources.  Water network model options are set to default values. 
-   Additional functionality could be added to WNTR in a future release.
-
-
-The following example creates a water network model from the group of GeoDataFrames created above.
+A WaterNetworkModel can also be created from a collection of GeoDataFrames using the function
+:class:`~wntr.network.io.from_gis` as shown below.
 
 .. doctest::
     :skipif: gpd is None
 
     >>> wn2 = wntr.network.from_gis(wn_gis)
 
+
+Additional GIS data
+------------------------
+
+Additional GIS data can also be utilized within 
+WNTR to add attributes to the water network model and analysis.  Example additional datasets include:
+
+* **Point geometries** that contain utility billing data, hydrant locations, isolation valve locations, or the location of emergency services.
+  These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
+* **LineString or MultiLineString geometries** that contain street layout or earthquake fault lines.
+  These geometries can be associated with points and lines in a water network model by finding the intersection.
+* **Polygon geometries** that contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
+  These geometries can be associated with points and lines in a water network model by finding the intersection.
+
+The snap and intersect examples below used additional GIS data stored in the 
+`examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
+
+Note, the GeoPandas ``read_file`` and ``to_file`` functions can be used to read/write external GeoJSON and Shapefile files in Python.
+
+.. _crs:
+
+Coordinate reference system
+--------------------------------------
+
+It is important to understand the coordinate reference system (CRS) of geospatial data.
+CRSs can be geographic (e.g., latitude/longitude where the units are in degrees) or 
+projected (e.g., Universal Transverse Mercator where units are in meters).
+GeoPandas includes documentation on managing projections at https://geopandas.org/en/stable/docs/user_guide/projections.html.
+Several important points on CRS are listed below.
+
+* The GeoPandas ``set_crs`` and ``to_crs`` methods can be used to set and transform the CRS of GeoDataFrames.
+* The WNTR WaterNetworkGIS object also includes 
+  :class:`~wntr.gis.network.WaterNetworkGIS.set_crs` and 
+  :class:`~wntr.gis.network.WaterNetworkGIS.to_crs` methods to set and 
+  transform the CRS of the junctions, tanks, reservoirs, pipes, pumps, and valves GeoDataFrames.
+* WNTR includes additional methods to modify coordinates on the WaterNetworkModel object, see :ref:`modify_node_coords` for more information.
+* When converting a WaterNetworkModel into GeoDataFrames using :class:`~wntr.network.io.to_gis` and 
+  when creating GeoJSON and Shapefiles from a WaterNetworkModel using 
+  :class:`~wntr.network.io.write_geojson` and :class:`~wntr.network.io.write_shapefile`, 
+  the user can specify a CRS for the node coordinates.
+  This does NOT convert node coordinates to a different CRS, this only assigns a CRS to the data or file.
+  By default, the CRS is not specified (and is set to None).  
+* The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` functions described 
+  in the following sections require that datasets have the same CRS.
+* Projected CRSs are preferred for more accurate distance calculations.
+
+The following example reads a GeoJSON file and overrides the CRS to change it from EPSG:4326 to EPSG:3857.
+(Note, this does not change the coordinates in the geometry column).
+
+.. doctest::
+    :skipif: gpd is None
+    
+    >>> import geopandas as gpd
+	
+    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
+    >>> print(hydrant_data.crs)
+    epsg:4326
+    >>> print(hydrant_data)
+       demand                   geometry
+    0    5000  POINT (48.20000 37.20000)
+    1    1500  POINT (71.80000 68.30000)
+    2    8000  POINT (51.20000 71.10000)
+	
+    >>> hydrant_data = hydrant_data.set_crs('EPSG:3857', allow_override=True)
+    >>> print(hydrant_data.crs)
+    EPSG:3857
+    >>> print(hydrant_data)
+       demand               geometry
+    0    5000  POINT (48.200 37.200)
+    1    1500  POINT (71.800 68.300)
+    2    8000  POINT (51.200 71.100)
+	
+.. doctest::
+    :hide:
+
+    >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
+
+The following example reads a GeoJSON file and transforms the CRS to EPSG:3857 
+(Note, this transforms the coordinates in the geometry column).
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
+	
+    >>> hydrant_data.to_crs('EPSG:3857', inplace=True)
+    >>> print(hydrant_data.crs)
+    EPSG:3857
+    >>> print(hydrant_data)
+       demand                          geometry
+    0    5000   POINT (5365599.456 4467020.994)
+    1    1500  POINT (7992739.439 10536729.551)
+    2    8000  POINT (5699557.929 11436551.505)
+
+.. doctest::
+    :hide:
+
+    >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
+
+The following example converts a WaterNetworkModel in EPSG:4326 coordinates into GeoDataFrames
+and then translates the GeoDataFrames coordinates to EPSG:3857.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+	
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+    >>> print(wn_gis.junctions.head())
+       node_type  elevation  initial_quality                   geometry
+    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+	
+    >>> wn_gis.to_crs('EPSG:3857')
+    >>> print(wn_gis.junctions.head())
+       node_type  elevation  initial_quality                          geometry
+    10  Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
+    11  Junction    216.408        5.000e-04  POINT (3339584.724 11068715.659)
+    12  Junction    213.360        5.000e-04  POINT (5565974.540 11068715.659)
+    13  Junction    211.836        5.000e-04  POINT (7792364.356 11068715.659)
+    21  Junction    213.360        5.000e-04   POINT (3339584.724 4865942.280)
+
 Snap point geometries to the nearest point or line
 ----------------------------------------------------
 
-The :class:`~wntr.gis.snap` function is used to find the nearest point or line to a set of points. 
+The :class:`~wntr.gis.geospatial.snap` function is used to find the nearest point or line to a set of points. 
 This functionality can be used to assign hydrants to junctions or assign isolation valves to pipes.
 
 When snapping Point geometries in GeoDataFrame A to Point or Line geometries in GeoDataFrame B, 
@@ -232,20 +353,28 @@ the function returns the following information (one entry for each point in A):
 * If B contains Lines, the nearest endpoint along the nearest line
 * If B contains Lines, the relative distance from the line's start node (line position)
 
-The following examples used geospatial data stored in the `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
-The GeoPandas ``read_file`` method is used to read the GeoJSON files into GeoDataFrames.  
+Net1.inp in EPSG:4326 CRS is used in the example below. 
+Additional data in GeoJSON format is also in EPSG:4326 CRS.
+See :ref:`crs` for more information.
 
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+	
 Snap hydrants to junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The dataset used in this example defines hydrant locations.  
 The dataset is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Point`` geometries and a 
-`demand` column that defines fire flow requirements.
+`demand` column that defines fire flow requirements. 
+The GeoPandas ``read_file`` method is used to read the GeoJSON file into a GeoDataFrame.  
 
 .. doctest::
     :skipif: gpd is None
     
-    >>> import geopandas as gpd # doctest: +SKIP
+    >>> import geopandas as gpd
 	
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
     >>> print(hydrant_data)
@@ -291,7 +420,7 @@ The data, water network model, and snapped points can be plotted as follows.
 
    Example hydrants snapped to junctions
 
-** By reversing the order of GeoDataFrames in the snap function**,
+**By reversing the order of GeoDataFrames in the snap function**,
 the nearest hydrant to each junction can also be identified.
 Note that the tolerance is increased to ensure all junctions are assigned a hydrant.
    
@@ -345,7 +474,7 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
     :skipif: gpd is None
 
     >>> valve_layer = snapped_to_pipes[['link', 'node']]
-    >>> G = wn.get_graph()
+    >>> G = wn.to_graph()
     >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
 
 The data, water network model, and valve layer can be plotted as follows.
@@ -376,7 +505,7 @@ The data, water network model, and valve layer can be plotted as follows.
 Find the intersect between geometries
 --------------------------------------
 
-The :class:`~wntr.gis.intersect`  function is used to find the intersection between geometries.
+The :class:`~wntr.gis.geospatial.intersect`  function is used to find the intersection between geometries.
 This functionality can be used to identify faults or landslides that intersect pipes,
 or assign demographic data to network components.
 
@@ -399,6 +528,16 @@ This is useful when working with geometries that do not cover the entire region 
 For example, while census tracts cover the entire region, hazard maps might contain gaps (regions with no hazard) 
 that the user might want to include in the intersection.
 
+Net1.inp in EPSG:4326 CRS is used in the example below. 
+Additional data in GeoJSON format is also in EPSG:4326 CRS.
+See :ref:`crs` for more information.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+	
 Assign earthquake probability to pipes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -548,7 +687,8 @@ Pipes are colored with the weighted mean probability.
 
    Example intersection of pipes with landslide zones
    
-**By reversing the order of GeoDataFrames in the intersection function**, the pipes that intersect each landslide zone and information about 
+**By reversing the order of GeoDataFrames in the intersection function**, 
+the pipes that intersect each landslide zone and information about 
 the intersecting pipe diameters can also be identified:
 
 .. doctest::

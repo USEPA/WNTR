@@ -332,7 +332,7 @@ class _Diagnostics(object): # pragma: no cover
         link_attributes = ['status', '_is_isolated', 'flow']
 
         # Graph
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         open_edges = dict()
         closed_edges = dict()

@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _networkx_graph:
+
 NetworkX graph
 ======================================
 
@@ -55,7 +57,7 @@ the following function:
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-    >>> G = wn.get_graph() # directed multigraph
+    >>> G = wn.to_graph() # directed multigraph
 	
 The graph is stored as a nested dictionary.  The nodes and links
 can be accessed using the graph's `node` and `adj` attribute (`adj` is used to get adjacent nodes and links).
@@ -101,7 +103,7 @@ The following NetworkX method can be used to check if a graph is connected:
     True
 
 A **weighted graph** is a graph in which each node and/or link is given a weight.  
-The WNTR method :class:`~wntr.network.model.WaterNetworkModel.get_graph` 
+The WNTR method :class:`~wntr.network.model.WaterNetworkModel.to_graph` 
 can be used to weight the graph by node and/or link attributes.
 In the following example, the graph is weighted by length. This graph can then 
 be used to compute path lengths:
@@ -109,7 +111,7 @@ be used to compute path lengths:
 .. doctest::
 
     >>> length = wn.query_link_attribute('length')
-    >>> wG = wn.get_graph(wn, link_weight=length) # weighted directed multigraph
+    >>> wG = wn.to_graph(wn, link_weight=length) # weighted directed multigraph
 	
 A **simple graph** is a graph with one edge between nodes.
 The following NetworkX method can be used to convert a multigraph to a simple graph:

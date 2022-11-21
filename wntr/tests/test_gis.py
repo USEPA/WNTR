@@ -98,8 +98,8 @@ class TestGIS(unittest.TestCase):
     def test_gis_to_wn(self):
         
         wn2 = wntr.network.io.from_gis(self.gis_data)
-        G1 = self.wn.get_graph()
-        G2 = wn2.get_graph()
+        G1 = self.wn.to_graph()
+        G2 = wn2.to_graph()
         
         assert nx.is_isomorphic(G1, G2)
                          
@@ -194,6 +194,25 @@ class TestGIS(unittest.TestCase):
         assert (stats.loc[stats['n']>0, 'weighted_mean'] >= stats.loc[stats['n']>0, 'min']).all()
         assert (stats.loc[stats['n']>0, 'weighted_mean'] <= stats.loc[stats['n']>0, 'max']).all()
         
+    def test_set_crs_to_crs(self):
+        # Test uses transformation from https://epsg.io/
+        # https://epsg.io/transform#s_srs=4326&t_srs=3857&x=20.0000000&y=70.0000000
+        
+        gis_data = self.wn.to_gis()
+        
+        gis_data.set_crs('EPSG:4326')  # EPSG:4326 WGS 84
+        x0 = gis_data.junctions.loc['10','geometry'].x
+        y0 = gis_data.junctions.loc['10','geometry'].y
+        self.assertEqual(gis_data.junctions.crs, 'EPSG:4326')
+        self.assertEqual(x0, 20)
+        self.assertEqual(y0, 70)
+        
+        gis_data.to_crs('EPSG:3857')  # EPSG:3857 WGS 84 / Pseudo-Mercator
+        x1 = gis_data.junctions.loc['10','geometry'].x
+        y1 = gis_data.junctions.loc['10','geometry'].y
+        self.assertEqual(gis_data.junctions.crs, 'EPSG:3857')
+        self.assertAlmostEqual(x1, 2226389.8158654715, 6)
+        self.assertAlmostEqual(y1, 11068715.659379493, 6)
         
     def test_add_attributes_and_write(self):
         
@@ -207,7 +226,7 @@ class TestGIS(unittest.TestCase):
         assert 'Flowrate_1hr' in self.gis_data.pumps.columns
         assert 'Flowrate_1hr' not in self.gis_data.valves.columns # Net1 has no valves
     
-    def test_write(self):
+    def test_write_geojson(self):
         prefix = 'temp_Net1'
         components = ['junctions', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves']
         for component in components:
@@ -215,7 +234,7 @@ class TestGIS(unittest.TestCase):
             if isfile(filename):
                 os.remove(filename)
             
-        self.gis_data.write(abspath(join(testdir, prefix)))
+        self.gis_data.write_geojson(abspath(join(testdir, prefix)))
 
         for component in components:
             if component == 'valves':
