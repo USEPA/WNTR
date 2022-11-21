@@ -343,7 +343,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 .. doctest::
 
     >>> valve_layer = wntr.network.generate_valve_layer(wn, 'strategic', 2, seed=123)
-    >>> G = wn.get_graph()   
+    >>> G = wn.to_graph()   
     >>> node_segments, link_segments, seg_sizes = wntr.metrics.topographic.valve_segments(G, valve_layer)
     >>> N = seg_sizes.shape[0] 
     >>> cmap = wntr.graphics.random_colormap(N) # random color map helps view segments

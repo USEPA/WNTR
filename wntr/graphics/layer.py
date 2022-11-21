@@ -66,7 +66,7 @@ def plot_valve_layer(wn, valve_layer, valve_attribute=None, title=None,
         ax = plt.gca()
         
     # Graph, undirected
-    G = wn.get_graph().to_undirected()
+    G = wn.to_graph().to_undirected()
 
     # Position
     pos = nx.get_node_attributes(G,'pos')
