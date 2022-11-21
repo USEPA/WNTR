@@ -271,11 +271,10 @@ def valve_segments(G, valve_layer):
 
     # Assign labels to links based on labelling of their nodes
     for edge in uG.edges(keys=True):
-        node1_index, node2_index, link_name = edge
-        assert node1_index == node2_index, "Node labels do not match."
-        node1_index = all_names.index('N_'+node1_index)
+        node1, node2, link_name = edge
+        node1 = all_names.index('N_'+node1)
         link_index = all_names.index('L_'+link_name)
-        seg_label[link_index] = seg_label[node1_index]
+        seg_label[link_index] = seg_label[node1]
 
     ## Label valved portion of graph
     for valved_edge in valved_edges:
