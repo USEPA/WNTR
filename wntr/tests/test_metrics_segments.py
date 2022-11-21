@@ -85,8 +85,8 @@ class TestSegmentation(unittest.TestCase):
         self.assertListEqual(list(node_segments), list(expected_node_segments))
         self.assertListEqual(list(link_segments), list(expected_link_segments))
 
-        self.assertEqual(max_seg_size, 112)
-        self.assertEqual(num_segments, 15)
+        self.assertEqual(max_seg_size, 125)
+        self.assertEqual(num_segments, 23)
 
     def test_segmentation_strategic(self):
         # test Net3
