@@ -395,7 +395,7 @@ def pump_cost(energy, wn):
             else:
                 raise NotImplementedError('WNTR does not support price patterns yet.')
         elif pump.energy_pattern is None:
-            if wn.energy.global_pattern is None:
+            if wn.options.energy.global_pattern is None:
                 price_dict[pump_name] = [pump.energy_price for i in time]
             else:
                 raise NotImplementedError('WNTR does not support price patterns yet.')
