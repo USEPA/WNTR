@@ -1,7 +1,7 @@
 """
 The wntr.metrics.topographic module contains topographic metrics that are not
 available directly with NetworkX.  Functions in this module operate on a 
-NetworkX MultiDiGraph, which can be created by calling ``G = wn.get_graph()``
+NetworkX MultiDiGraph, which can be created by calling ``G = wn.to_graph()``
 
 .. rubric:: Contents
 

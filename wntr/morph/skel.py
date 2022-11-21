@@ -82,7 +82,7 @@ class _Skeletonize(object):
             self.wn = wn
         
         # Get the WaterNetworkModel graph
-        G = self.wn.get_graph()
+        G = self.wn.to_graph()
         G = G.to_undirected()
         self.G = G
         

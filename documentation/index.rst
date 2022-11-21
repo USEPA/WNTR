@@ -14,6 +14,7 @@ designed to simulate and analyze resilience of water distribution networks.
    units
    getting_started
    waternetworkmodel
+   model_io
    controls
    networkxgraph
    layers
