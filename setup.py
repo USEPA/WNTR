@@ -5,14 +5,17 @@ import re
 import sys
 
 use_swig = False
-build = True
 
+# BUILD_WNTR_EXTENSIONS is defined as an environment variable for the project at readthedocs.org
+if '--build' in sys.argv:
+    build = True
+    sys.argv.remove('--build')
+elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'true':
+    build = True
+else:
+    build = False
+    
 extension_modules = list()
-
-# if sys.version_info.major >= 3 and sys.version_info.minor >= 10:
-#     print("Python version >= 3.10.x")
-#     build = True
-
 if build:
     import numpy
 
