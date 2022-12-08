@@ -130,53 +130,53 @@ class TestSegmentation(unittest.TestCase):
         self.assertEqual(max_seg_size, 3)
         self.assertEqual(num_segments, 119)
 
-def test_compare_segmentations(self):
-        #compare results from two segmentation algorithms
-        G = self.wn2.get_graph()
-        
-        strategic_valve_layer = wntr.network.generate_valve_layer(
-            self.wn2, 'strategic', 1, seed = 123
-            )
-
-        (node_segments, 
-        link_segments, 
-        segment_size) = wntr.metrics.valve_segments(G, strategic_valve_layer)
-
-        (old_node_segments, 
-        old_link_segments, 
-        old_segment_size) = matrix_valve_segments(G, strategic_valve_layer)
-
-        # basic length checks
-        self.assertEqual(len(old_node_segments), len(node_segments))
-        self.assertEqual(len(old_link_segments), len(link_segments))
-        self.assertEqual(len(old_segment_size), len(segment_size))
-
-        """
-        Warning: the following three tests assumes that algorithms output 
-        same labels for segment classes, which may not always be the case.
-        If this test fails, consider looking into a comparison
-        that checks if segment groups are the same, rather
-        than exact labelling.
-        TODO: use a set-of-sets approach to properly compare
-        segmentations without relying on above assumption.
-        """
-        for link in link_segments.index:
-            self.assertEqual(
-                link_segments.loc[link],
-                old_link_segments.loc[link]
+    def test_compare_segmentations(self):
+            #compare results from two segmentation algorithms
+            G = self.wn2.get_graph()
+            
+            strategic_valve_layer = wntr.network.generate_valve_layer(
+                self.wn2, 'strategic', 1, seed = 123
                 )
 
-        for node in node_segments.index:
-            self.assertEqual(
-                node_segments.loc[node],
-                old_node_segments.loc[node]
-                )
+            (node_segments, 
+            link_segments, 
+            segment_size) = wntr.metrics.valve_segments(G, strategic_valve_layer)
 
-        # check segment sizes
-        for k in segment_size.index:
-            self.assertTrue(
-                (old_segment_size.loc[k]==segment_size.loc[k]).all()
-                )
+            (old_node_segments, 
+            old_link_segments, 
+            old_segment_size) = matrix_valve_segments(G, strategic_valve_layer)
+
+            # basic length checks
+            self.assertEqual(len(old_node_segments), len(node_segments))
+            self.assertEqual(len(old_link_segments), len(link_segments))
+            self.assertEqual(len(old_segment_size), len(segment_size))
+
+            """
+            Warning: the following three tests assumes that algorithms output 
+            same labels for segment classes, which may not always be the case.
+            If this test fails, consider looking into a comparison
+            that checks if segment groups are the same, rather
+            than exact labelling.
+            TODO: use a set-of-sets approach to properly compare
+            segmentations without relying on above assumption.
+            """
+            for link in link_segments.index:
+                self.assertEqual(
+                    link_segments.loc[link],
+                    old_link_segments.loc[link]
+                    )
+
+            for node in node_segments.index:
+                self.assertEqual(
+                    node_segments.loc[node],
+                    old_node_segments.loc[node]
+                    )
+
+            # check segment sizes
+            for k in segment_size.index:
+                self.assertTrue(
+                    (old_segment_size.loc[k]==segment_size.loc[k]).all()
+                    )
 
 def matrix_valve_segments(G, valve_layer):
     """
