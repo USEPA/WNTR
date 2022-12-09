@@ -67,7 +67,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> random_valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40, seed=123)
     >>> print(random_valve_layer.head())
-    link node
+      link node
     0  105  105
     1  161  149
     2  113  111
