@@ -140,7 +140,8 @@ Attributes
 	   
         >>> sim = wntr.sim.EpanetSimulator(wn)
         >>> results = sim.run_sim()
-    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 'Pressure_1hr')
+    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
+    	...     'Pressure_1hr')
 
     Attributes can also be added directly to individual GeoDataFrames, as shown below.
 
@@ -167,7 +168,8 @@ Geometry
       .. doctest::
         :skipif: gpd is None
 
-          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, valves_as_points=True)
+          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, 
+    	...     valves_as_points=True)
 		
     * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
       vertices are stored as a MultiLineString.
@@ -475,7 +477,8 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
 
     >>> valve_layer = snapped_to_pipes[['link', 'node']]
     >>> G = wn.to_graph()
-    >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
+    >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
+    ...     valve_layer)
 
 The data, water network model, and valve layer can be plotted as follows.
 
@@ -643,8 +646,8 @@ the background conditions are included in the intersection function.
 .. doctest::
     :skipif: gpd is None 
 
-    >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', include_background=True, 
-    ...    background_value=0)
+    >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', 
+    ...    include_background=True, background_value=0)
     >>> print(pipe_Pr)
               intersections            values  n   sum  min   max   mean  weighted_mean
     10         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
@@ -667,8 +670,8 @@ Pipes are colored with the weighted mean probability.
     :skipif: gpd is None
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
-    >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], link_width=1.5, 
-    ...     node_range=[0,1], link_range=[0,1], ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], 
+    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax)
 
 .. doctest::
     :skipif: gpd is None
@@ -694,7 +697,8 @@ the intersecting pipe diameters can also be identified:
 .. doctest::
     :skipif: gpd is None 
 
-    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes, 'diameter')
+    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, 
+    ...     wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
         intersections                                             values  n    sum    min    max   mean
     0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.711  0.203  0.254  0.237
@@ -729,7 +733,8 @@ to assign demographic data to junctions and pipes.
 .. doctest::
     :skipif: gpd is None
 
-    >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 'mean_income')
+    >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 
+    ...     'mean_income')
     >>> print(junction_demographics)
        intersections     values  n      sum      min      max     mean
     10           [0]  [63326.0]  1  63326.0  63326.0  63326.0  63326.0
