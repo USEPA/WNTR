@@ -168,7 +168,7 @@ Geometry
       .. doctest::
         :skipif: gpd is None
 
-          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, 
+        >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, 
     	...     valves_as_points=True)
 		
     * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
@@ -569,13 +569,13 @@ The following example uses the function :class:`~wntr.gis.intersect` to assign e
         intersections                  values  n   sum   min   max  mean
     10             []                      []  0   NaN   NaN   NaN   NaN
     11            [1]                  [0.75]  1  0.75  0.75  0.75  0.75
-    12      [3, 2, 0]        [0.25, 0.9, 0.5]  3  1.65  0.25  0.90  0.55
-    21   [1, 3, 2, 0]  [0.75, 0.25, 0.9, 0.5]  4  2.40  0.25  0.90  0.60
+    12      [0, 2, 3]        [0.5, 0.9, 0.25]  3  1.65  0.25  0.90  0.55
+    21   [0, 1, 2, 3]  [0.5, 0.75, 0.9, 0.25]  4  2.40  0.25  0.90  0.60
     22             []                      []  0   NaN   NaN   NaN   NaN
-    31   [1, 3, 2, 0]  [0.75, 0.25, 0.9, 0.5]  4  2.40  0.25  0.90  0.60
+    31   [0, 1, 2, 3]  [0.5, 0.75, 0.9, 0.25]  4  2.40  0.25  0.90  0.60
     110            []                      []  0   NaN   NaN   NaN   NaN
     111            []                      []  0   NaN   NaN   NaN   NaN
-    112     [3, 2, 0]        [0.25, 0.9, 0.5]  3  1.65  0.25  0.90  0.55
+    112     [0, 2, 3]        [0.5, 0.9, 0.25]  3  1.65  0.25  0.90  0.55
     113           [0]                   [0.5]  1  0.50  0.50  0.50  0.50
     121            []                      []  0   NaN   NaN   NaN   NaN
     122            []                      []  0   NaN   NaN   NaN   NaN
@@ -616,10 +616,10 @@ the order in which the geometries intersect, as shown below:
     >>> pipes_that_intersect_each_fault = wntr.gis.intersect(earthquake_data, wn_gis.pipes)
     >>> print(pipes_that_intersect_each_fault)
                 intersections  n
-    0  [21, 31, 112, 12, 113]  5
-    1            [21, 31, 11]  3
-    2       [21, 31, 112, 12]  4
-    3       [21, 31, 112, 12]  4
+    0  [112, 113, 12, 21, 31]  5
+    1            [11, 21, 31]  3
+    2       [112, 12, 21, 31]  4
+    3       [112, 12, 21, 31]  4
 
 Assign landslide probability to pipes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -653,7 +653,7 @@ the background conditions are included in the intersection function.
     10         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
     11      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.201
     12         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
-    21   [BACKGROUND, 1, 0]  [0.0, 0.75, 0.5]  3  1.25  0.0  0.75  0.417          0.394
+    21   [BACKGROUND, 0, 1]  [0.0, 0.5, 0.75]  3  1.25  0.0  0.75  0.417          0.394
     22      [BACKGROUND, 2]        [0.0, 0.9]  2  0.90  0.0  0.90  0.450          0.246
     31      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.212
     110        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
@@ -702,7 +702,7 @@ the intersecting pipe diameters can also be identified:
     >>> print(pipes_that_intersect_each_landslide)
         intersections                                             values  n    sum    min    max   mean
     0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.711  0.203  0.254  0.237
-    1    [21, 11, 31]  [0.254, 0.35559999999999997, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
+    1    [11, 21, 31]  [0.35559999999999997, 0.254, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
     2            [22]                              [0.30479999999999996]  1  0.305  0.305  0.305  0.305
 	
 Assign demographic data to pipes and junctions
@@ -761,10 +761,10 @@ to assign demographic data to junctions and pipes.
     31            [2]           [91452.0]  1   91452.0  91452.0  91452.0  91452.0      91452.000
     110        [5, 7]  [57620.0, 69067.0]  2  126687.0  57620.0  69067.0  63343.5      60580.117
     111        [0, 3]  [63326.0, 54040.0]  2  117366.0  54040.0  63326.0  58683.0      60953.558
-    112        [5, 3]  [57620.0, 54040.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
+    112        [3, 5]  [54040.0, 57620.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
     113        [5, 6]  [57620.0, 44871.0]  2  102491.0  44871.0  57620.0  51245.5      53707.370
-    121        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
-    122        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
+    121        [2, 3]  [91452.0, 54040.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
+    122        [2, 3]  [91452.0, 54040.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
 	
 The data and water network model can be plotted as follows. 
 Junctions and pipes are colored with their average value (weighted average for pipes).
