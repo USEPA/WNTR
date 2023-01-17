@@ -132,7 +132,7 @@ class TestSegmentation(unittest.TestCase):
 
     def test_compare_segmentations(self):
             #compare results from two segmentation algorithms
-            G = self.wn2.get_graph()
+            G = self.wn2.to_graph()
             
             strategic_valve_layer = wntr.network.generate_valve_layer(
                 self.wn2, 'strategic', 1, seed = 123
