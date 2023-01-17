@@ -168,9 +168,7 @@ class TestGIS(unittest.TestCase):
                                  {'intersections': ['111', '112', '113', '121', '122', '21', '22'], 'n': 7},
                                  {'intersections': ['112', '122', '21', '22'], 'n': 4}])
         expected.index=['1', '2', '3']
-        
-        print(stats)
-        
+    
         assert_frame_equal(stats, expected, check_dtype=False)
         
     def test_intersect_polygons_with_lines_zero_length(self):
