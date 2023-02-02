@@ -49,7 +49,7 @@ def snap(A, B, tolerance):
         
         If B contains Lines or MultiLineString, columns include:
             - link: closest Line in B to Point in A
-            - node: start or end node of Line in B that is closest to the snapped point (if B contains columns "start_node_name" and "end_node_name")
+            - node: start or end node of Line in B that is closest to the snapped point
             - snap_distance: distance between Point A and snapped point
             - line_position: normalized distance of snapped point along Line in B from the start node (0.0) and end node (1.0)
             - geometry: GeoPandas Point object of the snapped point
@@ -122,12 +122,9 @@ def snap(A, B, tolerance):
         snapped_points = gpd.GeoDataFrame(data=closest ,geometry=snapped_points, crs=crs)
         # determine whether the snapped point is closer to the start or end node
         snapped_points["line_position"] = closest.geometry.project(snapped_points, normalized=True)
-        if ("start_node_name" in closest.columns) and ("end_node_name" in closest.columns):
-            snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
-            snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
-            snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
-        else:
-            snapped_points = snapped_points[["link", "snap_distance", "line_position", "geometry"]]
+        snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
+        snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
+        snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
         snapped_points.index.name = None
         
     return snapped_points
