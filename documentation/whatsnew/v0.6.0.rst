@@ -2,14 +2,6 @@
 
 v0.6.0 (main)
 ---------------------------------------------------
-* Minor update to the geospatial `snap` function:  
-  If B contains Lines or MultiLineStrings, the geoDataFrame does not need 
-  to contain a "start_node_name" and "end_node_name" column.  This makes 
-  the function more general.
-
-* Minor update to the geospatial `intersect` function:  
-  Results are now sorted to ensure reproducible tests.
-
 * Minor updates to address deprecation warnings in Python packages dependencies
 
 * Minor updates to documentation 

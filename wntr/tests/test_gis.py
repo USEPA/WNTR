@@ -263,20 +263,6 @@ class TestGIS(unittest.TestCase):
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
-        
-    def test_snap_no_start_end_node_names(self):
-        
-        pipes = self.gis_data.pipes.copy()
-        del pipes['start_node_name']
-        del pipes['end_node_name']
-        snapped_points = wntr.gis.snap(self.points, pipes, tolerance=5.0)
-        
-        # distance = 1,5,3
-        expected = pd.DataFrame([{'link': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
-                                 {'link':  '22', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
-                                 {'link': '121', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
-        
-        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
 
 if __name__ == "__main__":
     unittest.main()

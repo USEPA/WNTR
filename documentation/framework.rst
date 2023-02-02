@@ -154,12 +154,6 @@ Discrepancies
 -------------------------------------------
 Known discrepancies between the WNTRSimulator and EpanetSimulator are listed below.
 
-* **Continuous simulation and restart**: The EpanetSimulator restarts the simulation from time 0 each time ``run_sim`` is called.
-  The WNTRSimulator retains the current simulation time and conditions (i.e., tank head, reservoir head, pipe status, 
-  pump status, and valve status) after each call to ``run_sim``.  This allows the user to pause and restart the WNTRSimualtor.  
-  Note, the WNTRSimualtor will simulate a single hydraulic time step even if the simulation time is greater than or 
-  equal to the simulation duration. 
-  See :ref:`pause_restart` for more information.
 * **Tank draining**: The EpanetSimulator (and EPANET) continue to supply water from tanks after they reach their 
   minimum elevation.  This can result in incorrect system pressures.
   See issues https://github.com/USEPA/WNTR/issues/210 and https://github.com/OpenWaterAnalytics/EPANET/issues/623
