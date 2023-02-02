@@ -279,8 +279,8 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     2    8000  POINT (51.20000 71.10000)
 	
     >>> hydrant_data = hydrant_data.set_crs('EPSG:3857', allow_override=True)
-    >>> print(hydrant_data.crs)
-    EPSG:3857 # doctest: +SKIP
+    >>> print(hydrant_data.crs) # doctest: +SKIP
+    EPSG:3857 
     >>> print(hydrant_data)
        demand               geometry
     0    5000  POINT (48.200 37.200)
