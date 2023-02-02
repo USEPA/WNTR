@@ -270,8 +270,8 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     >>> import geopandas as gpd
 	
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
-    >>> print(hydrant_data.crs)
-    epsg:4326
+    >>> print(hydrant_data.crs) # doctest: +SKIP
+    EPSG:4326
     >>> print(hydrant_data)
        demand                   geometry
     0    5000  POINT (48.20000 37.20000)
@@ -301,7 +301,7 @@ The following example reads a GeoJSON file and transforms the CRS to EPSG:3857
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
 	
     >>> hydrant_data.to_crs('EPSG:3857', inplace=True)
-    >>> print(hydrant_data.crs)
+    >>> print(hydrant_data.crs) # doctest: +SKIP
     EPSG:3857
     >>> print(hydrant_data)
        demand                          geometry
@@ -418,7 +418,7 @@ The data, water network model, and snapped points can be plotted as follows.
 .. _fig-snap-points:
 .. figure:: figures/snap_points.png
    :width: 800
-   :alt: napped points to points
+   :alt: Snapped points to points
 
    Example hydrants snapped to junctions
 
