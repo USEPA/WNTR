@@ -92,6 +92,10 @@ def snap(A, B, tolerance):
     
     # Calculate distance between the point and nearby links
     closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=crs))
+        
+    # Collect only point/link pairs within snap distance radius
+    # This is needed because B.sindex.intersection(row) above can return false positives
+    closest = closest[closest['snap_distance'] <= tolerance]
     
     # Sort on ascending snap distance, so that closest goes to top
     closest = closest.sort_values(by=["snap_distance"]) 
