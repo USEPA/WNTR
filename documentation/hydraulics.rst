@@ -352,7 +352,9 @@ The following example adds a leak to the water network model.
 
     >>> node = wn.get_node('123')           
     >>> node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
-    
+
+.. _pause_restart:
+
 Pause and restart 
 ------------------
 

@@ -174,7 +174,7 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   These attributes are only used for pressure dependent demand simulation with the WNTRSimulator.  
   If the junction attributes are set to None (the default value), then the required pressure, minimum pressure, and pressure exponent defined in the global hydraulic options (`wn.options.hydraulic`) are used for that junction.
   Pressure dependent demand simulation using the EpanetSimulator always uses values in the global hydraulic options.
-* **Pattern Interpolation**: The WNTRSimulator can include pattern interpolation by setting
+* **Pattern interpolation**: The WNTRSimulator can include pattern interpolation by setting
   :py:class:`wn.options.time.pattern_interpolation
   <wntr.network.options.TimeOptions>`.  If True, 
   interpolation is used to determine pattern values between pattern

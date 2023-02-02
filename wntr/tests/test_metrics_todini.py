@@ -9,6 +9,15 @@ datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 class TestTodiniMetrics(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(self):
+        import wntr
+
+        # Network models from Todini, 2000 (based on Abebe and Solomatine, 
+        # 1988 - defined h_star)
+        self.h_star = 30 # m
+        
     def test_Todini_Fig2_optCost_GPM(self):
         inp_file = join(datadir, "Todini_Fig2_optCost_GPM.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -21,8 +30,8 @@ class TestTodiniMetrics(unittest.TestCase):
         demand = results.node["demand"]
         flowrate = results.link["flowrate"]
         todini = wntr.metrics.todini_index(
-            head, pressure, demand, flowrate, wn, 30
-        )  # h* = 30 m
+            head, pressure, demand, flowrate, wn, self.h_star
+        )  
 
         expected = 0.22
         error = abs(todini[0] - expected)
@@ -41,8 +50,8 @@ class TestTodiniMetrics(unittest.TestCase):
         demand = results.node["demand"]
         flowrate = results.link["flowrate"]
         todini = wntr.metrics.todini_index(
-            head, pressure, demand, flowrate, wn, 30
-        )  # h* = 30 m
+            head, pressure, demand, flowrate, wn, self.h_star
+        )  
 
         expected = 0.22
         error = abs(todini[0] - expected)
@@ -61,8 +70,8 @@ class TestTodiniMetrics(unittest.TestCase):
         demand = results.node["demand"]
         flowrate = results.link["flowrate"]
         todini = wntr.metrics.todini_index(
-            head, pressure, demand, flowrate, wn, 30
-        )  # h* = 30 m
+            head, pressure, demand, flowrate, wn, self.h_star
+        )  
 
         expected = 0.41
         error = abs(todini[0] - expected)
@@ -81,8 +90,8 @@ class TestTodiniMetrics(unittest.TestCase):
         demand = results.node["demand"]
         flowrate = results.link["flowrate"]
         todini = wntr.metrics.todini_index(
-            head, pressure, demand, flowrate, wn, 30
-        )  # h* = 30 m
+            head, pressure, demand, flowrate, wn, self.h_star
+        ) 
 
         expected = 0.41
         error = abs(todini[0] - expected)

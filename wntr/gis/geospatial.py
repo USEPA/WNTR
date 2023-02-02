@@ -208,13 +208,19 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         background = _backgound(A, B)
         if B_value is not None:
             background[B_value] = background_value
-        B = B.append(background)
+        B = pd.concat([B, background])
         
     intersects = gpd.sjoin(A, B, predicate='intersects')
-    intersects.index.name = 'name'
+    intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
-    n = intersects.groupby('name')['geometry'].count()
-    B_indices = intersects.groupby('name')['index_right'].apply(list)
+    # Sort values by index and intersecting object
+    intersects['sort_order'] = 1 # make sure 'BACKGROUND' is listed first
+    intersects.loc[intersects['index_right'] == 'BACKGROUND', 'sort_order'] = 0
+    intersects.sort_values(['_tmp_index_name', 'sort_order', 'index_right'], inplace=True)
+    
+    n = intersects.groupby('_tmp_index_name')['geometry'].count()
+    B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
+    B_indices.sort_values()
     stats = pd.DataFrame(index=A.index, data={'intersections': B_indices,
                                               'n': n,})
     stats['n'] = stats['n'].fillna(0)
@@ -222,11 +228,11 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     stats.loc[stats['intersections'].isnull(), 'intersections'] = stats.loc[stats['intersections'].isnull(), 'intersections'] .apply(lambda x: [])
     
     if B_value is not None:
-        stats['values'] = intersects.groupby('name')[B_value].apply(list)
-        stats['sum'] = intersects.groupby('name')[B_value].sum()
-        stats['min'] = intersects.groupby('name')[B_value].min()
-        stats['max'] = intersects.groupby('name')[B_value].max()
-        stats['mean'] = intersects.groupby('name')[B_value].mean()
+        stats['values'] = intersects.groupby('_tmp_index_name')[B_value].apply(list)
+        stats['sum'] = intersects.groupby('_tmp_index_name')[B_value].sum()
+        stats['min'] = intersects.groupby('_tmp_index_name')[B_value].min()
+        stats['max'] = intersects.groupby('_tmp_index_name')[B_value].max()
+        stats['mean'] = intersects.groupby('_tmp_index_name')[B_value].mean()
         
         stats = stats.reindex(['intersections', 'values', 'n', 'sum', 'min', 'max', 'mean'], axis=1)
         stats.loc[stats['values'].isnull(), 'values'] = stats.loc[stats['values'].isnull(), 'values'] .apply(lambda x: [])
