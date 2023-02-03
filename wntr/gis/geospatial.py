@@ -49,7 +49,7 @@ def snap(A, B, tolerance):
         
         If B contains Lines or MultiLineString, columns include:
             - link: closest Line in B to Point in A
-            - node: start or end node of Line in B that is closest to the snapped point
+            - node: start or end node of Line in B that is closest to the snapped point (if B contains columns "start_node_name" and "end_node_name")
             - snap_distance: distance between Point A and snapped point
             - line_position: normalized distance of snapped point along Line in B from the start node (0.0) and end node (1.0)
             - geometry: GeoPandas Point object of the snapped point
@@ -126,9 +126,12 @@ def snap(A, B, tolerance):
         snapped_points = gpd.GeoDataFrame(data=closest ,geometry=snapped_points, crs=crs)
         # determine whether the snapped point is closer to the start or end node
         snapped_points["line_position"] = closest.geometry.project(snapped_points, normalized=True)
-        snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
-        snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
-        snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
+        if ("start_node_name" in closest.columns) and ("end_node_name" in closest.columns):
+            snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
+            snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
+            snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
+        else:
+            snapped_points = snapped_points[["link", "snap_distance", "line_position", "geometry"]]
         snapped_points.index.name = None
         
     return snapped_points
@@ -224,7 +227,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     
     n = intersects.groupby('_tmp_index_name')['geometry'].count()
     B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
-    B_indices.sort_values()
+    #B_indices.sort_values()
     stats = pd.DataFrame(index=A.index, data={'intersections': B_indices,
                                               'n': n,})
     stats['n'] = stats['n'].fillna(0)
@@ -248,12 +251,13 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             
     if weighted_mean and B_value is not None:
         stats['weighted_mean'] = 0
+        stats['fraction_background'] = 0
         A_length = A.length
         covered_length = pd.Series(0, index = A.index)
         
         for i in B.index:
             B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
-            val = float(B_geom[B_value])
+            val = B.loc[i,B_value]
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
             A_clip = gpd.clip(A_subset, B_geom) 
@@ -262,9 +266,12 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             
             if A_clip_length.shape[0] > 0:
                 fraction_length = A_clip_length/A_length[A_clip_index]
-                covered_length[A_clip_index] = covered_length[A_clip_index] + fraction_length
-                weighed_val = fraction_length*val
-                stats.loc[A_clip_index, 'weighted_mean'] = stats.loc[A_clip_index, 'weighted_mean'] + weighed_val
+                if not np.isnan(val):
+                    covered_length[A_clip_index] = covered_length[A_clip_index] + fraction_length
+                    weighed_val = fraction_length*val
+                    stats.loc[A_clip_index, 'weighted_mean'] = stats.loc[A_clip_index, 'weighted_mean'] + weighed_val
+                if B_geom.index[0] == 'BACKGROUND':
+                    stats.loc[A_clip_index, 'fraction_background'] = fraction_length
         
         # Normalize weighted mean by covered length (can be over 1 if polygons overlap)
         # Can be less than 1 if there are gaps (when background is not used)
