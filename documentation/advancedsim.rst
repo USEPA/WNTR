@@ -7,7 +7,8 @@
 Advanced simulation techniques
 ===============================
 
-This section describes several advanced simulation techniques using WNTR.
+This section describes several advanced simulation techniques using WNTR. These techniquest include
+stochastic simulation, multiple processors, and WNTR's customized algebraic modeling language (AML).
 
 
 .. _stochastic_simulation:
@@ -16,7 +17,7 @@ Stochastic simulation
 -------------------------------
 
 In contrast to deterministic or enumeration of every possible scenario, 
-stochastic simulations is often used to evaluate an ensemble of hydraulic and/or water quality 
+stochastic simulation is often used to evaluate an ensemble of hydraulic and/or water quality 
 scenarios that are defined using failure probabilities or distributions.  
 For disaster scenarios, the location, duration, and severity of different types of incidents
 can often be drawn from distributions and included in the simulation in a stochastic manner.
@@ -70,7 +71,7 @@ the standard Python library documentation.
 
 The following example shows how to use the EpanetSimulator in a multi-threaded manner.
 The WNTRSimulator can also be used in a similar way. 
-Note that the EPANET 2.0 library was not written to be "thread-safe" (i.e., it does not allow simultaneous use of the library by multiple threads).  
+Note that the EPANET 2.00.12 library was not written to be "thread-safe" (i.e., it does not allow simultaneous use of the library by multiple threads).  
 For that reason, the EpanetSimulator must use EPANET 2.2 (which is the default).
 The first step is to load the Python packages that are needed for this example and create a water network model.
 
@@ -182,7 +183,7 @@ Before evaluating or solving the model, the :func:`~wntr.sim.aml.aml.Model.set_s
 
    >>> m.set_structure()
    
-The model can then be used to evaluate the constraint residuals and the Jacobian.
+The model can then be used to evaluate the constraint residuals and the Jacobian. 
 The methods :func:`~wntr.sim.aml.aml.Model.evaluate_residuals` and
 :func:`~wntr.sim.aml.aml.Model.evaluate_jacobian` return a NumPy array
 and a SciPy compressed sparse row (CSR) matrix, respectively. 

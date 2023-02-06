@@ -21,14 +21,14 @@
 Model I/O
 ======================================
 
-The following section describes data and file formats that can used for 
+The following section describes the data and file formats that can used for the 
 :class:`~wntr.network.model.WaterNetworkModel` input and output (I/O).
 
 EPANET INP file
 ---------------------------------
 
 The :class:`~wntr.network.io.read_inpfile` function builds a WaterNetworkModel from an EPANET INP file.
-The EPANET INP file can be in EPANET 2.00.12 or 2.2.0 format.
+The EPANET INP file can be in the EPANET 2.00.12 or 2.2.0 format.
 The function can also be used to append information from an EPANET INP file into an existing WaterNetworkModel.
 
 .. doctest::
@@ -48,7 +48,7 @@ The function can also be used to append information from an EPANET INP file into
 The :class:`~wntr.network.io.write_inpfile` function creates an EPANET INP file from a WaterNetworkModel.
 By default, files are written in the LPS (liter per second) EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., custom element attributes).
-EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
+EPANET INP files can be saved in the EPANET 2.00.12 or 2.2.0 format.
 
 .. doctest::
 
@@ -109,14 +109,14 @@ for each of the following model components:
 * valves
 
 Note that patterns, curves, sources, controls, and options are not stored in the GeoDataFrame representation.
-See :ref:`geospatial` for more information on the the WaterNetworkGIS object and the use of GeoDataFrames in WNTR. 
+See :ref:`geospatial` for more information on the the :class:`~wntr.gis.network.WaterNetworkGIS` object and the use of GeoDataFrames in WNTR. 
 
 .. doctest::
     :skipif: gpd is None
 
     >>> wn_gis = wntr.network.to_gis(wn)
 
-Individual GeoDataFrames are obtained as follows (Note that Net3 has no valves and the GeoDataFrame for valves is empty).
+Individual GeoDataFrames are obtained as follows (Note that the example network, Net3, has no valves and thus the GeoDataFrame for valves is empty).
 
 .. doctest::
     :skipif: gpd is None
@@ -140,10 +140,10 @@ The function can also be used to append information from GeoDataFrames into an e
     >>> wn2 = wntr.network.from_gis(wn_gis)
 
 A WaterNetworkModel created from GeoDataFrames only contains 
-junction, tank, reservoir, pipe, pump and valve
+the junction, tank, reservoir, pipe, pump, and valve
 attributes and topographic connectivity of the network.  
 The network will not contain patterns, curves, rules, controls, 
-or sources.  Water network model options are set to default values. 
+or sources. The water network model options are set to default values. 
 Additional functionality could be added to WNTR in a future release.
    
 .. note:: 
@@ -196,22 +196,23 @@ GeoJSON files
 
 The :class:`~wntr.network.io.write_geojson` function writes a collection of 
 GeoJSON files from a WaterNetworkModel. 
-The GeoJSON files can be loaded into GIS platforms for further analysis and visualization.
+The GeoJSON files can be loaded into geographic information
+system (GIS) platforms for further analysis and visualization.
 
 .. doctest::
     :skipif: gpd is None
 	
     >>> wntr.network.write_geojson(wn, 'Net3')
 
-This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, pumps, and valves:
+This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes,  and pumps:
 
 * Net3_junctions.geojson
 * Net3_tanks.geojson
 * Net3_reservoirs.geojson
 * Net3_pipes.geojson
 * Net3_pumps.geojson
-* Note, Net3_valves.geojson is not created since Net3 has no valves
 
+A GeoJSON file for valves, Net3_valves.geojson, is not created since Net3 has no valves. 
 Note that patterns, curves, sources, controls, and options are not stored in the GeoJSON files.
 
 The :class:`~wntr.network.io.read_geojson` function creates a WaterNetworkModel from a 
@@ -231,7 +232,7 @@ The function can also be used to append information from GeoJSON files into an e
 .. note:: 
    :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and
    :class:`~wntr.gis.network.WaterNetworkGIS.read_geojson`
-   are also a methods on the WaterNetworkGIS object. 
+   are also methods on the WaterNetworkGIS object. 
    
 Shapefile files
 -------------------
@@ -245,15 +246,15 @@ The Shapefiles can be loaded into GIS platforms for further analysis and visuali
 	
     >>> wntr.network.write_shapefile(wn, 'Net3')
 	
-This creates the following Shapefile directories for junctions, tanks, reservoirs, pipes, pumps, and valves:
+This creates the following Shapefile directories for junctions, tanks, reservoirs, pipes, and pumps:
 
 * Net3_junctions
 * Net3_tanks
 * Net3_reservoirs
 * Net3_pipes
 * Net3_pumps
-* Note, Net3_valves is not created since Net3 has no valves
 
+A Shapefile for valves, Net3_valves, is not created since Net3 has no valves.
 Note that patterns, curves, sources, controls, and options are not stored in the Shapefile files.
 
 The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a dictionary of
@@ -273,5 +274,5 @@ The function can also be used to append information from Shapefiles into an exis
 .. note:: 
    :class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` and
    :class:`~wntr.gis.network.WaterNetworkGIS.read_shapefile`
-   are also a methods on the WaterNetworkGIS object. 
+   are also methods on the WaterNetworkGIS object. 
    
