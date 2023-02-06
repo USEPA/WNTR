@@ -6,7 +6,7 @@ pandas
 matplotlib
 
 # Optional
-plotly
+plotly<=5.11.0
 folium
 utm
 openpyxl

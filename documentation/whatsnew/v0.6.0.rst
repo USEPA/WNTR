@@ -1,0 +1,11 @@
+.. _whatsnew_060:
+
+v0.6.0 (main)
+---------------------------------------------------
+* Minor update to the geospatial `intersect` function:  
+  Results are now sorted to ensure reproducible tests.
+  
+* Minor updates to address deprecation warnings in Python packages dependencies
+
+* Minor updates to documentation 
+ 

@@ -7,6 +7,13 @@ import pandas as pd
 import wntr
 from wntr.network.controls import Control, Rule
 
+try:
+    import geopandas as gpd
+    has_geopandas = True
+except ModuleNotFoundError:
+    gpd = None
+    has_geopandas = False
+    
 testdir = dirname(abspath(str(__file__)))
 test_network_dir = join(testdir, "networks_for_testing")
 test_data_dir = join(testdir, "data_for_testing")
@@ -972,7 +979,10 @@ class TestNetworkIO_Dict(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel()
         wn.add_pattern('pat0', [0,1,0,1,0,1,0])
         self.wntr.network.write_json(wn, f'temp.json')
-        
+
+
+@unittest.skipIf(not has_geopandas,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestNetworkIO_GIS(unittest.TestCase):
     @classmethod
     def setUpClass(self):

@@ -136,7 +136,7 @@ class TestGIS(unittest.TestCase):
         
         # Pipe 22 intersects poly2 100%, val=20, intersects poly3 50%, val=30
         expected_weighted_mean = (20*1+30*0.5)/1.5
-        expected = pd.Series({'intersections': ['3','2'], 'values': [30,20], 'weighted_mean': expected_weighted_mean})
+        expected = pd.Series({'intersections': ['2','3'], 'values': [20,30], 'weighted_mean': expected_weighted_mean})
         expected['n'] = len(expected['values'])
         expected['sum'] = float(sum(expected['values']))
         expected['min'] = float(min(expected['values']))
@@ -154,7 +154,7 @@ class TestGIS(unittest.TestCase):
         assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
         # Pipe 122
-        self.assertEqual(stats.loc['122','intersections'], ['BACKGROUND', '3', '2'])
+        self.assertEqual(stats.loc['122','intersections'], ['BACKGROUND', '2', '3'])
         # total length = 30
         expected_weighted_mean = (bv*(5/30) + 30*(25/30) + 20*(10/30))/(40/30)
         self.assertAlmostEqual(stats.loc['122','weighted_mean'], expected_weighted_mean, 2)
@@ -164,11 +164,11 @@ class TestGIS(unittest.TestCase):
         
         stats = wntr.gis.intersect(self.polygons, self.gis_data.pipes)
         
-        expected = pd.DataFrame([{'intersections': ['10', '111', '11', '110', '112', '12'], 'n': 6},
-                                 {'intersections': ['111', '112', '121', '21', '122', '22', '113'], 'n': 7},
-                                 {'intersections': ['112', '21', '122', '22'], 'n': 4}])
+        expected = pd.DataFrame([{'intersections': ['10', '11', '110', '111', '112', '12'], 'n': 6},
+                                 {'intersections': ['111', '112', '113', '121', '122', '21', '22'], 'n': 7},
+                                 {'intersections': ['112', '122', '21', '22'], 'n': 4}])
         expected.index=['1', '2', '3']
-        
+    
         assert_frame_equal(stats, expected, check_dtype=False)
         
     def test_intersect_polygons_with_lines_zero_length(self):

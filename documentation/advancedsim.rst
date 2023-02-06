@@ -44,7 +44,8 @@ based on a failure probability of each pipe.  This information can be used withi
     >>> pipe_names = ['pipe1', 'pipe2', 'pipe3', 'pipe4']
     >>> failure_probability = [0.10, 0.20, 0.30, 0.40]
     >>> N = 2
-    >>> selected_pipes = list(np.random.choice(pipe_names, N, replace=False, p=failure_probability))
+    >>> selected_pipes = list(np.random.choice(pipe_names, N, replace=False, 
+    ...     p=failure_probability))
     >>> print(selected_pipes) # doctest: +SKIP
     ['pipe2', 'pipe3']
 	

@@ -566,7 +566,7 @@ def single_reservoir_pump_pipe_tank_ode_solution(
                 t, x, d, D, C, L, pA, pB, pC, vcurve, dh, h20, pump_on
             ),
             (tmax, tf),
-            array([Q0, h2_start]),
+            array([Q0[0], h2_start]),
             max_step=dt_max,
             events=event_func,
         )

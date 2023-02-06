@@ -140,7 +140,8 @@ Attributes
 	   
         >>> sim = wntr.sim.EpanetSimulator(wn)
         >>> results = sim.run_sim()
-    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 'Pressure_1hr')
+    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
+    	...     'Pressure_1hr')
 
     Attributes can also be added directly to individual GeoDataFrames, as shown below.
 
@@ -167,7 +168,8 @@ Geometry
       .. doctest::
         :skipif: gpd is None
 
-          >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, valves_as_points=True)
+        >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, 
+    	...     valves_as_points=True)
 		
     * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
       vertices are stored as a MultiLineString.
@@ -270,8 +272,8 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     >>> import geopandas as gpd
 	
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
-    >>> print(hydrant_data.crs)
-    epsg:4326
+    >>> print(hydrant_data.crs) # doctest: +SKIP
+    EPSG:4326
     >>> print(hydrant_data)
        demand                   geometry
     0    5000  POINT (48.20000 37.20000)
@@ -279,8 +281,8 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     2    8000  POINT (51.20000 71.10000)
 	
     >>> hydrant_data = hydrant_data.set_crs('EPSG:3857', allow_override=True)
-    >>> print(hydrant_data.crs)
-    EPSG:3857
+    >>> print(hydrant_data.crs) # doctest: +SKIP
+    EPSG:3857 
     >>> print(hydrant_data)
        demand               geometry
     0    5000  POINT (48.200 37.200)
@@ -301,7 +303,7 @@ The following example reads a GeoJSON file and transforms the CRS to EPSG:3857
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
 	
     >>> hydrant_data.to_crs('EPSG:3857', inplace=True)
-    >>> print(hydrant_data.crs)
+    >>> print(hydrant_data.crs) # doctest: +SKIP
     EPSG:3857
     >>> print(hydrant_data)
        demand                          geometry
@@ -482,7 +484,8 @@ The snapped locations can be used to define a :ref:`valvelayer` and then create 
 
     >>> valve_layer = snapped_to_pipes[['link', 'node']]
     >>> G = wn.to_graph()
-    >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
+    >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
+    ...     valve_layer)
 
 The data, water network model, and valve layer can be plotted as follows. The resulting :numref:`fig-snap-lines` 
 illustrates the valve layer created by snapping points to lines in Net1.
@@ -574,13 +577,13 @@ The following example uses the function :class:`~wntr.gis.intersect` to assign e
         intersections                  values  n   sum   min   max  mean
     10             []                      []  0   NaN   NaN   NaN   NaN
     11            [1]                  [0.75]  1  0.75  0.75  0.75  0.75
-    12      [3, 2, 0]        [0.25, 0.9, 0.5]  3  1.65  0.25  0.90  0.55
-    21   [1, 3, 2, 0]  [0.75, 0.25, 0.9, 0.5]  4  2.40  0.25  0.90  0.60
+    12      [0, 2, 3]        [0.5, 0.9, 0.25]  3  1.65  0.25  0.90  0.55
+    21   [0, 1, 2, 3]  [0.5, 0.75, 0.9, 0.25]  4  2.40  0.25  0.90  0.60
     22             []                      []  0   NaN   NaN   NaN   NaN
-    31   [1, 3, 2, 0]  [0.75, 0.25, 0.9, 0.5]  4  2.40  0.25  0.90  0.60
+    31   [0, 1, 2, 3]  [0.5, 0.75, 0.9, 0.25]  4  2.40  0.25  0.90  0.60
     110            []                      []  0   NaN   NaN   NaN   NaN
     111            []                      []  0   NaN   NaN   NaN   NaN
-    112     [3, 2, 0]        [0.25, 0.9, 0.5]  3  1.65  0.25  0.90  0.55
+    112     [0, 2, 3]        [0.5, 0.9, 0.25]  3  1.65  0.25  0.90  0.55
     113           [0]                   [0.5]  1  0.50  0.50  0.50  0.50
     121            []                      []  0   NaN   NaN   NaN   NaN
     122            []                      []  0   NaN   NaN   NaN   NaN
@@ -620,10 +623,10 @@ the order in which the geometries intersect, as shown below:
     >>> pipes_that_intersect_each_fault = wntr.gis.intersect(earthquake_data, wn_gis.pipes)
     >>> print(pipes_that_intersect_each_fault)
                 intersections  n
-    0  [21, 31, 112, 12, 113]  5
-    1            [21, 31, 11]  3
-    2       [21, 31, 112, 12]  4
-    3       [21, 31, 112, 12]  4
+    0  [112, 113, 12, 21, 31]  5
+    1            [11, 21, 31]  3
+    2       [112, 12, 21, 31]  4
+    3       [112, 12, 21, 31]  4
 
 Assign landslide probability to pipes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -651,14 +654,14 @@ the background conditions are included in the intersection function (i.e, the ba
 .. doctest::
     :skipif: gpd is None 
 
-    >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', include_background=True, 
-    ...    background_value=0)
+    >>> pipe_Pr = wntr.gis.intersect(wn_gis.pipes, landslide_data, 'Pr', 
+    ...    include_background=True, background_value=0)
     >>> print(pipe_Pr)
               intersections            values  n   sum  min   max   mean  weighted_mean
     10         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
     11      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.201
     12         [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
-    21   [BACKGROUND, 1, 0]  [0.0, 0.75, 0.5]  3  1.25  0.0  0.75  0.417          0.394
+    21   [BACKGROUND, 0, 1]  [0.0, 0.5, 0.75]  3  1.25  0.0  0.75  0.417          0.394
     22      [BACKGROUND, 2]        [0.0, 0.9]  2  0.90  0.0  0.90  0.450          0.246
     31      [BACKGROUND, 1]       [0.0, 0.75]  2  0.75  0.0  0.75  0.375          0.212
     110        [BACKGROUND]             [0.0]  1  0.00  0.0  0.00  0.000          0.000
@@ -676,8 +679,8 @@ The pipes are colored based upon their weighted mean landslide probability.
     :skipif: gpd is None
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
-    >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], link_width=1.5, 
-    ...     node_range=[0,1], link_range=[0,1], ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], 
+    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax)
 
 .. doctest::
     :skipif: gpd is None
@@ -701,11 +704,12 @@ the intersecting pipe diameters can also be identified:
 .. doctest::
     :skipif: gpd is None 
 
-    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, wn_gis.pipes, 'diameter')
+    >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, 
+    ...     wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
         intersections                                             values  n    sum    min    max   mean
     0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.711  0.203  0.254  0.237
-    1    [21, 11, 31]  [0.254, 0.35559999999999997, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
+    1    [11, 21, 31]  [0.35559999999999997, 0.254, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
     2            [22]                              [0.30479999999999996]  1  0.305  0.305  0.305  0.305
 	
 Assign demographic data to pipes and junctions
@@ -739,7 +743,8 @@ to assign the demographic data, specifically the mean income, to junctions and p
 .. doctest::
     :skipif: gpd is None
 
-    >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 'mean_income')
+    >>> junction_demographics = wntr.gis.intersect(wn_gis.junctions, demographic_data, 
+    ...     'mean_income')
     >>> print(junction_demographics)
        intersections     values  n      sum      min      max     mean
     10           [0]  [63326.0]  1  63326.0  63326.0  63326.0  63326.0
@@ -766,7 +771,7 @@ to assign the demographic data, specifically the mean income, to junctions and p
     31            [2]           [91452.0]  1   91452.0  91452.0  91452.0  91452.0      91452.000
     110        [5, 7]  [57620.0, 69067.0]  2  126687.0  57620.0  69067.0  63343.5      60580.117
     111        [0, 3]  [63326.0, 54040.0]  2  117366.0  54040.0  63326.0  58683.0      60953.558
-    112        [5, 3]  [57620.0, 54040.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
+    112        [3, 5]  [54040.0, 57620.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
     113        [5, 6]  [57620.0, 44871.0]  2  102491.0  44871.0  57620.0  51245.5      53707.370
     121        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
     122        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
