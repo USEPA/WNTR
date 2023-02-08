@@ -276,8 +276,7 @@ def _convert_with_map(wn, node_map, flag, return_copy):
         raise ImportError('utm package is required')
     
     if not len(node_map.keys()) == 2:
-        print('map must have exactly 2 entries')
-        return
+        raise Exception('map must have exactly 2 entries')
     
     if return_copy: # Get a copy of the WaterNetworkModel
         wn2 = copy.deepcopy(wn)
@@ -334,5 +333,16 @@ def _convert_with_map(wn, node_map, flag, return_copy):
             node.coordinates = (long, lat)
         elif flag == 'UTM':
             node.coordinates = (easting, northing)
+
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                pos = link.vertices[k]
+                (easting, northing) = (np.array(pos) - cpA)*ratio + cpB
+                if flag == 'LONGLAT':
+                    lat, long = utm.to_latlon(easting, northing, zone_number, zone_letter)
+                    link.vertices[k] = (long, lat)
+                elif flag == 'UTM':
+                    node.coordinates = (easting, northing)
     
     return wn2

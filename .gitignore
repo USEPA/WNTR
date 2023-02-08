@@ -27,3 +27,4 @@ wntr/tests/performance_results
 examples/signal.csv
 examples/temp.hyd
 
+kirklocal/*
