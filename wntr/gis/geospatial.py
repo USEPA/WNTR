@@ -6,6 +6,8 @@ intersects with polygons.
 import pandas as pd
 import numpy as np
 
+import matplotlib.pylab as plt
+
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
     has_shapely = True
@@ -138,13 +140,23 @@ def snap(A, B, tolerance):
 
 def _backgound(A, B):
     
+    """
     hull_geom = A.unary_union.convex_hull
+
     hull_data = gpd.GeoDataFrame(pd.DataFrame([{'geometry': hull_geom}]), crs=A.crs)
     
     background_geom = hull_data.overlay(B, how='difference').unary_union
    
     background = gpd.GeoDataFrame(pd.DataFrame([{'geometry': background_geom}]), crs=A.crs)
     background.index = ['BACKGROUND']
+    """
+    Ai_hull = gpd.GeoSeries([A.unary_union.envelope], crs=A.crs)
+    Bi = gpd.GeoSeries([B.unary_union], crs=B.crs)
+    background = Ai_hull.difference(Bi)
+    background = background.to_frame('geometry')
+    background.index = ['BACKGROUND']
+    
+    background.plot()
     
     return background
 
@@ -213,6 +225,170 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     
     if include_background:
         background = _backgound(A, B)
+        if B_value is not None:
+            background[B_value] = background_value
+        B = pd.concat([B, background])
+        
+    intersects = gpd.sjoin(A, B, predicate='intersects')
+    intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
+    
+    # Subset of A that intersects with B
+    A_intersects = A.loc[intersects.index.unique().sort_values(),:]
+    
+    # Sort values by index and intersecting object
+    intersects['sort_order'] = 1 # make sure 'BACKGROUND' is listed first
+    intersects.loc[intersects['index_right'] == 'BACKGROUND', 'sort_order'] = 0
+    intersects.sort_values(['_tmp_index_name', 'sort_order', 'index_right'], inplace=True)
+    
+    n = intersects.groupby('_tmp_index_name')['geometry'].count()
+    B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
+    #B_indices.sort_values()
+    stats = pd.DataFrame(index=A_intersects.index, 
+                         data={'intersections': B_indices,
+                               'n': n,})
+    if B_value is not None:
+        stats['values'] = intersects.groupby('_tmp_index_name')[B_value].apply(list)
+        stats['sum'] = intersects.groupby('_tmp_index_name')[B_value].sum()
+        stats['min'] = intersects.groupby('_tmp_index_name')[B_value].min()
+        stats['max'] = intersects.groupby('_tmp_index_name')[B_value].max()
+        stats['mean'] = intersects.groupby('_tmp_index_name')[B_value].mean()
+
+    weighted_mean = False
+    if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
+        if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
+            weighted_mean = True
+            
+    if weighted_mean and B_value is not None:
+        weighted_mean = np.array([0.0]*A_intersects.shape[0])
+        fraction_background = np.array([0.0]*A_intersects.shape[0])
+        A_length = A_intersects.length.values
+        covered_length = np.array([0.0]*A_intersects.shape[0])
+        index_to_id = dict(zip(A_intersects.index, np.arange(0,A_intersects.shape[0],1)))
+        
+        for i in B.index:
+            Bi = B.loc[[i],:]
+            B_geom = gpd.GeoDataFrame(Bi, crs=B.crs)
+            A_subset = A_intersects.loc[B_indices.apply(lambda x: i in x),:]
+            if A_subset.shape[0] == 0:
+                continue
+            if B_geom.index[0] == 'BACKGROUND':
+  
+                fig, ax = plt.subplots()
+                B_geom.plot(ax=ax, alpha=0.5)
+                A_subset.plot(ax=ax, color='red')
+                fig, ax = plt.subplots()
+                B_geom.plot(ax=ax, alpha=0.5)
+                A_clip.plot(ax=ax, color='red')
+
+                A_clip = A_subset.difference(B.loc[B.index != 'BACKGROUND',:].unary_union)
+                #fig, ax = plt.subplots()
+                #B_geom.plot(ax=ax, alpha=0.5)
+                #A_clip.plot(ax=ax, color='red')
+            else:
+                A_clip = gpd.clip(A_subset, B_geom)
+            if A_clip.shape[0] == 0:
+                continue
+            A_clip_length = A_clip.length
+            A_clip_index = A_clip.index
+            A_clip_loc = [A_intersects.index.get_loc(i) for i in A_clip_index]
+            
+            val = Bi.at[i,B_value]
+            fraction_length = (A_clip_length/A_length[A_clip_loc]).values
+            
+            if not np.isnan(val):
+                covered_length[A_clip_loc] = covered_length[A_clip_loc] + fraction_length
+                weighed_val = fraction_length*val
+                weighted_mean[A_clip_loc] = weighted_mean[A_clip_loc] + weighed_val
+            if B_geom.index[0] == 'BACKGROUND':
+                fraction_background[A_clip_loc] = fraction_length
+        
+        # Normalize weighted mean by covered length (can be over 1 if polygons overlap)
+        # Can be less than 1 if there are gaps (when background is not used)
+        weighted_mean = weighted_mean/covered_length
+        
+        stats['weighted_mean'] = weighted_mean
+        stats['fraction_background'] = fraction_background
+        
+    stats.index.name = None
+    
+    return stats
+
+def _backgound_original(A, B):
+    
+    hull_geom = A.unary_union.convex_hull
+    hull_data = gpd.GeoDataFrame(pd.DataFrame([{'geometry': hull_geom}]), crs=A.crs)
+    
+    background_geom = hull_data.overlay(B, how='difference').unary_union
+   
+    background = gpd.GeoDataFrame(pd.DataFrame([{'geometry': background_geom}]), crs=A.crs)
+    background.index = ['BACKGROUND']
+    
+    return background
+
+
+def intersect_original(A, B, B_value=None, include_background=False, background_value=0):
+    """
+    Intersect Points, Lines or Polygons in A with Points, Lines, or Polygons in B.
+    Return statistics on the intersection.
+    
+    The function returns information about the intersection for each geometry 
+    in A. Each geometry in B is assigned a value based on a column of data in 
+    that GeoDataFrame.  Note the CRS of A must equal the CRS of B.
+    
+    Parameters
+    ----------
+    A : geopandas GeoDataFrame
+        GeoDataFrame containing Point, LineString, or Polygon geometries
+    B : geopandas GeoDataFrame
+        GeoDataFrame containing  Point, LineString, or Polygon geometries
+    B_value : str or None (optional)
+        Column name in B used to assign a value to each geometry.
+        Default is None.
+    include_background : bool (optional) 
+         Include background, defined as space covered by A that is not covered by B 
+         (overlay difference between A and B). The background geometry is added
+         to B and is given the name 'BACKGROUND'. Default is False.
+    background_value : int or float (optional)
+        The value given to background space. This value is used in the intersection 
+        statistics if a B_value column name is provided. Default is 0.
+        
+    Returns
+    -------
+    pandas DataFrame
+        Intersection statistics (index = A.index, columns = defined below)
+        Columns include:
+            - n: number of intersecting B geometries
+            - intersections: list of intersecting B indices
+            
+        If B_value is given:
+            - values: list of intersecting B values
+            - sum: sum of the intersecting B values
+            - min: minimum of the intersecting B values
+            - max: maximum of the intersecting B values
+            - mean: mean of the intersecting B values
+            
+        If A contains Lines and B contains Polygons:
+            - weighted_mean: weighted mean of intersecting B values
+    """
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
+    isinstance(A, gpd.GeoDataFrame)
+    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 
+                                           'MultiLineString', 'Polygon', 
+                                           'MultiPolygon']).all()
+    isinstance(B, gpd.GeoDataFrame)
+    assert (B['geometry'].geom_type).isin(['Point', 'LineString', 
+                                           'MultiLineString', 'Polygon', 
+                                           'MultiPolygon']).all()
+    if isinstance(B_value, str):
+        assert B_value in B.columns
+    isinstance(include_background, bool)
+    isinstance(background_value, (int, float))
+    assert A.crs == B.crs
+    
+    if include_background:
+        background = _backgound_original(A, B)
         if B_value is not None:
             background[B_value] = background_value
         B = pd.concat([B, background])
