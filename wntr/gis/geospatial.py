@@ -206,7 +206,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         assert B_value in B.columns
     isinstance(include_background, bool)
     isinstance(background_value, (int, float))
-    assert A.crs == B.crs
+    assert A.crs == B.crs, "A and B must have the same crs."
     
     if include_background:
         background = _backgound(A, B)
