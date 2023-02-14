@@ -1126,7 +1126,7 @@ class InpFile(object):
                 f.write('{:10s} {:10s}\n'.format(pump_name, LinkStatus(pump.initial_status).name).encode('latin-1'))
             else:
                 setting = pump.initial_setting
-                if type(setting) is float and setting != 1.0:
+                if isinstance(setting, float) and setting != 1.0:
                     f.write('{:10s} {:10.7g}\n'.format(pump_name, setting).encode('latin-1'))
         
         vnames = list(wn.valve_name_list)
@@ -1662,8 +1662,7 @@ class InpFile(object):
                         edata['key'] = words[0] + ' ' + words[1]
                         setattr(opts, words[0].lower() + '_' + words[1].lower(), float(words[2]))
                         logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
-        if (type(opts.time.report_timestep) == float or
-                type(opts.time.report_timestep) == int):
+        if isinstance(opts.time.report_timestep, (float, int)):
             if opts.time.report_timestep < opts.time.hydraulic_timestep:
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
@@ -2994,13 +2993,13 @@ def _compare_lines(line1, line2, tol=1e-14):  # pragma: no cover
 
     for i, a in enumerate(line1):
         b = line2[i]
-        if type(a) not in {int, float}:
+        if isinstance(a, (int, float)):
             if a != b:
                 return False
-        elif type(a) is int and type(b) is int:
+        elif isinstance(a, int) and isinstance(b, int):
             if a != b:
                 return False
-        elif type(a) in {int, float} and type(b) in {int, float}:
+        elif isinstance(a, (int, float)) and isinstance(b, (int, float)):
             if abs(a - b) > tol:
                 return False
         else:
@@ -3028,7 +3027,7 @@ def _clean_line(wn, sec, line):  # pragma: no cover
             other = wn.options.hydraulic.pattern
             if other is None:
                 other = 1
-            if (type(line[3]) is int) and (other is int):
+            if isinstance(line[3], int) and isinstance(other, int):
                 other = int(other)
             if line[3] == other:
                 return line[:3]

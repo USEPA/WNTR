@@ -373,7 +373,7 @@ class _Diagnostics(object): # pragma: no cover
             link_text = str(link.link_type) + ' ' + str(link)
             for _attr in link_attributes:
                 val = getattr(link, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 link_text += '<br />{0}: {1}'.format(_attr, str(val))
             link_text += '<br />{0}: {1}'.format('x_coord', 0.5 * (x0 + x1))
@@ -391,7 +391,7 @@ class _Diagnostics(object): # pragma: no cover
             node_text = str(_node.node_type) + ' ' + str(_node)
             for _attr in node_attributes:
                 val = getattr(_node, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 node_text += '<br />{0}: {1}'.format(_attr, str(val))
             try:
@@ -1333,7 +1333,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.debug('no changes made by postsolve controls; moving to next timestep')
 
             resolve = False
-            if type(self._report_timestep) == float or type(self._report_timestep) == int:
+            if isinstance(self._report_timestep, (float, int)):
                 if self._wn.sim_time % self._report_timestep == 0:
                     wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
