@@ -1,6 +1,6 @@
 ---
-name: Ask a question
-about: ''
+name: General question
+about: Ask a question
 title: ''
 labels: ''
 assignees: ''
