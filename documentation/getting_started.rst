@@ -64,3 +64,27 @@ WNTR comes with additional examples that illustrate advanced use cases, includin
 * `Sensor placement example <https://github.com/sandialabs/chama/blob/main/examples/water_network_example.py>`_: 
   This example is hosted in Chama repository (https://github.com/sandialabs/chama) and uses WNTR to optimize the placement of sensors that minimizes detection time. 
   Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.
+  
+Additionally, the examples folder contains demonstrations using Jupyter Notebooks. 
+A Jupyter Notebook, an open-sourced web-based application, can be accessed through Anaconda or by installing the 
+associated software available at https://jupyter.org. These demonstrations include the following: 
+
+* `Pipe break demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`_: 
+  This demostration runs multiple hydraulic simulations to compute the impact that different individual pipe breaks/closures have on network pressure. 
+  It also plots the pressure and population impacts for all junctions effected by the pipe breaks/closures. 
+* `Segment pipe break demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/segment_break_demo.ipynb>`_: 
+  This demostration runs multiple hydraulic simulations to compute the impact that different pipe segment breaks/closures (identified by isolation 
+  valve locations) have on network pressure. It also plots the pressure and population impacts for all junctions effected by the pipe segment breaks/closures. 
+* `Fire flow demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/fire_flow_demo.ipynb>`_: 
+  This demostration runs multiple hydraulic simulations with and without fire fighting flow demand to multiple fire hydrant nodes. 
+  It also plots the pressure and population impacts for junctions effected by the additional fire fighting flow demand. 
+* `Earthquake demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/earthquake_demo.ipynb>`_: 
+  This demostration runs hydraulic simulations of earthquake damage with and without repair efforts. It plots fragility curves, 
+  peak ground acceleration, peak ground velocity, repair rate, leak probability, and damage states. In addition, it compares 
+  junction pressure 24 hours into the simulation, and tank and junction pressure over time. The demonstration also plots water 
+  service availability and population impacted by low pressure conditions.
+  
+For more details about the steps in the demonstrations, review Chapter 12: Water network tool for resilience in 
+`Embracing Analytics in the Drinking Water Industry <https://iwaponline.com/ebooks/book/849/Embracing-Analytics-in-the-Drinking-Water-Industry>`_. 
+  
+  

@@ -1270,7 +1270,7 @@ class InpFile(object):
         has_been_read = set()
         for lnum, line in self.sections['[DEMANDS]']:
             ldata = line.split(';')
-            if len(ldata) > 1:
+            if len(ldata) > 1 and (ldata[1] != ""):
                 category = ldata[1]
             else:
                 category = None
@@ -1969,12 +1969,10 @@ class InpFile(object):
         entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('latin-1'))
-        lnames = list(wn.pipe_name_list)
-        # lnames.sort()
-        for pipe_name in lnames:
-            pipe = wn.links[pipe_name]
-            for vert in pipe._vertices:
-                f.write(entry.format(pipe_name, vert[0], vert[1]).encode('latin-1'))
+        for name, link in wn.links():
+                for vert in link._vertices:
+                    f.write(entry.format(name, vert[0], vert[1]).encode('latin-1'))
+        
         f.write('\n'.encode('latin-1'))
 
     def _read_labels(self):

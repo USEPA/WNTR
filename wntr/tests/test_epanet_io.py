@@ -100,8 +100,11 @@ class TestInpFileWriter(unittest.TestCase):
         self.wntr = wntr
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn.get_link("LINK-3774").vertices.append((305.31, 206.755)) # add vertex for testing
         self.wntr.network.write_inpfile(self.wn, "temp.inp", units="LPM")
-        self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
+        self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
+        # adjusting for comparison tests
+        self.wn2.options.hydraulic.inpfile_units = 'GPM'
 
     @classmethod
     def tearDownClass(self):

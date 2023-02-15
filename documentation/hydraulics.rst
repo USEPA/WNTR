@@ -101,7 +101,7 @@ demand model,
 minimum pressure,
 required pressure, and 
 pressure exponent.
-Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
+Note that EPANET 2.00.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
 Options that directly apply to hydraulic simulation that are not used in the
 WNTRSimulator are described in :ref:`limitations`.   
 
