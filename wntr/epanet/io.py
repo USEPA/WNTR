@@ -1270,7 +1270,7 @@ class InpFile(object):
         has_been_read = set()
         for lnum, line in self.sections['[DEMANDS]']:
             ldata = line.split(';')
-            if len(ldata) > 1:
+            if len(ldata) > 1 and (ldata[1] != ""):
                 category = ldata[1]
             else:
                 category = None
