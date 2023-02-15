@@ -398,8 +398,11 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             return False
         if self.initial_status != other.initial_status:
             return False
-        if self.initial_setting != other.initial_setting:
-            return False
+        if (self.initial_setting is not None) ^ (other.initial_setting is not None):
+                return False 
+        elif (self.initial_setting is not None) and (other.initial_setting is not None):
+            if abs(self.initial_setting - other.initial_setting) > 1e-9:
+                return False
         if self.start_node_name != other.start_node_name:
             return False
         if self.end_node_name != other.end_node_name:

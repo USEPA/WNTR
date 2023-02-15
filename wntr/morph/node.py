@@ -40,6 +40,11 @@ def scale_node_coordinates(wn, scale, return_copy=True):
     for name, node in wn2.nodes():
         pos = node.coordinates
         node.coordinates = (pos[0]*scale, pos[1]*scale)
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                vertex = link.vertices[k]
+                link.vertices[k] = (vertex[0]*scale, vertex[1]*scale)
 
     return wn2
 
@@ -73,7 +78,12 @@ def translate_node_coordinates(wn, offset_x, offset_y, return_copy=True):
     for name, node in wn2.nodes():
         pos = node.coordinates
         node.coordinates = (pos[0]+offset_x, pos[1]+offset_y)
-    
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                vertex = link.vertices[k]
+                link.vertices[k] = (vertex[0]+offset_x, vertex[1]+offset_y)
+
     return wn2
         
 
@@ -107,6 +117,10 @@ def rotate_node_coordinates(wn, theta, return_copy=True):
     for name, node in wn2.nodes():
         pos = node.coordinates
         node.coordinates = tuple(np.dot(R,pos))
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                link.vertices[k] = tuple(np.dot(R,link.vertices[k]))
     
     return wn2
 
@@ -145,6 +159,13 @@ def convert_node_coordinates_UTM_to_longlat(wn, zone_number, zone_letter, return
         lat, long = utm.to_latlon(pos[0], pos[1], zone_number, zone_letter)
         node.coordinates = (long, lat)
 
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                vertex = link.vertices[k]
+                lat, long = utm.to_latlon(vertex[0], vertex[1], zone_number, zone_letter)
+                link.vertices[k] = (long, lat)
+
     return wn2
 
 
@@ -181,6 +202,16 @@ def convert_node_coordinates_longlat_to_UTM(wn, return_copy=True):
         easting = utm_coords[0]
         northing = utm_coords[1]
         node.coordinates = (easting, northing)
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                vertex = link.vertices[k]
+                longitude = vertex[0]
+                latitude = vertex[1]
+                utm_coords = utm.from_latlon(latitude, longitude)
+                easting = utm_coords[0]
+                northing = utm_coords[1]
+                link.vertices[k] = (easting, northing)
 
     return wn2
 
@@ -238,14 +269,14 @@ def convert_node_coordinates_to_longlat(wn, longlat_map, return_copy=True):
     
     return wn2
 
+
 def _convert_with_map(wn, node_map, flag, return_copy):
     
     if utm is None:
         raise ImportError('utm package is required')
     
     if not len(node_map.keys()) == 2:
-        print('map must have exactly 2 entries')
-        return
+        raise Exception('map must have exactly 2 entries')
     
     if return_copy: # Get a copy of the WaterNetworkModel
         wn2 = copy.deepcopy(wn)
@@ -302,5 +333,16 @@ def _convert_with_map(wn, node_map, flag, return_copy):
             node.coordinates = (long, lat)
         elif flag == 'UTM':
             node.coordinates = (easting, northing)
+
+    for name, link in wn2.links():
+        if link.vertices:
+            for k in range(len(link.vertices)):
+                pos = link.vertices[k]
+                (easting, northing) = (np.array(pos) - cpA)*ratio + cpB
+                if flag == 'LONGLAT':
+                    lat, long = utm.to_latlon(easting, northing, zone_number, zone_letter)
+                    link.vertices[k] = (long, lat)
+                elif flag == 'UTM':
+                    node.coordinates = (easting, northing)
     
     return wn2

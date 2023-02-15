@@ -773,8 +773,8 @@ to assign the demographic data, specifically the mean income, to junctions and p
     111        [0, 3]  [63326.0, 54040.0]  2  117366.0  54040.0  63326.0  58683.0      60953.558
     112        [3, 5]  [54040.0, 57620.0]  2  111660.0  54040.0  57620.0  55830.0      56596.728
     113        [5, 6]  [57620.0, 44871.0]  2  102491.0  44871.0  57620.0  51245.5      53707.370
-    121        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
-    122        [3, 2]  [54040.0, 91452.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
+    121        [2, 3]  [91452.0, 54040.0]  2  145492.0  54040.0  91452.0  72746.0      73586.482
+    122        [2, 3]  [91452.0, 54040.0]  2  145492.0  54040.0  91452.0  72746.0      66314.037
 
 The data, water network model, and census tracts can be plotted as follows. The 
 resulting :numref:`fig-intersect-demographics` illustrates Net1 with the intersection of junctions and pipes with the census tracts (polygons). 
