@@ -20,13 +20,18 @@ class TestMorph(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         node = wn.get_node("123")
         coord = node.coordinates
+        vertex = (8.5, 27)
+        wn.get_link('10').vertices.append(vertex)
 
         wn2 = wntr.morph.scale_node_coordinates(wn, 100)
         node2 = wn2.get_node("123")
         coord2 = node2.coordinates
+        vertex2 = wn2.get_link('10').vertices[0]
 
         self.assertEqual(coord[0] * 100, coord2[0])
         self.assertEqual(coord[1] * 100, coord2[1])
+        self.assertEqual(vertex[0] * 100, vertex2[0])
+        self.assertEqual(vertex[1] * 100, vertex2[1])
 
     def test_translate_node_coordinates(self):
 
@@ -34,25 +39,37 @@ class TestMorph(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         node = wn.get_node("123")
         coord = node.coordinates
+        vertex = (8.5, 27)
+        wn.get_link('10').vertices.append(vertex)
 
         wn2 = wntr.morph.translate_node_coordinates(wn, 5, 10)
         node2 = wn2.get_node("123")
         coord2 = node2.coordinates
+        vertex2 = wn2.get_link('10').vertices[0]
 
         self.assertEqual(coord[0] + 5, coord2[0])
         self.assertEqual(coord[1] + 10, coord2[1])
+        self.assertEqual(vertex[0] + 5, vertex2[0])
+        self.assertEqual(vertex[1] + 10, vertex2[1])
 
     def test_rotate_node_coordinates(self):
 
         wn = wntr.network.WaterNetworkModel()
         wn.add_junction("J1", base_demand=5, elevation=100.0, coordinates=(2, 0))
+        wn.add_junction("J2", base_demand=5, elevation=100.0, coordinates=(8, 0))
+        wn.add_pipe("P1", "J1", "J2")
+        vertex = (4, 0)
+        wn.get_link('P1').vertices.append(vertex)
 
         wn2 = wntr.morph.rotate_node_coordinates(wn, 45)
         node2 = wn2.get_node("J1")
         coord2 = node2.coordinates
+        vertex2 = wn2.get_link('P1').vertices[0]
 
         self.assertAlmostEqual(np.sqrt(2), coord2[0], 6)
         self.assertAlmostEqual(np.sqrt(2), coord2[1], 6)
+        self.assertAlmostEqual(vertex[0] * np.sqrt(2) / 2, vertex2[0])
+        self.assertAlmostEqual(vertex[0] * np.sqrt(2) / 2 , vertex2[1])
 
     def test_UTM_to_longlat_to_UTM(self):
 
@@ -60,25 +77,39 @@ class TestMorph(unittest.TestCase):
         wn.add_junction(
             "J1", base_demand=5, elevation=100.0, coordinates=(351521.07, 3886097.33)
         )  # easting, northing
+        wn.add_junction(
+            "J2", base_demand=5, elevation=100.0, coordinates=(351700.00, 3886097.33)
+        )
+        wn.add_pipe("P1", "J1", "J2")
+        vertex = (351600.00, 3886097.33)
+        wn.get_link('P1').vertices.append(vertex)
 
         wn2 = wntr.morph.convert_node_coordinates_UTM_to_longlat(wn, 13, "S")
         node2 = wn2.get_node("J1")
         coord2 = node2.coordinates
+        vertex2 = wn2.get_link('P1').vertices[0]
 
         self.assertAlmostEqual(-106.629181, coord2[0], 6)  # longitude
         self.assertAlmostEqual(35.106766, coord2[1], 6)  # latitude
+        self.assertAlmostEqual(-106.628315, vertex2[0], 6)  # longitude
+        self.assertAlmostEqual(35.106778, vertex2[1], 6)  # latitude
 
         wn3 = wntr.morph.convert_node_coordinates_longlat_to_UTM(wn2)
         node3 = wn3.get_node("J1")
         coord3 = node3.coordinates
+        vertex3 = wn3.get_link('P1').vertices[0]
 
         self.assertAlmostEqual(351521.07, coord3[0], 1)  # easting
         self.assertAlmostEqual(3886097.33, coord3[1], 1)  # northing
+        self.assertAlmostEqual(351600.00, vertex3[0], 1)  # easting
+        self.assertAlmostEqual(3886097.33, vertex3[1], 1)  # northing
 
     def test_convert_node_coordinates_to_longlat(self):
 
         inp_file = join(netdir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
+        vertex = (8.5, 27)
+        wn.get_link('10').vertices.append(vertex)
 
         longlat_map = {"Lake": (-106.6587, 35.0623), "219": (-106.5248, 35.191)}
         wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
@@ -87,6 +118,9 @@ class TestMorph(unittest.TestCase):
             coord = node.coordinates
             self.assertAlmostEqual(longlat_map[node_name][0], coord[0], 4)
             self.assertAlmostEqual(longlat_map[node_name][1], coord[1], 4)
+        vertex2 = wn2.get_link('10').vertices[0]
+        self.assertAlmostEqual(-106.6555, vertex2[0], 4)
+        self.assertAlmostEqual(35.0638, vertex2[1], 4)
 
         # opposite rotation
         longlat_map = {"Lake": (-106.6851, 35.1344), "219": (-106.5073, 35.0713)}
@@ -96,6 +130,9 @@ class TestMorph(unittest.TestCase):
             coord = node.coordinates
             self.assertAlmostEqual(longlat_map[node_name][0], coord[0], 4)
             self.assertAlmostEqual(longlat_map[node_name][1], coord[1], 4)
+        vertex2 = wn2.get_link('10').vertices[0]
+        self.assertAlmostEqual(-106.6826, vertex2[0], 4)
+        self.assertAlmostEqual(35.1325, vertex2[1], 4)
 
     def test_split_pipe(self):
 
