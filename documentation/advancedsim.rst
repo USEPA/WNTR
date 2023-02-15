@@ -7,7 +7,7 @@
 Advanced simulation techniques
 ===============================
 
-This section describes several advanced simulation techniques using WNTR. These techniquest include
+This section describes several advanced simulation techniques using WNTR. These techniques include
 stochastic simulation, multiple processors, and WNTR's customized algebraic modeling language (AML).
 
 
