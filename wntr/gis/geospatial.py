@@ -230,29 +230,61 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         B = pd.concat([B, background])
         
     intersects = gpd.sjoin(A, B, predicate='intersects')
-    intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
-    # Subset of A that intersects with B
-    A_intersects = A.loc[intersects.index.unique().sort_values(),:]
+    
+    Ai = intersects.loc[:,'geometry'].reset_index()
+    Bi = B.loc[intersects['index_right'], 'geometry'].reset_index()
+    intersect_geom = Ai.intersection(Bi)
+    if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
+        fraction = intersect_geom.length/Ai.length
+    elif (A['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
+        fraction = intersect_geom.area/Ai.area
+    else: # Point geometry, no fraction
+        fraction = pd.Series(None, index=Ai.index) 
+    intersects['intersection_geometry'] = intersect_geom.values
+    intersects['intersection_fraction'] = fraction.round(3).values
+    
+    intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
     # Sort values by index and intersecting object
     intersects['sort_order'] = 1 # make sure 'BACKGROUND' is listed first
     intersects.loc[intersects['index_right'] == 'BACKGROUND', 'sort_order'] = 0
     intersects.sort_values(['_tmp_index_name', 'sort_order', 'index_right'], inplace=True)
     
-    n = intersects.groupby('_tmp_index_name')['geometry'].count()
     B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
-    #B_indices.sort_values()
-    stats = pd.DataFrame(index=A_intersects.index, 
+    B_fraction = intersects.groupby('_tmp_index_name')['intersection_fraction'].apply(list)
+    B_n = B_indices.apply(len)
+    
+    A_index = intersects.index.unique().sort_values()
+    stats = pd.DataFrame(index=A_index, 
                          data={'intersections': B_indices,
-                               'n': n,})
+                               'fraction': B_fraction,
+                               'n': B_n})
+    
     if B_value is not None:
         stats['values'] = intersects.groupby('_tmp_index_name')[B_value].apply(list)
         stats['sum'] = intersects.groupby('_tmp_index_name')[B_value].sum()
         stats['min'] = intersects.groupby('_tmp_index_name')[B_value].min()
         stats['max'] = intersects.groupby('_tmp_index_name')[B_value].max()
         stats['mean'] = intersects.groupby('_tmp_index_name')[B_value].mean()
-
+        
+        if isinstance(stats['fraction'].iloc[0], list):
+            # To compute weighted mean, I also tried saving 'values' and 
+            # 'fraction' as np.arrays, but those can't be saved to json
+            # I thought I could do this without a loop, but the arrays have 
+            # different lengths, so operations like np.nansum(x, axis=0) don't 
+            # work anyways
+            weighted_mean = []
+            for i in stats.index:
+                val = np.array(stats['values'][i])
+                frac = np.array(stats['fraction'][i])
+                weighted_mean.append(np.nansum(val*frac)/np.nansum(frac))
+            stats['weighted_mean'] = weighted_mean
+            
+    """    
+    # Subset of A that intersects with B
+    A_intersects = A.loc[intersects.index.unique().sort_values(),:]
+    
     weighted_mean = False
     if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
         if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
@@ -271,21 +303,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             A_subset = A_intersects.loc[B_indices.apply(lambda x: i in x),:]
             if A_subset.shape[0] == 0:
                 continue
-            if B_geom.index[0] == 'BACKGROUND':
-  
-                fig, ax = plt.subplots()
-                B_geom.plot(ax=ax, alpha=0.5)
-                A_subset.plot(ax=ax, color='red')
-                fig, ax = plt.subplots()
-                B_geom.plot(ax=ax, alpha=0.5)
-                A_clip.plot(ax=ax, color='red')
-
-                A_clip = A_subset.difference(B.loc[B.index != 'BACKGROUND',:].unary_union)
-                #fig, ax = plt.subplots()
-                #B_geom.plot(ax=ax, alpha=0.5)
-                #A_clip.plot(ax=ax, color='red')
-            else:
-                A_clip = gpd.clip(A_subset, B_geom)
+            A_clip = gpd.clip(A_subset, B_geom)
             if A_clip.shape[0] == 0:
                 continue
             A_clip_length = A_clip.length
@@ -299,6 +317,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
                 covered_length[A_clip_loc] = covered_length[A_clip_loc] + fraction_length
                 weighed_val = fraction_length*val
                 weighted_mean[A_clip_loc] = weighted_mean[A_clip_loc] + weighed_val
+                
             if B_geom.index[0] == 'BACKGROUND':
                 fraction_background[A_clip_loc] = fraction_length
         
@@ -308,7 +327,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         
         stats['weighted_mean'] = weighted_mean
         stats['fraction_background'] = fraction_background
-        
+    """
     stats.index.name = None
     
     return stats
