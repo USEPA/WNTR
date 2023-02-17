@@ -198,13 +198,13 @@ class _Diagnostics(object): # pragma: no cover
                 print('could not load {0} into the model because {0} is not an attribute of the model'.format(v_name))
                 continue
             v = getattr(self.model, v_name)
-            if type(val) == dict:
+            if isinstance(val, dict):
                 for key, _val in val.items():
                     if key not in v:
                         print('could not load {0}[{1}] into the model because {1} is not an element in model.{0}'.format(v_name, key))
                         continue
                     _v = v[key]
-                    if type(_v) == Var:
+                    if isinstance(_v, Var):
                         _v.value = _val
                     else:
                         if abs(_v.value - _val) > 1e-6:
@@ -213,7 +213,7 @@ class _Diagnostics(object): # pragma: no cover
                                 print('  from solution file: {0}'.format(_val))
                                 print('  from model: {0}'.format(_v.value))
             else:
-                if type(v) == Var:
+                if isinstance(v, Var):
                     v.value = val
                 else:
                     if abs(v.value - val) > 1e-6:
@@ -666,7 +666,7 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _setup_sim_options(self, solver, backup_solver, solver_options, backup_solver_options, convergence_error):
         self._report_timestep = self._wn.options.time.report_timestep
         self._hydraulic_timestep = self._wn.options.time.hydraulic_timestep
-        if type(self._report_timestep) is str:
+        if isinstance(self._report_timestep, str):
             if self._report_timestep.upper() != 'ALL':
                 raise ValueError('report timestep must be either an integer number of seconds or "ALL".')
         else:
