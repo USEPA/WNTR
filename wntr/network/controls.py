@@ -1728,7 +1728,7 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
             return False
         if attr1 != attr2:
             return False
-        if type(val1) == float:
+        if isinstance(val1, float):
             if abs(val1 - val2) > 1e-10:
                 return False
         else:

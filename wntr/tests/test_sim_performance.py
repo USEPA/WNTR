@@ -3,6 +3,7 @@ import unittest
 from os.path import abspath, dirname, join
 import threading
 import time
+import numpy as np
 
 import pandas
 
@@ -61,7 +62,7 @@ class TestPerformance(unittest.TestCase):
             pump.pump_curve_name = new_curve_name
         for pump_name, pump in wn2.pumps():
             pump.pump_curve_name = new_curve_name
-
+        
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
@@ -93,6 +94,27 @@ class TestPerformance(unittest.TestCase):
             )
         )
 
+    def test_Net1_float64(self):
+        """Only needs to test that runs successfully with float64 time options"""
+        inp_file = join(ex_datadir, "Net1.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        
+        wn.options.time.duration = np.float64(wn.options.time.duration)
+        wn.options.time.hydraulic_timestep = np.float64(wn.options.time.hydraulic_timestep)
+        wn.options.time.quality_timestep = np.float64(wn.options.time.quality_timestep)
+        wn.options.time.rule_timestep = np.float64(wn.options.time.rule_timestep)
+        wn.options.time.pattern_timestep = np.float64(wn.options.time.pattern_timestep)
+        wn.options.time.pattern_start = np.float64(wn.options.time.pattern_start)
+        wn.options.time.report_timestep = np.float64(wn.options.time.report_timestep)
+        wn.options.time.report_start = np.float64(wn.options.time.report_start)
+        wn.options.time.start_clocktime = np.float64(wn.options.time.start_clocktime)
+        
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_res = epa_sim.run_sim()
+
+        sim = self.wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+    
     def test_Net1_charset(self):
         """Only needs to test that runs successfully with latin-1 character set."""
         inp_file = join(test_datadir, "latin1.inp")
