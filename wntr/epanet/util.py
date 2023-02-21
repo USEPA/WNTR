@@ -346,11 +346,13 @@ class QualParam(enum.Enum):
             The data values converted to SI standard units
 
         """
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(data.values())
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         if mass_units is None:
@@ -388,10 +390,11 @@ class QualParam(enum.Enum):
             data = data * 3600.0  # hr to s
 
         # Convert back to input data type
-        if data_type is dict:
+        if original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list': 
             data = list(data)
+            
         return data
 
     def _from_si(self, flow_units, data, mass_units=MassUnits.mg, reaction_order=0):
@@ -416,11 +419,13 @@ class QualParam(enum.Enum):
             The data values converted to EPANET appropriate units, based on the flow units.
 
         """
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(data.values())
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do conversions
@@ -455,10 +460,11 @@ class QualParam(enum.Enum):
             data = data / 3600.0  # hr fr s
 
         # Convert back to input data type
-        if data_type is dict:
+        if original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+            
         return data
 
 
@@ -557,15 +563,18 @@ class HydParam(enum.Enum):
 
         """
         # Convert to array for unit conversion
-        data_type = type(data)
-        if data_type is pd.core.frame.DataFrame:
+        original_data_type = None
+        if isinstance(data, pd.core.frame.DataFrame):
+            original_data_type = 'dataframe'
             data_index = data.index
             data_columns = data.columns
             data = data.values
-        elif data_type is dict:
+        elif isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(list(data.values()))
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do conversions
@@ -622,12 +631,13 @@ class HydParam(enum.Enum):
                 data = data * np.power(0.3048, 3)  # ft3 to m3
 
         # Convert back to input data type
-        if data_type is pd.core.frame.DataFrame:
+        if original_data_type == 'dataframe':
             data = pd.DataFrame(data, columns=data_columns, index=data_index)
-        elif data_type is dict:
+        elif original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+        
         return data
 
     def _from_si(self, flow_units, data, darcy_weisbach=False):
@@ -654,11 +664,13 @@ class HydParam(enum.Enum):
 
         """
         # Convert to array for conversion
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(list(data.values()))
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do onversions
@@ -717,10 +729,11 @@ class HydParam(enum.Enum):
                 data = data / np.power(0.3048, 3)  # ft3 from m3
 
         # Put back into data format passed in
-        if data_type is dict:
+        if original_data_type  == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+            
         return data
 
 

@@ -198,13 +198,13 @@ class _Diagnostics(object): # pragma: no cover
                 print('could not load {0} into the model because {0} is not an attribute of the model'.format(v_name))
                 continue
             v = getattr(self.model, v_name)
-            if type(val) == dict:
+            if isinstance(val, dict):
                 for key, _val in val.items():
                     if key not in v:
                         print('could not load {0}[{1}] into the model because {1} is not an element in model.{0}'.format(v_name, key))
                         continue
                     _v = v[key]
-                    if type(_v) == Var:
+                    if isinstance(_v, Var):
                         _v.value = _val
                     else:
                         if abs(_v.value - _val) > 1e-6:
@@ -213,7 +213,7 @@ class _Diagnostics(object): # pragma: no cover
                                 print('  from solution file: {0}'.format(_val))
                                 print('  from model: {0}'.format(_v.value))
             else:
-                if type(v) == Var:
+                if isinstance(v, Var):
                     v.value = val
                 else:
                     if abs(v.value - val) > 1e-6:
@@ -373,7 +373,7 @@ class _Diagnostics(object): # pragma: no cover
             link_text = str(link.link_type) + ' ' + str(link)
             for _attr in link_attributes:
                 val = getattr(link, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 link_text += '<br />{0}: {1}'.format(_attr, str(val))
             link_text += '<br />{0}: {1}'.format('x_coord', 0.5 * (x0 + x1))
@@ -391,7 +391,7 @@ class _Diagnostics(object): # pragma: no cover
             node_text = str(_node.node_type) + ' ' + str(_node)
             for _attr in node_attributes:
                 val = getattr(_node, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 node_text += '<br />{0}: {1}'.format(_attr, str(val))
             try:
@@ -666,7 +666,7 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _setup_sim_options(self, solver, backup_solver, solver_options, backup_solver_options, convergence_error):
         self._report_timestep = self._wn.options.time.report_timestep
         self._hydraulic_timestep = self._wn.options.time.hydraulic_timestep
-        if type(self._report_timestep) is str:
+        if isinstance(self._report_timestep, str):
             if self._report_timestep.upper() != 'ALL':
                 raise ValueError('report timestep must be either an integer number of seconds or "ALL".')
         else:
@@ -1333,7 +1333,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.debug('no changes made by postsolve controls; moving to next timestep')
 
             resolve = False
-            if type(self._report_timestep) == float or type(self._report_timestep) == int:
+            if isinstance(self._report_timestep, (float, int)):
                 if self._wn.sim_time % self._report_timestep == 0:
                     wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
