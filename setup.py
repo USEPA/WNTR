@@ -5,11 +5,12 @@ import re
 import sys
 
 use_swig = False
+build = True
 
 # BUILD_WNTR_EXTENSIONS is defined as an environment variable for the project at readthedocs.org
-if '--build' in sys.argv:
-    build = True
-    sys.argv.remove('--build')
+if '--no-build' in sys.argv:
+    build = False
+    sys.argv.remove('--no-build')
 elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'true':
     build = True
 else:
