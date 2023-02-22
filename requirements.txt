@@ -1,5 +1,5 @@
 # Required
-numpy
+numpy>=1.21
 scipy
 networkx
 pandas
