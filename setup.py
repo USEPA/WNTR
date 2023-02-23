@@ -11,11 +11,9 @@ build = True
 if '--no-build' in sys.argv:
     build = False
     sys.argv.remove('--no-build')
-elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'true':
-    build = True
-else:
+elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'false':
     build = False
-    
+
 extension_modules = list()
 if build:
     import numpy
