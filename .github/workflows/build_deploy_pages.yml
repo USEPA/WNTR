@@ -28,10 +28,10 @@ jobs:
           python setup.py develop --build
       - name: Build documentation
         run: sphinx-build -b html documentation/ documentation/_build/html
-      - uses: actions/upload-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          name: github-pages
-          path: documentation/_build/html
+          path: 'documentation/_build/html'
 
   deploy:
     needs: build
@@ -47,10 +47,6 @@ jobs:
         uses: actions/configure-pages@v3
       - name: ls
         run: ls -la
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: './'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
