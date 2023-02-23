@@ -30,7 +30,7 @@ jobs:
         run: sphinx-build -b html documentation/ documentation/_build/html
       - uses: actions/upload-artifact@v3
         with:
-          name: html-docs
+          name: github-pages
           path: documentation/_build/html
 
   deploy:
@@ -39,7 +39,7 @@ jobs:
       pages: write      # to deploy to Pages
       id-token: write   # to verify the deployment originates from an appropriate source
     environment:
-      name: html-docs
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
