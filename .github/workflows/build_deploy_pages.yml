@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v3
+      - name: ls
+        run: ls -la
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
