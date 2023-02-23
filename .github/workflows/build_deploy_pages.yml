@@ -43,13 +43,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          name: html-docs
-          path: './'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
+    # runs-on: ubuntu-latest
+    # steps:
+    #   - name: Setup Pages
+    #     uses: actions/configure-pages@v3
+    #   - name: Upload artifact
+    #     uses: actions/upload-pages-artifact@v1
+    #     with:
+    #       path: './'
+    #   - name: Deploy to GitHub Pages
+    #     id: deployment
+    #     uses: actions/deploy-pages@v1
