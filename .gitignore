@@ -15,14 +15,8 @@ docker/
 *.pickle
 *.xlsx
 
-temp*.inp
-temp*.bin
-temp*.rpt
-temp*.json
+temp*
 
 examples/*.inp
 wntr/tests/*.png
-wntr/tests/performance_results
 
-examples/signal.csv
-examples/temp.hyd
