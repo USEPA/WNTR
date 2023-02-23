@@ -139,7 +139,7 @@ Step 2: Install WNTR
 	  To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
 	  
 	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
-	  WNTR can then be installed using using pip.
+	  WNTR can then be installed using pip.
 	  To build WNTR from the source files, open a command line or PowerShell prompt from within the folder that contains the setup.py file and run:: 
 	  
 		  python -m pip install .
