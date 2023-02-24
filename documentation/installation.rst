@@ -132,15 +132,17 @@ Step 2: Install WNTR
 	
 	  This will install the latest release of WNTR from https://anaconda.org/conda-forge/wntr.
 	  
-	* **Option 3**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
+	* **Option 3**: Users can download and build WNTR using source files from the WNTR GitHub repository.  
 	  
-	  To download the main branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
-	  This downloads a zip file called WNTR-main.zip.
+	  To download a zip file of the main branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
+	  This downloads a file called WNTR-main.zip.
 	  To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
+	  The zip file contains the examples folder.
 	  
 	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
-	  WNTR can then be installed using pip.
-	  To build WNTR from the source files, open a command line or PowerShell prompt from within the folder that contains the setup.py file and run:: 
+	  WNTR can then be installed using pip, which is a command line software tool used to install and manage Python 
+	  packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
+	  To build WNTR from the source files, open a command line or PowerShell prompt from within the folder that contains the ``setup.py`` file and run:: 
 	  
 		  python -m pip install .
 	
@@ -148,11 +150,11 @@ Step 2: Install WNTR
 	  The ``.`` indicates that the source files are in the current directory.
 	  This use of pip installs WNTR using the local source files (not from PyPI as shown in Option 1).
 	   
-	.. note:: 
-	   When installing WNTR using source files, the user must have a C++ compiler on their path. 
-	   No compiler is needed when installing WNTR through PyPI (Option 1) or conda (Option 2). 
-	   
-
+	  .. note:: 
+	     WNTR includes C++ code that is built into shared object files (e.g., pyd for Windows)
+	     during the setup process. This requires that the user has a C++ compiler on their path.
+	     No compiler is needed when installing WNTR through PyPI (Option 1) or conda (Option 2). 
+   
 Step 3: Test installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -174,9 +176,9 @@ Step 3: Test installation
 Developer instructions
 ------------------------
 
-Developers should review the :ref:`developers` and :ref:`copyright_license` sections before contributing to WNTR.
+Developers should review the :ref:`developers` section before contributing to WNTR.
 
-Developers can clone and setup the main branch of WNTR from source files using git
+Developers can clone and setup the main branch of WNTR from source files 
 using the following commands in a terminal, command line, or PowerShell prompt::
 
     git clone https://github.com/USEPA/WNTR
@@ -187,15 +189,17 @@ The ``-e`` option runs ``setup.py develop``.
 This will install the main branch of WNTR from https://github.com/USEPA/WNTR in development mode.
 
 .. note:: 
-   WNTR includes C++ code that must be built into shared object files (e.g., pyd for Windows).
-   This requires that the developer has a C++ compiler on their path.
-   When installing WNTR through PyPI or conda, the shared object files do not need to be built and no compiler is needed.
+   WNTR includes C++ code that is built into shared object files (e.g., pyd for Windows)
+   during the setup process. This requires that the developer has a C++ compiler on their path.
+   When installing WNTR through PyPI or conda, the shared object files do not need to be built 
+   and no compiler is needed.
 
 If the developer does NOT have a C++ compiler, or would rather use prebuilt wheels,
 the shared object files can be downloaded from WNTR GitHub Actions using the following steps:
 
 * Clone and setup the main branch of WNTR from the GitHub 
-  repository using the following commands in a terminal, command line, or PowerShell prompt::
+  repository using the following commands in a terminal, command line, or PowerShell prompt 
+  (the ``--no-build`` command line argument omits the build step in the setup process)::
 
     git clone https://github.com/USEPA/WNTR
     cd WNTR
