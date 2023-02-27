@@ -58,7 +58,6 @@ Directories
   * wntr - Python package
   * documentation - User manual
   * examples - Examples and network files
-  * ci - Software requirements for continuous integration testing
   
 Contact
 --------
