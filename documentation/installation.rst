@@ -184,9 +184,12 @@ using the following commands in a terminal, command line, or PowerShell prompt::
     git clone https://github.com/USEPA/WNTR
     cd WNTR
     python -m pip install -e .
+	pip install -r requirements.txt
 
 The ``-e`` option runs ``setup.py develop``.
 This will install the main branch of WNTR from https://github.com/USEPA/WNTR in development mode.
+The ``requirements.txt`` file contains all the necessary dependencies for testing the package
+and building the documentation.
 
 .. note:: 
    WNTR includes C++ code that is built into shared object files (e.g., pyd for Windows)
@@ -216,7 +219,7 @@ the shared object files can be downloaded from WNTR GitHub Actions using the fol
 * Copy these files into the matching directory in the cloned version of WNTR
 
 To test WNTR, developers can run software tests locally using the following command::
-
+	
 	pytest wntr
 
 .. _requirements:
@@ -259,10 +262,11 @@ The following Python packages are optional:
   https://rtree.readthedocs.io/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
-* numpydoc [VaCV11]_: used to build the user manual,
-  https://github.com/numpy/numpydoc
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.
+To quickly install all optional dependencies, run::
+
+	pip install -r requirements.txt
 
 .. note:: 
    Proper installation of geopandas requires installing several geopandas dependencies, including 
