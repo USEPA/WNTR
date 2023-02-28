@@ -255,8 +255,6 @@ The following Python packages are optional:
   https://rtree.readthedocs.io/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
-* numpydoc [VaCV11]_: used to build the user manual,
-  https://github.com/numpy/numpydoc
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.
 
