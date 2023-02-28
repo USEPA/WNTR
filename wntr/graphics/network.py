@@ -253,7 +253,8 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                figsize=[700, 450], round_ndigits=2, add_to_node_popup=None, 
                filename='plotly_network.html', auto_open=True):
     """
-    Create an interactive scalable network graphic using plotly.  
+    Create an interactive scalable network graphic using plotly. 
+
     Parameters
     ----------
     wn : wntr WaterNetworkModel
@@ -434,7 +435,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                add_to_node_popup=None, add_to_link_popup=None,
                filename='leaflet_network.html'):
     """
-    Create an interactive scalable network graphic on a Leaflet map using folium.  
+    Create an interactive scalable network graphic on a Leaflet map using folium.
+
     Parameters
     ----------
     wn : wntr WaterNetworkModel
@@ -667,6 +669,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
                add_colorbar=True, directed=False, ax=None, repeat=True):
     """
     Create a network animation
+    
     Parameters
     ----------
     wn : wntr WaterNetworkModel
