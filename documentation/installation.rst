@@ -215,10 +215,6 @@ the shared object files can be downloaded from WNTR GitHub Actions using the fol
    
 * Copy these files into the matching directory in the cloned version of WNTR
 
-To test WNTR, developers can run software tests locally using the following command::
-
-	pytest wntr
-
 .. _requirements:
 
 Requirements
