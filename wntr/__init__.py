@@ -1,5 +1,5 @@
 # shapely and geopandas are optional dependencies of WNTR. If shapely 
-# version is >= 2.0, the enviromnet variable USE_PYGEOS is set to '0' to 
+# version is >= 2.0, the environment variable USE_PYGEOS is set to '0' to 
 # ensure geopandas uses shapely over pygeos. Future versions of 
 # geopandas will use shapely by default.
 try:
