@@ -15,6 +15,8 @@ examples,
 bug reports,
 feature requests, and
 ways to contribute.
+Developers should follow the :ref:`developer_instructions` to 
+clone and setup WNTR.
 
 GitHub repository
 ---------------------
@@ -62,8 +64,8 @@ command line/PowerShell prompt from the documentation directory::
 
 	make html
 
-HTML files are created in the documentation/_build/html directory.
-Open index.html to view the documentation.
+HTML files are created in the ``documentation/_build/html`` directory.
+Open ``index.html`` to view the documentation.
 
 Examples
 ---------------------

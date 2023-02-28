@@ -184,7 +184,7 @@ using the following commands in a terminal, command line, or PowerShell prompt::
     git clone https://github.com/USEPA/WNTR
     cd WNTR
     python -m pip install -e .
-	pip install -r requirements.txt
+    pip install -r requirements.txt
 
 The ``-e`` option runs ``setup.py develop``.
 This will install the main branch of WNTR from https://github.com/USEPA/WNTR in development mode.
@@ -207,6 +207,7 @@ the shared object files can be downloaded from WNTR GitHub Actions using the fol
     git clone https://github.com/USEPA/WNTR
     cd WNTR
     python -m pip install -e . --no-build
+    pip install -r requirements.txt
 	
 * Select the latest GitHub Actions build_tests that uses the main branch from https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml
 * Scroll down to "Artifacts"
@@ -264,7 +265,7 @@ The following Python packages are optional:
   https://openpyxl.readthedocs.io
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.
-To quickly install all optional dependencies, run::
+To install optional dependencies, run::
 
 	pip install -r requirements.txt
 
