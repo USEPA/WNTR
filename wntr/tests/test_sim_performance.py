@@ -12,7 +12,6 @@ pandas.set_option("display.max_rows", 10000)
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
-results_dir = join(testdir, "performance_results")
 
 
 def compare_results(wntr_res, epa_res, abs_threshold, rel_threshold):
@@ -30,7 +29,6 @@ def compare_results(wntr_res, epa_res, abs_threshold, rel_threshold):
 class TestPerformance(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        sys.path.append(results_dir)
         import wntr
 
         self.wntr = wntr

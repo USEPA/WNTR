@@ -1,11 +1,29 @@
-.. _whatsnew_060:
-
 v0.6.0 (main)
 ---------------------------------------------------
-* Minor update to the geospatial `intersect` function:  
-  Results are now sorted to ensure reproducible tests.
+* Bug fix to allow for np.float and np.int in type checking 
+  `#334 <https://github.com/USEPA/WNTR/pull/334>`_.
   
-* Minor updates to address deprecation warnings in Python packages dependencies
+* Added vertices coordinate transformation functions in :class:`wntr.morph.node` 
+  `#332 <https://github.com/USEPA/WNTR/pull/332>`_.
+ 
+* Updated the :class:`~wntr.gis.geospatial.intersect` function, results are now sorted 
+  to ensure reproducible tests. Minor updates to documentation 
+  and to address deprecation warnings. 
+  `#328 <https://github.com/USEPA/WNTR/pull/328>`_.
+  
+* Bug fix in :class:`~wntr.gis.geospatial.snap` function, previous results could 
+  include false positives
+  `#327 <https://github.com/USEPA/WNTR/pull/327>`_.
 
-* Minor updates to documentation 
+* Efficiency improvements to :class:`~wntr.metrics.topographic.valve_segments` function. 
+  The function now makes use of NetworkX connected components.
+  `#318 <https://github.com/USEPA/WNTR/pull/318>`_.
+ 
+* Updated environment variable for CIBW_ENVIRONMENT to build extensions. 
+  `#316 <https://github.com/USEPA/WNTR/pull/316>`_.
+
+
+
+  
+
  

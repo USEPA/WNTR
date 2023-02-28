@@ -165,17 +165,18 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         Column name in B used to assign a value to each geometry.
         Default is None.
     include_background : bool (optional) 
-         Include background, defined as space covered by A that is not covered by B 
-         (overlay difference between A and B). The background geometry is added
-         to B and is given the name 'BACKGROUND'. Default is False.
+        Include background, defined as space covered by A that is not covered by B 
+        (overlay difference between A and B). The background geometry is added
+        to B and is given the name 'BACKGROUND'. Default is False.
     background_value : int or float (optional)
         The value given to background space. This value is used in the intersection 
         statistics if a B_value column name is provided. Default is 0.
-        
+      
     Returns
     -------
-    pandas DataFrame
+    intersects : DataFrame
         Intersection statistics (index = A.index, columns = defined below)
+        
         Columns include:
             - n: number of intersecting B geometries
             - intersections: list of intersecting B indices
