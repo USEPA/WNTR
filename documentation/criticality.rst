@@ -22,7 +22,7 @@ to quantify impact.  Analysis can include different components, including:
 
 * Pipe criticality
 * Pump criticality
-* Segment criticality (based on valve isolation, see ref:`valvelayer: for more details)
+* Segment criticality (based on valve isolation, see :ref:`valvelayer` for more details)
 * Fire flow criticality
 
 In each case, a single element is changed in each simulation.  
@@ -33,4 +33,4 @@ Summary metrics are collected for each simulation to determine the relative impa
 The `pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_ 
 runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure. 
 Another version of the pipe criticality analysis is available as a Jupyter Notebook 
-`pipe criticality demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`. 
+`pipe criticality demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`_. 
