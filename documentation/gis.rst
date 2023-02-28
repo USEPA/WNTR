@@ -161,7 +161,7 @@ Geometry
     ``shapely.geometry.Point``, ``shapely.geometry.LineString``, and ``shapely.geometry.MultiLineString``.
     A few components can be defined using multiple types:
 
-    * Pumps and valves can be stored as LineStrings (default) or points. While pumps are defined as 
+    * Pumps and valves can be stored as lines (default) or points. While pumps are defined as 
       lines within WNTR (and EPANET), converting the geometry to points can be useful for 
       geospatial analysis and visualization. The following example stores pumps and valves as points.
 	  
