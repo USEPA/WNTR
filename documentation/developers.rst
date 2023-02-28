@@ -57,13 +57,7 @@ New content is marked `Draft`.
 Python documentation string formatting can be found at
 https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 
-To build the documentation locally, first install the documentation
-dependencies by running the following command in the root of the 
-repository::
-
-	pip install -r requirements.txt
-
-Next, run the following command in a 
+To build the documentation locally, run the following command in a 
 command line/PowerShell prompt from the documentation directory::
 
 	make html
