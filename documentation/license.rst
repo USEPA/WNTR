@@ -10,12 +10,14 @@ The WNTR Python package is copyright through Sandia National Laboratories.
 The software is distributed under the Revised BSD License.
 WNTR also leverages a variety of third-party software packages, which
 have separate licensing policies. 
+See `LICENSE.md <https://github.com/USEPA/WNTR/blob/main/LICENSE.md>`_ for 
+more details.
 
 Copyright
 ------------
 .. code-block:: none 
 
-   Copyright 2019 National Technology & Engineering Solutions of Sandia, 
+   Copyright 2023 National Technology & Engineering Solutions of Sandia, 
    LLC (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S. 
    Government retains certain rights in this software.
 

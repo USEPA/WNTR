@@ -32,7 +32,7 @@ The latest release of WNTR can be installed from PyPI or Anaconda using one of t
 
   ``conda install -c conda-forge wntr``
   
-Additional instructions are available at https://wntr.readthedocs.io/en/latest/installation.html.
+See [installation instructions](https://wntr.readthedocs.io/en/latest/installation.html) for more details.
 
 Citing WNTR
 -----------------
@@ -48,7 +48,8 @@ To cite WNTR, use one of the following references:
 License
 ------------
 
-WNTR is released under the Revised BSD license.  See the LICENSE.txt file.
+WNTR is released under the Revised BSD license. See 
+[LICENSE.md](https://github.com/USEPA/WNTR/blob/main/LICENSE.md) for more details.
 
 Organization
 ------------
@@ -57,7 +58,6 @@ Directories
   * wntr - Python package
   * documentation - User manual
   * examples - Examples and network files
-  * ci - Software requirements for continuous integration testing
   
 Contact
 --------
