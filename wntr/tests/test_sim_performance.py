@@ -1,5 +1,6 @@
 import sys
 import unittest
+import pytest
 from os.path import abspath, dirname, join
 import threading
 import time
@@ -245,7 +246,8 @@ class TestPerformance(unittest.TestCase):
                 rel_threshold,
             )
         )
-
+    
+    @pytest.mark.time_consuming
     def test_Net6_thread_performance(self):
         """
         Test thread-safe performance of simulators
@@ -303,7 +305,8 @@ class TestPerformance(unittest.TestCase):
         t2.join()
         thr_time = time.time()-start_time
         self.assertGreaterEqual(seq_time - thr_time, -1, 'WNTR threading took 1s longer than sequential')
-
+        
+    @pytest.mark.time_consuming
     def test_Net6_mod_performance(self):
         head_diff_abs_threshold = 1e-3
         demand_diff_abs_threshold = 1e-5
