@@ -1,14 +1,12 @@
-v1.0.0 (main)
+v1.0.0 (March 30, 2023)
 ---------------------------------------------------
 WNTR version 1.0.0 has undergone extensive testing 
-with a wide range of water distribution systems model
+with a wide range of water distribution system models
 and analysis options. The software has also successfully been
 used by external research groups and in analysis that uses large-scale 
-water distribution systems models, see 
+water distribution system models. See 
 `User community <https://wntr.readthedocs.io/en/latest/users.html>`_ 
-for a list of publications and software that use WNTR.
-WNTR will continue to be developed to support water distribution 
-system resilience analysis. 
+for a list of publications and software that uses WNTR.
 
 * Updated copyright and added EPANET license
   `#336 <https://github.com/USEPA/WNTR/pull/336>`_.
