@@ -350,7 +350,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
     >>> cmap = wntr.graphics.random_colormap(N) # random color map helps view segments
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=link_segments, node_size=0, 
     ...     link_width=2, node_range=[0,N], link_range=[0,N], node_cmap=cmap, 
-    ...     link_cmap=cmap, link_colorbar_label='Segment')
+    ...     link_cmap=cmap, link_colorbar_label='Segment ID')
     >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, add_colorbar=False, 
     ...     include_network=False, ax=ax)
 

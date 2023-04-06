@@ -11,7 +11,7 @@ To start using WNTR, open a Python console or IDE like Spyder and import the pac
 
 	import wntr	
 
-WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/main/examples/getting_started.py>`_, shown below that uses the `EPANET Example Network 3 (Net3) INP file <https://github.com/USEPA/WNTR/blob/main/examples/networks/Net3.inp>`_.
+WNTR comes with a simple `getting started example <https://github.com/USEPA/WNTR/blob/main/examples/getting_started.py>`_, shown below, that uses the `EPANET Example Network 3 (Net3) INP file <https://github.com/USEPA/WNTR/blob/main/examples/networks/Net3.inp>`_.
 This example demonstrates how to:
 
 * Import WNTR
@@ -27,11 +27,11 @@ This example demonstrates how to:
 
 .. literalinclude:: ../examples/getting_started.py
 
-Additional examples are included throughout the WNTR documentation. The examples provided in the documentation assume
+Additional examples of Python code snippets are included throughout the WNTR documentation. The examples provided in the documentation assume
 that a user has experience using EPANET (https://www.epa.gov/water-research/epanet) and Python (https://www.python.org/), including the ability to install and use additional Python packages, such as those listed in :ref:`requirements` and :ref:`optional_dependencies`.
 
-Several EPANET INP files and example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/main/examples>`_.
-Example networks range from a simple 9 node network to a 3,000 node network.
+Several EPANET INP files and Python code example files are also included in the WNTR repository in the `examples folder <https://github.com/USEPA/WNTR/blob/main/examples>`_.
+Example EPANET INP files are for networks that range from a simple 9 node network to a 3,000 node network.
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at
 https://uknowledge.uky.edu/wdsrd.
@@ -50,10 +50,10 @@ Example files can be run as follows:
 * Open the example file within an IDE like Spyder and run or step through the file. 
 
     
-Additional examples
+Example Files
 -----------------------
 
-WNTR comes with additional examples that illustrate advanced use cases, including:
+WNTR comes with Python code examples that illustrate advanced use cases, including:
 
 * `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_: 
   This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.

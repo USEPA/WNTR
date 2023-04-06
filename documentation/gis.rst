@@ -171,7 +171,7 @@ Geometry
         >>> wn_gis = wntr.network.to_gis(wn, pumps_as_points=True, 
     	...     valves_as_points=True)
 		
-    * Pipes that do not contain vertices are stored as a LineString while pipes that contain 
+    * Pipes that do not contain vertices, interior vertex points that allow the visual depiction of curved pipes, are stored as a LineString while pipes that contain 
       vertices are stored as a MultiLineString.
 
     .. _table-geometry-type:
@@ -597,7 +597,7 @@ The pipes are colored based upon their maximum earthquake probability.
 
     >>> ax = earthquake_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['max'], link_width=1.5, 
-    ...     node_range=[0,1], link_range=[0,1], ax=ax)
+    ...     node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Earthquake Probability')
 
 .. doctest::
     :skipif: gpd is None
@@ -612,7 +612,7 @@ The pipes are colored based upon their maximum earthquake probability.
    :width: 800
    :alt: Intersection of pipes with earthquake fault lines in EPANET example Net1
 
-   Net1 with example earthquake fault lines intersected with pipes.  
+   Net1 with example earthquake fault lines intersected with pipes, which are colored based upon their maximum earthquake probability.  
    
 The intersect function can also be used to identify pipes that cross each fault simply by reversing 
 the order in which the geometries intersect, as shown below:
@@ -680,7 +680,7 @@ The pipes are colored based upon their weighted mean landslide probability.
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], 
-    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax)
+    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Landslide Probability')
 
 .. doctest::
     :skipif: gpd is None
@@ -695,7 +695,7 @@ The pipes are colored based upon their weighted mean landslide probability.
    :width: 800
    :alt: Intersection of junctions with landslide zones in EPANET example Net1
 
-   Net1 with example landslide zones intersected with pipes. 
+   Net1 with example landslide zones intersected with pipes, which are colored based upon their weighted mean landslide probability. 
    
 **By reversing the order of GeoDataFrames in the intersection function**, 
 the pipes that intersect each landslide zone and information about 
