@@ -1,4 +1,6 @@
-![WNTR](documentation/figures/logo.jpg)
+<h1>
+<img src="https://github.com/kaklise/WNTR/blob/main/documentation/figures/logo.jpg" alt="WNTR" width="300">
+</h1><br>
 =======================================
 
 [![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml)
