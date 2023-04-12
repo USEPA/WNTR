@@ -1,5 +1,5 @@
 <h1>
-<img src="https://raw.githubusercontent.com/kaklise/wntr/logo/documentation/figures/logo_highres.jpg" width="400">
+<img src="https://raw.githubusercontent.com/kaklise/wntr/logo/documentation/figures/logo.jpg" width="400">
 </h1><br>
 
 [![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml)
