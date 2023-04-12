@@ -1,4 +1,4 @@
-![WNTR](documentation/figures/logo.png)
+![WNTR](documentation/figures/logo.jpg)
 =======================================
 
 [![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml)
