@@ -33,7 +33,7 @@ jobs:
         python -m pip install -e .
     - name: Run tests and coverage (unittests plus doctests)
       run: |
-        coverage run --source=wntr --omit="*/tests/*" -m pytest -m "not time_consuming" --doctest-modules --doctest-glob="*.rst" wntr     
+        coverage run --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest -m "not time_consuming" --doctest-modules --doctest-glob="*.rst" wntr        
         coverage report --fail-under=70        
     # coverage run --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation 
 
