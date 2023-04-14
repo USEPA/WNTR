@@ -85,7 +85,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         Node size 
 
     node_range: list, optional
-        Node range ([None,None] indicates autoscale)
+        Node color range ([None,None] indicates autoscale)
         
     node_alpha: int, optional
         Node transparency
@@ -100,7 +100,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         Link width
 		
     link_range : list, optional
-        Link range ([None,None] indicates autoscale)
+        Link color range ([None,None] indicates autoscale)
 		
     link_alpha : int, optional
         Link transparency

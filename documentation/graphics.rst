@@ -143,6 +143,8 @@ function :class:`~wntr.graphics.network.network_animation`. Node and link attrib
 index is time and columns are the node or link name.  
 
 The following example creates a network animation of water age over time.
+The ``node_range`` parameter indicates the minimum and maximum values to use 
+when mapping colors to ``node_attribute`` values.
 
 .. doctest::
 

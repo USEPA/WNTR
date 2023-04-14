@@ -168,6 +168,12 @@ Step 3: Test installation
 	
 		ImportError: No module named wntr
 	
+	To verify the version of WNTR that has been installed, continue in the Python console and run::
+	
+		print(wntr.__version__)
+		
+	This will print the WNTR version to the screen, for example, "1.0.0".
+	
 	See :ref:`getting_started` for a simple example that can also be used to test installation.
 	A full set of software tests can also be run locally to ensure proper installation, see :ref:`software_tests` for more details.
 

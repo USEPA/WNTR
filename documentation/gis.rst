@@ -391,7 +391,7 @@ The GeoPandas ``read_file`` method is used to read the GeoJSON file into a GeoDa
     2    8000  POINT (51.20000 71.10000)
 
 The following example uses the function :class:`~wntr.gis.snap` to snap hydrant locations to the nearest junction 
-within a tolerance of 5.0 degrees.
+within a tolerance of 5.0 units (the tolerance is in the units of the GIS coordinate system).
 	
 .. doctest::
     :skipif: gpd is None
