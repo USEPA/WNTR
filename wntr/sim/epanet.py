@@ -4,6 +4,8 @@ import wntr.epanet.io
 import warnings
 import logging
 import numpy as np
+import shutil
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +65,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
-                version=2.2, convergence_error=False, clean_temp='none'):
+                version=2.2, convergence_error=False, clean_temp='none', verbose=False, debug=False):
 
         """
         Run the EPANET simulator.
@@ -103,13 +105,22 @@ class EpanetSimulator(WaterNetworkSimulator):
             If "results", delete only results binary and report (leaves the inp file). If "none", none of 
             the three will be deleted.
         """
+        if debug:
+            verbose = True
+
         if isinstance(version, str):
             version = float(version)
 
         if file_prefix == 'random':
-            file_prefix = f'temp{np.random.randint(1, high=1e9)}.inp'
-            clean_temp = True
+            file_prefix = f'temp{np.random.randint(1, high=1e9)}'
 
+            # avoid name collisions
+            while os.path.exists(file_prefix + '.inp'):
+                file_prefix = f'temp{np.random.randint(1, high=1e9)}'
+            
+            clean_temp = 'all'
+            if verbose:
+                print(f'Using temporary file prefix {file_prefix}')
         try:
             inpfile = file_prefix + '.inp'
             self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
@@ -149,12 +160,18 @@ class EpanetSimulator(WaterNetworkSimulator):
                 self._wn.links_gis['max_flow'] = results.link['flowrate'].iloc[-nsteps:].max()
                 self._wn.links_gis['max_flow_abs'] = results.link['flowrate'].iloc[-nsteps:].abs().max()
             except RuntimeError:
+                if verbose:
+                    print('Could not add results to GIS')
                 pass
             
             return results
 
         except Exception as e:
-            print(e)
+            if debug:
+                if not os.path.isdir('error_inptfiles'):
+                    os.mkdir('error_inptfiles')
+                shutil.copy(inpfile, 'error_inptfiles')
+                print('Error in pipe file ' + inpfile, e)
             return None
 
         finally:

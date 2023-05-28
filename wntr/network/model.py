@@ -32,7 +32,6 @@ import warnings
 import pyproj
 import requests
 import urllib
-from wntr.network.data import SnowflakeAquisitionService
 
 from wntr.utils.constants import *
 
@@ -83,7 +82,7 @@ class WaterNetworkModel(AbstractModel):
     """
 
     def __init__(self, inp_file_name: str=None, crs: str=None, pressure_zone_layer: gpd.GeoDataFrame=None, 
-                    service_points_layer: gpd.GeoDataFrame=None, online_data_kwargs: dict=None):
+                    service_points_layer: gpd.GeoDataFrame=None, online_data_kwargs: dict=None, retrieve_elevations: bool=False):
 
         # Network name
         self.name = None
@@ -130,7 +129,7 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None  # the last time at which results were accepted
 
         if crs is not None or pressure_zone_layer is not None:
-            self._create_model_gis(crs, pressure_zone_layer)
+            self._create_model_gis(crs, pressure_zone_layer, retrieve_elevations)
 
         if online_data_kwargs is not None:
             for kw in ['business_unit', 'snowflake_username', 'snowflake_password', 'snowflake_account', 
@@ -1767,7 +1766,7 @@ class WaterNetworkModel(AbstractModel):
 
         return
 
-    def _create_model_gis(self, crs: str=None, pressure_zone_layer: gpd.GeoDataFrame=None) -> None:
+    def _create_model_gis(self, crs: str=None, pressure_zone_layer: gpd.GeoDataFrame=None, retrieve_elevations=False) -> None:
         """Initializes the model's GIS with the coordinates specified in the EPANET file and either a specified coordinate system or the same coordinate system of the pressure zones shapefile, if the latter is passed to the function.
 
         Parameters
@@ -1790,8 +1789,8 @@ class WaterNetworkModel(AbstractModel):
             If "pressure_zone_layer" is provided its crs will be used, so do not pass a "crs.
         """
 
-        self._nodes_gis = NodesGIS(self, crs=crs, pressure_zone=pressure_zone_layer)
-        self._links_gis = LinksGIS(self, crs=crs, pressure_zone=pressure_zone_layer)
+        self._nodes_gis = NodesGIS(self, crs=crs, pressure_zone=pressure_zone_layer, retrieve_elevations=retrieve_elevations)
+        self._links_gis = LinksGIS(self, crs=crs, pressure_zone=pressure_zone_layer, retrieve_elevations=retrieve_elevations)
         self._pressure_zones = pressure_zone_layer
 
         for name, n in self._nodes_gis.iterrows():
@@ -1799,8 +1798,14 @@ class WaterNetworkModel(AbstractModel):
         for name, l in self._links_gis.iterrows():
             self.get_link(name).pressure_zone = l.pressure_zone
 
-        for node in self.query_node_attribute('elevation', np.equal, 0).index:
-            self.get_node(node).elevation = self.nodes_gis.elevation[node]
+        if retrieve_elevations:
+            for node in self.query_node_attribute('elevation', np.equal, 0).index:
+                self.get_node(node).elevation = self.nodes_gis.elevation[node]
+
+    def reset_gis(self):
+        self._nodes_gis = None
+        self._links_gis = None
+        self._pressure_zones = None
 
     def _assign_highest_diameter_link(self) -> None:
         """Registers in each node the diameter of the largest pipe connected to it.
@@ -3468,9 +3473,12 @@ class ModelGIS(gpd.GeoDataFrame, ABC):
 
 class NodesGIS(ModelGIS):
     
-    def __init__(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], crs: str=None, pressure_zone: gpd.GeoDataFrame=None):
+    def __init__(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], crs: str=None, 
+                 pressure_zone: gpd.GeoDataFrame=None, retrieve_elevations=False):
+        print('Creating NodesGIS...')
         super().__init__(base_model, crs, pressure_zone)
-        self.assign_elevation()
+        if retrieve_elevations:
+            self.assign_elevation()
 
     @staticmethod
     def get_pattern(node, wn):
@@ -3518,12 +3526,12 @@ class NodesGIS(ModelGIS):
     def _get_type(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS]) -> pd.Series:
         return base_model.query_node_attribute('node_type')
 
-    def assign_elevation(self, verbose=False):  
+    def assign_elevation(self, verbose=True):  
         """Assigns an elevation to nodes with zero elevation.
         """
 
         # USGS Elevation Point Query Service
-        url = r'https://nationalmap.gov/epqs/pqs.php?'
+        url = r'https://epqs.nationalmap.gov/v1/json?'
 
         if self.geometry.crs is None:
             self.geometry = self.geometry.set_crs(self.crs)
@@ -3538,16 +3546,17 @@ class NodesGIS(ModelGIS):
             lat, lon = nodes_nad83.loc[junc].geometry.coords.xy
             # define rest query params
             params = {
-                'output': 'json',
-                'y': lon[0],
                 'x': lat[0],
-                'units': 'Meters'
+                'y': lon[0],
+                'wkid': 4326,
+                'units': 'Feet',
+                'includeDate': 'false'
             }
 
             elev = self._get_node_elevation(url, junc, params)
 
             # format query string and return query value
-            if elev > 0:
+            if elev != 0:
                 if verbose:
                     print(f'Assigned elevation of {elev:.2f} ({elev / 0.3048:.2f} ft) to junction {junc}.')
                 self.loc[junc, 'elevation'] = elev
@@ -3557,16 +3566,16 @@ class NodesGIS(ModelGIS):
     def _get_node_elevation(self, url, junc, params):
         # format query string and return query value
         elev = 0
-        for i in range(10):
+        for i in range(5):
             try:
                 result = requests.get((url + urllib.parse.urlencode(params)))
-                elev = float(result.json()['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation'])
+                elev = float(result.json()['value'])
                 break
             except Exception as e:
-                sleep(10)
+                sleep(0.5)
             
         if elev == 0:
-            juncs_w_elev = self.loc[self.query_node_attribute('elevation', np.greater, 0).index]
+            juncs_w_elev = self.loc[self.elevation > 0]
             geometry = self.loc[junc].geometry
             closest_junc_ix = juncs_w_elev.distance(geometry).argmin()
             elev = juncs_w_elev.iloc[closest_junc_ix].elevation
@@ -3575,9 +3584,10 @@ class NodesGIS(ModelGIS):
                 
         return elev
 
-    def update(self, other: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS]) -> None:
+    def update(self, other: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], retrieve_elevations=False) -> None:
         self._update(other, 'node_name_list')
-        self.assign_elevation()
+        if retrieve_elevations:
+            self.assign_elevation()
         return self.elevation
 
     def __deepcopy__(self, memo=...):
@@ -3587,7 +3597,8 @@ class NodesGIS(ModelGIS):
 class LinksGIS(ModelGIS):
 
     def __init__(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], 
-            crs: str=None, pressure_zone: gpd.GeoDataFrame=None):
+            crs: str=None, pressure_zone: gpd.GeoDataFrame=None, retrieve_elevations=False):
+        print('Creating LinksGIS...')
         super().__init__(base_model, crs, pressure_zone)
 
     def _create_data_and_geometry_epanet(self, base_model: WaterNetworkModel, 
@@ -3803,51 +3814,3 @@ class HydrantsParser():
     @property
     def hyd_branch_line(self):
         return self._hyd_branch_line
-
-
-class ServicePointGIS(ModelGIS):
-    def __init__(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], 
-            crs: str = None, pressure_zone_shp: gpd.GeoDataFrame = None):
-        super().__init__(base_model, crs, pressure_zone_shp)
-
-    def __init__(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], 
-            crs: str = None, pressure_zone: gpd.GeoDataFrame = None):
-        assert type(base_model) is gpd.GeoDataFrame, f'{type(self)} can only be created from shape files.'
-        if pressure_zone is None:
-            super().__init__(base_model, base_model.crs.srs, None)
-        else:
-            super().__init__(base_model, None, pressure_zone)
-
-    def _create_data_and_geometry_epanet(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS], 
-            elements: Iterable=None) -> Tuple[Iterable, Iterable]:
-        raise TypeError(f'{type(self)} can only be created from shapefiles (pased into GeoDataFrames).')
-
-    def _get_type(self, base_model: Union[WaterNetworkModel, gpd.GeoDataFrame, ModelGIS]) -> pd.Series:
-        assert type(base_model) is gpd.GeoDataFrame, f'{type(self)} can only be created from shape files.'
-        return ['junction'] * len(base_model)
-
-
-class LiveDataCenter(ABC):
-    def __init__(self, business_unit, snowflake_username, snowflake_password, snowflake_account, snowflake_database, 
-                    snowflake_schema, snowflake_warehouse, snowflake_role) -> None:
-        self._query_service = SnowflakeAquisitionService(business_unit, snowflake_username, snowflake_password, 
-                        snowflake_account, snowflake_database, snowflake_schema, snowflake_warehouse, snowflake_role)
-        self._data = None
-
-    @abstractmethod
-    def update(self, wn, start_date_time, end_date_time, aux_data=None):
-        raise NotImplementedError('Not yet implemented')
-        self._data = self._query_service.get(start_date_time, end_date_time, aux_data)
-        return self._data
-
-
-class DemandDataCenter(LiveDataCenter):
-    def __init__(self, business_unit, snowflake_username, snowflake_password, snowflake_account, snowflake_database, 
-                    snowflake_schema, snowflake_warehouse, snowflake_role) -> None:
-        super().__init__(business_unit, snowflake_username, snowflake_password, snowflake_account, snowflake_database, 
-                            snowflake_schema, snowflake_warehouse, snowflake_role)
-    
-    def update(self, wn, start_date_time, end_date_time, aux_data=None):
-        data = super().update(wn, start_date_time, end_date_time, aux_data)
-        return data
-
