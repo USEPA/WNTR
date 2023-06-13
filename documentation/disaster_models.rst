@@ -153,7 +153,7 @@ and check valves next to reservoirs.
 .. note:: 
    The power outage is added to the WaterNetworkModel as a Rule.  
    If the WaterNetworkModel includes Controls that impact pumps, 
-   it is recommended that those Controls are converted to Rules using 
+   it is recommended that those Controls are converted to Rules  
    to ensure that the power outage is evaluated in a consistent manner.  
    The method :class:`~wntr.network.model.WaterNetworkModel.convert_controls_to_rules`
    converts all Controls to Rules, with an option input argument to set priority.  
@@ -182,7 +182,7 @@ The following example adds fire flow conditions at a specific node.
 
 Environmental change
 ---------------------
-Environmental change is a long term problem for water distribution 
+Environmental change is a long-term problem for water distribution 
 systems. Changes in the environment could lead to 
 reduced water availability, 
 damage from weather incidents, 

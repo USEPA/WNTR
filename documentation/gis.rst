@@ -47,7 +47,7 @@ The following section describes capabilities in WTNR that use GeoPandas GeoDataF
 
 .. note:: 
    Functions that use GeoDataFrames require the Python package **geopandas** [JVFM21]_ 
-   and **rtree** [rtree]_, both are optional dependencies of WNTR.
+   and **rtree** [rtree]_. Both are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.
@@ -101,7 +101,7 @@ Individual GeoDataFrames are obtained as follows (Note that the example network,
     >>> wn_gis.pumps # doctest: +SKIP
     >>> wn_gis.valves # doctest: +SKIP
 	
-For example, the junctions GeoDataFrame contains the following information
+For example, the junctions GeoDataFrame contains the following information:
 
 .. doctest::
     :skipif: gpd is None
@@ -264,7 +264,7 @@ Several important points on CRS are listed below.
 * Projected CRSs are preferred for more accurate distance calculations.
 
 The following example reads a GeoJSON file and overrides the CRS to change it from EPSG:4326 to EPSG:3857.
-(Note, this does not change the coordinates in the geometry column).
+(Note, this does not change the coordinates in the geometry column.)
 
 .. doctest::
     :skipif: gpd is None
@@ -294,8 +294,8 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
 
     >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
 
-The following example reads a GeoJSON file and transforms the CRS to EPSG:3857 
-(Note, this transforms the coordinates in the geometry column).
+The following example reads a GeoJSON file and transforms the CRS to EPSG:3857. 
+(Note, this transforms the coordinates in the geometry column.)
 
 .. doctest::
     :skipif: gpd is None
@@ -372,7 +372,7 @@ Snap hydrants to junctions
 
 GIS data which include the network hydrant locations is useful in a resilience analysis. In particular, 
 this information identifies which junctions could have their demands increased to simulate the opening 
-of hydrants to fight fires or flush contaminated water out of the network either of which could caused by a disaster scenario. 
+of hydrants to fight fires or flush contaminated water out of the network, either of which could caused by a disaster scenario. 
 The following example highlights the process to snap hydrants to junctions. The example dataset of hydrant 
 locations is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Point`` geometries and a 
 `demand` column that defines fire flow requirements. 
@@ -631,7 +631,7 @@ the order in which the geometries intersect, as shown below:
 Assign landslide probability to pipes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Landslide hazard zones GIS data can be used to identify pipes with the potential to be effected during a landslide. 
+Landslide hazard zones GIS data can be used to identify pipes with the potential to be affected during a landslide. 
 The following example highlights the process to assign landslide probabilities to pipes. The landslide hazard zones example dataset 
 is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.LineString`` geometries and a 
 `Pr` column which contains the probability of damage from a landslide in that zone.

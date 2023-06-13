@@ -199,7 +199,7 @@ and building the documentation.
 
 .. note:: 
    WNTR includes C++ code that is built into shared object files (e.g., pyd for Windows)
-   during the setup process. This requires that the developer has a C++ compiler on their path.
+   during the setup process. This requires that the developer has a C++ compiler located in a folder specified in their PATH.
    When installing WNTR through PyPI or conda, the shared object files do not need to be built 
    and no compiler is needed.
 
