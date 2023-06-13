@@ -58,7 +58,7 @@ Dictionary representation
 -------------------------
 
 The :class:`~wntr.network.io.to_dict` function 
-creates a dictionary from a WaterNetworkModel.
+creates a dictionary, a Python data structure, from a WaterNetworkModel.
 The dictionary contains the following keys:
  
 * nodes (which contains junctions, tanks, and reservoirs)

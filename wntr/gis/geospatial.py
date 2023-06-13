@@ -49,7 +49,7 @@ def snap(A, B, tolerance):
         
         If B contains Lines or MultiLineString, columns include:
             - link: closest Line in B to Point in A
-            - node: start or end node of Line in B that is closest to the snapped point
+            - node: start or end node of Line in B that is closest to the snapped point (if B contains columns "start_node_name" and "end_node_name")
             - snap_distance: distance between Point A and snapped point
             - line_position: normalized distance of snapped point along Line in B from the start node (0.0) and end node (1.0)
             - geometry: GeoPandas Point object of the snapped point
@@ -126,9 +126,12 @@ def snap(A, B, tolerance):
         snapped_points = gpd.GeoDataFrame(data=closest ,geometry=snapped_points, crs=crs)
         # determine whether the snapped point is closer to the start or end node
         snapped_points["line_position"] = closest.geometry.project(snapped_points, normalized=True)
-        snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
-        snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
-        snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
+        if ("start_node_name" in closest.columns) and ("end_node_name" in closest.columns):
+            snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
+            snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
+            snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
+        else:
+            snapped_points = snapped_points[["link", "snap_distance", "line_position", "geometry"]]
         snapped_points.index.name = None
         
     return snapped_points
@@ -165,17 +168,18 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         Column name in B used to assign a value to each geometry.
         Default is None.
     include_background : bool (optional) 
-         Include background, defined as space covered by A that is not covered by B 
-         (overlay difference between A and B). The background geometry is added
-         to B and is given the name 'BACKGROUND'. Default is False.
+        Include background, defined as space covered by A that is not covered by B 
+        (overlay difference between A and B). The background geometry is added
+        to B and is given the name 'BACKGROUND'. Default is False.
     background_value : int or float (optional)
         The value given to background space. This value is used in the intersection 
         statistics if a B_value column name is provided. Default is 0.
-        
+      
     Returns
     -------
-    pandas DataFrame
+    intersects : DataFrame
         Intersection statistics (index = A.index, columns = defined below)
+        
         Columns include:
             - n: number of intersecting B geometries
             - intersections: list of intersecting B indices

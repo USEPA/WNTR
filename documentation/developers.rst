@@ -15,6 +15,8 @@ examples,
 bug reports,
 feature requests, and
 ways to contribute.
+Developers should follow the :ref:`developer_instructions` to 
+clone and setup WNTR.
 
 GitHub repository
 ---------------------
@@ -34,12 +36,12 @@ New tests are developed each time new functionality is added to the code.
 Testing status (passed/failed) and code coverage statistics are posted on 
 the README section at https://github.com/USEPA/WNTR.
 	
-Tests can also be run locally using the Python package nose.  
-For more information on nose, see  http://nose.readthedocs.io/.
-The nose package comes with a command line software tool called nosetests.
+Tests can also be run locally using the Python package pytest.  
+For more information on pytest, see  https://docs.pytest.org/.
+The pytest package comes with a command line software tool.
 Tests can be run in the WNTR directory using the following command in a command line/PowerShell prompt::
 
-	nosetests -v --with-coverage --cover-package=wntr wntr
+	pytest wntr
 
 In addition to the publicly available software tests run using GitHub Actions,
 WNTR is also tested on private servers using several large water utility network models.
@@ -56,6 +58,14 @@ public functions, methods, and classes.
 New content is marked `Draft`.
 Python documentation string formatting can be found at
 https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+
+To build the documentation locally, run the following command in a 
+command line/PowerShell prompt from the documentation directory::
+
+	make html
+
+HTML files are created in the ``documentation/_build/html`` directory.
+Open ``index.html`` to view the documentation.
 
 Examples
 ---------------------

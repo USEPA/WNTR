@@ -15,22 +15,22 @@ of elements and k elements fail.
 
 In water distribution systems analysis, N-1 contingency analysis is commonly called criticality analysis [WaWC06]_.
 WNTR is commonly used to run criticality analysis, where a series of simulations are run to determine the impact of 
-individuals failures on the system.  
+individual failures on the system.  
 This framework can be expanded to include analysis where two or more elements fail at one time or in succession.
 Metrics such as water service availability and water pressure are commonly used 
 to quantify impact.  Analysis can include different components, including:
 
 * Pipe criticality
 * Pump criticality
-* Segment criticality (based on valve isolation, see ref:`valvelayer: for more details)
+* Segment criticality (based on valve isolation, see :ref:`valvelayer` for more details)
 * Fire flow criticality
 
 In each case, a single element is changed in each simulation.  
 The pipe, pump, or segment is closed in the case of pipe, pump, and segment criticality.
 Demand at hydrants is increased in the case of fire flow criticality.
-Summary metrics are collected for each simulation to determine the relative impact of each simulation.
+Summary metrics are collected for each simulation to determine the relative impact of each element.
 
 The `pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_ 
 runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure. 
 Another version of the pipe criticality analysis is available as a Jupyter Notebook 
-`pipe criticality demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`. 
+`pipe criticality demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`_. 

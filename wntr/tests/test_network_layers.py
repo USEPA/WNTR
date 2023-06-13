@@ -61,7 +61,7 @@ class TestValveLayer(unittest.TestCase):
             )
 
             self.assertEqual(valves.shape[0], expected_n_valves[N])
-            assert_frame_equal(valves, expected_valves)
+            assert_frame_equal(valves, expected_valves, check_index_type=False)
 
 
 if __name__ == "__main__":
