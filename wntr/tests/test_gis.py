@@ -4,6 +4,7 @@ import warnings
 import os
 from os.path import abspath, dirname, isfile, join
 
+import math
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -111,62 +112,61 @@ class TestGIS(unittest.TestCase):
         # weighted mean = (1*20+0.5*30)/2 = 17.5
         expected = pd.Series({'intersections': ['2','3'], 'values': [20,30]})
         expected['n'] = len(expected['values'])
+        expected['fraction'] = [np.nan, np.nan]
         expected['sum'] = float(sum(expected['values']))
         expected['min'] = float(min(expected['values']))
         expected['max'] = float(max(expected['values']))
         expected['mean'] = expected['sum']/expected['n']
         expected = expected.reindex(stats.columns)
         
+        self.assertEqual(stats.shape[0],5)
         assert_series_equal(stats.loc['22',:], expected, check_dtype=False, check_names=False)
-        
-        # Junction 31: no intersections
-        expected = pd.Series({'intersections': [], 'values': [], 'n': 0, 
-                              'sum': np.nan, 'min': np.nan, 'max': np.nan,
-                              'mean': np.nan, })
-        
-        assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
     def test_intersect_lines_with_polygons(self):
         
         bv = 0
-        stats = wntr.gis.intersect(self.gis_data.pipes, self.polygons, 'value', True, bv)
+        stats = wntr.gis.intersect(self.gis_data.pipes, self.polygons, attributes=['value'], include_background=True)
 
-        ax = self.polygons.plot(column='value', alpha=0.5)
-        ax = wntr.graphics.plot_network(self.wn, ax=ax)
+        # ax = self.polygons.plot(column='value', alpha=0.5)
+        # ax = wntr.graphics.plot_network(self.wn, ax=ax)
         
         # Pipe 22 intersects poly2 100%, val=20, intersects poly3 50%, val=30
-        expected_weighted_mean = (20*1+30*0.5)/1.5
-        expected = pd.Series({'intersections': ['2','3'], 'values': [20,30], 'weighted_mean': expected_weighted_mean})
-        expected['n'] = len(expected['values'])
-        expected['sum'] = float(sum(expected['values']))
-        expected['min'] = float(min(expected['values']))
-        expected['max'] = float(max(expected['values']))
-        expected['mean'] = expected['sum']/expected['n']
+        expected = pd.Series({
+            'intersections': ['2','3'],
+            'fraction': [1.0,0.5],
+            'n': 2,
+            'value': [20.0,30.0]
+            })
         expected = expected.reindex(stats.columns)
         
         assert_series_equal(stats.loc['22',:], expected, check_dtype=False, check_names=False)
         
         # Pipe 31: no intersections
-        expected = pd.Series({'intersections': ['BACKGROUND'], 'values': [bv],
-                              'n': 1, 'sum': bv, 'min': bv, 'max': bv,
-                              'mean': bv, 'weighted_mean': bv})
+        expected = pd.Series({
+            'intersections': ['BACKGROUND'],
+            'fraction': [1.0],
+            'n': 1,
+            'value': [np.nan],
+            })
         
         assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
         # Pipe 122
         self.assertEqual(stats.loc['122','intersections'], ['BACKGROUND', '2', '3'])
-        # total length = 30
-        expected_weighted_mean = (bv*(5/30) + 30*(25/30) + 20*(10/30))/(40/30)
-        self.assertAlmostEqual(stats.loc['122','weighted_mean'], expected_weighted_mean, 2)
         
     
     def test_intersect_polygons_with_lines(self):
         
         stats = wntr.gis.intersect(self.polygons, self.gis_data.pipes)
         
-        expected = pd.DataFrame([{'intersections': ['10', '11', '110', '111', '112', '12'], 'n': 6},
-                                 {'intersections': ['111', '112', '113', '121', '122', '21', '22'], 'n': 7},
-                                 {'intersections': ['112', '122', '21', '22'], 'n': 4}])
+        expected = pd.DataFrame([
+            {'intersections': ['10', '11', '110', '111', '112', '12'], 
+            'fraction': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'n': 6},
+            {'intersections': ['111', '112', '113', '121', '122', '21', '22'], 
+            'fraction': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'n': 7},
+            {'intersections': ['112', '122', '21', '22'], 
+            'fraction': [0.0, 0.0, 0.0, 0.0], 'n': 4}
+            ])
         expected.index=['1', '2', '3']
     
         assert_frame_equal(stats, expected, check_dtype=False)
@@ -181,18 +181,16 @@ class TestGIS(unittest.TestCase):
         
         # No value
         stats = wntr.gis.intersect(gis_data.pipes, self.polygons)
-        assert stats.shape == (14,2)
+        assert stats.shape == (13,3)
         
         # With value
-        stats = wntr.gis.intersect(gis_data.pipes, self.polygons, 'value')
-        assert stats.shape == (14,8)
+        stats = wntr.gis.intersect(gis_data.pipes, self.polygons, ['value'])
+        assert stats.shape == (13,4)
         
-        assert stats.loc['22_0', 'weighted_mean'] == stats.loc['22_0', 'mean'] # zero length pipe
-        assert stats.loc['22_A', 'weighted_mean'] == 20 # overlaps with 20 and 30, but zero length with 30
-        assert stats.loc['22', 'weighted_mean'] == 25 # overlaps with 20 and 30 across the entire pipe
-        
-        assert (stats.loc[stats['n']>0, 'weighted_mean'] >= stats.loc[stats['n']>0, 'min']).all()
-        assert (stats.loc[stats['n']>0, 'weighted_mean'] <= stats.loc[stats['n']>0, 'max']).all()
+        assert math.isnan(stats.loc['22_0', 'fraction'][0]) # zero length pipe
+        assert math.isnan(stats.loc['22_0', 'fraction'][1]) # zero length pipe
+        assert stats.loc['22_A', 'fraction'] == [1.0, 0.0] # overlaps with 20 and 30, but zero length with 30
+        assert stats.loc['22', 'fraction'] == [1.0, 1.0] # overlaps with 20 and 30 across the entire pipe
         
     def test_set_crs_to_crs(self):
         # Test uses transformation from https://epsg.io/
