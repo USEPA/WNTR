@@ -1,10 +1,10 @@
 include README.md
-include LICENSE.txt
+include LICENSE.md
 include wntr/epanet/Darwin/*
 include wntr/epanet/Linux/*
 include wntr/epanet/Windows/*
-include wntr/sim/aml/*.pyd
-include wntr/sim/aml/*.so
-include wntr/sim/network_isolation/*.pyd
-include wntr/sim/network_isolation/*.so
+include wntr/sim/aml/evaluator*
+include wntr/sim/aml/numpy.i
+include wntr/sim/network_isolation/network_isolation*
+include wntr/sim/network_isolation/numpy.i
 include wntr/tests/networks_for_testing/*.inp

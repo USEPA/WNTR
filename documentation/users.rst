@@ -8,8 +8,9 @@ User community
 ================================
 
 This page is intended to capture research using WNTR and will be updated periodically.
-If you have related software or a publication that you'd like 
-to add to this page, please let us know or submit a pull request with the update.
+If users have related software or a publication that they would like 
+to add to this page, please email the contacts listed on the WNTR GitHub webpage (https://github.com/USEPA/WNTR) 
+or submit a pull request with the update.
 
 Related software
 -----------------
