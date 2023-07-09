@@ -320,7 +320,7 @@ class Model(object):
         del self._params_referenced_by_con[con]
         del self._floats_referenced_by_con[con]
 
-    def evaluate_residuals(self, x=None, num_threads=4):
+    def evaluate_residuals(self, x=None):
         if x is not None:
             self._evaluator.load_var_values_from_x(x)
         r = self._evaluator.evaluate(len(self._con_ccon_map))
