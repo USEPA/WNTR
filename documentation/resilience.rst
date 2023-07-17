@@ -74,7 +74,7 @@ WNTR includes additional topographic metrics to help compute resilience.
                                           measure of the number of branches in a network.  A node with degree 0 is not 
                                           connected to the network.  Terminal nodes have degree 1. A node connected to every node (including itself) 
                                           has a degree equal to the number of nodes in the network.  
-                                          The average node degree is a system wide metric used to describe the number of 
+                                          The average node degree is a system-wide metric used to describe the number of 
                                           connected links in a network.
 
    Link density                           Link density is the ratio between the total number of links and the maximum 
@@ -114,7 +114,7 @@ WNTR includes additional topographic metrics to help compute resilience.
    Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
                                           other nodes in the network.  Shortest path length is a value between 0 and 
                                           the number of links in the network.
-                                          The average shortest path length is a system wide metric used to describe the number
+                                          The average shortest path length is a system-wide metric used to describe the number
                                           of links between a node and all other nodes.
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
@@ -343,7 +343,7 @@ The following examples compute hydraulic metrics, including:
       >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
       ...     threshold)
     
-* Water service availability (Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0).
+* Water service availability [Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0)].
 	
   .. doctest::
 
@@ -483,7 +483,7 @@ The following examples use the results from the chemical water quality simulatio
       >>> flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
       >>> EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, detection_limit)
     
-* Population impacted by mass consumed over a specified threshold.
+* Population impacted by mass consumed over a specified threshold
 
   .. doctest::
 

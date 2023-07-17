@@ -36,9 +36,9 @@ Publications
 
 * Antonowicz, A., & Urbaniak, A. (2022). Optimization of the process of restoring the continuity of the WDS based on the matrix and genetic algorithm approach. Bulletin of the Polish Academy of Sciences: Technical Sciences, e141594-e141594.
 
-* Bjerke, M. (2019). Leak Detection in Water Distribution Networks using Gated Recurrent Neural Networks, Master's thesis, Norwegian University of Science and Technology (NTNU)
+* Bjerke, M. (2019). Leak Detection in Water Distribution Networks using Gated Recurrent Neural Networks, Master's thesis, Norwegian University of Science and Technology (NTNU).
 
-* Bunn, B. B. (2018). An operational model of interdependent water and power distribution infrastructure systems. Naval Postgraduate School, Monterey, CA
+* Bunn, B. B. (2018). An operational model of interdependent water and power distribution infrastructure systems. Naval Postgraduate School, Monterey, CA.
 
 * Fan, X., Zhang, X., & Yu, X. B. (2021). Machine learning model and strategy for fast and accurate detection of leaks in water supply network. Journal of Infrastructure Preservation and Resilience, 2(1), 1-21.
 
@@ -62,7 +62,7 @@ Publications
 
 * Marlim, M. S., & Kang, D. (2022). Contaminant Flushing in Water Distribution Networks Incorporating Customer Faucet Control. Sustainability, 14(4), 2249.
 
-* Mazumder, R. K., Salman, A. M., Li, Y., & Yu, X. (2019). A Decision-making Framework for Water Distribution Systems using Fuzzy Inference and Centrality Analysis. 13th International Conference on Applications of Statistics and Probability in Civil Engineering, ICASP13, Seoul, South Korea, May 26-30, 2019
+* Mazumder, R. K., Salman, A. M., Li, Y., & Yu, X. (2019). A Decision-making Framework for Water Distribution Systems using Fuzzy Inference and Centrality Analysis. 13th International Conference on Applications of Statistics and Probability in Civil Engineering, ICASP13, Seoul, South Korea, May 26-30, 2019.
 
 * Mazumder, R. K., Salman, A. M., & Li, Y. (2020). Post-disaster sequential recovery planning for water distribution systems using topological and hydraulic metrics. Structure and Infrastructure Engineering, 1-16.
 
@@ -84,9 +84,9 @@ Publications
 
 * Randeniya, A., Radhakrishnan, M., Sirisena, T. A. J. G., Maish, I., & Pathirana, A. (2022). Equity–performance trade-off in water rationing regimes with domestic storage. Water Supply, 22(5), 4781-4797.
 
-* Sharma, N., Tabandeh, A., & Gardoni, P. (2019). Recovery optimization of interdependent infrastructure: a multi-scale approach. 13th International Conference on Applications of Statistics and Probability in Civil Engineering, ICASP13
+* Sharma, N., Tabandeh, A., & Gardoni, P. (2019). Recovery optimization of interdependent infrastructure: a multi-scale approach. 13th International Conference on Applications of Statistics and Probability in Civil Engineering, ICASP13.
 
-* Sharma, N., Tabandeh, A., & Gardoni, P. (2020). Regional resilience analysis: A multiscale approach to optimize the resilience of interdependent infrastructure. Computer‐Aided Civil and Infrastructure Engineering, 35(12), 1315-1330.
+* Sharma, N., Tabandeh, A., & Gardoni, P. (2020). Regional resilience analysis: A multiscale approach to optimize the resilience of interdependent infrastructure. Computer-Aided Civil and Infrastructure Engineering, 35(12), 1315-1330.
 
 * Tabandeh, S. (2018). Societal risk and resilience analysis: A multi-scale approach to model the dynamics of infrastructure-social systems (Doctoral dissertation, University of Illinois at Urbana-Champaign).
 

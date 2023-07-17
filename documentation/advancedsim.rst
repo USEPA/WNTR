@@ -208,13 +208,13 @@ The SciPy method ``sparse.linalg.spsolve`` can be used to solve the system of eq
 :math:`b` is the residual of the model, and 
 :math:`x` is the solution to the system of equations.
 
-* Get the variables values.  This returns the values for :math:`u` and :math:`v`, which were both initialized to be 1.
+* Get the variables' values.  This returns the values for :math:`u` and :math:`v`, which were both initialized to be 1.
 
 * Solve the system of equations and return the solution.
 
-* Add the solution back to the variables values.
+* Add the solution back to the variables' values.
 
-* Load the variable values back into the model.
+* Load the variables' values back into the model.
 
 * Evaluate the residuals of the model.  If the maximum absolute value of the residuals is too high, the solve can be repeated.
 

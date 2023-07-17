@@ -17,7 +17,7 @@ Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
 Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
-Pipes that fall below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
+Pipes that fall below a user-defined pipe diameter threshold are candidates for removal based on three operations, including:
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
    The demand and demand pattern assigned to the dead-end junction is moved to the junction that is retained in the model.  

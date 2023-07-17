@@ -21,7 +21,7 @@ This example demonstrates how to:
 
 .. note:: 
    If WNTR is installed using PyPI or Anaconda, the examples folder is not included.  
-   The examples folder can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
+   The examples folder can be downloaded by going to https://github.com/USEPA/WNTR, selecting the "Clone or download" button, and then selecting "Download ZIP."
    Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder.  
    The following example assumes the user is running the example from the examples folder.
 
@@ -70,14 +70,14 @@ A Jupyter Notebook, an open-sourced web-based application, can be accessed throu
 associated software available at https://jupyter.org. These demonstrations include the following: 
 
 * `Pipe break demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`_: 
-  This demostration runs multiple hydraulic simulations to compute the impact that different individual pipe breaks/closures have on network pressure. 
-  It also plots the pressure and population impacts for all junctions effected by the pipe breaks/closures. 
+  This demonstration runs multiple hydraulic simulations to compute the impact that different individual pipe breaks/closures have on network pressure. 
+  It also plots the pressure and population impacts for all junctions affected by the pipe breaks/closures. 
 * `Segment pipe break demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/segment_break_demo.ipynb>`_: 
-  This demostration runs multiple hydraulic simulations to compute the impact that different pipe segment breaks/closures (identified by isolation 
-  valve locations) have on network pressure. It also plots the pressure and population impacts for all junctions effected by the pipe segment breaks/closures. 
+  This demonstration runs multiple hydraulic simulations to compute the impact that different pipe segment breaks/closures (identified by isolation 
+  valve locations) have on network pressure. It also plots the pressure and population impacts for all junctions affected by the pipe segment breaks/closures. 
 * `Fire flow demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/fire_flow_demo.ipynb>`_: 
-  This demostration runs multiple hydraulic simulations with and without fire fighting flow demand to multiple fire hydrant nodes. 
-  It also plots the pressure and population impacts for junctions effected by the additional fire fighting flow demand. 
+  This demonstration runs multiple hydraulic simulations with and without fire fighting flow demand to multiple fire hydrant nodes. 
+  It also plots the pressure and population impacts for junctions affected by the additional fire fighting flow demand. 
 * `Earthquake demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/earthquake_demo.ipynb>`_: 
   This demostration runs hydraulic simulations of earthquake damage with and without repair efforts. It plots fragility curves, 
   peak ground acceleration, peak ground velocity, repair rate, leak probability, and damage states. In addition, it compares 

@@ -37,7 +37,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
    :class:`~wntr.gis`	                              Contains geospatial capabilities, including a function to convert the water network model to GeoDataFrames.
    :class:`~wntr.graphics`                            Contains functions to generate graphics.
-   :class:`~wntr.epanet`                              Contains EPANET 2.00.12 and and EPANET 2.2.0 compatibility class and methods for WNTR.
+   :class:`~wntr.epanet`                              Contains EPANET 2.00.12 and EPANET 2.2.0 compatibility class and methods for WNTR.
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
@@ -106,7 +106,7 @@ Current WNTR limitations include:
 * Use of the "MAP" file option in EPANET will **not** automatically assign node
   coordinates from that file. 
 
-**WNTR reads in and writes all sections of EPANET INP files**. This includes the following sections: 
+**WNTR reads and writes all sections of EPANET INP files**. This includes the following sections: 
 [BACKDROP], 
 [CONTROLS], 
 [COORDINATES], 
@@ -156,7 +156,7 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
 
 * **Tank draining**: The EpanetSimulator (and EPANET) continue to supply water from tanks after they reach their 
   minimum elevation. This can result in incorrect system pressures.
-  See issues https://github.com/USEPA/WNTR/issues/210 and https://github.com/OpenWaterAnalytics/EPANET/issues/623.
+  See issues at the following sites: https://github.com/USEPA/WNTR/issues/210 and https://github.com/OpenWaterAnalytics/EPANET/issues/623.
   The EPANET dll in WNTR will be updated when an EPANET release is available.
 * **Pump controls and patterns**: Pumps have speed settings which are adjustable 
   by controls and/or patterns. With the EpanetSimulator, 
