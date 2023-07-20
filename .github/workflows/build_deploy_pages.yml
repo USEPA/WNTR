@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
+    name: Build the documentation with Sphinx
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,15 +24,17 @@ jobs:
           pip install .
           pip install -r requirements.txt
       - name: Build documentation
-        run: sphinx-multiversion -b html documentation/ documentation/_build/html
+        run: sphinx-multiversion documentation/ documentation/_build/html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           path: 'documentation/_build/html'
 
   deploy:
+    name: Deploy documentation to GitHub Pages
     needs: build
     permissions:
+      contents: read
       pages: write      # to deploy to Pages
       id-token: write   # to verify the deployment originates from an appropriate source
     environment:
