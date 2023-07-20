@@ -15,7 +15,10 @@ jobs:
         with:
           fetch-depth: 0
       - run: git fetch --no-tags --depth=1 origin
-      - run: git branch
+      - name: troubleshooting
+        run: |
+          git branch
+          git remote -v
       - uses: actions/setup-python@v2
         with: 
           python-version: '3.8'
