@@ -21,7 +21,7 @@ jobs:
           python-version: '3.8'
       - name: Install package
         run: |
-          pip install .
+          pip install -e .
           pip install -r requirements.txt
       - name: Build documentation
         run: sphinx-multiversion documentation/ documentation/_build/html
