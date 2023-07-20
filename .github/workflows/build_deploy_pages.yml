@@ -14,9 +14,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: "main"
       # - name: Install pandoc
       #   run: sudo apt-get update -y && sudo apt-get install -y pandoc
+      - run: git branch
       - uses: actions/setup-python@v2
         with: 
           python-version: '3.8'
