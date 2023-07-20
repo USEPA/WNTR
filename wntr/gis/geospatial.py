@@ -253,7 +253,8 @@ def intersect(A, B, attributes=None, include_background=False):
     results.index.name = None
     
     return results
-            
+
+     
 def intersect_filter_rows(intersect, entry, operation, fraction_threshold):
     """
     Keep row if entry in `intersections` meets `fraction` threshold criteria
@@ -290,6 +291,7 @@ def intersect_filter_rows(intersect, entry, operation, fraction_threshold):
             
     return intersect.loc[mask,:]
     
+
 def intersect_stats(intersect, attribute, fraction_threshold=None, nan_value=None):
     """
     Compute stats on an attribute of intersections.  
@@ -337,154 +339,4 @@ def intersect_stats(intersect, attribute, fraction_threshold=None, nan_value=Non
     
     stats = pd.DataFrame(stats, index=intersect.index)
 
-    return stats
-        
-def _backgound_original(A, B):
-    
-    hull_geom = A.unary_union.convex_hull
-    hull_data = gpd.GeoDataFrame(pd.DataFrame([{'geometry': hull_geom}]), crs=A.crs)
-    
-    background_geom = hull_data.overlay(B, how='difference').unary_union
-   
-    background = gpd.GeoDataFrame(pd.DataFrame([{'geometry': background_geom}]), crs=A.crs)
-    background.index = ['BACKGROUND']
-    
-    return background
-
-
-def intersect_original(A, B, B_value=None, include_background=False, background_value=0):
-    """
-    Intersect Points, Lines or Polygons in A with Points, Lines, or Polygons in B.
-    Return statistics on the intersection.
-    
-    The function returns information about the intersection for each geometry 
-    in A. Each geometry in B is assigned a value based on a column of data in 
-    that GeoDataFrame.  Note the CRS of A must equal the CRS of B.
-    
-    Parameters
-    ----------
-    A : geopandas GeoDataFrame
-        GeoDataFrame containing Point, LineString, or Polygon geometries
-    B : geopandas GeoDataFrame
-        GeoDataFrame containing  Point, LineString, or Polygon geometries
-    B_value : str or None (optional)
-        Column name in B used to assign a value to each geometry.
-        Default is None.
-    include_background : bool (optional) 
-         Include background, defined as space covered by A that is not covered by B 
-         (overlay difference between A and B). The background geometry is added
-         to B and is given the name 'BACKGROUND'. Default is False.
-    background_value : int or float (optional)
-        The value given to background space. This value is used in the intersection 
-        statistics if a B_value column name is provided. Default is 0.
-        
-    Returns
-    -------
-    pandas DataFrame
-        Intersection statistics (index = A.index, columns = defined below)
-        Columns include:
-            - n: number of intersecting B geometries
-            - intersections: list of intersecting B indices
-            
-        If B_value is given:
-            - values: list of intersecting B values
-            - sum: sum of the intersecting B values
-            - min: minimum of the intersecting B values
-            - max: maximum of the intersecting B values
-            - mean: mean of the intersecting B values
-            
-        If A contains Lines and B contains Polygons:
-            - weighted_mean: weighted mean of intersecting B values
-    """
-    if not has_shapely or not has_geopandas:
-        raise ModuleNotFoundError('shapley and geopandas are required')
-        
-    isinstance(A, gpd.GeoDataFrame)
-    assert (A['geometry'].geom_type).isin(['Point', 'LineString', 
-                                           'MultiLineString', 'Polygon', 
-                                           'MultiPolygon']).all()
-    isinstance(B, gpd.GeoDataFrame)
-    assert (B['geometry'].geom_type).isin(['Point', 'LineString', 
-                                           'MultiLineString', 'Polygon', 
-                                           'MultiPolygon']).all()
-    if isinstance(B_value, str):
-        assert B_value in B.columns
-    isinstance(include_background, bool)
-    isinstance(background_value, (int, float))
-    assert A.crs == B.crs
-    
-    if include_background:
-        background = _backgound_original(A, B)
-        if B_value is not None:
-            background[B_value] = background_value
-        B = pd.concat([B, background])
-        
-    intersects = gpd.sjoin(A, B, predicate='intersects')
-    intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
-    
-    # Sort values by index and intersecting object
-    intersects['sort_order'] = 1 # make sure 'BACKGROUND' is listed first
-    intersects.loc[intersects['index_right'] == 'BACKGROUND', 'sort_order'] = 0
-    intersects.sort_values(['_tmp_index_name', 'sort_order', 'index_right'], inplace=True)
-    
-    n = intersects.groupby('_tmp_index_name')['geometry'].count()
-    B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
-    #B_indices.sort_values()
-    stats = pd.DataFrame(index=A.index, data={'intersections': B_indices,
-                                              'n': n,})
-    stats['n'] = stats['n'].fillna(0)
-    stats['n'] = stats['n'].apply(int)
-    stats.loc[stats['intersections'].isnull(), 'intersections'] = stats.loc[stats['intersections'].isnull(), 'intersections'] .apply(lambda x: [])
-    
-    if B_value is not None:
-        stats['values'] = intersects.groupby('_tmp_index_name')[B_value].apply(list)
-        stats['sum'] = intersects.groupby('_tmp_index_name')[B_value].sum()
-        stats['min'] = intersects.groupby('_tmp_index_name')[B_value].min()
-        stats['max'] = intersects.groupby('_tmp_index_name')[B_value].max()
-        stats['mean'] = intersects.groupby('_tmp_index_name')[B_value].mean()
-        
-        stats = stats.reindex(['intersections', 'values', 'n', 'sum', 'min', 'max', 'mean'], axis=1)
-        stats.loc[stats['values'].isnull(), 'values'] = stats.loc[stats['values'].isnull(), 'values'] .apply(lambda x: [])
-        
-    weighted_mean = False
-    if (A['geometry'].geom_type).isin(['LineString', 'MultiLineString']).all():
-        if (B['geometry'].geom_type).isin(['Polygon', 'MultiPolygon']).all():
-            weighted_mean = True
-            
-    if weighted_mean and B_value is not None:
-        stats['weighted_mean'] = 0
-        stats['fraction_background'] = 0
-        A_length = A.length
-        covered_length = pd.Series(0, index = A.index)
-        
-        for i in B.index:
-            B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
-            val = B.loc[i,B_value]
-            A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
-            #print(i, lines_subset)
-            A_clip = gpd.clip(A_subset, B_geom) 
-            A_clip_length = A_clip.length
-            A_clip_index = A_clip.index
-            
-            if A_clip_length.shape[0] > 0:
-                fraction_length = A_clip_length/A_length[A_clip_index]
-                if not np.isnan(val):
-                    covered_length[A_clip_index] = covered_length[A_clip_index] + fraction_length
-                    weighed_val = fraction_length*val
-                    stats.loc[A_clip_index, 'weighted_mean'] = stats.loc[A_clip_index, 'weighted_mean'] + weighed_val
-                if B_geom.index[0] == 'BACKGROUND':
-                    stats.loc[A_clip_index, 'fraction_background'] = fraction_length
-        
-        # Normalize weighted mean by covered length (can be over 1 if polygons overlap)
-        # Can be less than 1 if there are gaps (when background is not used)
-        stats['weighted_mean'] = stats['weighted_mean']/covered_length
-        
-        # Covered_length is NaN if length A is 0, set weighted mean to mean
-        stats.loc[covered_length.isna(), 'weighted_mean'] = stats.loc[covered_length.isna(), 'mean']
-        
-        # No intersection, set weighted mean to NaN
-        stats.loc[stats['n']==0, 'weighted_mean'] = np.NaN
-        
-    stats.index.name = None
-    
     return stats
