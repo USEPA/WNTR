@@ -138,6 +138,7 @@ def snap(A, B, tolerance):
         
     return snapped_points
 
+
 def _backgound(A, B):
     
     """
