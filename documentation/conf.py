@@ -40,7 +40,20 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinx_multiversion',
+    'sphinxcontrib.jquery'
 ]
+
+# html_sidebars = {
+#     '**': [
+#         'versions.html',
+#     ],
+# }
+# Whitelist pattern for tags (set to None to ignore all tags)
+smv_tag_whitelist = None
+
+# Whitelist pattern for branches (set to None to ignore all branches)
+smv_branch_whitelist = r'^.*$'
 
 napoleon_use_rtype = False
 viewcode_import = True
