@@ -11,6 +11,7 @@ docker/
 *.egg
 *.coverage
 *.ipynb
+*.html
 *.pickle
 *.xlsx
 
