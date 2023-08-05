@@ -152,7 +152,8 @@ when mapping colors to ``node_attribute`` values.
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
     >>> water_age = results.node['quality']/3600 # convert seconds to hours
-    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, node_range=[0,24]) # doctest: +SKIP
+    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, 
+    ...     node_range=[0,24]) # doctest: +SKIP
    
 Time series
 ------------------

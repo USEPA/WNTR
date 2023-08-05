@@ -250,12 +250,14 @@ htmlhelp_basename = 'WNTRdoc'
 
 latex_elements = {
 'printindex': '',
-#'sphinxsetup': 'noteBgColor={RGB}{255,204,204}',
+
+'sphinxsetup': 'hmargin={0.9in,0.9in}, vmargin={0.9in,0.9in}, marginpar=1.0in',
+
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'letterpaper',
 
 # The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
 'preamble':  r'''
@@ -276,6 +278,7 @@ title=\sphinxstrong{#1}]}
 
 # Latex figure (float) alignment
 'figure_align': 'htbp',
+
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

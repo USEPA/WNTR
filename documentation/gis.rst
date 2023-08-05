@@ -134,17 +134,17 @@ Attributes
 
     The following example adds the simulated pressure at hour 1 to the water network GIS data 
     (which includes pressure at junctions, tanks, and reservoirs).
-
+    
     .. doctest::
        :skipif: gpd is None
-	   
+
         >>> sim = wntr.sim.EpanetSimulator(wn)
         >>> results = sim.run_sim()
-    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
+        >>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
     	...     'Pressure_1hr')
-
+    
     Attributes can also be added directly to individual GeoDataFrames, as shown below.
-
+    
     .. doctest::
        :skipif: gpd is None
 
@@ -410,7 +410,8 @@ the hydrants snapped to the junctions in Net1.
     :skipif: gpd is None
 
     >>> ax = hydrant_data.plot()
-    >>> ax = wntr.graphics.plot_network(wn, node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, 
+    ...     node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
 
 .. doctest::
     :skipif: gpd is None
@@ -597,7 +598,8 @@ The pipes are colored based upon their maximum earthquake probability.
 
     >>> ax = earthquake_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['max'], link_width=1.5, 
-    ...     node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Earthquake Probability')
+    ...     node_range=[0,1], link_range=[0,1], ax=ax, 
+    ...     link_colorbar_label='Earthquake Probability')
 
 .. doctest::
     :skipif: gpd is None
@@ -680,7 +682,8 @@ The pipes are colored based upon their weighted mean landslide probability.
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], 
-    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Landslide Probability')
+    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax, 
+    ...     link_colorbar_label='Landslide Probability')
 
 .. doctest::
     :skipif: gpd is None
