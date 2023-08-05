@@ -250,6 +250,7 @@ htmlhelp_basename = 'WNTRdoc'
 
 latex_elements = {
 'printindex': '',
+#'sphinxsetup': 'noteBgColor={RGB}{255,204,204}',
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
 
@@ -257,7 +258,15 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble':  '''%
+'preamble':  r'''
+\usepackage{tcolorbox}
+\definecolor{sphinxnoteBgColor}{RGB}{221,233,239}
+\renewenvironment{sphinxnote}[1]
+{\begin{tcolorbox}[colback=sphinxnoteBgColor,
+colframe=red!35!green!50!blue!87!,
+title=\sphinxstrong{#1}]}
+{\end{tcolorbox}}
+''',
 #  \usepackage[nottoc]{tocbibind}
 #  \pagestyle{plain}
 #  \pagenumbering{gobble}
@@ -266,7 +275,7 @@ latex_elements = {
 #''',
 
 # Latex figure (float) alignment
-#'figure_align': 'htbp',
+'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

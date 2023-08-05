@@ -422,7 +422,7 @@ the hydrants snapped to the junctions in Net1.
 
 .. _fig-snap-points:
 .. figure:: figures/snap_points.png
-   :width: 800
+   :width: 640
    :alt: Hydrants snapped to junctions in EPANET example Net1 using the snapped points to points function
 
    Net1 with example hydrants snapped to junctions, in which the larger blue circles are the hydrant locations and the smaller red circles are the associated junctions.
@@ -506,7 +506,7 @@ illustrates the valve layer created by snapping points to lines in Net1.
 
 .. _fig-snap-lines:
 .. figure:: figures/snap_lines.png
-   :width: 600
+   :width: 640
    :alt: Isolation valves snapped to pipes in EPANET example Net1 using the snapped points to lines function
 
    Net1 with example valve layer created by snapping points to lines, in which the blue circles are the isolation valve locations 
@@ -609,7 +609,7 @@ The pipes are colored based upon their maximum earthquake probability.
 	
 .. _fig-intersect-earthquake:
 .. figure:: figures/intersect_earthquake.png
-   :width: 800
+   :width: 640
    :alt: Intersection of pipes with earthquake fault lines in EPANET example Net1
 
    Net1 with example earthquake fault lines intersected with pipes, which are colored based upon their maximum earthquake probability.  
@@ -692,7 +692,7 @@ The pipes are colored based upon their weighted mean landslide probability.
 
 .. _fig-intersect-landslide:
 .. figure:: figures/intersect_landslide.png
-   :width: 800
+   :width: 640
    :alt: Intersection of junctions with landslide zones in EPANET example Net1
 
    Net1 with example landslide zones intersected with pipes, which are colored based upon their weighted mean landslide probability. 
@@ -800,7 +800,7 @@ the census tracts (polygons) is different than the junction and pipe attributes.
 
 .. _fig-intersect-demographics:
 .. figure:: figures/intersect_demographics.png
-   :width: 800
+   :width: 640
    :alt: Intersection of junctions and pipes with mean income demographic data in EPANET example Net1
 
    Net1 with mean income demographic data intersected with junctions and pipes.

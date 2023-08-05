@@ -62,7 +62,7 @@ of exceeding the Minor damage state is 0.80.
 
 .. _fig-fragility:
 .. figure:: figures/fragility_curve.png
-   :width: 800
+   :width: 640
    :alt: Fragility curve
 
    Example fragility curve.
