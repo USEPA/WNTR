@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import pyswmm
 import swmmio
@@ -5,6 +6,9 @@ from swmm.toolkit.shared_enum import NodeAttribute, LinkAttribute, \
                                      SubcatchAttribute, SystemAttribute
 
 from wntr.sim import SimulationResults
+from wntr.gis import WaterNetworkGIS
+
+logger = logging.getLogger(__name__)
 
 
 def to_graph(swn):
@@ -14,16 +18,51 @@ def to_graph(swn):
     return G
 
 
-def read_inpfile(filename):
+def to_gis(swn, crs=None):
+    """
+    Convert a StormWaterNetworkModel into GeoDataFrames
+    
+    Parameters
+    ----------
+    swn : WaterNetworkModel
+        Water network model
+    crs : str, optional
+        Coordinate reference system, by default None
 
-    model = swmmio.Model(filename)
+    Returns
+    -------
+    WaterNetworkGIS object that contains GeoDataFrames
+        
+    """
+    gis_data = WaterNetworkGIS()
+    
+    # nodes
+    gis_data.junctions = swn.nodes.loc[swn.junction_name_list,:]
+    gis_data.outfalls = swn.nodes.loc[swn.outfall_name_list,:]
+    gis_data.storages = swn.nodes.loc[swn.storage_name_list,:]
+    
+    # links
+    gis_data.conduits = swn.links.loc[swn.conduit_name_list,:]
+    gis_data.weirs = swn.links.loc[swn.weir_name_list,:]
+    gis_data.orifices = swn.links.loc[swn.orifice_name_list,:]
+    gis_data.pumps = swn.links.loc[swn.pump_name_list,:]
+    
+    # subcatchments
+    gis_data.subcatchments = swn.subcatchments.loc[swn.subcatchment_name_list,:]
 
-    return model
+    return gis_data
 
 
 def write_inpfile(swn, filename):
 
     swn._swmmio_model.inp.save(filename)
+
+
+def read_inpfile(filename):
+
+    model = swmmio.Model(filename)
+
+    return model
 
 
 def read_outfile(outfile):

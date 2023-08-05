@@ -1,6 +1,31 @@
+import logging
 import networkx as nx
 import matplotlib.pylab as plt
 
+from wntr.graphics.network import plot_network as _plot_network
+
+logger = logging.getLogger(__name__)
+
+"""
+def plot_network(swn, node_attribute=None, link_attribute=None, title=None,
+               node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
+               link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
+               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               directed=False, ax=None, filename=None):
+    
+    if ax is None:  # create a new figure
+        plt.figure(facecolor="w", edgecolor="k")
+        ax = plt.gca()
+        
+    for subcatch in swn.subcatchments['geometry']:
+        ax.plot(*subcatch.boundary.xy, c='gray', linewidth=0.5)
+    
+    _plot_network(swn, node_attribute, link_attribute, title, 
+                  node_size, node_range, node_alpha, node_cmap, node_labels,
+                  link_width, link_range, link_alpha, link_cmap, link_labels,
+                  add_colorbar, node_colorbar_label, link_colorbar_label, 
+                  directed, ax=ax, filename=filename)
+"""
 def plot_network(
     swn,
     node_attribute=None,
@@ -131,7 +156,16 @@ def plot_network(
         edge_vmax=link_range[1],
         ax=ax,
     )
-
+    if node_labels:
+        labels = dict(zip(swn.node_name_list, swn.node_name_list))
+        nx.draw_networkx_labels(G, pos, labels, font_size=7, ax=ax)
+    # if link_labels:
+    #     labels = {}
+    #     for link_name in swn.link_name_list:
+    #         link = wn.get_link(link_name)
+    #         labels[(link.start_node_name, link.end_node_name)] = link_name
+    #     nx.draw_networkx_edge_labels(G, pos, labels, font_size=7, ax=ax)
+        
     if add_node_colorbar and node_attribute:
         clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
         clb.ax.set_title(node_colorbar_label, fontsize=10)

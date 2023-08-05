@@ -18,7 +18,7 @@ class SWMMSimulator(object):
         outfile = file_prefix + '.out'
         
         # Update swmmio model inp based on swn data
-        self._swn.udpate_inp_model(inpfile)
+        self._swn.udpate_model_inp(inpfile)
 
         sim = pyswmm.Simulation(inpfile)
         sim.execute()
