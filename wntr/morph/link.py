@@ -3,6 +3,8 @@ The wntr.morph.link module contains functions to split/break pipes.
 """
 import logging
 import copy
+
+import wntr.network
 from wntr.network.elements import Reservoir, Pipe
 
 logger = logging.getLogger(__name__)
@@ -209,8 +211,7 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
         # Identify the segment that cross the split point and compute the new
         # junction coordinates
         for segment in segments:
-            if (segment['subtotal'] + segment['length'] >= split_length
-                    and segment['subtotal'] < split_length):
+            if segment['subtotal'] + segment['length'] >= split_length > segment['subtotal']:
                 split_at = ((split_length - segment['subtotal'])
                             / segment['length'])
                 x0 = segment['start_pos'][0]
@@ -268,4 +269,17 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
         logger.warn('You are splitting a pipe with a check valve. The new \
                     pipe will not have a check valve.')
     
-    return wn2 
+    return wn2
+
+
+def reverse_link(wn: wntr.network.WaterNetworkModel, link_name: str) -> wntr.network.WaterNetworkModel:
+    link = wn.get_link(link_name)
+    start_node = link.start_node
+    end_node = link.end_node
+    vertices = link.vertices
+
+    link.start_node = end_node
+    link.end_node = start_node
+    link.vertices = vertices[::-1]
+
+    return wn
