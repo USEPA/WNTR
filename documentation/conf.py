@@ -40,8 +40,6 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-    'sphinx_multiversion',
-    'sphinxcontrib.jquery',
 ]
 
 napoleon_use_rtype = False
@@ -53,11 +51,6 @@ autodoc_member_order = 'bysource'
 autoclass_content = 'both'
 numfig=True
 numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
-# Whitelist pattern for tags (set to None to ignore all tags)
-smv_tag_whitelist = None
-# Whitelist pattern for branches (set to None to ignore all branches)
-smv_branch_whitelist = r'^.*$'
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
