@@ -21,9 +21,49 @@ class SolverStatus(enum.IntEnum):
 class NewtonSolver(object):
     """
     Newton Solver class.
+
+    Attributes
+    ----------
+    log_progress: bool
+        If True, the infinity norm of the constraint violation will be logged each iteration
+    log_level: int
+        The level for logging the infinity norm of the constraint violation
+    time_limit: float
+        If the wallclock time exceeds time_limit, the newton solver will exit with an error status
+    maxiter: int
+        If the number of iterations exceeds maxiter, the newton solver will exit with an error status
+    tol: float
+        The convergence tolerance. If the infinity norm of the constraint violation drops below tol,
+        the newton solver will exit with a converged status.
+    rho: float
+        During the line search, rho is used to reduce the stepsize. It should be strictly between 0 and 1.
+    bt_maxiter: int
+        The maximum number of line search iterations for each outer iteration
+    bt: bool
+        If False, a line search will not be used.
+    bt_start_iter: int
+        A line search will not be used for any iteration prior to bt_start_iter
     """
 
     def __init__(self, options=None):
+        """
+        Parameters
+        ----------
+        options: dict
+            A dictionary specifying options for the newton solver. Keys
+            should be strings in all caps. See the documentation of the
+            NewtonSolver attributes for details on each option. Possible
+            keys are:
+                | "LOG_PROGRESS" (NewtonSolver.log_progress)
+                | "LOG_LEVEL" (NewtonSolver.log_level)
+                | "TIME_LIMIT" (NewtonSolver.time_limit)
+                | "MAXITER" (NewtonSolver.maxiter)
+                | "TOL" (NewtonSolver.tol)
+                | "BT_RHO" (NewtonSolver.rho)
+                | "BT_MAXITER" (NewtonSolver.bt_maxiter)
+                | "BACKTRACKING" (NewtonSolver.bt)
+                | "BT_START_ITER" (NewtonSolver.bt_start_iter)
+        """
         if options is None:
             options = {}
         self._options = options
