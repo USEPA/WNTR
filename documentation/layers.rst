@@ -83,7 +83,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
 .. _fig-random-valve-layer:
 .. figure:: figures/random_valve_layer.png
-   :width: 500
+   :width: 640
    :alt: Valve layer
    
    Valve layer using random placement.
@@ -107,7 +107,7 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 
 .. _fig-strategic-valve-layer:
 .. figure:: figures/strategic_valve_layer.png
-   :width: 500
+   :width: 640
    :alt: Valve layer
    
    Valve layer using strategic N-2 placement.

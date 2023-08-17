@@ -134,17 +134,17 @@ Attributes
 
     The following example adds the simulated pressure at hour 1 to the water network GIS data 
     (which includes pressure at junctions, tanks, and reservoirs).
-
+    
     .. doctest::
        :skipif: gpd is None
-	   
+
         >>> sim = wntr.sim.EpanetSimulator(wn)
         >>> results = sim.run_sim()
-    	>>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
+        >>> wn_gis.add_node_attributes(results.node['pressure'].loc[3600,:], 
     	...     'Pressure_1hr')
-
+    
     Attributes can also be added directly to individual GeoDataFrames, as shown below.
-
+    
     .. doctest::
        :skipif: gpd is None
 
@@ -410,7 +410,8 @@ the hydrants snapped to the junctions in Net1.
     :skipif: gpd is None
 
     >>> ax = hydrant_data.plot()
-    >>> ax = wntr.graphics.plot_network(wn, node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, 
+    ...     node_attribute=snapped_to_junctions['node'].to_list(), ax=ax)
 
 .. doctest::
     :skipif: gpd is None
@@ -422,7 +423,7 @@ the hydrants snapped to the junctions in Net1.
 
 .. _fig-snap-points:
 .. figure:: figures/snap_points.png
-   :width: 800
+   :width: 640
    :alt: Hydrants snapped to junctions in EPANET example Net1 using the snapped points to points function
 
    Net1 with example hydrants snapped to junctions, in which the larger blue circles are the hydrant locations and the smaller red circles are the associated junctions.
@@ -506,7 +507,7 @@ illustrates the valve layer created by snapping points to lines in Net1.
 
 .. _fig-snap-lines:
 .. figure:: figures/snap_lines.png
-   :width: 600
+   :width: 640
    :alt: Isolation valves snapped to pipes in EPANET example Net1 using the snapped points to lines function
 
    Net1 with example valve layer created by snapping points to lines, in which the blue circles are the isolation valve locations 
@@ -597,7 +598,8 @@ The pipes are colored based upon their maximum earthquake probability.
 
     >>> ax = earthquake_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['max'], link_width=1.5, 
-    ...     node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Earthquake Probability')
+    ...     node_range=[0,1], link_range=[0,1], ax=ax, 
+    ...     link_colorbar_label='Earthquake Probability')
 
 .. doctest::
     :skipif: gpd is None
@@ -609,7 +611,7 @@ The pipes are colored based upon their maximum earthquake probability.
 	
 .. _fig-intersect-earthquake:
 .. figure:: figures/intersect_earthquake.png
-   :width: 800
+   :width: 640
    :alt: Intersection of pipes with earthquake fault lines in EPANET example Net1
 
    Net1 with example earthquake fault lines intersected with pipes, which are colored based upon their maximum earthquake probability.  
@@ -680,7 +682,8 @@ The pipes are colored based upon their weighted mean landslide probability.
 
     >>> ax = landslide_data.plot(column='Pr', alpha=0.5, cmap='bone', vmin=0, vmax=1)
     >>> ax = wntr.graphics.plot_network(wn, link_attribute=pipe_Pr['weighted_mean'], 
-    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax, link_colorbar_label='Landslide Probability')
+    ...     link_width=1.5, node_range=[0,1], link_range=[0,1], ax=ax, 
+    ...     link_colorbar_label='Landslide Probability')
 
 .. doctest::
     :skipif: gpd is None
@@ -692,7 +695,7 @@ The pipes are colored based upon their weighted mean landslide probability.
 
 .. _fig-intersect-landslide:
 .. figure:: figures/intersect_landslide.png
-   :width: 800
+   :width: 640
    :alt: Intersection of junctions with landslide zones in EPANET example Net1
 
    Net1 with example landslide zones intersected with pipes, which are colored based upon their weighted mean landslide probability. 
@@ -800,7 +803,7 @@ the census tracts (polygons) is different than the junction and pipe attributes.
 
 .. _fig-intersect-demographics:
 .. figure:: figures/intersect_demographics.png
-   :width: 800
+   :width: 640
    :alt: Intersection of junctions and pipes with mean income demographic data in EPANET example Net1
 
    Net1 with mean income demographic data intersected with junctions and pipes.
