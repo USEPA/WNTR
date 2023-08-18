@@ -19,7 +19,7 @@ Graphics
 ======================================
 
 WNTR includes several functions to plot water network models and to plot 
-fragility, pump curves, tank curves, and valve layers.
+fragility curves, pump curves, tank curves, and valve layers.
 
 Networks
 --------------------
@@ -68,6 +68,62 @@ which can be further customized by the user.
    :alt: Network
    
    Basic network graphic.
+   
+Additional network plot examples are included below.  
+This includes the use of data stored as 
+a Pandas Series (pipe velocity from simulation results), 
+a dictionary (the length of the 5 longest pipes), and
+a list of strings (tank names).
+The example also combines multiple images into one figure using subplots and 
+changes the colormap from the default `Spectral_r` to `viridis` in one plot.
+See https://matplotlib.org for more colormap options.
+
+.. doctest::
+
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+    >>> velocity = results.link['velocity'].loc[3600,:]
+    >>> print(velocity.head())
+    name
+    20     0.039
+    40     0.013
+    50     0.004
+    60     2.824
+    101    1.320
+    Name: 3600, dtype: float32
+	
+    >>> length = wn.query_link_attribute('length')
+    >>> length_top5 = length.sort_values(ascending=False)[0:5]
+	>>> length_top5 = length_top5.round(2).to_dict()
+    >>> print(length_top5)
+    {'329': 13868.4, '101': 4328.16, '137': 1975.1, '169': 1389.89, '204': 1380.74}
+	
+    >>> tank_names = wn.tank_name_list
+    >>> print(tank_names)
+    ['1', '2', '3']
+	
+    >>> fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=velocity, 
+    ...    title='Pipe velocity at hour 1', link_colorbar_label='Velocity (m/s)', ax=axes[0])
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=length_top5, link_width=2, 
+    ...    title='Longest 5 pipes', link_cmap = plt.cm.viridis, 
+    ...    link_colorbar_label='Pipe length (m)', ax=axes[1])
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute=tank_names, 
+    ...    title='Location of tanks', ax=axes[2])
+	
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_subplot_basic_network.png', dpi=300)
+    
+.. _fig-network-3:
+.. figure:: figures/plot_subplot_basic_network.png
+   :width: 800
+   :alt: Network
+   
+   Additional network graphics.
+   
    
 Interactive plotly networks
 ---------------------------------
