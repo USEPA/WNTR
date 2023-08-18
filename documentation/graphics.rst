@@ -69,7 +69,7 @@ which can be further customized by the user.
    
    Basic network graphic.
    
-Additional network plot examples are included below.  
+Additional network plot examples are included below (:numref:`fig-network-3`). 
 This includes the use of data stored as 
 a Pandas Series (pipe velocity from simulation results), 
 a dictionary (the length of the 5 longest pipes), and
