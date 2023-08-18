@@ -4,7 +4,7 @@ name: Build docs and deploy to pages
 
 on:
   push:
-    branches: [main, pages]
+    branches: [main]
   workflow_dispatch:
 jobs:
   build:
