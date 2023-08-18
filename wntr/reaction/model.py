@@ -64,11 +64,11 @@ class ExprType(Enum):
     """The type of reaction expression"""
 
     Equil = 1
-    """An equilibrium reaction, where expression is RHS of: 0 = f(…,Cᵢ,…), {i | i=1..n}"""
+    """An equilibrium reaction, where expression is RHS of: 0 = f(…,Cᵢ,…), {species i | i=1..n}"""
     Rate = 2
-    """A decay rate equation, where expression is RHS of: ∂Cᵢ/∂t = f(…,Cᵢ,…), {i | i=1..n}"""
+    """A decay rate equation, where expression is RHS of: ∂Cᵢ/∂t = f(…,Cᵢ,…), {species i | i=1..n} """
     Formula = 3
-    """A formula reaction, where expression is RHS of: Cᵢ = f(…,Cⱼ,…), {j | j=1..n, j≠i}"""
+    """A formula reaction, where expression is RHS of: Cᵢ = f(…,Cⱼ,…), {species i, j | j=1..n, j≠i}"""
     E = Equil
     R = Rate
     F = Formula
@@ -291,23 +291,23 @@ class WaterQualityReactionsModel:
 
         Parameters
         ----------
-        typ : Union[str, VarType]
-            _description_
+        typ : str or VarType, {'Bulk', 'Wall'}
+            the type of species
         name : str
-            _description_
+            the species name/expression symbol
         unit : str
-            _description_
+            the unit for this species
         Atol : float, optional
-            _description_, by default None
+            the absolute solver tolerance, by default None
         Rtol : float, optional
-            _description_, by default None
+            the relative solver tolerance, by default None
         note : str, optional
-            _description_, by default None
+            comments about the species, by default None
 
         Returns
         -------
-        RxnSpecies
-            _description_
+        BulkSpecies or WallSpecies
+            a new species object
 
         Raises
         ------
@@ -331,25 +331,25 @@ class WaterQualityReactionsModel:
             raise ValueError("typ must be a valid species subtype but got {}".format(typ))
 
     def add_bulk_species(self, name: str, unit: str, Atol: float = None, Rtol: float = None, note: str = None) -> "BulkSpecies":
-        """_summary_
+        """Add a new bulk species to the reaction model
 
         Parameters
         ----------
         name : str
-            _description_
+            the species name/expression symbol
         unit : str
-            _description_
+            the unit for this species
         Atol : float, optional
-            _description_, by default None
+            the absolute solver tolerance, by default None
         Rtol : float, optional
-            _description_, by default None
+            the relative solver tolerance, by default None
         note : str, optional
-            _description_, by default None
+            comments about the species, by default None
 
         Returns
         -------
         BulkSpecies
-            _description_
+            new species object
 
         Raises
         ------
@@ -364,25 +364,25 @@ class WaterQualityReactionsModel:
         return new
 
     def add_wall_species(self, name: str, unit: str, Atol: float = None, Rtol: float = None, note: str = None) -> "WallSpecies":
-        """_summary_
+        """Add a new wall species to the model.
 
         Parameters
         ----------
         name : str
-            _description_
+            the species name/expression symbol
         unit : str
-            _description_
+            the unit for this species
         Atol : float, optional
-            _description_, by default None
+            the absolute solver tolerance, by default None
         Rtol : float, optional
-            _description_, by default None
+            the relative solver tolerance, by default None
         note : str, optional
-            _description_, by default None
+            comments about the species, by default None
 
         Returns
         -------
         WallSpecies
-            _description_
+            new species object
 
         Raises
         ------
@@ -399,27 +399,27 @@ class WaterQualityReactionsModel:
     def add_coefficient(
         self, typ: Union[str, VarType], name: str, value: float, note: str = None, pipe_values: Dict[str, float] = None, tank_values: Dict[str, float] = None
     ) -> "RxnCoefficient":
-        """_summary_
+        """Add a new coefficient (constant or parameter) to the model.
 
         Parameters
         ----------
-        typ : Union[str, VarType]
-            _description_
+        typ : str or VarType, {'Constant', 'Parameter'}
+            the coefficient type
         name : str
-            _description_
-        value : float
-            _description_
+            the coefficient name (and expression symbol)
+        unit : str
+            the value of this coefficient
         note : str, optional
-            _description_, by default None
-        pipe_values : Dict[str, float], optional
-            _description_, by default None
-        tank_values : Dict[str, float], optional
-            _description_, by default None
-
+            comments about the species, by default None
+        pipe_values : dict[str, float], optional
+            a (partial) dictionary of specific values for the coefficient based on pipe, be default None
+        tank_values : dict[str, float], optional
+            a (partial) dictionary of specific values for the coefficient based on tank, be default None
+        
         Returns
         -------
-        RxnCoefficient
-            _description_
+        Constant or Parameter
+            the new coefficient object
 
         Raises
         ------
@@ -453,21 +453,21 @@ class WaterQualityReactionsModel:
             raise ValueError("typ must be a valid coefficient subtype but got {}".format(typ))
 
     def add_constant(self, name: str, value: float, note: str = None) -> "Constant":
-        """_summary_
+        """Add a new constant coefficient to the model.
 
         Parameters
         ----------
         name : str
-            _description_
-        value : float
-            _description_
+            the coefficient name (and expression symbol)
+        unit : str
+            the value of this coefficient
         note : str, optional
-            _description_, by default None
+            comments about the species, by default None
 
         Returns
         -------
         Constant
-            _description_
+            the new coefficient object
 
         Raises
         ------
@@ -482,25 +482,25 @@ class WaterQualityReactionsModel:
         return new
 
     def add_parameter(self, name: str, value: float, note: str = None, pipe_values: Dict[str, float] = None, tank_values: Dict[str, float] = None) -> "Parameter":
-        """_summary_
+        """A parameterized coefficient with a global value and additional values based on pipe or tank.
 
         Parameters
         ----------
         name : str
-            _description_
-        value : float
-            _description_
+            the coefficient name (and expression symbol)
+        unit : str
+            the value of this coefficient
         note : str, optional
-            _description_, by default None
-        pipe_values : Dict[str, float], optional
-            _description_, by default None
-        tank_values : Dict[str, float], optional
-            _description_, by default None
+            comments about the species, by default None
+        pipe_values : dict[str, float], optional
+            a (partial) dictionary of specific values for the coefficient based on pipe, be default None
+        tank_values : dict[str, float], optional
+            a (partial) dictionary of specific values for the coefficient based on tank, be default None
 
         Returns
         -------
         Parameter
-            _description_
+            the new coefficient object
 
         Raises
         ------
@@ -515,21 +515,21 @@ class WaterQualityReactionsModel:
         return new
 
     def add_term(self, name: str, expr: str, note: str = None) -> "RxnTerm":
-        """_summary_
+        """A new shortcut term for use in equations.
 
         Parameters
         ----------
         name : str
-            _description_
+            the name and symbol for the term
         expr : str
-            _description_
+            the expression
         note : str, optional
-            _description_, by default None
+            a comment or note about the term, by default None
 
         Returns
         -------
         RxnTerm
-            _description_
+            the new term object
 
         Raises
         ------
