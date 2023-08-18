@@ -600,7 +600,7 @@ def read_geojson(files, index_col='index', append=None):
 def write_shapefile(wn, prefix: str, crs=None, pumps_as_points=True,
                     valves_as_points=True):
     """
-    Write the WaterNetworkModel to a set of ESRI Shapefiles, one directory for
+    Write the WaterNetworkModel to a set of Esri Shapefiles, one directory for
     each network element.
 
     The Shapefiles only includes information from the water network model.
@@ -633,7 +633,7 @@ def write_shapefile(wn, prefix: str, crs=None, pumps_as_points=True,
 def read_shapefile(files, index_col='index', append=None):
     """
 
-    Create or append a WaterNetworkModel from ESRI Shapefiles
+    Create or append a WaterNetworkModel from Esri Shapefiles
 
     Parameters
     ----------
@@ -657,3 +657,4 @@ def read_shapefile(files, index_col='index', append=None):
     wn = gis_data._create_wn(append=append)
 
     return wn
+    

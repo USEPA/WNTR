@@ -337,24 +337,23 @@ class WaterNetworkGIS:
         """
         self._read(files, index_col)
 
-    def read_shapefile(self, files, index_col='index'):
+    def shapefile_field_names(self):
         """
-        Append information from ESRI Shapefiles to a WaterNetworkGIS object
-
-        Parameters
-        ----------
-        files : dictionary
-            Dictionary of Shapefile directory or filenames, where the keys are
-            in the set ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps',
-            'valves') and values are the corresponding GeoJSON filename
-        index_col : str, optional
-            Column that contains the element name
+        Return a map (dictionary) of shapefile field names to 
+        WaterNetworkModel attribute names
+        
+        Esri Shapefiles truncate field names to 10 characters. The field name 
+        map links truncated shapefile field names to complete (and ofen longer)
+        WaterNetworkModel attribute names.  This assumes that the first 10 
+        characters of each attribute name are unique.
+        
+        Returns
+        -------
+        field_name_map : dict
+            Map (dictionary) of shapefile field names to WaterNetworkModel 
+            attribute names
         """
-        self._read(files, index_col)
-
-        # ESRI Shapefiles truncate field names to 10 characters. The field_name_map
-        # maps truncated names to long names.  The following code assumes the 
-        # first 10 characters are unique.
+        
         element_attributes = {
             'junctions': dir(wntr.network.elements.Junction),
             'tanks': dir(wntr.network.elements.Tank),
@@ -370,16 +369,55 @@ class WaterNetworkGIS:
                       dir(wntr.network.elements.FCValve) +
                       dir(wntr.network.elements.TCValve) +
                       dir(wntr.network.elements.GPValve)}
-
+        
         field_name_map = {}
         for element, attribute in element_attributes.items():
             field_name_map[element] = {}
             for field_name in attribute:
-                if (len(field_name) > 10) and (not field_name.startswith('_')):
-                    field_name_map[element][field_name[0:10]] = field_name
+                # remove private attributes and methods
+                if field_name.startswith(('_', 'add_', 'remove_', 'to_', 'get_')):
+                    continue
+                # remove simulation results that are stored in the Results object
+                if element in ['pipes', 'pumps', 'valves'] and field_name in ['flowrate', 'friction_factor', 'headloss', 'quality', 'reaction_rate', 'setting', 'status', 'velocity']:
+                    continue
+                if element in ['junctions', 'tanks', 'reservoirs'] and field_name in ['demand', 'head', 'pressure', 'quality']:
+                    continue
+                # Remove additional simulation results
+                # pipe simulation result include flow
+                if element == 'pipes' and field_name == 'flow':
+                    continue
+                # pump simulation results include power
+                if element == 'pumps' and field_name == 'power':
+                    continue
+                # tank simulation results include 'level' 
+                if element == 'tanks' and field_name == 'level':
+                    continue
+                
+                field_name_map[element][field_name[0:10]] = field_name
+            field_name_map[element] = pd.Series(field_name_map[element])
 
         # TODO: pipe property is cv instead of check_valve, this should be updated
         field_name_map['pipes']['check_valv'] = 'check_valve'
+        del field_name_map['pipes']['cv']
+        
+        return field_name_map
+    
+    def read_shapefile(self, files, index_col='index'):
+        """
+        Append information from Esri Shapefiles to a WaterNetworkGIS object
+
+        Parameters
+        ----------
+        files : dictionary
+            Dictionary of Shapefile directory or filenames, where the keys are
+            in the set ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps',
+            'valves') and values are the corresponding GeoJSON filename
+        index_col : str, optional
+            Column that contains the element name
+        """
+        self._read(files, index_col)
+
+        field_name_map = self.shapefile_field_names()
 
         self.junctions.rename(columns=field_name_map['junctions'], inplace=True)
         self.tanks.rename(columns=field_name_map['tanks'], inplace=True)
@@ -402,7 +440,7 @@ class WaterNetworkGIS:
             pipes, etc.) appended
         driver : str, optional
             GeoPandas driver. Use "GeoJSON" for GeoJSON files, use :code:`None` 
-            for ESRI shapefile folders, by default "GeoJSON"
+            for Esri Shapefile folders, by default "GeoJSON"
 
         """
         
@@ -449,7 +487,7 @@ class WaterNetworkGIS:
 
     def write_shapefile(self, prefix: str):
         """
-        Write the WaterNetworkGIS object to a set of ESRI Shapefiles, one
+        Write the WaterNetworkGIS object to a set of Esri Shapefiles, one
         directory for each network element.
 
         Parameters

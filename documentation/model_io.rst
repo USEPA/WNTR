@@ -6,6 +6,7 @@
     :hide:
 	
     >>> import wntr
+    >>> import pandas as pd
     >>> try:
     ...    import geopandas as gpd
     ... except ModuleNotFoundError:
@@ -29,6 +30,8 @@ EPANET INP file
 
 The :class:`~wntr.network.io.read_inpfile` function builds a WaterNetworkModel from an EPANET INP file.
 The EPANET INP file can be in the EPANET 2.00.12 or 2.2.0 format.
+See https://epanet22.readthedocs.io for more information on EPANET INP file format.
+
 The function can also be used to append information from an EPANET INP file into an existing WaterNetworkModel.
 
 .. doctest::
@@ -233,12 +236,68 @@ The function can also be used to append information from GeoJSON files into an e
    :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and
    :class:`~wntr.gis.network.WaterNetworkGIS.read_geojson`
    are also methods on the WaterNetworkGIS object. 
-   
-Shapefile files
+
+
+.. _shapefile_format:
+
+Shapefile
 -------------------
 
+A Shapefile is a collection of vector data storage files used to store geographic data.
+The file format is developed and regulated by Esri.
+For more information on Shapefiles, see https://www.esri.com.
+
+To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
+
+* Geospatial data containing Junction, Tank, Reservoir, Pipe, Pump, and Valve data 
+  are stored in separate Shapefile directories.
+
+* Shapefiles truncate field names to 10 characters, while WaterNetworkModel 
+  node and link attribute names are often longer.  For this reason, it is
+  assumed that the first 10 characteris of each attribute are unique.  
+  To see a mapping of truncated Esri Shapefile field names to WaterNetworkModel
+  attribute names, create an empty WaterNetworkGIS object and run the 
+  :class:`~wntr.gis.network.shapefile_field_name_map` method. 
+  
+  For example, the shapefile that contains pipe attributes should include the 
+  field `initial_st` for `initial_status`. 
+  Similar maps can be printed for junctions, tanks, reservoirs, pump, and 
+  valve attributes.
+  
+  .. doctest::
+
+      >>> wn_gis = wntr.gis.network.WaterNetworkGIS()
+      >>> field_name_map = wn_gis.shapefile_field_names()
+      >>> print(field_name_map['pipes'])
+      bulk_coeff         bulk_coeff
+      diameter             diameter
+      end_node             end_node
+      end_node_n      end_node_name
+      initial_se    initial_setting
+      initial_st     initial_status
+      length                 length
+      link_type           link_type
+      minor_loss         minor_loss
+      name                     name
+      roughness           roughness
+      start_node    start_node_name
+      tag                       tag
+      vertices             vertices
+      wall_coeff         wall_coeff
+      check_valv        check_valve
+      dtype: object
+	  
+* The namespace for Node names (which includes Junctions, Tanks, and Reservoirs) 
+  must be unique.  Likewise, the namespace for Links (which includes Pipes, 
+  Pumps, and Valves) must be unique.  For example, this means that a Junction
+  cannot have the same name as a tank.
+  
+* The Shapefile geometry is in a format compatible with GeoPandas, namely a 
+  Point, LineString, or MultiLineString.  See See :ref:`gis_data` for 
+  more information on geometries.
+  
 The :class:`~wntr.network.io.write_shapefile` function creates 
-Shapefile files from a WaterNetworkModel. 
+Shapefiles from a WaterNetworkModel. 
 The Shapefiles can be loaded into GIS platforms for further analysis and visualization.
 
 .. doctest::
@@ -255,7 +314,7 @@ This creates the following Shapefile directories for junctions, tanks, reservoir
 * Net3_pumps
 
 A Shapefile for valves, Net3_valves, is not created since Net3 has no valves.
-Note that patterns, curves, sources, controls, and options are not stored in the Shapefile files.
+Note that patterns, curves, sources, controls, and options are not stored in the Shapefiles.
 
 The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a dictionary of
 Shapefile directories.
