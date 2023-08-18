@@ -7,7 +7,7 @@ Water quality reactions base classes
 import logging
 import warnings
 from collections.abc import MutableMapping
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from enum import Enum, IntFlag
 from typing import Any, ClassVar, Dict, Hashable, Iterator, List, Set, Tuple, Union
 
@@ -112,6 +112,11 @@ class WaterQualityReactionsModel:
             "Ff": "Darcy-Weisbach friction factor",
             "Av": "Surface area per unit volume (area-units/L)",
         }
+
+    @property
+    def vars(self):
+        """access to variables directly as keyed items"""
+        return self._variables
 
     def variables(self):
         """Generator to iterate over all user defined variables (species, terms, etc).
@@ -318,12 +323,12 @@ class WaterQualityReactionsModel:
                 typ = VarType[typ]
             except KeyError as k:
                 raise ValueError("Missing/invalid value for typ, expected VarType but got {}".format(repr(typ))) from k
-        if typ & VarType.Bulk:
+        if typ & VarType.Bulk and not typ is VarType.Species:
             return self.add_bulk_species(name, unit, Atol, Rtol, note)
-        elif typ & VarType.Wall:
+        elif typ & VarType.Wall and not typ is VarType.Species:
             return self.add_wall_species(name, unit, Atol, Rtol, note)
         else:
-            raise ValueError("typ must be a valid species type but got {}".format(typ))
+            raise ValueError("typ must be a valid species subtype but got {}".format(typ))
 
     def add_bulk_species(self, name: str, unit: str, Atol: float = None, Rtol: float = None, note: str = None) -> "BulkSpecies":
         """_summary_
@@ -432,7 +437,7 @@ class WaterQualityReactionsModel:
                 typ = VarType[typ]
             except KeyError as k:
                 raise ValueError("Missing/invalid value for typ, expected VarType but got {}".format(repr(typ))) from k
-        if typ & VarType.Const:
+        if typ & VarType.Const and not typ is VarType.Coeff:
             if pipe_values is not None or tank_values is not None:
                 raise ValueError(
                     "pipe_values and tank_values must be None for constants but values for {}".format(
@@ -442,10 +447,10 @@ class WaterQualityReactionsModel:
                     )
                 )
             return self.add_constant(name, value, note)
-        elif typ & VarType.Param:
+        elif typ & VarType.Param and not typ is VarType.Coeff:
             return self.add_parameter(name, value, note, pipe_values, tank_values)
         else:
-            raise ValueError("typ must be a valid coefficient type but got {}".format(typ))
+            raise ValueError("typ must be a valid coefficient subtype but got {}".format(typ))
 
     def add_constant(self, name: str, value: float, note: str = None) -> "Constant":
         """_summary_
@@ -535,7 +540,7 @@ class WaterQualityReactionsModel:
         """
         if name in self._variables.keys():
             raise ValueError("A variable named {} already exists: {}".format(name, self._variables[name]))
-        expr1 = sympy.parse_expr(expr)
+        expr1 = sympy.parse_expr(expr, transformations=standard_transformations + (convert_xor,))
         used = expr1.free_symbols
         undefined = used - self.all_symbols
         if len(undefined) > 0:
@@ -544,7 +549,7 @@ class WaterQualityReactionsModel:
         self._variables[name] = new
         self._usage[name] = set()
         for v in used:
-            self._usage[v].add(name)
+            self._usage[str(v)].add(name)
         return new
 
     def add_reaction(self, loc: Union[str, RxnLocation], typ: Union[str, ExprType], species: Union[str, 'RxnSpecies'], expression: str, note: str = None) -> "RxnExpression":
@@ -631,6 +636,10 @@ class WaterQualityReactionsModel:
         else:
             raise ValueError("Unknown value for ExprType, got typ={}".format(typ))
         self._pipe_reactions[(typ.name, species)] = new
+        expr = new.validate()
+        used = expr.free_symbols
+        for v in used:
+            self._usage[str(v)].add(('pipes', typ.name, species))
         return new
 
     def add_tank_reaction(self, typ: Union[str, ExprType], species: Union[str, 'RxnSpecies'], expression: str, note: str = None) -> "RxnExpression":
@@ -676,6 +685,10 @@ class WaterQualityReactionsModel:
         else:
             raise ValueError("Unknown value for ExprType, got typ={}".format(typ))
         self._tank_reactions[(typ.name, species)] = new
+        expr = new.validate()
+        used = expr.free_symbols
+        for v in used:
+            self._usage[str(v)].add(('pipes', typ.name, species))
         return new
 
     def get_variable(self, name) -> "RxnVariable":
@@ -1008,9 +1021,9 @@ class RxnCoefficient(RxnVariable):
     """The global (default) value for this coefficient"""
     note: str = None
     """A note regarding this coefficient"""
-    pipe_values: Dict[str, float] = field(default_factory=dict, repr=False)
+    _pipe_values: Dict[str, float] = field(repr=False, init=False, default_factory=dict)
     """Values for specific pipes"""
-    tank_values: Dict[str, float] = field(default_factory=dict, repr=False)
+    _tank_values: Dict[str, float] = field(repr=False, init=False, default_factory=dict)
     """Values for specific tanks"""
 
     @property
@@ -1061,13 +1074,6 @@ class RxnCoefficient(RxnVariable):
 
 class Constant(RxnCoefficient):
     """A constant coefficient"""
-
-    def __post_init__(self):
-        if len(self.pipe_values) > 0 or len(self.tank_values) > 0:
-            warnings.warn('A Constant cannot have different values for specific pipes or tanks', category=RuntimeWarning)
-        self.pipe_values = None
-        self.tank_values = None
-        super().__post_init__()
         
     @property
     def coeff_type(self):
@@ -1075,15 +1081,40 @@ class Constant(RxnCoefficient):
 
     typ = coeff_type
 
-
+@dataclass
 class Parameter(RxnCoefficient):
     """A coefficient that has different values based on a pipe or tank"""
+
+    pipe_values: InitVar[Dict[str, float]] = None
+    """Values for specific pipes"""
+    tank_values: InitVar[Dict[str, float]] = None
+    """Values for specific tanks"""
+
+    def __post_init__(self, pipe_values_, tank_values_):
+        super().__post_init__()
+        if self._pipe_values is None:
+            self._pipe_values = dict()
+        if self._tank_values is None:
+            self._tank_values = dict()
+        if isinstance(pipe_values_, dict):
+            self._pipe_values.update(pipe_values_)
+        if isinstance(tank_values_ , dict):
+            self._tank_values.update(tank_values_)
+
+    @property
+    def pipe_values(self):
+        return self._pipe_values
+    
+    @property
+    def tank_values(self):
+        return self._tank_values
 
     @property
     def coeff_type(self):
         return VarType.Parameter
 
     typ = coeff_type
+
 
 
 @dataclass
@@ -1122,10 +1153,16 @@ class RxnExpression:
     """The right-hand-side of the equation (the expression itself)"""
     note: str = None
     """A note or comment regarding this expression"""
-    _variables: WaterQualityReactionsModel = None
+    _variables: WaterQualityReactionsModel = field(compare=False, default=None)
     """A link to the variable registry for evaluation"""
     _transformations: ClassVar[Tuple] = standard_transformations + (convert_xor,)
     """Expression transformations"""
+
+    def __post_init__(self):
+        if not isinstance(self.loc, (RxnLocation, str)):
+            raise TypeError('loc must be a str or a RxnLocation')
+        if not isinstance(self.expression_type, ExprType):
+            raise TypeError('expression type must be an ExprType, got {}'.format(repr(self.expression_type)))
 
     def link_variables(self, variables: WaterQualityReactionsModel):
         if variables is not None:
