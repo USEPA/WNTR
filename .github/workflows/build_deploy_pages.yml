@@ -1,0 +1,52 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build docs and deploy to pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build the documentation with Sphinx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch origin main
+      - name: troubleshooting
+        run: |
+          git branch
+          git remote -v
+      - uses: actions/setup-python@v2
+        with: 
+          python-version: '3.8'
+      - name: Install package
+        run: |
+          pip install -e .
+          pip install -r requirements.txt
+      - name: Build documentation
+        run: sphinx-build documentation/ documentation/_build/html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'documentation/_build/html'
+
+  deploy:
+    name: Deploy documentation to GitHub Pages
+    needs: build
+    permissions:
+      contents: read
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
