@@ -230,8 +230,8 @@ use NetworkX directly, while others use metrics included in WNTR.
 
       >>> average_expected_demand = wntr.metrics.average_expected_demand(wn)
       >>> link_lengths = wn.query_link_attribute('length')
-      >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, node_segments, 
-      ...     link_segments, average_expected_demand, link_lengths)
+      >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, 
+      ...     node_segments, link_segments, average_expected_demand, link_lengths)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
