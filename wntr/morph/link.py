@@ -273,6 +273,23 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
 
 
 def reverse_link(wn: wntr.network.WaterNetworkModel, link_name: str) -> wntr.network.WaterNetworkModel:
+    """
+    Reverse a link to switch between the start and end nodes
+    The function can reverse any link (pipe, pump or valve)
+    Vertices order will be reversed to maintain the link layout
+
+    Parameters
+    ----------
+    wn:         wntr.network.WaterNetworkModel
+                The network object where link should be reversed
+    link_name:  string
+                The name of the link to revers
+
+    Returns
+    -------
+    wntr.network.WaterNetworkModel
+    A network object after link was reversed
+    """
     link = wn.get_link(link_name)
     start_node = link.start_node
     end_node = link.end_node
