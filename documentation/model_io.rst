@@ -179,7 +179,6 @@ JSON file
 
 JSON (JavaScript Object Notation) files store a collection of name/value pairs that is easy to read in text format.
 More information on JSON files is available at https://www.json.org.
-
 The format of JSON files in WNTR is based on the :ref:`dictionary_representation` of the WaterNetworkModel.
 
 The :class:`~wntr.network.io.write_json` function writes a 
@@ -306,12 +305,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
   For Shapefiles, the `truncate` input parameter should be set to 10 (characters).
   The following example returns valid base Shapefile field names for junctions.
   Note that attributes like ``base_demand`` are truncated to ``base_deman``. 
-  
-  A minimal list of valid field names can also be obtained by setting ``complete_list`` to False.
-  Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
-  
-  Note that Shapefiles can contain additional custom field names that are assigned to WaterNetworkModel objects.
-  
+
   .. doctest::
       :skipif: gpd is None
 
@@ -319,10 +313,18 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
       >>> print(shapefile_field_names['junctions'])
       ['name', 'base_deman', 'pattern_na', 'elevation', 'coordinate', 'demand_cat', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
 
-      >>> shapefile_field_names = wntr.network.io.valid_gis_names(complete_list=False, truncate_names=10)
+  A minimal list of valid field names can also be obtained by setting ``complete_list`` to False.
+  Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
+
+  .. doctest::
+      :skipif: gpd is None
+
+      >>> shapefile_field_names = wntr.network.io.valid_gis_names(complete_list=False, 
+      ...    truncate_names=10)
       >>> print(shapefile_field_names['junctions'])
       ['name', 'base_deman', 'pattern_na', 'elevation', 'coordinate', 'demand_cat']
 	  
+* Shapefiles can contain additional custom field names that are assigned to WaterNetworkModel objects.
 
   
 The :class:`~wntr.network.io.write_shapefile` function creates 
