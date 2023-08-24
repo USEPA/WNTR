@@ -240,7 +240,7 @@ The data can be used to create a custom `material` attribute for each pipe objec
     ...     pipe.material = material[name]
 
 The custom attribute can be used in analysis in several ways. 
-For example, the following example closes the pipe if pipe material is 'Steel'.
+For example, the following example closes the pipe if pipe material is 'Steel.'
 
     >>> for name, pipe in wn.pipes():
     ...     if pipe.material == 'Steel':

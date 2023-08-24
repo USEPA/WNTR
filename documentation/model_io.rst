@@ -249,7 +249,7 @@ For more information on Shapefiles, see https://www.esri.com.
 
 To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
 
-* Geospatial data containing Junction, Tank, Reservoir, Pipe, Pump, and Valve data 
+* Geospatial data containing junction, tank, reservoir, pipe, pump, and valve data 
   are stored in separate Shapefile directories.
 
 * Shapefiles truncate field names to 10 characters, while WaterNetworkModel 
@@ -287,13 +287,13 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
       check_valv        check_valve
       dtype: object
 	  
-* The namespace for Node names (which includes Junctions, Tanks, and Reservoirs) 
-  must be unique.  Likewise, the namespace for Links (which includes Pipes, 
-  Pumps, and Valves) must be unique.  For example, this means that a Junction
+* The namespace for Node names (which includes junctions, tanks, and reservoirs) 
+  must be unique.  Likewise, the namespace for Links (which includes pipes, 
+  pumps, and valves) must be unique.  For example, this means that a junction
   cannot have the same name as a tank.
   
 * The Shapefile geometry is in a format compatible with GeoPandas, namely a 
-  Point, LineString, or MultiLineString.  See See :ref:`gis_data` for 
+  Point, LineString, or MultiLineString.  See :ref:`gis_data` for 
   more information on geometries.
   
 The :class:`~wntr.network.io.write_shapefile` function creates 

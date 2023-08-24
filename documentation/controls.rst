@@ -233,9 +233,8 @@ The control or rule should be named so that it can be retrieved and modified if 
 Accessing and modifying controls/rules
 ---------------------------------------
 
-The following examples illustrate how to access and modify controls/rules.
-
-Return a list of control names
+Controls and rules can be accessed and modified in several ways. 
+For example, the following example returns a list of control names that are included in the model.
 
 .. doctest::
 
@@ -243,7 +242,7 @@ Return a list of control names
     >>> print(control_name_list)
     ['control 1', 'control 2', 'control 3', 'control 4', 'control 5', 'control 6', 'control 7', 'control 8', 'control 9', 'control 10', 'control 11', 'control 12', 'control 13', 'control 14', 'control 15', 'control 16', 'control 17', 'control 18']
     
-Loop through control objects and identify controls that require with a specific pipe
+The following example loops through all controls in the model and identifies controls that require pipe '330'.
 
 .. doctest::
 
@@ -254,11 +253,13 @@ Loop through control objects and identify controls that require with a specific 
     control 17 IF TANK 1 LEVEL BELOW 5.21208 THEN PIPE 330 STATUS IS CLOSED PRIORITY 3
     control 18 IF TANK 1 LEVEL ABOVE 5.821680000000001 THEN PIPE 330 STATUS IS OPEN PRIORITY 3
     
-Return a specific control object and modify the priority
+The following example changes the priority of 'control 5' from medium (3) to low (1).
 
 .. doctest::
 
     >>> control = wn.get_control('control 5')
+    >>> print(control)
+    IF SYSTEM TIME IS 49:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 3
     >>> control.update_priority(1) # low
     >>> print(control)
     IF SYSTEM TIME IS 49:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 1

@@ -72,7 +72,7 @@ which can be further customized by the user.
 Additional network plot examples are included below (:numref:`fig-network-3`). 
 This includes the use of data stored as 
 a Pandas Series (pipe velocity from simulation results), 
-a dictionary (the length of the 5 longest pipes), and
+a dictionary (the length of the five longest pipes), and
 a list of strings (tank names).
 The example also combines multiple images into one figure using subplots and 
 changes the colormap from the default `Spectral_r` to `viridis` in one plot.
