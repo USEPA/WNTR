@@ -8,6 +8,8 @@
     >>> import wntr
     >>> import numpy as np
     >>> import matplotlib.pylab as plt
+    >>> import pandas as pd
+    >>> pd.set_option("display.precision", 3)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
