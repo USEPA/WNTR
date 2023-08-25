@@ -1,6 +1,14 @@
 """
 The wntr.reaction.toolkit module is a Python extension for the EPANET MSX
 Programmers Toolkit DLLs.
+
+.. note::
+    
+    Code in this section taken from code originally written by Junli Hao 07/29/2018, 
+    "EPANET-MSX-Python-wrapper" on GitHub, licensed under the BSD license. See LICENSE.txt for more 
+    details.
+
+
 """
 import ctypes
 import os
