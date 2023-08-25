@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
+autosummary_generate = True
 napoleon_use_rtype = False
 viewcode_import = True
 numpydoc_show_class_members = True

@@ -5,7 +5,7 @@
 # pyomo.dae
 # sympy
 
-from . import model
+from . import model, io, options, toolkitmsx
 # from . import library
 # from . import msx_toolkit
 # from . import MSXPY_toolkit
