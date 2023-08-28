@@ -215,8 +215,7 @@ class RxnOptions(_OptionsBase):
 
     """
 
-    def __init__(self, title: str = None, time: TimeOptions = None, report: ReportOptions = None, quality: QualityOptions = None, user: UserOptions = None):
-        self.title = (title,)
+    def __init__(self, time: TimeOptions = None, report: ReportOptions = None, quality: QualityOptions = None, user: UserOptions = None):
         self.time = TimeOptions.factory(time)
         self.report = ReportOptions.factory(report)
         self.quality = QualityOptions.factory(quality)
@@ -237,7 +236,8 @@ class RxnOptions(_OptionsBase):
             value = QualityOptions.factory(value)
         elif name == "user":
             value = UserOptions.factory(value)
-        elif name not in ["title"]:
+        else:
+        # elif name not in ["title"]:
             raise ValueError("%s is not a valid member of WaterNetworkModel")
         self.__dict__[name] = value
 

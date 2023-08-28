@@ -13,7 +13,7 @@ from wntr.network.model import WaterNetworkModel
 from wntr.reaction.base import RxnVarType
 
 from .base import ExpressionMixin, LinkedVariablesMixin, RxnExprType, RxnLocType, VariableRegistry, ReactionDynamics, RxnVarType
-from .variables import Coefficient, NamedExpression, Species
+from .variables import Coefficient, OtherTerm, Species
 
 logger = logging.getLogger(__name__)
 

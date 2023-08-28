@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
         self.assertRaises(ValueError, wntr.reaction.model.WallSpecies, "Q", "mg")
         self.assertRaises(ValueError, wntr.reaction.model.Constant, "Re", 0.52)
         self.assertRaises(ValueError, wntr.reaction.model.Parameter, "Re", 0.52)
-        self.assertRaises(ValueError, wntr.reaction.model.NamedExpression, "Re", 0.52)
+        self.assertRaises(ValueError, wntr.reaction.model.OtherTerm, "Re", 0.52)
 
     def test_RxnVariable_symbols_and_sympy(self):
         species1 = wntr.reaction.model.BulkSpecies("Cl", "mg")
@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
         symbol3 = sympy.symbols("Ka")
         self.assertEqual(param1.symbol, symbol3)
 
-        term1 = wntr.reaction.model.NamedExpression("T0", "-3.2 * Kb * Cl^2", note="bar")
+        term1 = wntr.reaction.model.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
         symbol4 = sympy.symbols("T0")
         self.assertEqual(term1.symbol, symbol4)
 
@@ -64,7 +64,7 @@ class Test(unittest.TestCase):
         species2 = wntr.reaction.model.WallSpecies("Cl", "mg", 0.01, 0.0001, note="Testing stuff")
         const1 = wntr.reaction.model.Constant("Kb", 0.482)
         param1 = wntr.reaction.model.Parameter("Ka", 0.482, note="foo")
-        term1 = wntr.reaction.model.NamedExpression("T0", "-3.2 * Kb * Cl^2", note="bar")
+        term1 = wntr.reaction.model.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
 
         self.assertEqual(str(species1), "Cl")
         self.assertEqual(species1.to_msx_string(), "BULK Cl mg  ;")
@@ -167,9 +167,9 @@ class Test(unittest.TestCase):
         self.assertDictEqual(param2.tank_values, test_tank_dict)
 
     def test_RxnTerm_creation(self):
-        self.assertRaises(TypeError, wntr.reaction.model.NamedExpression, "Re")
-        self.assertRaises(ValueError, wntr.reaction.model.NamedExpression, "Re", "1.0*Re")
-        term1 = wntr.reaction.model.NamedExpression("T0", "-3.2 * Kb * Cl^2", note="bar")
+        self.assertRaises(TypeError, wntr.reaction.model.OtherTerm, "Re")
+        self.assertRaises(ValueError, wntr.reaction.model.OtherTerm, "Re", "1.0*Re")
+        term1 = wntr.reaction.model.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
         self.assertEqual(term1.name, "T0")
         self.assertEqual(term1.expression, "-3.2 * Kb * Cl^2")
         self.assertEqual(term1.var_type, wntr.reaction.model.RxnVarType.TERM)
@@ -208,7 +208,7 @@ class Test(unittest.TestCase):
         wall1 = wntr.reaction.model.WallSpecies("ClOH", "mg", 0.01, 0.0001, note="Testing stuff")
         const1 = wntr.reaction.model.Constant("Kb", 0.482)
         param1 = wntr.reaction.model.Parameter("Ka", 0.482, note="foo")
-        term1 = wntr.reaction.model.NamedExpression("T0", "-3.2 * Kb * Cl^2", note="bar")
+        term1 = wntr.reaction.model.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
         equil1 = wntr.reaction.model.EquilibriumDynamics(bulk1, wntr.reaction.model.RxnLocType.PIPE, "-Ka + Kb * Cl + T0")
         rate1 = wntr.reaction.model.RateDynamics(bulk1, wntr.reaction.model.RxnLocType.TANK, "-Ka + Kb * Cl + T0", note="Foo Bar")
         formula1 = wntr.reaction.model.FormulaDynamics(wall1, wntr.reaction.model.RxnLocType.PIPE, "-Ka + Kb * Cl + T0")
@@ -235,7 +235,7 @@ class Test(unittest.TestCase):
         wall1 = wntr.reaction.model.WallSpecies("ClOH", "mg", 0.01, 0.0001, note="Testing stuff")
         const1 = wntr.reaction.model.Constant("Kb", 0.482)
         param1 = wntr.reaction.model.Parameter("Ka", 0.482, note="foo")
-        term1 = wntr.reaction.model.NamedExpression("T0", "-3.2 * Kb * Cl^2", note="bar")
+        term1 = wntr.reaction.model.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
 
         rxn_model2 = wntr.reaction.model.WaterQualityReactionsModel()
 
