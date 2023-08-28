@@ -57,7 +57,7 @@ Options can be modified, as shown in the example below.
     >>> wn.options.hydraulic.demand_model = 'PDD'
     >>> wn.options.hydraulic.required_pressure = 21.097 # 30 psi = 21.097 m
 	
-Note that EPANET 2.0.12 does not use the demand model, minimum pressure, 
+Note that EPANET 2.00.12 does not use the demand model, minimum pressure, 
 required pressure, or pressure exponent from the hydraulic section.
 Options that directly apply to hydraulic simulation that are not used in the
 WNTRSimulator are described in :ref:`limitations`.  

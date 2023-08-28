@@ -2,8 +2,6 @@
 
     \clearpage
 
-.. _graphics
-
 .. doctest::
     :hide:
 
@@ -14,6 +12,8 @@
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+
+.. _graphics:
 
 Graphics
 ======================================
@@ -91,7 +91,7 @@ The following example plots the network along with node population (:numref:`fig
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
-   :width: 715
+   :width: 640
    :alt: Network
 
    Interactive network graphic with the legend showing the node population.
@@ -143,6 +143,8 @@ function :class:`~wntr.graphics.network.network_animation`. Node and link attrib
 index is time and columns are the node or link name.  
 
 The following example creates a network animation of water age over time.
+The ``node_range`` parameter indicates the minimum and maximum values to use 
+when mapping colors to ``node_attribute`` values.
 
 .. doctest::
 
@@ -150,7 +152,8 @@ The following example creates a network animation of water age over time.
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
     >>> water_age = results.node['quality']/3600 # convert seconds to hours
-    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, node_range=[0,24]) # doctest: +SKIP
+    >>> anim = wntr.graphics.network_animation(wn, node_attribute=water_age, 
+    ...     node_range=[0,24]) # doctest: +SKIP
    
 Time series
 ------------------
@@ -241,7 +244,7 @@ The following example plots a fragility curve with two states (:numref:`fig-frag
 
 .. _fig-fragility2:
 .. figure:: figures/fragility_curve.png
-   :width: 800
+   :width: 640
    :alt: Fragility curve
 
    Fragility curve graphic.
@@ -273,7 +276,7 @@ The following example plots a pump curve (:numref:`fig-pump`).
     
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
-   :width: 800
+   :width: 640
    :alt: Pump curve
 
    Pump curve graphic.
@@ -343,14 +346,16 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 .. doctest::
 
     >>> valve_layer = wntr.network.generate_valve_layer(wn, 'strategic', 2, seed=123)
-    >>> G = wn.get_graph()   
-    >>> node_segments, link_segments, seg_sizes = wntr.metrics.topographic.valve_segments(G, valve_layer)
+    >>> G = wn.to_graph()   
+    >>> node_segments, link_segments, seg_sizes = wntr.metrics.topographic.valve_segments(G, 
+    ...     valve_layer)
     >>> N = seg_sizes.shape[0] 
     >>> cmap = wntr.graphics.random_colormap(N) # random color map helps view segments
-    >>> ax = wntr.graphics.plot_network(wn, link_attribute=link_segments, node_size=0, link_width=2,
-    ...     node_range=[0,N], link_range=[0,N], node_cmap=cmap, link_cmap=cmap, 
-    ...     link_colorbar_label='Segment')
-    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, add_colorbar=False, include_network=False, ax=ax)
+    >>> ax = wntr.graphics.plot_network(wn, link_attribute=link_segments, node_size=0, 
+    ...     link_width=2, node_range=[0,N], link_range=[0,N], node_cmap=cmap, 
+    ...     link_cmap=cmap, link_colorbar_label='Segment ID')
+    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, add_colorbar=False, 
+    ...     include_network=False, ax=ax)
 
 .. doctest::
     :hide:
@@ -360,7 +365,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 
 .. _fig-valve_segment:
 .. figure:: figures/plot_valve_segment.png
-   :width: 800
+   :width: 640
    :alt: Valve segment attributes
 
    Valves layer and segments.
@@ -376,8 +381,8 @@ valves surrounding each valve is plotted on the network
 
     >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, node_segments, 
     ...     link_segments)
-    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, valve_attributes['num_surround'], 
-    ...     colorbar_label='Surrounding valves')
+    >>> ax = wntr.graphics.plot_valve_layer(wn, valve_layer, 
+    ...     valve_attributes['num_surround'], colorbar_label='Surrounding valves')
 
 .. doctest::
     :hide:
@@ -387,7 +392,7 @@ valves surrounding each valve is plotted on the network
     
 .. _fig-valve_segment_attributes:
 .. figure:: figures/plot_valve_segment_attributes.png
-   :width: 800
+   :width: 640
    :alt: Valve segment attributes
 
    Valve segment attribute showing the number of valves surrounding each valve.

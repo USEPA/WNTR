@@ -16,13 +16,15 @@ References
 
 .. [BaRR13] Barker, K., Ramirez-Marquez, J.E., and Rocco, C.M. (2013). Resilience-based network component importance measures. Reliability Engineering and System Safety, 117, 89-97.
 
-.. [Bieni19] Bieniek, T., van Andel, B., and Bø, T.I. (2019). Bidirectional UTM-WGS84 converter for python, Retrieved on February 5, 2019 from https://github.com/Turbo87/utm
+.. [Bieni19] Bieniek, T., van Andel, B., and Bø, T.I. (2019). Bidirectional UTM-WGS84 converter for python, Retrieved on February 5, 2019 from https://github.com/Turbo87/utm.
 
 .. [CrLo02] Crowl, D.A., and Louvar, J.F. (2011). Chemical Process Safety: Fundamentals with Applications, 3 edition. Upper Saddle River, NJ: Prentice Hall, 720p.
 
-.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p
+.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p.
 
-.. [Folium] python-visualization/folium. (n.d.). Retrieved on February 5, 2019 from https://github.com/python-visualization/folium
+.. [JVFM21] Jordahl, K., Van den Bossche, J., Fleischmann, M,  McBride, J. and others (2021) geopandas, 10.5281/zenodo.5573592.
+
+.. [Folium] python-visualization/folium. (n.d.). Retrieved on February 5, 2019 from https://github.com/python-visualization/folium.
 
 .. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
 
@@ -48,6 +50,8 @@ References
 
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cincinnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
 
+.. [rtree] Toblerity/rtree. (n.d.). Retrieved on March 17, 2022 from https://github.com/Toblerity/rtree.
+
 .. [RWTS20] Rossman, L., Woo, H., Tryby M., Shang, F., Janke, R., and  Haxton, T. (2020) EPANET 2.2 User Manual. U.S. Environmental Protection Agency, Washington, DC, EPA/600/R-20/133.
 
 .. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., and Simpson, A. (2012). The battle of the water networks II - Problem description. Water Distribution Systems Analysis Conference 2012, September 24-27, Adelaide, South Australia, Australia. Retrieved on May 23, 2017 from https://emps.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/WDSA2012-BWNII-ProblemDescription.pdf.
@@ -66,7 +70,7 @@ References
 
 .. [WaWC06] Walski, T., Weiler, J. Culver, T. (2006). Using Criticality Analysis to Identify Impact of Valve Location. Water Distribution Systems Analysis Symposium. Cincinnati, OH, American Society of Civil Engineers: 1-9.
 
-.. [WWQP06] Wald, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). ShakeMap manual: Technical manual, user's guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
+.. [WWQP06] Wald, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). ShakeMap manual: Technical manual, user's guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/.
 
 .. [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 693p.
 

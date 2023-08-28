@@ -13,21 +13,26 @@ WNTR documentation
    units
    getting_started
    waternetworkmodel
+   model_io	   
    controls
    networkxgraph
    layers
+   options	  
    hydraulics
    waterquality
    resultsobject
    disaster_models
+   criticality	  
    resilience
    stochastic
    realtime
    fragility
    morph
    graphics
+   gis
    advancedsim
    license
+   users	   
    developers
    reference
    

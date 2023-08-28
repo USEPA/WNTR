@@ -48,7 +48,36 @@ __all__ = [
     "MixType",
     "ResultType",
     "EN",
+    "SizeLimits",
+    "InitHydOption"
 ]
+
+
+class SizeLimits(enum.Enum):
+    """
+        Limits on the size of character arrays used to store ID names
+        and text messages.
+    """
+    # // ! < Max.  # characters in ID name
+    EN_MAX_ID = 31
+    # //! < Max.  # characters in message text
+    EN_MAX_MSG = 255
+
+
+class InitHydOption(enum.Enum):
+    """
+        Hydraulic initialization options.
+        These options are used to initialize a new hydraulic analysis
+        when EN_initH is called.
+    """
+    # !< Don't save hydraulics; don't re-initialize flows
+    EN_NOSAVE = 0
+    # !< Save hydraulics to file, don't re-initialize flows
+    EN_SAVE = 1
+    # !< Don't save hydraulics; re-initialize flows
+    EN_INITFLOW = 10
+    # !< Save hydraulics; re-initialize flows
+    EN_SAVE_AND_INIT = 11
 
 
 class FlowUnits(enum.Enum):
@@ -317,23 +346,25 @@ class QualParam(enum.Enum):
             The data values converted to SI standard units
 
         """
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(data.values())
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         if mass_units is None:
             mass_units = MassUnits.mg
 
         # Do conversions
-        if self in [QualParam.Concentration, QualParam.Quality, 
+        if self in [QualParam.Concentration, QualParam.Quality,
                     QualParam.LinkQuality, QualParam.ReactionRate]:
             data = data * (mass_units.factor / 0.001)  # MASS /L to kg/m3
             if self in [QualParam.ReactionRate]:
-                data = data / (24*3600)  # 1/day to 1/s
-            
+                data = data / (24 * 3600)  # 1/day to 1/s
+
         elif self in [QualParam.SourceMassInject]:
             data = data * (mass_units.factor / 60.0)  # MASS /min to kg/s
 
@@ -359,10 +390,11 @@ class QualParam(enum.Enum):
             data = data * 3600.0  # hr to s
 
         # Convert back to input data type
-        if data_type is dict:
+        if original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list': 
             data = list(data)
+            
         return data
 
     def _from_si(self, flow_units, data, mass_units=MassUnits.mg, reaction_order=0):
@@ -387,20 +419,22 @@ class QualParam(enum.Enum):
             The data values converted to EPANET appropriate units, based on the flow units.
 
         """
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(data.values())
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do conversions
-        if self in [QualParam.Concentration, QualParam.Quality, 
+        if self in [QualParam.Concentration, QualParam.Quality,
                     QualParam.LinkQuality, QualParam.ReactionRate]:
             data = data / (mass_units.factor / 0.001)  # MASS /L fr kg/m3
             if self in [QualParam.ReactionRate]:
-                data = data * (24*3600)  # 1/day fr 1/s
-                
+                data = data * (24 * 3600)  # 1/day fr 1/s
+
         elif self in [QualParam.SourceMassInject]:
             data = data / (mass_units.factor / 60.0)  # MASS /min fr kg/s
 
@@ -426,10 +460,11 @@ class QualParam(enum.Enum):
             data = data / 3600.0  # hr fr s
 
         # Convert back to input data type
-        if data_type is dict:
+        if original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+            
         return data
 
 
@@ -531,15 +566,18 @@ class HydParam(enum.Enum):
 
         """
         # Convert to array for unit conversion
-        data_type = type(data)
-        if data_type is pd.core.frame.DataFrame:
+        original_data_type = None
+        if isinstance(data, pd.core.frame.DataFrame):
+            original_data_type = 'dataframe'
             data_index = data.index
             data_columns = data.columns
             data = data.values
-        elif data_type is dict:
+        elif isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(list(data.values()))
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do conversions
@@ -549,7 +587,7 @@ class HydParam(enum.Enum):
                 if flow_units.is_traditional:
                     # flowunit/sqrt(psi) to flowunit/sqrt(m), i.e.,
                     # flowunit/sqrt(psi) * sqrt(psi/ft / m/ft ) = flowunit/sqrt(m)
-                    data = data * np.sqrt(0.4333 / 0.3048)   
+                    data = data * np.sqrt(0.4333 / 0.3048)
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
                 data = data * 0.0254  # in to m
@@ -569,10 +607,10 @@ class HydParam(enum.Enum):
             HydParam.Length]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft to m
-        
+
         elif self in [HydParam.HeadLoss]:
             data = data / 1000  # m/1000m or ft/1000ft to unitless
-            
+
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft/s to m/s
@@ -589,19 +627,20 @@ class HydParam(enum.Enum):
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
                 # psi to m, i.e., psi * (m/ft / psi/ft) = m
-                data = data * (0.3048 / 0.4333)  
+                data = data * (0.3048 / 0.4333)
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
                 data = data * np.power(0.3048, 3)  # ft3 to m3
 
         # Convert back to input data type
-        if data_type is pd.core.frame.DataFrame:
+        if original_data_type == 'dataframe':
             data = pd.DataFrame(data, columns=data_columns, index=data_index)
-        elif data_type is dict:
+        elif original_data_type == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+        
         return data
 
     def _from_si(self, flow_units, data, darcy_weisbach=False):
@@ -628,11 +667,13 @@ class HydParam(enum.Enum):
 
         """
         # Convert to array for conversion
-        data_type = type(data)
-        if data_type is dict:
+        original_data_type = None
+        if isinstance(data, dict):
+            original_data_type = 'dict'
             data_keys = data.keys()
             data = np.array(list(data.values()))
-        elif data_type is list:
+        elif isinstance(data, list):
+            original_data_type = 'list'
             data = np.array(data)
 
         # Do onversions
@@ -643,7 +684,7 @@ class HydParam(enum.Enum):
                     # flowunit/sqrt(psi) from flowunit/sqrt(m), i.e.,
                     # flowunit/sqrt(m) * sqrt( m/ft / psi/ft ) = flowunit/sqrt(psi), same as
                     # flowunit/sqrt(m) / sqrt( psi/ft / m/ft ) = flowunit/sqrt(psi)
-                    data = data / np.sqrt( 0.4333 / 0.3048 )
+                    data = data / np.sqrt(0.4333 / 0.3048)
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
                 data = data / 0.0254  # in from m
@@ -663,10 +704,10 @@ class HydParam(enum.Enum):
             HydParam.Length]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft from m
-                    
+
         elif self in [HydParam.HeadLoss]:
             data = data * 1000  # m/1000m or ft/1000ft from unitless
-            
+
         elif self in [HydParam.Velocity]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft/s from m/s
@@ -684,17 +725,18 @@ class HydParam(enum.Enum):
             if flow_units.is_traditional:
                 # psi from m, i.e., m * (psi/ft / m/ft) = psi, same as
                 # m / ( m/ft / psi/m ) = psi
-                data = data / (0.3048 / 0.4333 )  
+                data = data / (0.3048 / 0.4333)
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
                 data = data / np.power(0.3048, 3)  # ft3 from m3
 
         # Put back into data format passed in
-        if data_type is dict:
+        if original_data_type  == 'dict':
             data = dict(zip(data_keys, data))
-        elif data_type is list:
+        elif original_data_type == 'list':
             data = list(data)
+            
         return data
 
 
@@ -1192,13 +1234,13 @@ class EN(enum.IntEnum):
 
 
 def to_si(
-    from_units: FlowUnits,
-    data,
-    param,
-    mass_units: MassUnits = MassUnits.mg,
-    pressure_units: PressureUnits = None,
-    darcy_weisbach: bool = False,
-    reaction_order: int = 0,
+        from_units: FlowUnits,
+        data,
+        param,
+        mass_units: MassUnits = MassUnits.mg,
+        pressure_units: PressureUnits = None,
+        darcy_weisbach: bool = False,
+        reaction_order: int = 0,
 ):
     """Convert an EPANET parameter from internal to SI standard units.
 
@@ -1280,13 +1322,13 @@ def to_si(
 
 
 def from_si(
-    to_units: FlowUnits,
-    data,
-    param,
-    mass_units: MassUnits = MassUnits.mg,
-    pressure_units: PressureUnits = None,
-    darcy_weisbach: bool = False,
-    reaction_order: int = 0,
+        to_units: FlowUnits,
+        data,
+        param,
+        mass_units: MassUnits = MassUnits.mg,
+        pressure_units: PressureUnits = None,
+        darcy_weisbach: bool = False,
+        reaction_order: int = 0,
 ):
     """Convert an EPANET parameter from SI standard units back to internal units.
 

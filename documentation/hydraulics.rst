@@ -101,7 +101,7 @@ demand model,
 minimum pressure,
 required pressure, and 
 pressure exponent.
-Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
+Note that EPANET 2.00.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
 Options that directly apply to hydraulic simulation that are not used in the
 WNTRSimulator are described in :ref:`limitations`.   
 
@@ -278,8 +278,8 @@ in the following example.
    EPANET specifications.
    
 When using the WNTRSimulator, the required pressure, minimum pressure, and pressure exponent can vary throughout the network.  
-By default, each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value
-in the hydraulic options are used to define the PDD constraint for that junction. 
+By default, each junction's required pressure, minimum pressure, and pressure exponent is set to None and the global value is used 
+in the hydraulic options to define the PDD constraint for that junction. 
 If the user defines required pressure, minimum pressure, or pressure exponent on a junction, 
 those values will override the required pressure, minimum pressure, and pressure exponent defined in the global hydraulic options 
 when defining the PDD constraint for that junction.  
@@ -295,7 +295,7 @@ junction 121.
     
 The ability to use spatially variable required pressure, minimum pressure, and pressure 
 exponent is only available when using the WNTRSimulator.
-The EpanetSimulator always uses values in the global hydraulic options.
+The EpanetSimulator always uses the global values in the hydraulic options.
 
 .. _leak_model:
 
@@ -352,17 +352,19 @@ The following example adds a leak to the water network model.
 
     >>> node = wn.get_node('123')           
     >>> node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
-    
+
+.. _pause_restart:
+
 Pause and restart 
 ------------------
 
-The WNTRSimulator includes the ability to 
+The WNTRSimulator includes the ability to: 
 
 * Reset initial values and re-simulate using the same water network model.  Initial values include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
 
-* Pause a hydraulic simulation, change network operations, and then restart the simulation
+* Pause a hydraulic simulation, change network operations, and then restart the simulation.
 
-* Save the water network model and results to files and reload for future analysis
+* Save the water network model and results to files and reload for future analysis.
 
 These features are helpful when evaluating various response action plans or when 
 simulating long periods of time where the time resolution might vary.

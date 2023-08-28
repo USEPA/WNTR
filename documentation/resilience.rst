@@ -74,7 +74,7 @@ WNTR includes additional topographic metrics to help compute resilience.
                                           measure of the number of branches in a network.  A node with degree 0 is not 
                                           connected to the network.  Terminal nodes have degree 1. A node connected to every node (including itself) 
                                           has a degree equal to the number of nodes in the network.  
-                                          The average node degree is a system wide metric used to describe the number of 
+                                          The average node degree is a system-wide metric used to describe the number of 
                                           connected links in a network.
 
    Link density                           Link density is the ratio between the total number of links and the maximum 
@@ -114,7 +114,7 @@ WNTR includes additional topographic metrics to help compute resilience.
    Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
                                           other nodes in the network.  Shortest path length is a value between 0 and 
                                           the number of links in the network.
-                                          The average shortest path length is a system wide metric used to describe the number
+                                          The average shortest path length is a system-wide metric used to describe the number
                                           of links between a node and all other nodes.
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
@@ -150,7 +150,7 @@ graph or a graph with a single edge between two nodes.
     >>> import wntr # doctest: +SKIP
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
-    >>> G = wn.get_graph() # directed multigraph
+    >>> G = wn.to_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
 
@@ -213,7 +213,7 @@ use NetworkX directly, while others use metrics included in WNTR.
       >>> results = sim.run_sim()
       
       >>> flowrate = results.link['flowrate'].iloc[-1,:] # flowrate from the last timestep
-      >>> G = wn.get_graph(link_weight=flowrate, modify_direction=True)
+      >>> G = wn.to_graph(link_weight=flowrate, modify_direction=True)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
 * Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valvelayer`)
@@ -230,8 +230,8 @@ use NetworkX directly, while others use metrics included in WNTR.
 
       >>> average_expected_demand = wntr.metrics.average_expected_demand(wn)
       >>> link_lengths = wn.query_link_attribute('length')
-      >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, node_segments, 
-      ...     link_segments, average_expected_demand, link_lengths)
+      >>> valve_attributes = wntr.metrics.valve_segment_attributes(valve_layer, 
+      ...     node_segments, link_segments, average_expected_demand, link_lengths)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
@@ -250,7 +250,7 @@ use NetworkX directly, while others use metrics included in WNTR.
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network. NPR is computed using ...
 	Connectivity will change at each timestep, depending on the flow direction.  
-	The method :class:`~wntr.network.model.WaterNetworkModel.get_graph` method 
+	The method :class:`~wntr.network.model.WaterNetworkModel.to_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
@@ -307,7 +307,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each timestep, depending on the flow direction.  
-                                          The :class:`~wntr.network.model.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
+                                          The :class:`~wntr.network.model.WaterNetworkModel.to_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -343,7 +343,7 @@ The following examples compute hydraulic metrics, including:
       >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
       ...     threshold)
     
-* Water service availability (Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0).
+* Water service availability [Note that for Net3, the simulated demands are never less than the expected demand, and water service availability is always 1 (for junctions that have positive demand) or NaN (for junctions that have demand equal to 0)].
 	
   .. doctest::
 
@@ -365,7 +365,7 @@ The following examples compute hydraulic metrics, including:
   .. doctest::
 
       >>> flowrate = results.link['flowrate'].loc[12*3600,:]
-      >>> G = wn.get_graph(link_weight=flowrate)
+      >>> G = wn.to_graph(link_weight=flowrate)
       >>> entropy, system_entropy = wntr.metrics.entropy(G)
     
 Water quality metrics
@@ -483,7 +483,7 @@ The following examples use the results from the chemical water quality simulatio
       >>> flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
       >>> EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, detection_limit)
     
-* Population impacted by mass consumed over a specified threshold.
+* Population impacted by mass consumed over a specified threshold
 
   .. doctest::
 
@@ -520,8 +520,8 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Greenhouse gas emissions can be computed 
                                           using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.
 
-   Pump operating power, energy and       The power, energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy`, 
-   cost                                   :class:`~wntr.metrics.economic.pump_energy` and 
+   Pump operating power, energy and cost  The power, energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy`, 
+                                          :class:`~wntr.metrics.economic.pump_energy` and 
                                           :class:`~wntr.metrics.economic.pump_cost` methods. These
                                           use the flowrates and pressures from simulation results to compute pump power, energy and cost.
    =====================================  ================================================================================================================================================

@@ -198,13 +198,13 @@ class _Diagnostics(object): # pragma: no cover
                 print('could not load {0} into the model because {0} is not an attribute of the model'.format(v_name))
                 continue
             v = getattr(self.model, v_name)
-            if type(val) == dict:
+            if isinstance(val, dict):
                 for key, _val in val.items():
                     if key not in v:
                         print('could not load {0}[{1}] into the model because {1} is not an element in model.{0}'.format(v_name, key))
                         continue
                     _v = v[key]
-                    if type(_v) == Var:
+                    if isinstance(_v, Var):
                         _v.value = _val
                     else:
                         if abs(_v.value - _val) > 1e-6:
@@ -213,7 +213,7 @@ class _Diagnostics(object): # pragma: no cover
                                 print('  from solution file: {0}'.format(_val))
                                 print('  from model: {0}'.format(_v.value))
             else:
-                if type(v) == Var:
+                if isinstance(v, Var):
                     v.value = val
                 else:
                     if abs(v.value - val) > 1e-6:
@@ -332,7 +332,7 @@ class _Diagnostics(object): # pragma: no cover
         link_attributes = ['status', '_is_isolated', 'flow']
 
         # Graph
-        G = wn.get_graph()
+        G = wn.to_graph()
 
         open_edges = dict()
         closed_edges = dict()
@@ -373,7 +373,7 @@ class _Diagnostics(object): # pragma: no cover
             link_text = str(link.link_type) + ' ' + str(link)
             for _attr in link_attributes:
                 val = getattr(link, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 link_text += '<br />{0}: {1}'.format(_attr, str(val))
             link_text += '<br />{0}: {1}'.format('x_coord', 0.5 * (x0 + x1))
@@ -391,7 +391,7 @@ class _Diagnostics(object): # pragma: no cover
             node_text = str(_node.node_type) + ' ' + str(_node)
             for _attr in node_attributes:
                 val = getattr(_node, _attr)
-                if type(val) == float:
+                if isinstance(val, float):
                     val = round(val, round_ndigits)
                 node_text += '<br />{0}: {1}'.format(_attr, str(val))
             try:
@@ -666,7 +666,7 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _setup_sim_options(self, solver, backup_solver, solver_options, backup_solver_options, convergence_error):
         self._report_timestep = self._wn.options.time.report_timestep
         self._hydraulic_timestep = self._wn.options.time.hydraulic_timestep
-        if type(self._report_timestep) is str:
+        if isinstance(self._report_timestep, str):
             if self._report_timestep.upper() != 'ALL':
                 raise ValueError('report timestep must be either an integer number of seconds or "ALL".')
         else:
@@ -1194,19 +1194,11 @@ class WNTRSimulator(WaterNetworkSimulator):
         Parameters
         ----------
         solver: object
-            wntr.sim.solvers.NewtonSolver or Scipy solver
+            :py:class:`~wntr.sim.solvers.NewtonSolver` or Scipy solver
         backup_solver: object
-            wntr.sim.solvers.NewtonSolver or Scipy solver
+            :py:class:`~wntr.sim.solvers.NewtonSolver` or Scipy solver
         solver_options: dict
-            Solver options are specified using the following dictionary keys:
-
-            * MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 3000)
-            * TOL: tolerance for the hydraulic equations (default = 1e-6)
-            * BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
-            * BT_MAXITER: the maximum number of iterations for each line search (default = 100)
-            * BACKTRACKING: whether or not to use a line search (default = True)
-            * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
-            * THREADS: the number of threads to use in constraint and jacobian computations
+            See :py:class:`~wntr.sim.solvers.NewtonSolver` for possible options
         backup_solver_options: dict
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the
@@ -1333,7 +1325,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.debug('no changes made by postsolve controls; moving to next timestep')
 
             resolve = False
-            if type(self._report_timestep) == float or type(self._report_timestep) == int:
+            if isinstance(self._report_timestep, (float, int)):
                 if self._wn.sim_time % self._report_timestep == 0:
                     wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:

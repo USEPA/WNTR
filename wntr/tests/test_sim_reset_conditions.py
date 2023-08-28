@@ -72,7 +72,7 @@ class Test_Reset_Conditions(unittest.TestCase):
             results2.node["pressure"].plot(ax=ax)
 
             wn.options.time.duration = 100 * 3600
-            wn.write_inpfile("temp_Net3_epanet.inp")
+            wntr.network.write_inpfile(wn, "temp_Net3_epanet.inp")
 
             results3 = sim.run_sim()
             results3.node["pressure"].plot(ax=ax, title="WNTRSim_continue")

@@ -28,7 +28,7 @@ class TestEntropyMetric(unittest.TestCase):
             "12": 150.0,
         }
 
-        G_flowrate = wn.get_graph(link_weight=attr, modify_direction=True)
+        G_flowrate = wn.to_graph(link_weight=attr, modify_direction=True)
 
         [S, S_ave] = wntr.metrics.entropy(G_flowrate)
 
@@ -68,7 +68,7 @@ class TestEntropyMetric(unittest.TestCase):
             "16": 20.4,
         }
 
-        G_flowrate = wn.get_graph(link_weight=attr, modify_direction=True)
+        G_flowrate = wn.to_graph(link_weight=attr, modify_direction=True)
 
         [S, S_ave] = wntr.metrics.entropy(G_flowrate)
 

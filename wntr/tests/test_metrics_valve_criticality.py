@@ -15,7 +15,7 @@ class TestSegmentation(unittest.TestCase):
     def setUpClass(self):
         inp_file = join(ex_datadir, "Net3.inp")
         self.wn = wntr.network.WaterNetworkModel(inp_file)
-        G = self.wn.get_graph()
+        G = self.wn.to_graph()
         self.valves = pd.read_csv(
             join(test_datadir, "valve_layer_stategic_1.csv"),
             index_col=0,
@@ -55,8 +55,8 @@ class TestSegmentation(unittest.TestCase):
         #                            node_size=10, filename=filename)
 
         expected_valve_crit = pd.read_csv(
-            join(test_datadir, "valve_crit_length.csv"), index_col=[0], squeeze=True
-        )
+            join(test_datadir, "valve_crit_length.csv"), index_col=[0], 
+        ).squeeze("columns")
 
         assert_series_equal(
             valve_crit, expected_valve_crit, check_dtype=False, check_names=False
@@ -79,8 +79,8 @@ class TestSegmentation(unittest.TestCase):
         #                            node_size=10, filename=filename)
 
         expected_valve_crit = pd.read_csv(
-            join(test_datadir, "valve_crit_demand.csv"), index_col=[0], squeeze=True
-        )
+            join(test_datadir, "valve_crit_demand.csv"), index_col=[0], 
+        ).squeeze("columns")
 
         assert_series_equal(
             valve_crit, expected_valve_crit, check_dtype=False, check_names=False
@@ -100,8 +100,8 @@ class TestSegmentation(unittest.TestCase):
         #                            node_size=10, filename=filename)
 
         expected_valve_crit = pd.read_csv(
-            join(test_datadir, "valve_crit_valve.csv"), index_col=[0], squeeze=True
-        )
+            join(test_datadir, "valve_crit_valve.csv"), index_col=[0], 
+        ).squeeze("columns")
 
         assert_series_equal(
             valve_crit, expected_valve_crit, check_dtype=False, check_names=False

@@ -133,7 +133,7 @@ In the example below, the strength of the source is changed from 1000 to 1500.
     <Source: 'Source', '121', 'SETPOINT', 1500, SourcePattern>
 
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
-These sources are given the name 'INP#' where # is an integer related to the number of sources in the INP file.
+These sources are given the name 'INP#' where # is an integer representing the number of sources in the INP file.
 
 .. The following is not shown in the UM
     _wq_pdd:
