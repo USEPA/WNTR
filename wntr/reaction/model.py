@@ -50,6 +50,7 @@ class WaterQualityReactionsModel(ReactionRegistry, VariableRegistry):
         A long description of the model
     citations : 
     """
+    filename: str = None
     title: str = None
     desc: str = None
     citations: Union[List[str], str] = "you ought to provide citations for this model"
@@ -79,8 +80,10 @@ class WaterQualityReactionsModel(ReactionRegistry, VariableRegistry):
         self._usage: Dict[str, Set[str]] = dict()
 
         self._sources: Dict[str, float] = dict()
-        self._inital_quality: Dict[Hashable, float] = dict()
+        self._inital_quality = list()
         self._wn: WaterNetworkModel = None
+        self._patterns: Dict[str, Any] = dict()
+        self._report = list()
 
         for v in HYDRAULIC_VARIABLES:
             self._variables[v['name']] = InternalVariable(v['name'], note=v['note'])
@@ -270,3 +273,6 @@ class WaterQualityReactionsModel(ReactionRegistry, VariableRegistry):
 
     def link_water_network_model(self, wn: WaterNetworkModel):
         self._wn = wn
+
+    def add_pattern(self, name, pat):
+        self._patterns[name] = pat

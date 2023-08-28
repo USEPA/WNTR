@@ -24,13 +24,18 @@ class Species(LinkedVariablesMixin, ReactionVariable):
     atol: InitVar[float] = None
     rtol: InitVar[float] = None
     note: str = None
+    diffusivity: float = None
     variable_registry: InitVar[VariableRegistry] = None
 
     def __post_init__(self, atol=None, rtol=None, reaction_model=None):
         if isinstance(atol, property):
             atol = None
+        elif atol is not None:
+            atol = float(atol)
         if isinstance(rtol, property):
             rtol = None
+        elif rtol is not None:
+            rtol = float(rtol)
         if self.name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         if (atol is None) ^ (rtol is None):
@@ -119,6 +124,7 @@ class Coefficient(LinkedVariablesMixin, ReactionVariable):
     def __post_init__(self, reaction_model):
         if self.name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
+        self.global_value = float(self.global_value)
         self._variable_registry = reaction_model
 
     def get_value(self) -> float:
