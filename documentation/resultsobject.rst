@@ -87,7 +87,7 @@ Link results include DataFrames for each of the following attributes:
 * Velocity
 * Flowrate
 * Setting
-* Status (0 indicates closed, 1 indicates open)
+* Status (0 indicates closed pipe/pump/valve, 1 indicates open pipe/pump/valve, 2 indicates active valve)
 * Headloss (only when the EpanetSimulator is used)
 * Friction factor (only when the EpanetSimulator is used)
 * Reaction rate (only when the EpanetSimulator is used)

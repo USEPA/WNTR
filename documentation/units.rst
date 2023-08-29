@@ -7,19 +7,22 @@ Units
 
 All data in WNTR is stored in the following SI (International System) units:
 
-* Length = :math:`m`
-* Diameter = :math:`m`
-* Water pressure = :math:`m` (this assumes a fluid density of 1000 :math:`kg/m^3`)
-* Elevation = :math:`m`
-* Mass = :math:`kg`
-* Time = :math:`s`
+* Acceleration = :math:`g` (1 :math:`g` = 9.81 :math:`m/s^2`)
 * Concentration = :math:`kg/m^3`
 * Demand = :math:`m^3/s`
-* Velocity = :math:`m/s`
-* Acceleration = :math:`g` (1 :math:`g` = 9.81 :math:`m/s^2`)
+* Diameter = :math:`m`
+* Elevation = :math:`m`
 * Energy = :math:`J`
-* Power = :math:`W`
+* Flow rate = :math:`m^3/s`
+* Head = :math:`m` 
+* Headloss = :math:`m` 
+* Length = :math:`m`
+* Mass = :math:`kg`
 * Mass injection = :math:`kg/s`
+* Power = :math:`W`
+* Pressure head = :math:`m` (this assumes a fluid density of 1000 :math:`kg/m^3`)
+* Time = :math:`s`
+* Velocity = :math:`m/s`
 * Volume = :math:`m^3`
 
 When setting up analysis in WNTR, all input values should be specified in SI units. 

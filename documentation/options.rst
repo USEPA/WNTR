@@ -49,7 +49,8 @@ Individual sections are selected as follows.
     >>> wn.options.graphics  # doctest: +SKIP
     >>> wn.options.user  # doctest: +SKIP
 
-Options can be modified, as shown in the example below.
+Options can be modified, as shown in the example below
+(note, duration is in seconds and required pressure is in meters).
 
 .. doctest::
     

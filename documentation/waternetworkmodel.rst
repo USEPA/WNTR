@@ -5,6 +5,8 @@
 .. doctest::
     :hide:
 	
+    >>> import numpy as np
+    >>> import pandas as pd
     >>> try:
     ...    import geopandas as gpd
     ... except ModuleNotFoundError:
@@ -199,12 +201,59 @@ Add custom element attributes
 
 New attributes can be added to model elements simply by defining a new attribute 
 name and value. These attributes can be used in custom analysis and graphics.
+While this is similar to using external datasets directly, there can be benefits 
+to adding custom attributes to model objects.
+
+The following example uses a dataset that defines pipe material as 
+polyvinyl chloride (PVC), cast iron, steel, or high-density polyethylene (HDPE). 
+The dataset is indexed by pipe name.  The first 10 lines of the dataset are shown below.
+
+.. doctest::
+    :hide:
+
+    >>> np.random.seed(6789)
+    >>> material = pd.Series()
+    >>> for name, pipe in wn.pipes():
+    ...     val = np.random.choice(['PVC', 'Cast iron', 'Steel', 'HDPE'], 1, [0.45, 0.2, 0.1, 0.25])[0]
+    ...     material[name] = val
 
 .. doctest::
 
-    >>> pipe = wn.get_link('122')
-    >>> pipe.material = 'PVC'
+    >>> print(material.head(10))
+    20         Steel
+    40     Cast iron
+    50          HDPE
+    60           PVC
+    101    Cast iron
+    103          PVC
+    105        Steel
+    107        Steel
+    109    Cast iron
+    111        Steel
+    dtype: object
 	
+The data can be used to create a custom `material` attribute for each pipe object.
+
+.. doctest::
+
+    >>> for name, pipe in wn.pipes():
+    ...     pipe.material = material[name]
+
+The custom attribute can be used in analysis in several ways. 
+For example, the following example closes the pipe if pipe material is 'Steel.'
+
+    >>> for name, pipe in wn.pipes():
+    ...     if pipe.material == 'Steel':
+    ...         pipe.initial_status = 'Closed'
+
+A complete list of custom attributes can also be obtained using a query, 
+as shown below.
+
+.. doctest::
+
+    >>> material = wn.query_link_attribute('material')
+
+    
 Iterate over elements
 -------------------------
 

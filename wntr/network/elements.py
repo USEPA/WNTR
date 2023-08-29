@@ -75,17 +75,17 @@ class Junction(Node):
 
         name
         node_type
-        head
-        demand
+        base_demand
+        demand_pattern
         demand_timeseries_list
         elevation
-        required_pressure
-        minimum_pressure
-        pressure_exponent
-        emitter_coefficient
-        base_demand
         coordinates
+        demand_category
+        emitter_coefficient
         initial_quality
+        minimum_pressure
+        required_pressure
+        pressure_exponent
         tag
 
     .. rubric:: Read-only simulation results
@@ -102,6 +102,22 @@ class Junction(Node):
         leak_discharge_coeff
     
     """
+
+    # base and optional attributes used to create a Junction in _from_dict
+    # base attributes are used in add_junction
+    _base_attributes = ["name", 
+                        "base_demand", 
+                        "pattern_name", 
+                        "elevation", 
+                        "coordinates",
+                        "demand_category"]
+    _optional_attributes = ["emitter_coefficient",
+                            "initial_quality", 
+                            "minimum_pressure", 
+                            "required_pressure", 
+                            "pressure_exponent", 
+                            "tag"]
+
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
         self._demand_timeseries_list = Demands(self._pattern_reg)
@@ -401,7 +417,25 @@ class Tank(Node):
         leak_discharge_coeff
 
     """
-
+    
+    # base and optional attributes used to create a Tank in _from_dict
+    # base attributes are used in add_tank
+    _base_attributes = ["name", 
+                        "elevation", 
+                        "init_level",
+                        "min_level",
+                        "max_level", 
+                        "diameter",
+                        "min_vol"
+                        "vol_curve_name",
+                        "overflow", 
+                        "coordinates"]
+    _optional_attributes = ["initial_quality",
+                            "mixing_fraction",
+                            "mixing_model", 
+                            "bulk_coeff", 
+                            "tag"]
+    
     def __init__(self, name, wn):
         super(Tank, self).__init__(wn, name)
         self._elevation=0.0
@@ -714,9 +748,9 @@ class Reservoir(Node):
         base_head
         head_pattern_name
         head_timeseries
-        tag
-        initial_quality
         coordinates
+        initial_quality
+        tag
 
     .. rubric:: Read-only simulation results
 
@@ -728,6 +762,15 @@ class Reservoir(Node):
         quality
 
     """
+    
+    # base and optional attributes used to create a Reservoir in _from_dict
+    # base attributes are used in add_reservoir
+    _base_attributes = ["name", 
+                        "base_head", 
+                        "head_pattern_name",
+                        "coordinates"]
+    _optional_attributes = ["initial_quality", 
+                            "tag"]
     
     def __init__(self, name, wn, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(wn, name)
@@ -807,22 +850,21 @@ class Pipe(Link):
     .. autosummary::
 
         name
-        start_node_name
-        end_node_name
         link_type
+        start_node
+        start_node_name
+        end_node
+        end_node_name
         length
         diameter
         roughness
         minor_loss
-        cv
+        initial_status
+        check_valve
         bulk_coeff
         wall_coeff
-        initial_status
-        start_node
-        end_node
-        tag
         vertices
-
+        tag
 
     .. rubric:: Read-only simulation results
 
@@ -837,7 +879,23 @@ class Pipe(Link):
         status
 
     """
-
+    
+    # base and optional attributes used to create a Pipe in _from_dict
+    # base attributes are used in add_pipe
+    _base_attributes = ["name",
+                        "start_node_name",
+                        "end_node_name",
+                        "length",
+                        "diameter",
+                        "roughness",
+                        "minor_loss",
+                        "initial_status",
+                        "check_valve"]
+    _optional_attributes = ["bulk_coeff",
+                            "wall_coeff",
+                            "vertices",
+                            "tag"]
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Pipe, self).__init__(wn, name, start_node_name, end_node_name)
         self._length = 304.8
@@ -984,15 +1042,16 @@ class Pump(Link):
         start_node_name
         end_node
         end_node_name
+        base_speed
+        speed_pattern_name
+        speed_timeseries
         initial_status
         initial_setting
-        speed_timeseries
         efficiency
         energy_price
         energy_pattern
-        tag
         vertices
-
+        tag
 
     .. rubric:: Read-only simulation results
 
@@ -1006,7 +1065,25 @@ class Pump(Link):
         setting
 
     """
-
+    
+    # base and optional attributes used to create a Pump in _from_dict
+    # base attributes are used in add_pump
+    _base_attributes = ["name",
+                        "start_node_name",
+                        "end_node_name",
+                        "pump_type",
+                        "pump_curve_name",
+                        "power"
+                        "base_speed",
+                        "speed_pattern_name",
+                        "initial_status"]
+    _optional_attributes = ["initial_setting",
+                            "efficiency",
+                            "energy_pattern",
+                            "energy_price",
+                            "vertices",
+                            "tag"]
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Pump, self).__init__(wn, name, start_node_name, end_node_name)
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
@@ -1177,17 +1254,18 @@ class HeadPump(Pump):
         start_node_name
         end_node
         end_node_name
+        base_speed
+        speed_pattern_name
+        speed_timeseries
         initial_status
         initial_setting
         pump_type
         pump_curve_name
-        speed_timeseries
         efficiency
         energy_price
         energy_pattern
-        tag
         vertices
-
+        tag
 
     .. rubric:: Read-only simulation results
 
@@ -1201,6 +1279,7 @@ class HeadPump(Pump):
         setting
 
     """
+
 #    def __init__(self, name, start_node_name, end_node_name, wn):
 #        super(HeadPump,self).__init__(name, start_node_name, 
 #                                      end_node_name, wn)
@@ -1208,7 +1287,7 @@ class HeadPump(Pump):
 #        self._coeffs_curve_points = None # these are used to verify whether
 #                                         # the pump curve was changed since
 #                                         # the _curve_coeffs were calculated
-    
+
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
@@ -1395,17 +1474,18 @@ class PowerPump(Pump):
         start_node_name
         end_node
         end_node_name
+        base_speed
+        speed_pattern_name
+        speed_timeseries
         initial_status
         initial_setting
         pump_type
         power
-        speed_timeseries
         efficiency
         energy_price
         energy_pattern
-        tag
         vertices
-
+        tag
 
     .. rubric:: Read-only simulation results
 
@@ -1419,7 +1499,7 @@ class PowerPump(Pump):
         setting
 
     """
-    
+
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'POWER', self._base_power, 
@@ -1486,12 +1566,12 @@ class Valve(Link):
         start_node_name
         end_node
         end_node_name
+        diameter
+        valve_type
         initial_status
         initial_setting
-        valve_type
-        tag
         vertices
-
+        tag
 
     .. rubric:: Result attributes
 
@@ -1505,7 +1585,20 @@ class Valve(Link):
         setting
 
     """
-    
+
+    # base and optional attributes used to create a Valve in _from_dict
+    # base attributes are used in add_valve
+    _base_attributes = ["name",
+                        "start_node_name",
+                        "end_node_name",
+                        "diameter",
+                        "valve_type",
+                        "minor_loss",
+                        "initial_setting",
+                        "initial_status"]
+    _optional_attributes = ["vertices",
+                            "tag"]
+        
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Valve, self).__init__(wn, name, start_node_name, end_node_name)
         self.diameter = 0.3048
@@ -1602,7 +1695,7 @@ class PRValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PRValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1663,7 +1756,7 @@ class PSValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PSValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1724,7 +1817,7 @@ class PBValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PBValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1784,7 +1877,7 @@ class FCValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(FCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1845,7 +1938,7 @@ class TCValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(TCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1908,7 +2001,7 @@ class GPValve(Valve):
         setting
 
     """
-    
+
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(GPValve, self).__init__(name, start_node_name, end_node_name, wn)
         self._headloss_curve_name = None
