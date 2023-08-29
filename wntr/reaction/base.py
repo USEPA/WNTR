@@ -1,17 +1,47 @@
+# -*- coding: utf-8 -*-
+
+"""
+The base classes for the the wntr.reaction module.
+Other than the enum classes, the classes in this module are all abstract 
+and/or mixin classes, and should not be instantiated directly.
+"""
+
 import abc
-from abc import ABC, abstractmethod, abstractproperty
-from collections.abc import MutableMapping
 import enum
 import logging
-from dataclasses import InitVar, asdict, dataclass, field
+from abc import ABC, abstractmethod, abstractproperty
+from collections.abc import MutableMapping
+from dataclasses import InitVar, dataclass
 from enum import Enum, IntFlag
-from typing import Any, ClassVar, Dict, Generator, ItemsView, Iterator, KeysView, List, Set, Tuple, Union, ValuesView, Hashable
-import datetime
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Generator,
+    Hashable,
+    ItemsView,
+    Iterator,
+    KeysView,
+    List,
+    Set,
+    Tuple,
+    Union,
+    ValuesView,
+)
 
-import sympy
-from sympy import Float, Symbol, init_printing, symbols, Function
-from sympy.parsing import parse_expr
-from sympy.parsing.sympy_parser import convert_xor, standard_transformations
+has_sympy = False
+try:
+    from sympy import Float, Symbol, init_printing, symbols
+    from sympy.parsing import parse_expr
+    from sympy.parsing.sympy_parser import convert_xor, standard_transformations
+
+    has_sympy = True
+except ImportError:
+    sympy = None
+    logging.critical("This python installation does not have SymPy installed. Certain functionality will be disabled.")
+    standard_transformations = (None,)
+    convert_xor = None
+    has_sympy = False
 
 from wntr.network.model import WaterNetworkModel
 
@@ -33,109 +63,52 @@ HYDRAULIC_VARIABLES = [
     {"name": "Av", "note": "Surface area per unit volume (area units/L) "},
     {"name": "Len", "note": "Pipe length (feet or meters)"},
 ]
-RESERVED_NAMES = tuple([v['name'] for v in HYDRAULIC_VARIABLES])
+"""The hydraulic variables defined in EPANET-MSX"""
+
+RESERVED_NAMES = tuple([v["name"] for v in HYDRAULIC_VARIABLES])
+"""The MSX reserved names as a tuple"""
+
 SYMPY_RESERVED = ("E", "I", "pi")
+"""Some extra names reserved by sympy"""
+
 EXPR_TRANSFORMS = standard_transformations + (convert_xor,)
-
-@dataclass
-class Citation:
-    title: str
-    year: int
-    author: str = None
-
-    # citation type/subtype (e.g., "report"/"tech. rep.")
-    citationtype: str = 'misc'
-    citationsubtype: str = None
-
-    # document identifiers
-    doi: str = None
-    url: str = None
-    isrn: str = None
-    isbn: str = None
-    issn: str = None
-    eprint: str = None
-
-    # container titles
-    journaltitle: str = None
-    maintitle: str = None
-    booktitle: str = None
-    issuetitle: str = None
-
-    # conference/proceedings info
-    eventtitle: str = None
-    eventdate: datetime.date = None
-    venue: str = None
-
-    # publishing info
-    institution: str = None
-    organization: str = None
-    publisher: str = None
-    location: str = None
-    howpublished: str = None
-    language: str = None
-    origlanguage: str = None
-
-    # additional people
-    editor: str = None
-    bookauthor: str = None
-    translator: str = None
-    annotator: str = None
-    commentator: str = None
-    introduction: str = None
-    foreword: str = None
-    afterword: str = None
-
-    # identifying info
-    issue: str = None
-    series: str = None
-    volume: str = None
-    number: str = None
-    part: str = None
-    edition: str = None
-    version: str = None
-    chapter: str = None
-    pages: str = None
-    volumes: str = None
-    pagetotal: str = None
-
-    # dates
-    month: str = None
-    fulldate: datetime.date = None
-    urldate: datetime.date = None
-
-    # extra
-    note: str = None
-    addendum: str = None
-    abstract: str = None
-    annotation: str = None
+"""The sympy transforms to use in expression parsing"""
 
 
 class KeyInOtherGroupError(KeyError):
+    """The key exists but is in a different disjoint group"""
+
     pass
 
 
 class VariableNameExistsError(KeyError):
+    """The name already exists in the reaction model"""
+
     pass
 
 
-class RxnVarType(Enum):
+class RxnVariableType(Enum):
     """The type of reaction variable.
+
+    The following types are defined, and aliases of just the first character
+    are also defined.
 
     .. rubric:: Valid Values
 
-    The following types are defined, and aliases of the first character
-    are also defined.
+    .. autosummary::
+
+        BULK
+        WALL
+        CONSTANT
+        PARAMETER
+        TERM
+        INTERNAL
+
+    .. rubric:: Class methods
 
     .. autosummary::
 
-        Bulk
-        Wall
-        Constant
-        Parameter
-        Term
-
-        Species
-        Coeff
+        factory
 
     """
 
@@ -150,27 +123,46 @@ class RxnVarType(Enum):
     TERM = 16
     """A term that is aliased for ease of writing expressions"""
     INTERNAL = 32
-    """An internal variable - see RESERVED_NAMES"""
+    """An internal variable - see :attr:`~wntr.reaction.base.RESERVED_NAMES`"""
 
     B = BULK
-    """Alias for :attr:`Bulk`"""
+    """Alias for :attr:`BULK`"""
     W = WALL
-    """Alias for :attr:`Wall`"""
+    """Alias for :attr:`WALL`"""
     C = CONSTANT
-    """Alias for :attr:`Constant`"""
+    """Alias for :attr:`CONSTANT`"""
     P = PARAMETER
-    """Alias for :attr:`Parameter`"""
+    """Alias for :attr:`PARAMETER`"""
     T = TERM
-    """Alias for :attr:`Term`"""
+    """Alias for :attr:`TERM`"""
     I = INTERNAL
-    """Alias for :attr:`Internal`"""
+    """Alias for :attr:`INTERNAL`"""
     CONST = CONSTANT
-    """Alias for :attr:`Constant`"""
+    """Alias for :attr:`CONSTANT`"""
     PARAM = PARAMETER
-    """Alias for :attr:`Parameter`"""
+    """Alias for :attr:`PARAMETER`"""
 
     @classmethod
-    def make(cls, value: Union[str, int, "RxnVarType"]):
+    def factory(cls, value: Union[str, int, "RxnVariableType"]) -> "RxnVariableType":
+        """Convert a value to a valid RxnVariableType.
+
+        Parameters
+        ----------
+        value : str or int or RxnVariableType
+            the value to change
+
+        Returns
+        -------
+        RxnVariableType
+            the equivalent variable type enum
+
+        Raises
+        ------
+        KeyError
+            the value is unknown/undefined
+        TypeError
+            the type of the value is wrong
+        """
         if value is None:
             return
         if isinstance(value, cls):
@@ -185,18 +177,26 @@ class RxnVarType(Enum):
         raise TypeError("Invalid type '{}'".format(type(value)))
 
 
-class RxnLocType(Enum):
+class RxnLocationType(Enum):
     """What type of network component does this reaction occur in
+
+    The following types are defined, and aliases of just the first character
+    are also defined.
+
 
     .. rubric:: Valid values
 
-    The following types are defined, and aliases of the first character
-    are also defined.
+    .. autosummary::
+
+        PIPE
+        TANK
+
+    .. rubric:: Class methods
 
     .. autosummary::
 
-        Pipes
-        Tanks
+        factory
+
     """
 
     PIPE = 1
@@ -204,12 +204,31 @@ class RxnLocType(Enum):
     TANK = 2
     """The expression describes a reaction in tanks"""
     P = PIPE
-    """Alias for :attr:`Pipes`"""
+    """Alias for :attr:`PIPE`"""
     T = TANK
-    """Alias for :attr:`Tanks`"""
+    """Alias for :attr:`TANK`"""
 
     @classmethod
-    def make(cls, value: Union[str, int, "RxnLocType"]):
+    def factory(cls, value: Union[str, int, "RxnLocationType"]) -> "RxnLocationType":
+        """Convert a value to a valid RxnLocationType.
+
+        Parameters
+        ----------
+        value : str or int or RxnLocationType
+            the value to process
+
+        Returns
+        -------
+        RxnLocationType
+            the equivalent enum object
+
+        Raises
+        ------
+        KeyError
+            the value is unknown/undefined
+        TypeError
+            the type of the value is wrong
+        """
         if value is None:
             return
         if isinstance(value, cls):
@@ -224,19 +243,26 @@ class RxnLocType(Enum):
         raise TypeError("Invalid type '{}'".format(type(value)))
 
 
-class RxnExprType(Enum):
+class RxnDynamicsType(Enum):
     """The type of reaction expression.
+
+    The following types are defined, and aliases of just the first character
+    are also defined.
 
     .. rubric:: Valid values
 
-    The following types are defined, and aliases of the first character
-    are also defined.
+    .. autosummary::
+
+        EQUIL
+        RATE
+        FORMULA
+
+    .. rubric:: Class methods
 
     .. autosummary::
 
-        Equil
-        Rate
-        Formula
+        factory
+
     """
 
     EQUIL = 1
@@ -246,14 +272,33 @@ class RxnExprType(Enum):
     FORMULA = 3
     """used when the concentration of the named species is a simple function of the remaining species"""
     E = EQUIL
-    """Alias for :attr:`Equil`"""
+    """Alias for :attr:`EQUIL`"""
     R = RATE
-    """Alias for :attr:`Rate`"""
+    """Alias for :attr:`RATE`"""
     F = FORMULA
-    """Alias for :attr:`Formula`"""
+    """Alias for :attr:`FORMULA`"""
 
     @classmethod
-    def make(cls, value: Union[str, int, "RxnExprType"]):
+    def factory(cls, value: Union[str, int, "RxnDynamicsType"]) -> "RxnDynamicsType":
+        """Convert a value to a RxnDynamicsType.
+
+        Parameters
+        ----------
+        value : str or int or RxnDynamicsType
+            the value to convert
+
+        Returns
+        -------
+        RxnDynamicsType
+            the enum value
+
+        Raises
+        ------
+        KeyError
+            the value is unknown/undefined
+        TypeError
+            the type of the value is wrong
+        """
         if value is None:
             return
         if isinstance(value, cls):
@@ -450,80 +495,161 @@ class DisjointMappingGroup(MutableMapping):
 
 
 @dataclass
-class ReactionVariable(ABC):
+class RxnVariable(ABC):
+    """The base for a reaction variable.
+
+    Parameters
+    ----------
+    name : str
+        the name/symbol of the variable
+    """
 
     name: str
-
-    @abstractproperty
-    def var_type(self) -> RxnVarType:
-        raise NotImplementedError
-
-    @abstractmethod
-    def to_msx_string(self) -> str:
-        raise NotImplementedError
-
-    @property
-    def symbol(self):
-        return sympy.Symbol(self.name)
+    """The name (symbol) for the variable, must be a valid MSX name"""
 
     def __str__(self) -> str:
+        """Returns the name of the variable"""
         return self.name
 
     def __hash__(self) -> int:
+        """Makes the variable hashable by hashing the `str` representation"""
         return hash(str(self))
+
+    @abstractproperty
+    def var_type(self) -> RxnVariableType:
+        """The variable type."""
+        raise NotImplementedError
+
+    def is_species(self) -> bool:
+        """Check to see if this variable represents a species (bulk or wall).
+
+        Returns
+        -------
+        bool
+            True if this is a species object, False otherwise
+        """
+        return self.var_type == RxnVariableType.BULK or self.var_type == RxnVariableType.WALL
+    
+    def is_coeff(self) -> bool:
+        """Check to see if this variable represents a coefficient (constant or parameter).
+
+        Returns
+        -------
+        bool
+            True if this is a coefficient object, False otherwise
+        """
+        return self.var_type == RxnVariableType.CONST or self.var_type == RxnVariableType.PARAM
+    
+    def is_term_function(self) -> bool:
+        """Check to see if this variable represents a function (MSX term).
+
+        Returns
+        -------
+        bool
+            True if this is a term/function object, False otherwise
+        """
+        return self.var_type == RxnVariableType.TERM
+
+    @property
+    def symbol(self):
+        """Representation of the variable's name as a sympy.Symbol"""
+        return Symbol(self.name)
 
 
 @dataclass
-class ReactionDynamics(ABC):
+class RxnReaction(ABC):
+    """The base for a reaction.
+
+    Parameters
+    ----------
+    species : str
+        the name of the species whose reaction dynamics is being described
+    location : RxnLocationType or str
+        the location the reaction occurs (pipes or tanks)
+    expression : str
+        the expression for the reaction dynamics (right-hand-side)
+    """
 
     species: str
-    location: RxnLocType
-
-    @abstractproperty
-    def expr_type(self) -> RxnExprType:
-        raise NotImplementedError
-
-    @abstractmethod
-    def to_msx_string(self) -> str:
-        raise NotImplementedError
+    """The name of the species that this reaction describes"""
+    location: RxnLocationType
+    """The location this reaction occurs (pipes vs tanks)"""
+    expression: str
+    """The expression for the reaction dynamics (or, the right-hand-side of the equation)"""
 
     def __str__(self) -> str:
+        """Names the reaction with the format `species-dot-location` (for example, ``PB2.pipe``)"""
         return self.to_key(self.species, self.location)
+
+    def __hash__(self) -> int:
+        """Makes the reaction hashable by hashing the `str` representation"""
+        return hash(str(self))
+
+    @abstractproperty
+    def expr_type(self) -> RxnDynamicsType:
+        """The type of reaction dynamics being described (or, the left-hand-side of the equation)"""
+        raise NotImplementedError
 
     @classmethod
     def to_key(cls, species, location):
-        location = RxnLocType.make(location)
-        return species + "." + location.name.lower()
+        """Generate a dictionary key (equivalent to the ``str`` casting of a reaction)
+        without having the object itself.
 
-    def __hash__(self) -> int:
-        return hash(str(self))
+        Parameters
+        ----------
+        species : str
+            the species for the reaction
+        location : RxnLocationType or str
+            the location of the reaction
+
+        Returns
+        -------
+        str
+            a species/location unique name
+        """
+        location = RxnLocationType.factory(location)
+        return str(species) + "." + location.name.lower()
 
 
-class VariableRegistry(ABC):
+class RxnModelRegistry(ABC):
     @abstractmethod
     def variables(self, var_type=None):
+        """Generator over all defined variables, optionally limited by variable type"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_variable(self, name: str) -> ReactionVariable:
+    def add_variable(self, __variable: RxnVariable):
+        """Add a variable *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def del_variable(self, name: str):
+    def get_variable(self, name: str) -> RxnVariable:
+        """Get a specific variable by name"""
         raise NotImplementedError
 
+    @abstractmethod
+    def remove_variable(self, name: str):
+        """Delete a specified variable from the model"""
+        raise NotImplementedError
 
-class ReactionRegistry(ABC):
     @abstractmethod
     def reactions(self, location=None):
+        """Generator over all defined reactions, optionally limited by reaction location"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_reaction(self, species, location=None) -> List[ReactionDynamics]:
+    def add_reaction(self, __reaction: RxnReaction):
+        """Add a reaction *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def del_reaction(self, species, location=None):
+    def get_reaction(self, species, location=None) -> List[RxnReaction]:
+        """Get reaction(s) for a species, optionally only for one location"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def remove_reaction(self, species, location=None):
+        """Remove reaction(s) for a species, optionally only for one location"""
         raise NotImplementedError
 
 
@@ -532,21 +658,55 @@ class LinkedVariablesMixin:
     __variable_registry = None
 
     @property
-    def _variable_registry(self) -> VariableRegistry:
+    def _variable_registry(self) -> RxnModelRegistry:
         return self.__variable_registry
 
     @_variable_registry.setter
     def _variable_registry(self, value):
-        if value is not None and not isinstance(value, VariableRegistry):
-            raise TypeError("Linked model must be a RxnModel, got {}".format(type(value)))
+        if value is not None and not isinstance(value, RxnModelRegistry):
+            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
         self.__variable_registry = value
+
+    def validate(self):
+        """Validate that this object is a member of the RxnModelRegistry
+
+        Raises
+        ------
+        TypeError
+            if the model registry isn't linked
+        """
+        if not isinstance(self._variable_registry, RxnModelRegistry):
+            raise TypeError("This object is not connected to any RxnModelRegistry")
 
 
 @dataclass
 class ExpressionMixin(ABC):
-
-    expression: str
+    """A mixin class for converting an expression to a sympy Expr"""
 
     @abstractmethod
-    def sympify(self):
+    def to_symbolic(self, transformations=EXPR_TRANSFORMS):
+        """Convert to a symbolic expression.
+
+        Parameters
+        ----------
+        transformations : tuple of sympy transformations
+            transformations to apply to the expression, by default EXPR_TRANSFORMS
+
+        Returns
+        -------
+        sympy.Expr
+            the expression parsed by sympy
+        """
+        return parse_expr(self.expression, transformations=transformations)
+
+
+class MSXObject:
+    def to_msx_string(self) -> str:
+        """Get the expression as an EPANET-MSX input-file style string.
+
+        Returns
+        -------
+        str
+            the expression for use in an EPANET-MSX input file
+        """
         raise NotImplementedError

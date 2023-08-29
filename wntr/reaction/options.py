@@ -1,42 +1,11 @@
 import re
 import logging
 import copy
+from typing import Dict, List, Literal, Union
 
 from wntr.network.options import _float_or_None, _int_or_None, _OptionsBase
 
 logger = logging.getLogger(__name__)
-
-
-class TimeOptions(_OptionsBase):
-    """
-    Options related to reaction simulation.
-
-    Parameters
-    ----------
-    timestep : int >= 1
-        Water quality timestep (seconds), by default 60 (one minute).
-
-    """
-
-    _pattern1 = re.compile(r"^(\d+):(\d+):(\d+)$")
-    _pattern2 = re.compile(r"^(\d+):(\d+)$")
-    _pattern3 = re.compile(r"^(\d+)$")
-
-    def __init__(
-        self,
-        timestep: int = 60,
-    ):
-        self.timestep = timestep
-
-    def __setattr__(self, name, value):
-        if name in {"timestep"}:
-            try:
-                value = max(1, int(value))
-            except ValueError:
-                raise ValueError("%s must be an integer >= 1" % name)
-        elif name not in {"timestep"}:
-            raise AttributeError("%s is not a valid attribute in TimeOptions" % name)
-        self.__dict__[name] = value
 
 
 class QualityOptions(_OptionsBase):
@@ -46,11 +15,14 @@ class QualityOptions(_OptionsBase):
 
     Parameters
     ----------
+    timestep : int >= 1
+        Water quality timestep (seconds), by default 60 (one minute).
+
     area_units : str, optional
         The units of area to use in surface concentration forms, by default ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
 
     rate_units : str, optional
-        The timee units to use in rate reactions, by default ``MIN``. Valid values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
+        The time units to use in all rate reactions, by default ``MIN``. Valid values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
 
     solver : str, optional
         The solver to use, by default ``RK5``. Options are ``RK5`` (5th order Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or ``EUL`` (Euler method).
@@ -58,11 +30,11 @@ class QualityOptions(_OptionsBase):
     coupling : str, optional
         Use coupling method for solution, by default ``NONE``. Valid options are ``FULL`` or ``NONE``.
 
-    rtol : float, optional
-        Relative concentration tolerance, by default 1.0e-4.
-
     atol : float, optional
-        Absolute concentration tolerance, by default 1.0e-4.
+        Absolute concentration tolerance, by default 0.01 (regardless of species concentration units).
+
+    rtol : float, optional
+        Relative concentration tolerance, by default 0.001 (±0.1%).
 
     compiler : str, optional
         Whether to use a compiler, by default ``NONE``. Valid options are ``VC``, ``GC``, or ``NONE``
@@ -76,28 +48,46 @@ class QualityOptions(_OptionsBase):
 
     def __init__(
         self,
+        timestep: int = 360,
         area_units: str = "M2",
         rate_units: str = "MIN",
         solver: str = "RK5",
         coupling: str = "NONE",
-        rtol: float = 1.0e-4,
         atol: float = 1.0e-4,
-        compiler: str = "",
+        rtol: float = 1.0e-4,
+        compiler: str = "NONE",
         segments: int = 5000,
         peclet: int = 1000,
+        global_initial_quality: Dict[str, float] = None
     ):
+        self.timestep = timestep
+        """The timestep, in seconds, by default 360"""
         self.area_units = area_units
+        """The units used to express pipe wall surface area where, by default FT2. Valid values are FT2, M2, and CM2."""
         self.rate_units = rate_units
+        """The units in which all reaction rate terms are expressed, by default HR. Valid values are HR, MIN, SEC, and DAY."""
         self.solver = solver
+        """The solver to use, by default EUL. Valid values are EUL, RK5, and ROS2."""
         self.coupling = coupling
+        """Whether coupling should occur during solving, by default NONE. Valid values are NONE and FULL."""
         self.rtol = rtol
+        """The relative tolerance used during solvers ROS2 and RK5, by default 0.001 for all species. Can be overridden on a per-species basis."""
         self.atol = atol
+        """The absolute tolerance used by the solvers, by default 0.01 for all species regardless of concentration units. Can be overridden on a per-species basis."""
         self.compiler = compiler
+        """A compier to use if the equations should be compiled by EPANET-MSX, by default NONE. Valid options are VC, GC and NONE."""
         self.segments = segments
+        """The number of segments per-pipe to use, by default 5000."""
         self.peclet = peclet
+        """The threshold for applying dispersion, by default 1000."""
 
     def __setattr__(self, name, value):
-        if name in ["atol", "rtol"]:
+        if name in {"timestep"}:
+            try:
+                value = max(1, int(value))
+            except ValueError:
+                raise ValueError("%s must be an integer >= 1" % name)
+        elif name in ["atol", "rtol"]:
             try:
                 value = float(value)
             except ValueError:
@@ -125,14 +115,11 @@ class ReportOptions(_OptionsBase):
         Provides the filename to use for outputting an EPANET report file,
         by default this will be the prefix plus ".rpt".
 
-    status : str
-        Output solver status ("YES", "NO", "FULL"). "FULL" is only useful for debugging
+    species : dict[str, bool]
+        Output species concentrations
 
-    summary : str
-        Output summary information ("YES" or "NO")
-
-    energy : str
-        Output energy information
+    species_precision : dict[str, float]
+        Output species concentrations with the specified precision
 
     nodes : None, "ALL", or list
         Output node information in report file. If a list of node names is provided,
@@ -152,17 +139,23 @@ class ReportOptions(_OptionsBase):
         self,
         pagesize: list = None,
         report_filename: str = None,
-        species: dict = None,
-        species_precision: dict = None,
-        nodes: bool = False,
-        links: bool = False,
+        species: Dict[str, bool] = None,
+        species_precision: Dict[str, float] = None,
+        nodes: Union[Literal['ALL'], List[str]] = None,
+        links: Union[Literal['ALL'], List[str]] = None,
     ):
         self.pagesize = pagesize
+        """The pagesize for the report"""
         self.report_filename = report_filename
+        """The prefix of the report filename (will add .rpt)"""
         self.species = species if species is not None else dict()
+        """Turn individual species outputs on and off, by default no species are output"""
         self.species_precision = species_precision if species_precision is not None else dict()
+        """Set the output precision for the concentration of a specific species"""
         self.nodes = nodes
+        """A list of nodes to print output for, or 'ALL' for all nodes, by default None"""
         self.links = links
+        """A list of links to print output for, or 'ALL' for all links, by default None"""
 
     def __setattr__(self, name, value):
         if name not in ["pagesize", "report_filename", "species", "nodes", "links", "species_precision"]:
@@ -215,18 +208,13 @@ class RxnOptions(_OptionsBase):
 
     """
 
-    def __init__(self, time: TimeOptions = None, report: ReportOptions = None, quality: QualityOptions = None, user: UserOptions = None):
-        self.time = TimeOptions.factory(time)
+    def __init__(self, report: ReportOptions = None, quality: QualityOptions = None, user: UserOptions = None):
         self.report = ReportOptions.factory(report)
         self.quality = QualityOptions.factory(quality)
         self.user = UserOptions.factory(user)
 
     def __setattr__(self, name, value):
-        if name == "time":
-            if not isinstance(value, (TimeOptions, dict, tuple, list)):
-                raise ValueError("time must be a TimeOptions or convertable object")
-            value = TimeOptions.factory(value)
-        elif name == "report":
+        if name == "report":
             if not isinstance(value, (ReportOptions, dict, tuple, list)):
                 raise ValueError("report must be a ReportOptions or convertable object")
             value = ReportOptions.factory(value)

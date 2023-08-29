@@ -16,9 +16,11 @@ import os.path
 import platform
 import sys
 from ctypes import byref
-from ..epanet.toolkit import EpanetException, ENepanet
-from ..epanet.util import SizeLimits
+
 from pkg_resources import resource_filename
+
+from ..epanet.toolkit import ENepanet, EpanetException
+from ..epanet.util import SizeLimits
 
 epanet_toolkit = "wntr.epanet.toolkit"
 
@@ -472,7 +474,7 @@ class MSXepanet(ENepanet):
 
     def MSXgetspecies(self, spe):
         """Retrieves the attributes of a chemical species given its internal index number.
-        species is the sequence number of the species (starting from 1 as listed in teh MSX input file_
+        species is the sequence number of the species (starting from 1 as listed in the MSX input file
         type: MSX_BULK (defined as 0) and MSX_WALL (defined as 1)
         units: C_style character string array that is returned with the mass units that were defined for the species in question(hold max 15 characters)
         aTol returned with absolute concentration tolerance defined for the species

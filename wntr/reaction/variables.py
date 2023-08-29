@@ -1,31 +1,75 @@
+# -*- coding: utf-8 -*-
+
+"""
+Classes for variables used in reaction dynamics definitions.
+Defines species (chemical or biological), coefficients for equations,
+"term-functions", i.e., named functions that are called "terms" in 
+EPANET-MSX, and internal variables, such as hydraulic variables.
+
+The classes in this module can be created directly. However, they are more
+powerful when either, a) created using API calls on a :class:`~wntr.reaction.model.WaterNetworkModel`,
+or, b) linked to a :class:`~wntr.reaction.model.WaterNetworkModel` model object after creation.
+This allows for variables to be validated against other variables in the model, 
+avoiding naming conflicts and checking that terms used in a term-function have
+been defined.
+
+If :class:`sympy` is installed, then there are functions available
+that will convert object instances of these classes into sympy expressions
+and symbols. If the instances are linked to a model, then expressions can 
+be expanded, validated, and even evaluated or simplified symbolically.
+"""
+
 import enum
 import logging
+import warnings
 from dataclasses import InitVar, asdict, dataclass, field
 from enum import Enum, IntFlag
 from typing import Any, ClassVar, Dict, List, Set, Tuple, Union
-import warnings
 
-import sympy
-from sympy import Float, Function, Symbol, init_printing, symbols
-from sympy.parsing import parse_expr
-from sympy.parsing.sympy_parser import convert_xor, standard_transformations
+has_sympy = False
+try:
+    from sympy import Float, Symbol, init_printing, symbols
+    from sympy.parsing import parse_expr
+    from sympy.parsing.sympy_parser import convert_xor, standard_transformations
+
+    has_sympy = True
+except ImportError:
+    sympy = None
+    logging.critical("This python installation does not have SymPy installed. Certain functionality will be disabled.")
+    standard_transformations = (None,)
+    convert_xor = None
+    has_sympy = False
 
 from wntr.network.model import WaterNetworkModel
+from wntr.reaction.base import EXPR_TRANSFORMS
 
-from .base import ExpressionMixin, LinkedVariablesMixin, VariableRegistry, ReactionVariable, RxnVarType, RESERVED_NAMES
+from .base import (
+    RESERVED_NAMES,
+    ExpressionMixin,
+    LinkedVariablesMixin,
+    MSXObject,
+    RxnModelRegistry,
+    RxnVariable,
+    RxnVariableType,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(repr=False)
-class Species(LinkedVariablesMixin, ReactionVariable):
+class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
 
-    unit: str
+    units: str
+    """The unit used for this species"""
     atol: InitVar[float] = None
+    """The absolute tolerance to use when solving for this species, by default None"""
     rtol: InitVar[float] = None
+    """The relative tolerance to use when solving for this species, by default None"""
     note: str = None
+    """A note about this species, by default None"""
     diffusivity: float = None
-    variable_registry: InitVar[VariableRegistry] = None
+    """The diffusivity value for this species, by default None"""
+    variable_registry: InitVar[RxnModelRegistry] = None
 
     def __post_init__(self, atol=None, rtol=None, reaction_model=None):
         if isinstance(atol, property):
@@ -44,38 +88,58 @@ class Species(LinkedVariablesMixin, ReactionVariable):
         self._rtol = rtol
         self._variable_registry = reaction_model
 
-    @property
-    def atol(self) -> float:
-        return self._atol
+    def __repr__(self):
+        return "{}(name={}, unit={}, atol={}, rtol={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.units), self._atol, self._rtol, repr(self.note))
 
-    @property
-    def rtol(self) -> float:
-        return self._rtol
+    def get_tolerances(self) -> Tuple[float, float]:
+        """Get the species-specific solver tolerances.
 
-    def get_tolerances(self) -> Union[Tuple[float, float], None]:
+        Returns
+        -------
+        two-tuple or None
+            the absolute and relative tolerances, or None if the global values should be used
+        """
         if self._atol is not None and self._rtol is not None:
             return (self._atol, self._rtol)
         return None
 
-    def set_tolerances(self, atol: float, rtol: float):
-        if atol is None and rtol is None:
+    def set_tolerances(self, absolute: float, relative: float):
+        """Set the species-specific solver tolerances. Using ``None`` for both will
+        clear the tolerances, though using :func:`clear_tolerances` is clearer code.
+
+        Parameters
+        ----------
+        absolute : float
+            the absolute solver tolerance
+        relative : float
+            the relative solver tolerance
+
+        Raises
+        ------
+        TypeError
+            if both absolute and relative are not the same type
+        ValueError
+            if either value is less-than-or-equal-to zero
+        """
+        if absolute is None and relative is None:
             self._atol = self._rtol = None
             return
         try:
-            if not isinstance(atol, float):
-                atol = float(atol)
-            if not isinstance(rtol, float):
-                rtol = float(rtol)
+            if not isinstance(absolute, float):
+                absolute = float(absolute)
+            if not isinstance(relative, float):
+                relative = float(relative)
         except Exception as e:
-            raise TypeError("atol and rtol must be the same type, got {} and {}".format(atol, rtol))
-        if atol <= 0:
-            raise ValueError("Absolute tolerance atol must be greater than 0")
-        if rtol <= 0:
-            raise ValueError("Relative tolerance rtol must be greater than 0")
-        self._atol = atol
-        self._rtol = rtol
+            raise TypeError("absolute and relative must be the same type, got {} and {}".format(absolute, relative))
+        if absolute <= 0:
+            raise ValueError("Absolute tolerance must be greater than 0")
+        if relative <= 0:
+            raise ValueError("Relative tolerance must be greater than 0")
+        self._atol = absolute
+        self._rtol = relative
 
     def clear_tolerances(self):
+        """Resets both tolerances to ``None`` to use the global values."""
         self._atol = self._rtol = None
 
     def to_msx_string(self) -> str:
@@ -90,42 +154,54 @@ class Species(LinkedVariablesMixin, ReactionVariable):
         return "{:s} {:s} {:s} {:s} ;{:s}".format(
             self.var_type.name.upper(),
             self.name,
-            self.unit,
+            self.units,
             tolstr,
             self.note if self.note is not None else "",
         )
 
-    def __repr__(self):
-        return "{}(name={}, unit={}, atol={}, rtol={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.unit), self.atol, self.rtol, repr(self.note))
+    def to_dict(self):
+        rep = dict(name=self.name, unist=self.units)
+        tols = self.get_tolerances()
+        if tols is not None:
+            rep['atol'] = tols[0]
+            rep['rtol'] = tols[1]
+        if self.note:
+            rep['note'] = self.note
+        if self.diffusivity is not None:
+            rep['diffusivity'] = self.diffusivity
+        return rep
 
 
 @dataclass(repr=False)
 class BulkSpecies(Species):
     @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.BULK
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.BULK
 
 
 @dataclass(repr=False)
 class WallSpecies(Species):
     @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.WALL
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.WALL
 
 
 @dataclass(repr=False)
-class Coefficient(LinkedVariablesMixin, ReactionVariable):
+class Coefficient(MSXObject, LinkedVariablesMixin, RxnVariable):
 
     global_value: float
     note: str = None
-    unit: str = None
-    variable_registry: InitVar[VariableRegistry] = None
+    units: str = None
+    variable_registry: InitVar[RxnModelRegistry] = None
 
     def __post_init__(self, reaction_model):
         if self.name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.global_value = float(self.global_value)
         self._variable_registry = reaction_model
+
+    def __repr__(self):
+        return "{}(name={}, global_value={}, units={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.global_value), repr(self.units), repr(self.note))
 
     def get_value(self) -> float:
         return self.global_value
@@ -139,26 +215,40 @@ class Coefficient(LinkedVariablesMixin, ReactionVariable):
             self.note if self.note is not None else "",
         )
 
-    def __repr__(self):
-        return "{}(name={}, global_value={}, unit={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.global_value), repr(self.unit), repr(self.note))
+    def to_dict(self):
+        rep = dict(name=self.name, global_value=self.global_value)
+        if self.note is not None:
+            rep['note'] = self.note
+        if self.units is not None:
+            rep['units'] = self.units
+        return rep
 
 
 @dataclass(repr=False)
 class Constant(Coefficient):
     @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.CONST
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.CONST
 
 
 @dataclass(repr=False)
 class Parameter(Coefficient):
 
     _pipe_values: Dict[str, float] = field(default_factory=dict)
+    """A dictionary of parameter values for various pipes"""
     _tank_values: Dict[str, float] = field(default_factory=dict)
+    """A dictionary of parameter values for various tanks"""
+
+    def __post_init__(self, reaction_model):
+        super().__post_init__(reaction_model)
+        if self._pipe_values is None:
+            self._pipe_values = dict()
+        if self._tank_values is None:
+            self._tank_values = dict()
 
     @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.PARAM
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.PARAM
 
     def get_value(self, pipe: str = None, tank: str = None) -> float:
         if pipe is not None and tank is not None:
@@ -176,45 +266,74 @@ class Parameter(Coefficient):
     @property
     def tank_values(self) -> Dict[str, float]:
         return self._tank_values
+    
+    def to_dict(self):
+        rep = super().to_dict()
+        rep['pipe_values'] = self._pipe_values.copy()
+        rep['tank_values'] = self._tank_values.copy()
+        return rep
 
 
 @dataclass(repr=False)
-class OtherTerm(LinkedVariablesMixin, ExpressionMixin, ReactionVariable):
+class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
+    """A function definition used as a shortcut in reaction expressions (called a 'term' in EPANET-MSX)
 
+    Parameters
+    ----------
+    name : str
+        the name/symbol of the function (term)
+    expression : str
+        the mathematical expression described by this function
+    note : str, optional
+        a note for this function, by default None
+    variable_registry : RxnModelRegistry
+        the reaction model this function is a part of
+    """
+
+    expression: str
+    """The expression this named-function is equivalent to"""
     note: str = None
-    variable_registry: InitVar[VariableRegistry] = field(default=None, compare=False)
+    """A note about this function/term"""
+    variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
 
     def __post_init__(self, reaction_model):
         if self.name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self._variable_registry = reaction_model
 
-    @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.TERM
+    def __repr__(self):
+        return "{}(name={}, expression={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.expression), repr(self.note))
 
-    def sympify(self):
-        raise NotImplementedError
+    @property
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.TERM
 
     def to_msx_string(self) -> str:
         return "{:s} {:s} ;{:s}".format(self.name, self.expression, self.note if self.note is not None else "")
 
-    def __repr__(self):
-        return "{}(name={}, expression={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.expression), repr(self.note))
+    def to_symbolic(self, transformations=...):
+        return super().to_symbolic(transformations)
+
+    def to_dict(self):
+        rep = dict(name=self.name, expression=self.expression)
+        if self.note is not None:
+            rep['note'] = self.note
+        return rep
 
 
 @dataclass(repr=False)
-class InternalVariable(ReactionVariable):
+class InternalVariable(RxnVariable):
+    """A hydraulic variable or a placeholder for a built-in reserved word.
+
+    For example, "Len" is the EPANET-MSX name for the length of a pipe, and "I" is a sympy
+    reserved symbol for the imaginary number."""
 
     note: str = "internal variable - not output to MSX"
-    unit: str = None
-
-    @property
-    def var_type(self) -> RxnVarType:
-        return RxnVarType.INTERNAL
-
-    def to_msx_string(self) -> str:
-        raise TypeError("An InternalVariable is not part of an MSX input file")
+    units: str = None
 
     def __repr__(self):
-        return "{}(name={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.note))
+        return "{}(name={}, note={}, units={})".format(self.__class__.__name__, repr(self.name), repr(self.note), repr(self.units))
+
+    @property
+    def var_type(self) -> RxnVariableType:
+        return RxnVariableType.INTERNAL

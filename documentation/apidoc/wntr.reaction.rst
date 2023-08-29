@@ -12,8 +12,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   wntr.reaction.base
+   wntr.reaction.dynamics
    wntr.reaction.io
    wntr.reaction.library
    wntr.reaction.model
    wntr.reaction.options
    wntr.reaction.toolkitmsx
+   wntr.reaction.variables
