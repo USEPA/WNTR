@@ -110,7 +110,27 @@ class Citation:
         for k in list(d.keys()):
             if d[k] is None:
                 del d[k]
-        rep = self(self.__class__.__name__) + '('
+        rep = str(self.__class__.__name__) + '('
         rep = rep + ', '.join(['{}={}'.format(k, repr(v)) for k, v in d.items()])
         rep = rep + ')'
         return rep
+    
+    def shorten(self, maxlen=None) -> str:
+        auth = str(self.author)
+        if len(auth) > 48:
+            auth = auth[0:44] + '...'
+        if isinstance(self.author, list):
+            if len(self.author) > 3:
+                auth = self.author[0] + ' et al'
+            else:
+                auth = ', '.join(self.author)
+        year = str(self.year)
+        titl = str(self.title)
+        ref = ('doi:' + str(self.doi)) if self.doi else (str(self.url) if self.url else (str(self.eprint) if self.eprint else ''))
+        line = ref + (' // ' if ref else '') + auth + ' // ' + '{}'.format(year) + ' // ' + titl
+        if maxlen and len(line) > maxlen:
+            line = line[0:maxlen-3] + '...'
+        if maxlen and maxlen-3 < len(ref):
+            return ref
+        return line
+    

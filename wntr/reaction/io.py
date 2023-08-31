@@ -1,11 +1,15 @@
 # coding: utf-8
 
+import datetime
+from io import FileIO, TextIOWrapper
 import logging
 import sys
 
 from wntr.network.elements import Source
+from wntr.reaction.base import MSXComment, RxnLocationType, RxnVariableType
 from wntr.reaction.model import WaterQualityReactionsModel
 from wntr.reaction.variables import Parameter, Species
+from wntr.utils.citations import Citation
 
 sys_default_enc = sys.getdefaultencoding()
 
@@ -38,10 +42,10 @@ def _split_line(line):
     elif len(_vc) == 1:
         _vals = _vc[0].split()
     elif _vc[0] == "":
-        _cmnt = _vc[1]
+        _cmnt = _vc[1].strip()
     else:
         _vals = _vc[0].split()
-        _cmnt = _vc[1]
+        _cmnt = _vc[1].strip()
     return _vals, _cmnt
 
 
@@ -161,7 +165,7 @@ class MsxFile(object):
 
     def _read_options(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[OPTIONS]"]:
             vals, comment = _split_line(line)
             try:
@@ -193,193 +197,209 @@ class MsxFile(object):
 
     def _read_species(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[SPECIES]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) not in [3, 5]:
                     raise SyntaxError("Invalid [SPECIES] entry")
+
                 if len(vals) == 3:
-                    species = self.rxn.add_species(vals[0], vals[1], vals[2], note=comment)
+                    species = self.rxn.add_species(vals[0], vals[1], vals[2], note=note)
                 elif len(vals) == 5:
-                    species = self.rxn.add_species(vals[0], vals[1], vals[2], float(vals[3]), float(vals[4]), note=comment)
+                    species = self.rxn.add_species(vals[0], vals[1], vals[2], float(vals[3]), float(vals[4]), note=note)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_coefficients(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[COEFFICIENTS]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) != 3:
                     raise SyntaxError("Invalid [COEFFICIENTS] entry")
-                coeff = self.rxn.add_coefficient(vals[0], vals[1], float(vals[2]), note=comment)
+                coeff = self.rxn.add_coefficient(vals[0], vals[1], float(vals[2]), note=note)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_terms(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[TERMS]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) < 2:
                     raise SyntaxError("Invalid [TERMS] entry")
-                term = self.rxn.add_other_term(vals[0], " ".join(vals[1:]), note=comment)
+                term = self.rxn.add_other_term(vals[0], " ".join(vals[1:]), note=note)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_pipes(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[PIPES]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) < 3:
                     raise SyntaxError("Invalid [PIPES] entry")
-                reaction = self.rxn.add_pipe_reaction(vals[1], vals[0], " ".join(vals[2:]), note=comment)
+                reaction = self.rxn.add_pipe_reaction(vals[1], vals[0], " ".join(vals[2:]), note=note)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_tanks(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[TANKS]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) < 3:
                     raise SyntaxError("Invalid [TANKS] entry")
-                reaction = self.rxn.add_tank_reaction(vals[1], vals[0], " ".join(vals[2:]), note=comment)
+                reaction = self.rxn.add_tank_reaction(vals[1], vals[0], " ".join(vals[2:]), note=note)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_sources(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[SOURCES]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) == 4:
                     typ, node, spec, strength = vals
                     pat = None
                 else:
                     typ, node, spec, strength, pat = vals
                 if not self.rxn.has_variable(spec):
-                    raise ValueError('Undefined species in [QUALITY] section: {}'.format(spec))
+                    raise ValueError("Undefined species in [QUALITY] section: {}".format(spec))
                 if spec not in self.rxn._sources.keys():
                     self.rxn._sources[spec] = dict()
-                source = Source(None, name=spec, node_name=node, source_type=typ, strength=strength, pattern=pat)
+                source = dict(source_type=typ, strength=strength, pattern=pat, note=note)
                 self.rxn._sources[spec][node] = source
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_quality(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[QUALITY]"]:
             vals, comment = _split_line(line)
-            if len(vals) == 0: continue
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) == 4:
                     cmd, netid, spec, concen = vals
                 else:
                     cmd, spec, concen = vals
-                if cmd[0].lower() not in ['g', 'n', 'l']:
-                    raise SyntaxError('Unknown first word in [QUALITY] section')
+                if cmd[0].lower() not in ["g", "n", "l"]:
+                    raise SyntaxError("Unknown first word in [QUALITY] section")
                 if not self.rxn.has_variable(spec):
-                    raise ValueError('Undefined species in [QUALITY] section: {}'.format(spec))
+                    raise ValueError("Undefined species in [QUALITY] section: {}".format(spec))
                 if spec not in self.rxn._inital_quality.keys():
                     self.rxn._inital_quality[spec] = dict(global_value=None, nodes=dict(), links=dict())
-                if cmd[0].lower() == 'g':
-                    self.rxn._inital_quality[spec]['global_value'] = float(concen)
-                elif cmd[0].lower() == 'n':
-                    self.rxn._inital_quality[spec]['nodes'][netid] = float(concen)
-                elif cmd[1].lower() == 'l':
-                    self.rxn._inital_quality[spec]['links'][netid] = float(concen)
+                if cmd[0].lower() == "g":
+                    self.rxn._inital_quality[spec]["global_value"] = float(concen)
+                elif cmd[0].lower() == "n":
+                    self.rxn._inital_quality[spec]["nodes"][netid] = float(concen)
+                elif cmd[1].lower() == "l":
+                    self.rxn._inital_quality[spec]["links"][netid] = float(concen)
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_parameters(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[PARAMETERS]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 typ, netid, paramid, value = vals
                 coeff = self.rxn.get_variable(paramid)
                 if not isinstance(coeff, Parameter):
                     raise RuntimeError("Invalid parameter {}".format(paramid))
                 value = float(value)
                 if typ.lower()[0] == "p":
-                    coeff.pipe_values[netid] = vals
+                    coeff.pipe_values[netid] = value
                 elif typ.lower()[0] == "t":
-                    coeff.tank_values[netid] = vals
+                    coeff.tank_values[netid] = value
                 else:
                     raise RuntimeError("Invalid parameter type {}".format(typ))
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_diffusivity(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[DIFFUSIVITY]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) != 2:
                     raise SyntaxError("Invalid [DIFFUSIVITIES] entry")
                 species = self.rxn.get_variable(vals[0])
@@ -388,6 +408,8 @@ class MsxFile(object):
                 species.diffusivity = float(vals[1])
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
     def _read_patterns(self):
         _patterns = dict()
@@ -411,62 +433,285 @@ class MsxFile(object):
 
     def _read_report(self):
         lines = []
-        prev_comment = None
+        note = MSXComment()
         for lnum, line in self.sections["[REPORT]"]:
             vals, comment = _split_line(line)
             if vals is None:
-                prev_comment = comment
+                if comment is not None:
+                    note.pre.append(comment)
                 continue
-            if prev_comment is not None and comment is None:
-                comment = prev_comment
-                prev_comment = None
             try:
+                if comment is not None:
+                    note.post = comment
                 if len(vals) == 0:
                     continue
                 if len(vals) < 2:
-                    raise SyntaxError('Invalid number of arguments in [REPORT] section')
+                    raise SyntaxError("Invalid number of arguments in [REPORT] section")
                 cmd = vals[0][0].lower()
-                if cmd == 'n': # NODES
+                if cmd == "n":  # NODES
                     if self.rxn._options.report.nodes is None:
-                        if vals[1].upper() == 'ALL':
-                            self.rxn._options.report.nodes = 'ALL'
+                        if vals[1].upper() == "ALL":
+                            self.rxn._options.report.nodes = "ALL"
                         else:
                             self.rxn._options.report.nodes = list()
                             self.rxn._options.report.nodes.extend(vals[1:])
                     elif isinstance(self.rxn._options.report.nodes, list):
-                        if vals[1].upper() == 'ALL':
-                            self.rxn._options.report.nodes = 'ALL'
+                        if vals[1].upper() == "ALL":
+                            self.rxn._options.report.nodes = "ALL"
                         else:
                             self.rxn._options.report.nodes.extend(vals[1:])
-                elif cmd == 'l': # LINKS
+                elif cmd == "l":  # LINKS
                     if self.rxn._options.report.links is None:
-                        if vals[1].upper() == 'ALL':
-                            self.rxn._options.report.links = 'ALL'
+                        if vals[1].upper() == "ALL":
+                            self.rxn._options.report.links = "ALL"
                         else:
                             self.rxn._options.report.links = list()
                             self.rxn._options.report.links.extend(vals[1:])
                     elif isinstance(self.rxn._options.report.links, list):
-                        if vals[1].upper() == 'ALL':
-                            self.rxn._options.report.links = 'ALL'
+                        if vals[1].upper() == "ALL":
+                            self.rxn._options.report.links = "ALL"
                         else:
                             self.rxn._options.report.links.extend(vals[1:])
-                elif cmd == 'f':
+                elif cmd == "f":
                     self.rxn._options.report.report_filename = vals[1]
-                elif cmd == 'p':
+                elif cmd == "p":
                     self.rxn._options.report.pagesize = vals[1]
-                elif cmd == 's':
+                elif cmd == "s":
                     if not self.rxn.has_variable(vals[1]):
-                        raise ValueError('Undefined species in [REPORT] section: {}'.format(vals[1]))
-                    self.rxn._options.report.species[vals[1]] = True if vals[2].lower().startswith('y') else False
+                        raise ValueError("Undefined species in [REPORT] section: {}".format(vals[1]))
+                    self.rxn._options.report.species[vals[1]] = True if vals[2].lower().startswith("y") else False
                     if len(vals) == 4:
                         self.rxn._options.report.species_precision[vals[1]] = int(vals[3])
                 else:
-                    raise SyntaxError('Invalid syntax in [REPORT] section: unknown first word')
+                    raise SyntaxError("Invalid syntax in [REPORT] section: unknown first word")
             except Exception as e:
                 raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+            else:
+                note = MSXComment()
 
-    def write(self, filename, rxn_model):
-        pass
+    def write(self, filename: str, rxn: WaterQualityReactionsModel):
+        self.rxn = rxn
+        with open(filename, "w") as fout:
+
+            fout.write("; WNTR-reactions MSX file generated {}\n".format(datetime.datetime.now()))
+            fout.write("\n")
+            self._write_title(fout)
+            self._write_options(fout)
+            self._write_species(fout)
+            self._write_coefficients(fout)
+            self._write_terms(fout)
+            self._write_pipes(fout)
+            self._write_tanks(fout)
+            self._write_sources(fout)
+            self._write_quality(fout)
+            self._write_diffusivity(fout)
+            self._write_parameters(fout)
+            self._write_patterns(fout)
+            self._write_report(fout)
+            fout.write("; END of MSX file generated by WNTR\n")
+
+    def _write_title(self, fout):
+        fout.write("[TITLE]\n")
+        fout.write("  {}\n".format(self.rxn.title))
+        fout.write("\n")
+        # if self.rxn.desc is not None:
+        #     desc = self.rxn.desc.splitlines()
+        #     desc = " ".join(desc)
+        #     fout.write("; @desc={}\n".format(desc))
+        #     fout.write("\n")
+        # if self.rxn.citations is not None:
+        #     if isinstance(self.rxn.citations, list):
+        #         for citation in self.rxn.citations:
+        #             fout.write("; @cite={}\n".format(citation.to_dict() if isinstance(citation, Citation) else str(citation)))
+        #             fout.write("\n")
+        #     else:
+        #         citation = self.rxn.citations
+        #         fout.write("; @cite={}\n".format(citation.to_dict() if isinstance(citation, Citation) else str(citation)))
+        # fout.write("\n")
+
+    def _write_options(self, fout):
+        opts = self.rxn._options
+        fout.write("[OPTIONS]\n")
+        fout.write("  AREA_UNITS  {}\n".format(opts.quality.area_units.upper()))
+        fout.write("  RATE_UNITS  {}\n".format(opts.quality.rate_units.upper()))
+        fout.write("  SOLVER      {}\n".format(opts.quality.solver.upper()))
+        fout.write("  COUPLING    {}\n".format(opts.quality.coupling.upper()))
+        fout.write("  TIMESTEP    {}\n".format(opts.quality.timestep))
+        fout.write("  ATOL        {}\n".format(opts.quality.atol))
+        fout.write("  RTOL        {}\n".format(opts.quality.rtol))
+        fout.write("  COMPILER    {}\n".format(opts.quality.compiler.upper()))
+        fout.write("  SEGMENTS    {}\n".format(opts.quality.segments))
+        fout.write("  PECLET      {}\n".format(opts.quality.peclet))
+        fout.write("\n")
+
+    def _write_species(self, fout):
+        fout.write("[SPECIES]\n")
+        for var in self.rxn.variables(var_type=RxnVariableType.BULK):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        for var in self.rxn.variables(var_type=RxnVariableType.WALL):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        fout.write("\n")
+
+    def _write_coefficients(self, fout):
+        fout.write("[COEFFICIENTS]\n")
+        for var in self.rxn.variables(var_type=RxnVariableType.CONST):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        for var in self.rxn.variables(var_type=RxnVariableType.PARAM):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        fout.write("\n")
+
+    def _write_terms(self, fout):
+        fout.write("[TERMS]\n")
+        for var in self.rxn.variables(var_type=RxnVariableType.TERM):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        fout.write("\n")
+
+    def _write_pipes(self, fout):
+        fout.write("[PIPES]\n")
+        for var in self.rxn.reactions(location=RxnLocationType.PIPE):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        fout.write("\n")
+
+    def _write_tanks(self, fout):
+        fout.write("[TANKS]\n")
+        for var in self.rxn.reactions(location=RxnLocationType.TANK):
+            if isinstance(var.note, MSXComment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            elif isinstance(var.note, str):
+                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+            else:
+                fout.write("  {}\n".format(var.to_msx_string()))
+        fout.write("\n")
+
+    def _write_sources(self, fout):
+        fout.write("[SOURCES]\n")
+        for species in self.rxn._sources.keys():
+            for node, src in self.rxn._sources[species].items():
+                if isinstance(src["note"], MSXComment):
+                    fout.write(
+                        src["note"].wrap_msx_string(
+                            "{:<10s} {:<8s} {:<8s} {:12s} {:<12s}".format(src["source_type"], node, species, src["strength"], src["pattern"] if src["pattern"] is not None else "")
+                        )
+                    )
+                elif isinstance(src["note"], str):
+                    fout.write(
+                        "  {:<10s} {:<8s} {:<8s} {} {:<12s} ; {}\n".format(
+                            src["source_type"], node, species, src["strength"], src["pattern"] if src["pattern"] is not None else "", src["note"]
+                        )
+                    )
+                else:
+                    fout.write(
+                        "  {:<10s} {:<8s} {:<8s} {} {:<12s}\n".format(src["source_type"], node, species, src["strength"], src["pattern"] if src["pattern"] is not None else "")
+                    )
+                if src["note"] is not None:
+                    fout.write("\n")
+        fout.write("\n")
+
+    def _write_quality(self, fout):
+        fout.write("[QUALITY]\n")
+        for species in self.rxn._inital_quality.keys():
+            for typ, val in self.rxn._inital_quality[species].items():
+                if typ == "global_value":
+                    fout.write("  {:<8s} {:<8s} {}\n".format("GLOBAL", species, val))
+                elif typ in ["nodes", "links"]:
+                    for node, conc in val.items():
+                        fout.write("  {:<8s} {:<8s} {:<8s} {}\n".format(typ.upper()[0:4], node, species, conc))
+        fout.write("\n")
+
+    def _write_parameters(self, fout):
+        fout.write("[PARAMETERS]\n")
+        for var in self.rxn.variables(var_type=RxnVariableType.PARAM):
+            had_entries = False
+            if not isinstance(var, Parameter):
+                pass
+            paramID = var.name
+            for pipeID, value in var.pipe_values.items():
+                fout.write("  PIPE     {:<8s} {:<8s} {}\n".format(pipeID, paramID, value))
+                had_entries = True
+            for tankID, value in var.tank_values.items():
+                fout.write("  PIPE     {:<8s} {:<8s} {}\n".format(tankID, paramID, value))
+                had_entries = True
+            if had_entries:
+                fout.write("\n")
+        fout.write("\n")
+
+    def _write_patterns(self, fout):
+        fout.write("[PATTERNS]\n")
+        for pattern_name, pattern in self.rxn._patterns.items():
+            num_columns = 10
+            count = 0
+            for i in pattern:  # .multipliers:
+                if count % num_columns == 0:
+                    fout.write("\n  {:<8s} {:g}".format(pattern_name, i))
+                else:
+                    fout.write("  {:g}".format(i))
+                count += 1
+            fout.write("\n")
+        fout.write("\n")
+
+    def _write_diffusivity(self, fout):
+        fout.write("[DIFFUSIVITY]\n")
+        for name in self.rxn.species_name_list:
+            spec: Species = self.rxn.get_variable(name)
+            if spec.diffusivity is not None:
+                fout.write("  {:<8s} {}\n".format(name, spec.diffusivity))
+        fout.write("\n")
+
+    def _write_report(self, fout):
+        fout.write("[REPORT]\n")
+        if self.rxn._options.report.nodes is not None:
+            if isinstance(self.rxn._options.report.nodes, str):
+                fout.write("  NODES     {}\n".format(self.rxn.options.report.nodes))
+            else:
+                fout.write("  NODES     {}\n".format(" ".join(self.rxn.options.report.nodes)))
+        if self.rxn._options.report.links is not None:
+            if isinstance(self.rxn._options.report.links, str):
+                fout.write("  LINKS     {}\n".format(self.rxn.options.report.links))
+            else:
+                fout.write("  LINKS     {}\n".format(" ".join(self.rxn.options.report.links)))
+        for spec, val in self.rxn._options.report.species.items():
+            fout.write(
+                "  SPECIES   {:<8s} {:<3s} {}\n".format(
+                    spec,
+                    "YES" if val else "NO",
+                    self.rxn._options.report.species_precision[spec] if spec in self.rxn._options.report.species_precision.keys() else "",
+                )
+            )
+        if self.rxn._options.report.report_filename:
+            fout.write("  FILE      {}\n".format(self.rxn._options.report.report_filename))
+        if self.rxn._options.report.pagesize:
+            fout.write("  PAGESIZE  {}\n".format(self.rxn._options.report.pagesize))
+        fout.write("\n")
 
 
 class MsxBinFile(object):

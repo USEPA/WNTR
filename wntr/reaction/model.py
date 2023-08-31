@@ -137,8 +137,8 @@ class WaterQualityReactionsModel(RxnModelRegistry):
 
         self._usage: Dict[str, Set[str]] = dict()  # FIXME: currently no usage tracking
 
-        self._sources: Dict[str, Dict[str, Dict[str, Source]]] = dict()
-        self._inital_quality: Dict[str, Dict[str, Dict[str, Source]]] = dict()
+        self._sources: Dict[str, Dict[str, Source]] = dict()
+        self._inital_quality: Dict[str, Dict[str, Dict[str, float]]] = dict()
         self._patterns: Dict[str, Any] = dict()
         self._report = list()
 
@@ -315,9 +315,9 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         if (atol is None) ^ (rtol is None):
             raise TypeError("atol and rtol must be the same type, got {} and {}".format(atol, rtol))
         if species_type is RxnVariableType.BULK:
-            var = BulkSpecies(name, units, atol, rtol, note, self)
+            var = BulkSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
         elif species_type is RxnVariableType.WALL:
-            var = WallSpecies(name, units, atol, rtol, note, self)
+            var = WallSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
         self._species[name] = var
         self._inital_quality[name] = dict([('global', None), ('nodes', dict()), ('links', dict())])
         self._sources[name] = dict()
@@ -667,10 +667,10 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         rep["reactions"]["tanks"] = [v.to_dict() for v in self._tank_dynamics.values()]
         rep["patterns"] = self._patterns.copy()
         rep["initial_quality"] = self._inital_quality.copy()
-        rep["sources"] = dict()
-        for sp, v in self._sources:
-            if v is not None and len(v) > 0:
-                rep["sources"][sp] = dict()
-                for node, source in v:
-                    rep["sources"][sp][node] = source.to_dict()
+        # rep["sources"] = dict()
+        # for sp, v in self._sources:
+        #     if v is not None and len(v) > 0:
+        #         rep["sources"][sp] = dict()
+        #         for node, source in v.items():
+        #             rep["sources"][sp][node] = source.to_dict()
         return rep

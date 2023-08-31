@@ -11,7 +11,7 @@ import enum
 import logging
 from abc import ABC, abstractmethod, abstractproperty
 from collections.abc import MutableMapping
-from dataclasses import InitVar, dataclass
+from dataclasses import InitVar, dataclass, field
 from enum import Enum, IntFlag
 from typing import (
     Any,
@@ -710,3 +710,20 @@ class MSXObject:
             the expression for use in an EPANET-MSX input file
         """
         raise NotImplementedError
+
+@dataclass
+class MSXComment:
+    pre: List[str] = field(default_factory=list)
+    post: str = None
+
+    def wrap_msx_string(self, string) -> str:
+        if self.pre is None or len(self.pre) == 0:
+            if self.post is None:
+                return '  ' + string
+            else:
+                return '  ' + string + ' ; ' + self.post
+        elif self.post is None:
+            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string
+        else:
+            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string + ' ; ' + self.post
+

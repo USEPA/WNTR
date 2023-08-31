@@ -57,6 +57,7 @@ from wntr.reaction.base import EXPR_TRANSFORMS, MSXObject, RxnVariableType
 from .base import (
     ExpressionMixin,
     LinkedVariablesMixin,
+    MSXComment,
     RxnDynamicsType,
     RxnLocationType,
     RxnModelRegistry,
@@ -91,7 +92,7 @@ class RateDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction
     variable_registry : RxnModelRegistry, optional
         a link to the remainder of the larger model
     """
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
     variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
@@ -107,12 +108,16 @@ class RateDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction
         return super().to_symbolic(transformations)
 
     def to_msx_string(self) -> str:
-        return "{} {} {} ;{}".format(self.expr_type.name.upper(), str(self.species), self.expression, self.note if self.note else "")
+        return "{:<12s} {:<8s} {:<32s}".format(self.expr_type.name.upper(), str(self.species), self.expression)
 
     def to_dict(self) -> dict:
         rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
-        if self.note is not None:
+        if isinstance(self.note, str):
             rep['note'] = self.note
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep
 
 
@@ -140,7 +145,7 @@ class EquilibriumDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnR
         a link to the remainder of the larger model
     """
 
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
     variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
@@ -156,12 +161,16 @@ class EquilibriumDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnR
         return super().to_symbolic(transformations)
 
     def to_msx_string(self) -> str:
-        return "{} {} {} ;{}".format(self.expr_type.name.upper(), str(self.species), self.expression, self.note if self.note else "")
+        return "{:<12s} {:<8s} {:<32s}".format(self.expr_type.name.upper(), str(self.species), self.expression)
 
     def to_dict(self) -> dict:
         rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
-        if self.note is not None:
+        if isinstance(self.note, str):
             rep['note'] = self.note
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep
 
 
@@ -188,7 +197,7 @@ class FormulaDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReact
         a link to the remainder of the larger model
     """
 
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
     variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
@@ -204,10 +213,14 @@ class FormulaDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReact
         return super().to_symbolic(transformations)
 
     def to_msx_string(self) -> str:
-        return "{} {} {} ;{}".format(self.expr_type.name.upper(), str(self.species), self.expression, self.note if self.note else "")
+        return "{:<12s} {:<8s} {:<32s}".format(self.expr_type.name.upper(), str(self.species), self.expression)
 
     def to_dict(self) -> dict:
         rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
-        if self.note is not None:
+        if isinstance(self.note, str):
             rep['note'] = self.note
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep

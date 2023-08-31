@@ -47,6 +47,7 @@ from .base import (
     RESERVED_NAMES,
     ExpressionMixin,
     LinkedVariablesMixin,
+    MSXComment,
     MSXObject,
     RxnModelRegistry,
     RxnVariable,
@@ -65,7 +66,7 @@ class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
     """The absolute tolerance to use when solving for this species, by default None"""
     rtol: InitVar[float] = None
     """The relative tolerance to use when solving for this species, by default None"""
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     """A note about this species, by default None"""
     diffusivity: float = None
     """The diffusivity value for this species, by default None"""
@@ -145,18 +146,14 @@ class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
     def to_msx_string(self) -> str:
         tols = self.get_tolerances()
         if tols is None:
-            # tolstr = "{:<12s} {:<12s}".format("", "")
             tolstr = ""
         else:
-            # tolstr = "{:12.6g} {:12.6g}".format(*tols)
-            tolstr = "{} {}".format(*tols)
-        # return "{:<4s} {:<32s} {:s} {:s} ;{:s}".format(
-        return "{:s} {:s} {:s} {:s} ;{:s}".format(
+            tolstr = " {:12.6g} {:12.6g}".format(*tols)
+        return "{:<12s} {:<8s} {:<8s}{:s}".format(
             self.var_type.name.upper(),
             self.name,
             self.units,
             tolstr,
-            self.note if self.note is not None else "",
         )
 
     def to_dict(self):
@@ -165,10 +162,13 @@ class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
         if tols is not None:
             rep['atol'] = tols[0]
             rep['rtol'] = tols[1]
-        if self.note:
+        rep['diffusivity'] = self.diffusivity
+        if isinstance(self.note, str):
             rep['note'] = self.note
-        if self.diffusivity is not None:
-            rep['diffusivity'] = self.diffusivity
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep
 
 
@@ -190,7 +190,7 @@ class WallSpecies(Species):
 class Coefficient(MSXObject, LinkedVariablesMixin, RxnVariable):
 
     global_value: float
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     units: str = None
     variable_registry: InitVar[RxnModelRegistry] = None
 
@@ -207,20 +207,25 @@ class Coefficient(MSXObject, LinkedVariablesMixin, RxnVariable):
         return self.global_value
 
     def to_msx_string(self) -> str:
-        # return "{:<6s} {:<32s} {:g};{:s}".format(
-        return "{:s} {:s} {} ;{:s}".format(
+        # if self.units is not None:
+        #     post = r' ; {"units"="' + str(self.units) + r'"}'
+        # else:
+        post = ''
+        return "{:<12s} {:<8s} {:<16s}{}".format(
             self.var_type.name.upper(),
             self.name,
-            self.global_value,
-            self.note if self.note is not None else "",
+            str(self.global_value),
+            post
         )
 
     def to_dict(self):
-        rep = dict(name=self.name, global_value=self.global_value)
-        if self.note is not None:
+        rep = dict(name=self.name, global_value=self.global_value, units=self.units)
+        if isinstance(self.note, str):
             rep['note'] = self.note
-        if self.units is not None:
-            rep['units'] = self.units
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep
 
 
@@ -292,7 +297,7 @@ class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
 
     expression: str
     """The expression this named-function is equivalent to"""
-    note: str = None
+    note: Union[str, Dict[str, str]] = None
     """A note about this function/term"""
     variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
 
@@ -309,15 +314,19 @@ class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
         return RxnVariableType.TERM
 
     def to_msx_string(self) -> str:
-        return "{:s} {:s} ;{:s}".format(self.name, self.expression, self.note if self.note is not None else "")
+        return "{:<8s} {:<64s}".format(self.name, self.expression)
 
     def to_symbolic(self, transformations=...):
         return super().to_symbolic(transformations)
 
     def to_dict(self):
         rep = dict(name=self.name, expression=self.expression)
-        if self.note is not None:
+        if isinstance(self.note, str):
             rep['note'] = self.note
+        elif isinstance(self.note, MSXComment):
+            rep['note'] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep['note'] = None
         return rep
 
 
