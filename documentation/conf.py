@@ -66,9 +66,13 @@ source_suffix = '.rst'
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 # The master toctree document.
 master_doc = 'index'
-
+if on_rtd:
+    master_doc = 'index_redirect'
+    
 # General information about the project.
 project = u'WNTR'
 copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
@@ -137,7 +141,6 @@ todo_include_todos = True
 def setup(app):
   app.add_css_file( "wntr.css")
   
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
