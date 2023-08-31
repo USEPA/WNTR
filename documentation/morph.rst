@@ -85,7 +85,7 @@ The user can also specify a maximum number of cycles to include in the process.
 
 .. only:: latex
 
-   See the `online API documentation <https://wntr.readthedocs.io/en/latest/apidoc/wntr.morph.skel.html>`_ for more information on skeletonization.
+   See the `online API documentation <https://usepa.github.io/WNTR/apidoc/wntr.morph.skel.html>`_ for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
 a "skeletonization map" that maps original network nodes to merged nodes that are represented in the skeletonized network.  
