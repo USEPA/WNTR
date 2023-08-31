@@ -1,6 +1,7 @@
 import datetime
 import enum
 import numpy as np
+import pandas as pd
 
 
 class ResultsStatus(enum.IntEnum):
@@ -266,28 +267,28 @@ class SimulationResults(object):
         keep = self.node["head"].index.values < start_time
         for key in self.link.keys():
             if key in other.link:
-                t2 = self.link[key].loc[keep].append(other.link[key])
+                t2 = pd.concat([self.link[key].loc[keep], other.link[key]])
                 self.link[key] = t2
             else:
                 temp = other.link["flowrate"] * np.nan
-                t2 = self.link[key].loc[keep].append(temp)
+                t2 = pd.concat([self.link[key].loc[keep], temp])
                 self.link[key] = t2
         for key in other.link.keys():
             if key not in self.link.keys():
                 temp = self.link["flowrate"] * np.nan
-                t2 = temp.loc[keep].append(other.link[key])
+                t2 = pd.concat([temp.loc[keep], other.link[key]])
                 self.link[key] = t2
         for key in self.node.keys():
             if key in other.node:
-                t2 = self.node[key].loc[keep].append(other.node[key])
+                t2 = pd.concat([self.node[key].loc[keep], other.node[key]])
                 self.node[key] = t2
             else:
                 temp = other.node["head"] * np.nan
-                t2 = self.node[key].loc[keep].append(temp)
+                t2 = pd.concat([self.node[key].loc[keep], temp])
                 self.node[key] = t2
         for key in other.node.keys():
             if key not in self.node.keys():
                 temp = self.node["head"] * np.nan
-                t2 = temp.loc[keep].append(other.node[key])
+                t2 = pd.concat([temp.loc[keep],other.node[key]])
                 self.node[key] = t2
 
