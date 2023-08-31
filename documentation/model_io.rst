@@ -322,7 +322,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
       >>> shapefile_field_names = wntr.network.io.valid_gis_names(complete_list=False, 
       ...    truncate_names=10)
       >>> print(shapefile_field_names['junctions'])
-      ['name', 'base_deman', 'pattern_na', 'elevation', 'coordinate', 'demand_cat']
+      ['name', 'elevation', 'coordinate']
 	  
 * Shapefiles can contain additional custom field names that are assigned to WaterNetworkModel objects.
 
