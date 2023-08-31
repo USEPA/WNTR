@@ -1203,7 +1203,7 @@ class InpFile(object):
         # Time controls and conditional controls only
         for text, all_control in wn.controls():
             control_action = all_control._then_actions[0]
-            if all_control.epanet_control_type not in [_ControlType.rule, _ControlType.stop_condition]:
+            if all_control.epanet_control_type is not _ControlType.rule:
                 if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
                     logger.error('Too many actions on CONTROL "%s"'%text)
                     raise InpFileError('Too many actions on CONTROL "%s"'%text)
