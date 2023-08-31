@@ -226,7 +226,7 @@ Column names that are optional (i.e., ``initial_quality``) and not included in t
 
     >>> geojson_column_names = wntr.network.io.valid_gis_names(complete_list=False)
     >>> print(geojson_column_names['junctions'])
-    ['name', 'base_demand', 'pattern_name', 'elevation', 'coordinates', 'demand_category']
+    ['name', 'elevation', 'coordinates']
 
 Note that GeoJSON files can contain additional custom column names that are assigned to WaterNetworkModel objects.
 
