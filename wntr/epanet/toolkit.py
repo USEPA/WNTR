@@ -155,19 +155,13 @@ class ENepanet:
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Windows/%s.dll" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Linux/lib%s.so" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 return
             except Exception as E1:
@@ -764,6 +758,173 @@ class ENepanet:
         else:
             self.errcode = self.ENlib.ENgettimeparam(
                 ctypes.c_int(eParam), byref(lValue)
+            )
+        self._error()
+        return lValue.value
+
+    def ENaddcontrol(self, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float) -> int:
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+
+        Returns
+        -------
+        int
+            _description_
+        """
+        lValue = ctypes.c_int()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_addcontrol(
+                self._project, 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENaddcontrol(
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        self._error()
+        return lValue.value
+
+    def ENgetcontrol(self, iIndex: int):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        """
+        iType = ctypes.c_int()
+        iLinkIndex = ctypes.c_int()
+        dSetting = ctypes.c_double()
+        iNodeIndex = ctypes.c_int()
+        dLevel = ctypes.c_double()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getcontrol(
+                self._project, 
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        else:
+            self.errcode = self.ENlib.ENgetcontrol(
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        self._error()
+        return dict(index=iIndex, type=iType.value, linkindex=iLinkIndex.value, setting=dSetting.value, nodeindex=iNodeIndex.value, level=dLevel.value)
+
+    def ENsetcontrol(self, iIndex: int, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+
+        Warning
+        ------- 
+        There is an error in EPANET 2.2 that sets the :param:`dLevel` to 0.0 on Macs
+        regardless of the value the user passes in. This means that to use this toolkit
+        functionality on a Mac, the user must delete and create a new control to change
+        the level.
+        
+        """
+        if self._project is not None:
+            try:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_double(dLevel)
+                )
+            except:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_float(dLevel)
+                )
+        else:
+            self.errcode = self.ENlib.ENsetcontrol(
+                ctypes.c_int(iIndex), 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel)
+            )
+        self._error()
+
+    def ENdeletecontrol(self, iControlIndex):
+        """
+        Get a time parameter value
+
+        Parameters
+        ----------
+        iControlIndex : int
+            the time parameter to get
+
+        Returns
+        -------
+        int
+            the index of the new control
+        """
+        lValue = ctypes.c_long()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_deletecontrol(
+                self._project, 
+                ctypes.c_int(iControlIndex)
+            )
+        else:
+            self.errcode = self.ENlib.ENdeletecontrol(
+                ctypes.c_int(iControlIndex)
             )
         self._error()
         return lValue.value
