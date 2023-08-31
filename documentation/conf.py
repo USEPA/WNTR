@@ -68,8 +68,10 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
+root_doc = 'index'
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS'].lower() == 'true':
     master_doc = 'index_rtd_redirect'
+    root_doc = 'index_rtd_redirect'
 
 # General information about the project.
 project = u'WNTR'
@@ -146,8 +148,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     html_style = 'wntr.css'
 else:
-    html_theme = 'default'
-    root_doc = 'index_rtd_redirect'
+    html_theme = 'sphinx_rtd_theme'
 #    html_context = {
 #        'css_files': ['_static/wntr.css'],
 #    }  
