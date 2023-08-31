@@ -1254,7 +1254,7 @@ class InpFile(object):
         f.write('[RULES]\n'.encode(sys_default_enc))
         for text, all_control in wn.controls():
             entry = '{}\n'
-            if all_control.epanet_control_type == _ControlType.rule:
+            if all_control.epanet_control_type not in [_ControlType.rule, _ControlType.stop_condition]:
                 if all_control.name == '':
                     all_control._name = text
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)

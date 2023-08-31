@@ -266,6 +266,7 @@ class _ControlType(enum.Enum):
     rule = 2
     pre_and_postsolve = 3
     feasibility = 4  # controls necessary to ensure the problem being solved is feasible
+    stop_condition = 5
 
 
 class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
