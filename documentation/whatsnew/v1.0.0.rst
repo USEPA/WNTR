@@ -5,7 +5,7 @@ with a wide range of water distribution system models
 and analysis options. The software has also successfully been
 used by external research groups and in analysis that uses large-scale 
 water distribution system models. See 
-`User community <https://wntr.readthedocs.io/en/latest/users.html>`_ 
+`User community <https://usepa.github.io/WNTR/users.html>`_ 
 for a list of publications and software that uses WNTR.
 
 * Updated copyright and added EPANET license

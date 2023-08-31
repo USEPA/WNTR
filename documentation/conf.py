@@ -145,6 +145,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_style = 'wntr.css'
 else:
     html_theme = 'default'
+    master_doc = 'index_rtd_redirect'
 #    html_context = {
 #        'css_files': ['_static/wntr.css'],
 #    }  
