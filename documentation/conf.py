@@ -68,10 +68,6 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
-root_doc = 'index'
-if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS'].lower() == 'true':
-    master_doc = 'index_rtd_redirect'
-    root_doc = 'index_rtd_redirect'
 
 # General information about the project.
 project = u'WNTR'
