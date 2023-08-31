@@ -216,7 +216,7 @@ The following example returns valid base GeoJSON column names for junctions.
 
     >>> geojson_column_names = wntr.network.io.valid_gis_names()
     >>> print(geojson_column_names['junctions'])
-    ['name', 'base_demand', 'pattern_name', 'elevation', 'coordinates', 'demand_category', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
+    ['name', 'elevation', 'coordinates', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
 
 A minimal list of valid column names can also be obtained by setting ``complete_list`` to False.
 Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
