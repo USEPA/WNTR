@@ -76,11 +76,9 @@ class Junction(Node):
         name
         node_type
         base_demand
-        demand_pattern
         demand_timeseries_list
         elevation
         coordinates
-        demand_category
         emitter_coefficient
         initial_quality
         minimum_pressure
@@ -106,11 +104,8 @@ class Junction(Node):
     # base and optional attributes used to create a Junction in _from_dict
     # base attributes are used in add_junction
     _base_attributes = ["name", 
-                        "base_demand", 
-                        "pattern_name", 
                         "elevation", 
-                        "coordinates",
-                        "demand_category"]
+                        "coordinates"]
     _optional_attributes = ["emitter_coefficient",
                             "initial_quality", 
                             "minimum_pressure", 
@@ -206,7 +201,6 @@ class Junction(Node):
     def nominal_pressure(self):
         """deprecated - use required pressure"""
         raise DeprecationWarning('The nominal_pressure property has been renamed required_pressure. Please update your code')
-
     @nominal_pressure.setter
     def nominal_pressure(self, value):
         """deprecated - use required pressure"""
@@ -243,7 +237,6 @@ class Junction(Node):
         if len(self.demand_timeseries_list) > 0:
             return self.demand_timeseries_list[0].base_value
         return 0.0
-
     @base_demand.setter
     def base_demand(self, value):
         raise RuntimeWarning('The base_demand property is read-only. Please modify using demand_timeseries_list[0].base_value.')
@@ -860,7 +853,7 @@ class Pipe(Link):
         roughness
         minor_loss
         initial_status
-        check_valve
+        cv
         bulk_coeff
         wall_coeff
         vertices
@@ -1566,7 +1559,6 @@ class Valve(Link):
         start_node_name
         end_node
         end_node_name
-        diameter
         valve_type
         initial_status
         initial_setting

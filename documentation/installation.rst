@@ -38,7 +38,7 @@ following commands in a terminal, command line, or PowerShell prompt.
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/wntr.svg?maxAge=3600
 .. _pypi version: https://pypi.org/project/wntr/
-.. |pypi downloads| image:: https://pepy.tech/badge/wntr
+.. |pypi downloads| image:: https://static.pepy.tech/badge/wntr
 .. _pypi downloads: https://pepy.tech/project/wntr
 .. |anaconda version| image:: https://anaconda.org/conda-forge/wntr/badges/version.svg 
 .. _anaconda version: https://anaconda.org/conda-forge/wntr
