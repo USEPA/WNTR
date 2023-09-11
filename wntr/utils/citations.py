@@ -3,91 +3,163 @@
 Will output the class
 """
 import datetime
-from dataclasses import asdict, dataclass
-from typing import Any, Dict
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, Union, List, TypeAlias, Tuple
 
+Literal: TypeAlias = str
+Name: TypeAlias = str
+NameList: TypeAlias = Union[Name, List[Name]]
+LiteralList: TypeAlias = Union[Literal, List[Literal]]
+Key: TypeAlias = str
+KeyList: TypeAlias = Union[Key, List[Key]]
+Verbatim: TypeAlias = str
+Special: TypeAlias = Any
+URI: TypeAlias = str
+Date: TypeAlias = Union[str, datetime.date]
+Range: TypeAlias = Union[str, Tuple[Any, Any]]
+SeparatedValues: TypeAlias = Union[str, List[str]]
 
 @dataclass(repr=False)
-class Citation:
+class CitationFields:
     """A dataclass for citations, most attribute names match biblatex names.
-    The exceptions are :attr:`citation_class`, which is the "@..." type of an entry,
-    :attr:`fulldate`, which is the "date" element of a bibliography entry,
-    and :attr:`report_type`, which is the "type" element of a bib(la)tex entry.
+    The exceptions are :attr:`entry_type`, which is the "@..." type of an entry
+    :attr:`fulldate`, which is the "date" element of a bibliography entry
+    and :attr:`reporttype`, which is the "type" element of a bib(la)tex entry.
 
     This class makes no attempt to format or represent the citation in any form
     other than as a dictionary.
     """
+    title: Literal
+    author: NameList = None
+    editor: NameList = None
+    date: Date = None
+    year: Literal = None
 
-    title: str
-    year: int
-    key: str = None
-    author: str = None
-
-    # citation type/subtype (e.g., "report"/"tech. rep.")
-    citation_class: str = 'misc'
-    report_type: str = None
-
-    # document identifiers
-    doi: str = None
-    url: str = None
-    isrn: str = None
-    isbn: str = None
-    issn: str = None
-    eprint: str = None
-
-    # container titles
-    journaltitle: str = None
-    maintitle: str = None
-    booktitle: str = None
-    issuetitle: str = None
-
-    # conference/proceedings info
-    eventtitle: str = None
-    eventdate: datetime.date = None
-    venue: str = None
-
-    # publishing info
-    institution: str = None
-    organization: str = None
-    publisher: str = None
-    location: str = None
-    howpublished: str = None
-    language: str = None
-    origlanguage: str = None
-
-    # additional people
-    editor: str = None
-    bookauthor: str = None
-    translator: str = None
-    annotator: str = None
-    commentator: str = None
-    introduction: str = None
-    foreword: str = None
-    afterword: str = None
-
-    # identifying info
-    issue: str = None
-    series: str = None
-    volume: str = None
-    number: str = None
-    part: str = None
-    edition: str = None
-    version: str = None
-    chapter: str = None
-    pages: str = None
-    volumes: str = None
-    pagetotal: str = None
-
-    # dates
-    month: str = None
-    fulldate: datetime.date = None
-    urldate: datetime.date = None
-
-    # extra
-    note: str = None
-    addendum: str = None
-    abstract: str = None
-    annotation: str = None
+    abstract: Literal = None
+    addendum: Literal = None
+    afterword: NameList = None
+    annotation: Literal = None
+    annotator: NameList = None
+    authortype: Key = None
+    bookauthor: NameList = None
+    bookpagination: Key = None
+    chapter: Literal = None
+    commentator: NameList = None
+    doi: Verbatim = None
+    edition: Union[int, Literal] = None
+    editora: NameList = None
+    editorb: NameList = None
+    editorc: NameList = None
+    editortype: Key = None
+    editoratype: Key = None
+    editorbtype: Key = None
+    editorctype: Key = None
+    eid: Literal = None
+    entrysubtype: Literal = None
+    eprint: Verbatim = None
+    eprintclass: Literal = None
+    eprinttype: Literal = None
+    eventdate: Date = None
+    file: Verbatim = None
+    foreword: NameList = None
+    holder: NameList = None
+    howpublished: Literal = None
+    institution: LiteralList = None
+    introduction: NameList = None
+    isan: Literal = None
+    isbn: Literal = None
+    ismn: Literal = None
+    isrn: Literal = None
+    issn: Literal = None
+    issue: Literal = None
+    iswc: Literal = None
+    # Titles
+    eventtitle: Literal = None
+    eventtitleaddon: Literal = None
+    subtitle: Literal = None
+    titleaddon: Literal = None
+    journalsubtitle: Literal = None
+    journaltitle: Literal = None
+    journaltitleaddon: Literal = None
+    issuesubtitle: Literal = None
+    issuetitle: Literal = None
+    issuetitleaddon: Literal = None
+    booksubtitle: Literal = None
+    booktitle: Literal = None
+    booktitleaddon: Literal = None
+    mainsubtitle: Literal = None
+    maintitle: Literal = None
+    maintitleaddon: Literal = None
+    origtitle: Literal = None
+    reprinttitle: Literal = None
+    shorttitle: Literal = None
+    shortjournal: Literal = None
+    indextitle: Literal = None
+    indexsorttitle: Literal = None
+    sorttitle: Literal = None
+    # Continued
+    label: Literal = None
+    language: KeyList = None
+    library: Literal = None
+    location: LiteralList = None
+    month: Literal = None
+    nameaddon: Literal = None
+    note: Literal = None
+    number: Literal = None
+    organization: LiteralList = None
+    origdate: Date = None
+    origlanguage: KeyList = None
+    origlocation: LiteralList = None
+    origpublisher: LiteralList = None
+    pages: Range = None
+    pagetotal: Literal = None
+    pagination: Key = None
+    part: Literal = None
+    publisher: LiteralList = None
+    pubstate: Key = None
+    series: Literal = None
+    shortauthor: NameList = None
+    shorteditor: NameList = None
+    shorthand: Literal = None
+    shorthandintro: Literal = None
+    shortseries: Literal = None
+    translator: NameList = None
+    type: Key = None
+    url: URI = None
+    urldate: Date = None
+    venue: Literal = None
+    version: Literal = None
+    volume: int = None
+    volumes: int = None
+    # SPECIAL FIELDS
+    crossref: Key = None
+    entryset: SeparatedValues = None
+    execute: Special = None
+    gender: Key = None
+    langid: Key = None
+    langidopts: Special = None
+    ids: SeparatedValues = None
+    keywords: SeparatedValues = None
+    options: Special = None
+    presort: Special = None
+    related: SeparatedValues = None
+    relatedoptions: SeparatedValues = None
+    relatedtype: Special = None
+    relatedstring: Literal = None
+    sortkey: Literal = None
+    sortname: NameList = None
+    sortshorthand: Literal = None
+    sortyear: int = None
+    xdata: SeparatedValues = None
+    xref: Key = None
+    # FIELD ALIASES
+    address: LiteralList = None
+    annote: Literal = None
+    archiveprefix: Literal = None
+    journal: Literal = None
+    pdf: Verbatim = None
+    primaryclass: Literal = None
+    school: LiteralList = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary representation of the citation.
@@ -115,22 +187,32 @@ class Citation:
         rep = rep + ')'
         return rep
     
-    def shorten(self, maxlen=None) -> str:
-        auth = str(self.author)
-        if len(auth) > 48:
-            auth = auth[0:44] + '...'
-        if isinstance(self.author, list):
-            if len(self.author) > 3:
-                auth = self.author[0] + ' et al'
-            else:
-                auth = ', '.join(self.author)
-        year = str(self.year)
-        titl = str(self.title)
-        ref = ('doi:' + str(self.doi)) if self.doi else (str(self.url) if self.url else (str(self.eprint) if self.eprint else ''))
-        line = ref + (' // ' if ref else '') + auth + ' // ' + '{}'.format(year) + ' // ' + titl
-        if maxlen and len(line) > maxlen:
-            line = line[0:maxlen-3] + '...'
-        if maxlen and maxlen-3 < len(ref):
-            return ref
-        return line
-    
+
+@dataclass(repr=False)
+class Citation:
+    entry_type: str
+    key: str
+    fields: CitationFields = field(default_factory=CitationFields)
+
+    def __post_init__(self):
+        if isinstance(self.fields, dict):
+            self.fields = CitationFields(**self.fields)
+        elif isinstance(self.fields, list):
+            self.fields = CitationFields(*self.fields)
+
+    def to_dict(self):
+        """Convert to a dictionary.
+
+        Returns
+        -------
+        dict
+            the citation dictionaries
+        """
+        try:
+            ret = dict()
+            ret['entry_type'] = self.entry_type
+            ret['key'] = self.key
+            ret['fields'] = self.fields.to_dict()
+            return ret
+        except:
+            return asdict(self)
