@@ -2,6 +2,8 @@
 """
 Water quality reactions model.
 
+TODO: FIXME: Make sure that we throw the same errors (text/number) as MSX would throw
+
 """
 
 import logging
@@ -91,6 +93,10 @@ class WaterQualityReactionsModel(RxnModelRegistry):
     _wn : WaterNetworkModel
         The water network model to use, by default None
     """
+
+    # FIXME: Make the __init__ just minimal, with a filename
+    # do the rest of stuff directly on the MSX object, make it as
+    # close to WNM as possible
 
     title: str = None
     """A one-line title for the model"""
@@ -558,6 +564,7 @@ class WaterQualityReactionsModel(RxnModelRegistry):
             yield v
 
     def add_reaction(self, location: RxnLocationType, species: Union[str, Species], dynamics: Union[str, int, RxnDynamicsType], expression: str, note: str = None):
+        # TODO: accept a "both" or "all" value for location
         location = RxnLocationType.factory(location)
         species = str(species)
         if species not in self._species.keys():
