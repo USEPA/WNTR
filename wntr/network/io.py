@@ -31,6 +31,7 @@ import networkx as nx
 import wntr.epanet
 from wntr.epanet.util import FlowUnits
 import wntr.network.model
+import wntr.utils.citations
 from wntr.gis.network import WaterNetworkGIS
 try:
     import geopandas as gpd
@@ -69,7 +70,7 @@ def to_dict(wn) -> dict:
         version="wntr-{}".format(__version__),
         comment="WaterNetworkModel - all values given in SI units",
         name=wn.name,
-        citations=wntr.utils.citations.to_dict(wn.citations),
+        citations=wntr.utils.citations.to_jsontypes(wn.citations),
         options=wn._options.to_dict(),
         curves=wn._curve_reg.to_list(),
         patterns=wn._pattern_reg.to_list(),
@@ -122,6 +123,8 @@ def from_dict(d: dict, append=None):
         wn = append
     if "name" in d:
         wn.name = d["name"]
+    if "citations" in d:
+        wn.citations = wntr.utils.citations.from_jsontypes(d["citations"])
     if "options" in d:
         wn.options.__init__(**d["options"])
     if "curves" in d:
