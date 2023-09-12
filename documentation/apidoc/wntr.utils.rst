@@ -14,4 +14,4 @@ Submodules
 
    wntr.utils.logger
    wntr.utils.ordered_set
-
+   wntr.utils.citations
