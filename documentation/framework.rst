@@ -22,7 +22,7 @@ run simulations are described in more detail below, followed by a list of softwa
 
 .. only:: latex
 
-   See the online API documentation at https://wntr.readthedocs.io for more information on the code structure.
+   See the online API documentation at https://usepa.github.io/WNTR/ for more information on the code structure.
    
 .. _table-wntr-subpackage:
 .. table:: WNTR Subpackages

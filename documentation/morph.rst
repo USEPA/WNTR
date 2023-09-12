@@ -17,9 +17,9 @@ Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
 Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
-Pipes that fall below a user-defined pipe diameter threshold are candidates for removal based on three operations, including:
+Pipes that are less than or equal to a user-defined pipe diameter threshold are candidates for removal based on three operations, including:
 
-1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
+1. **Branch trimming**: Dead-end pipes that are less than or equal to the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
    The demand and demand pattern assigned to the dead-end junction is moved to the junction that is retained in the model.  
    Dead-end pipes that are connected to tanks or reservoirs are not removed from the model.
    
@@ -30,7 +30,7 @@ Pipes that fall below a user-defined pipe diameter threshold are candidates for 
 	   
 	   Branch trimming.
 	  
-2. **Series pipe merge**: Pipes in series are merged if both pipes are below the pipe diameter threshold (:numref:`fig-series-merge`).  
+2. **Series pipe merge**: Pipes in series are merged if both pipes are less than or equal to the pipe diameter threshold (:numref:`fig-series-merge`).  
    The demand and demand pattern assigned to the connecting junction is moved to the nearest junction that is retained in the model.
    The merged pipe is assigned the following equivalent properties:
    
@@ -52,7 +52,7 @@ Pipes that fall below a user-defined pipe diameter threshold are candidates for 
 	   
 	   Series pipe merge.
 	   
-3. **Parallel pipe merge**: Pipes in parallel are merged if both pipes are below the pipe diameter threshold (:numref:`fig-parallel-merge`).  
+3. **Parallel pipe merge**: Pipes in parallel are merged if both pipes are less than or equal to the pipe diameter threshold (:numref:`fig-parallel-merge`).  
    This operation does not reduce the number of junctions in the system.
    The merged pipe is assigned the following equivalent properties:
    
@@ -75,7 +75,7 @@ Pipes that fall below a user-defined pipe diameter threshold are candidates for 
       Parallel pipe merge.
 	  
 The :class:`~wntr.morph.skel.skeletonize` function is used to perform network skeletonization.
-The iterative algorithm first loops over all candidate pipes (pipes below the pipe diameter threshold) and removes branch pipes.  
+The iterative algorithm first loops over all candidate pipes (pipes less than or equal to the pipe diameter threshold) and removes branch pipes.  
 Then the algorithm loops over all candidate pipes and merges pipes in series.
 Finally, the algorithm loops over all candidate pipes and merges pipes in parallel.
 This initial set of operations can generate new branch pipes, pipes in series, and pipes in parallel.
@@ -85,7 +85,7 @@ The user can also specify a maximum number of cycles to include in the process.
 
 .. only:: latex
 
-   See the `online API documentation <https://wntr.readthedocs.io/en/latest/apidoc/wntr.morph.skel.html>`_ for more information on skeletonization.
+   See the `online API documentation <https://usepa.github.io/WNTR/apidoc/wntr.morph.skel.html>`_ for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
 a "skeletonization map" that maps original network nodes to merged nodes that are represented in the skeletonized network.  
@@ -109,7 +109,8 @@ the original 'Junction 1' and 'Junction 2.'
 
 The following example performs network skeletonization on Net6  
 and compares system pressure using the original and skeletonized networks.
-The example starts by creating a water network model for Net6, listing the number of network components (e.g., 3356 nodes, 3892 links), and then skeletonizing it using a using a pipe diameter threshold of 12 inches. 
+The example starts by creating a water network model for Net6, listing the number of network components 
+(e.g., 3356 nodes, 3892 links), and then skeletonizing it using pipes with diameter less than or equal to 12 inches.
 The skeletonization procedure reduces the number of nodes in the network from 
 approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 

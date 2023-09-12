@@ -23,7 +23,6 @@ simulation.
     ControlAction
     ControlBase
     Control
-    ControlManager
 	
 """
 import math
@@ -2317,7 +2316,7 @@ class ControlChangeTracker(Observer):
 
     def register_control(self, control):
         """
-        Register a control with the ControlManager
+        Register a control
 
         Parameters
         ----------
@@ -2355,7 +2354,7 @@ class ControlChangeTracker(Observer):
 
     def deregister(self, control):
         """
-        Deregister a control with the ControlManager
+        Deregister a control
 
         Parameters
         ----------
@@ -2383,7 +2382,7 @@ class ControlChecker(object):
 
     def register_control(self, control):
         """
-        Register a control with the ControlManager
+        Register a control
 
         Parameters
         ----------
@@ -2393,7 +2392,7 @@ class ControlChecker(object):
 
     def deregister(self, control):
         """
-        Deregister a control with the ControlManager
+        Deregister a control
 
         Parameters
         ----------

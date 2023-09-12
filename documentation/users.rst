@@ -17,15 +17,23 @@ Related software
 
 * CriticalityMaps: https://github.com/pshassett/CriticalityMaps
 
-* Digital HydrAuLic SIMulator (DHALSIM): https://github.com/afmurillo/DHALSIM
+* Digital HydrAuLic SIMulator (DHALSIM): https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM
 
 * LeakDB: https://github.com/KIOS-Research/LeakDB
 
+* MAGNets: https://github.com/meghnathomas/MAGNets
+
+* MILPNet: https://github.com/meghnathomas/MILPNet
+
 * PPMTools: https://github.com/USEPA/PPMtools
+
+* PTSNet: https://github.com/gandresr/ptsnet
 
 * pyincore: https://github.com/IN-CORE/pyincore
 
 * TSNet: https://github.com/glorialulu/TSNet
+
+* VisWaterNet: https://github.com/tylertrimble/viswaternet
 
 Publications
 -----------------

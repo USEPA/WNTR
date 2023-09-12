@@ -16,6 +16,7 @@ model.
 """
 import logging
 from collections import OrderedDict
+from typing import List, Union
 from warnings import warn
 
 import networkx as nx
@@ -24,6 +25,7 @@ import pandas as pd
 import six
 import wntr.epanet
 import wntr.network.io
+from wntr.utils.citations import Citation
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -71,6 +73,8 @@ class WaterNetworkModel(AbstractModel):
 
         # Network name
         self.name = None
+        self.citations: Union[str,Citation, List[Union[str,Citation]]] = list()
+        """A list of citations that document the source of this model. See also :class:`~wntr.utils.citations.Citation`."""
 
         self._options = Options()
         self._node_reg = NodeRegistry(self)
@@ -2506,12 +2510,7 @@ class LinkRegistry(Registry):
 
         # A PRV, PSV or FCV cannot be directly connected to a reservoir or tank (use a length of pipe to separate the two)
         if valve_type in ["PRV", "PSV", "FCV"]:
-            if (
-                type(start_node) == Tank
-                or type(end_node) == Tank
-                or type(start_node) == Reservoir
-                or type(end_node) == Reservoir
-            ):
+            if type(start_node) == Tank or type(end_node) == Tank:
                 msg = (
                     "%ss cannot be directly connected to a tank.  Add a pipe to separate the valve from the tank."
                     % valve_type

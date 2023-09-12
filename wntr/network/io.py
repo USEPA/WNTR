@@ -69,6 +69,7 @@ def to_dict(wn) -> dict:
         version="wntr-{}".format(__version__),
         comment="WaterNetworkModel - all values given in SI units",
         name=wn.name,
+        citations=wntr.utils.citations.to_dict(wn.citations),
         options=wn._options.to_dict(),
         curves=wn._curve_reg.to_list(),
         patterns=wn._pattern_reg.to_list(),
@@ -103,6 +104,7 @@ def from_dict(d: dict, append=None):
         "version",
         "comment",
         "name",
+        "citations",
         "options",
         "curves",
         "patterns",
@@ -172,9 +174,10 @@ def from_dict(d: dict, append=None):
                     name,
                     elevation=node.setdefault("elevation"),
                     init_level=node.setdefault("init_level", node.setdefault("min_level", 0)),
+                    min_level=node.setdefault("min_level", 0),
                     max_level=node.setdefault("max_level", node.setdefault("min_level", 0) + 10),
                     diameter=node.setdefault("diameter", 0),
-                    min_level=node.setdefault("min_level", 0),
+                    min_vol=node.setdefault("min_vol", 0),
                     vol_curve=node.setdefault("vol_curve_name"),
                     overflow=node.setdefault("overflow", False),
                     coordinates=coordinates,
@@ -185,8 +188,8 @@ def from_dict(d: dict, append=None):
                     t.mixing_fraction = node.setdefault("mixing_fraction")
                 if node.setdefault("mixing_model"):
                     t.mixing_model = node.setdefault("mixing_model")
-                t.tag = node.setdefault("tag")
                 t.bulk_coeff = node.setdefault("bulk_coeff")
+                t.tag = node.setdefault("tag")
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(t))):
                     setattr( t, attr, node[attr] )
@@ -600,7 +603,7 @@ def read_geojson(files, index_col='index', append=None):
 def write_shapefile(wn, prefix: str, crs=None, pumps_as_points=True,
                     valves_as_points=True):
     """
-    Write the WaterNetworkModel to a set of ESRI Shapefiles, one directory for
+    Write the WaterNetworkModel to a set of Esri Shapefiles, one directory for
     each network element.
 
     The Shapefiles only includes information from the water network model.
@@ -633,7 +636,7 @@ def write_shapefile(wn, prefix: str, crs=None, pumps_as_points=True,
 def read_shapefile(files, index_col='index', append=None):
     """
 
-    Create or append a WaterNetworkModel from ESRI Shapefiles
+    Create or append a WaterNetworkModel from Esri Shapefiles
 
     Parameters
     ----------
@@ -657,3 +660,28 @@ def read_shapefile(files, index_col='index', append=None):
     wn = gis_data._create_wn(append=append)
 
     return wn
+
+def valid_gis_names(complete_list=True, truncate_names=None):
+    """
+    Valid column/field names for GeoJSON or Shapefiles
+    
+    Note that Shapefile field names are truncated to 10 characters 
+    (set truncate=10)
+    
+    Parameters
+    ----------
+    complete_list : bool
+        Include a complete list of column/field names (beyond basic attributes)
+    truncate_names : None or int
+        Truncate column/field names to specified number of characters, 
+        set truncate=10 for Shapefiles.  None indicates no truncation.
+        
+    Returns
+    ---------
+    dict : Dictionary of valid GeoJSON or Shapefile column/field names
+    """
+    
+    gis_data = WaterNetworkGIS()
+    column_names = gis_data._valid_names(complete_list, truncate_names)
+
+    return column_names

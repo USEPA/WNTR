@@ -54,9 +54,12 @@ The following examples use a water network generated from Net1.inp.
 The :class:`~wntr.gis.geospatial.snap` and :class:`~wntr.gis.geospatial.intersect` examples 
 also use additional GIS data stored in the 
 `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
-For simplicity, the examples assume that all data coordinates are in 
+
+For simplicity, the examples in this section assume that all network and data coordinates are in 
 the EPSG:4326 coordinate reference system (CRS).  
+**Note that EPANET does not have a standard or default coordinate reference system.**
 More information on setting and transforming CRS is included in :ref:`crs`.
+    
 
 .. doctest::
     :skipif: gpd is None
@@ -65,6 +68,8 @@ More information on setting and transforming CRS is included in :ref:`crs`.
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
 
+
+.. _gis_data:
 
 Water network GIS data
 ------------------------
@@ -188,10 +193,12 @@ Geometry
        Valve                           LineString or Point
        ==============================  ===============================
    
-A WaterNetworkGIS object can also be written to GeoJSON and Shapefile files using 
+A WaterNetworkGIS object can also be written to GeoJSON and Shapefiles using 
 the object's :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and 
 :class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` methods. 
-The GeoJSON and Shapefile files can be loaded into GIS platforms for further analysis and visualization.
+See :ref:`shapefile_format` for more information on Shapefile format.
+
+The GeoJSON and Shapefiles can be loaded into GIS platforms for further analysis and visualization.
 An example of creating GeoJSON files from a WaterNetworkModel using the function :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson`
 is shown below.
 
@@ -234,7 +241,7 @@ WNTR to add attributes to the water network model and analysis. Examples of thes
 The snap and intersect examples below used additional GIS data stored in the 
 `examples/data <https://github.com/USEPA/WNTR/blob/main/examples/data>`_ directory.
 
-Note, the GeoPandas ``read_file`` and ``to_file`` functions can be used to read/write external GeoJSON and Shapefile files in Python.
+Note, the GeoPandas ``read_file`` and ``to_file`` functions can be used to read/write external GeoJSON and Shapefiles in Python.
 
 .. _crs:
 
