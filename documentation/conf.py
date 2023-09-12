@@ -106,6 +106,7 @@ exclude_patterns = ['_build']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
+autodoc_type_aliases = {'Literal': 'Literal', 'Name':'Name', 'NameList':'NameList', 'LiteralList':'LiteralList', 'Key':'Key', 'KeyList':'KeyList','Verbatim': 'Verbatim', 'URI': 'URI', 'Date':'Date', 'Range':'Range', 'SeparatedValues':'SeparatedValues'}
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
