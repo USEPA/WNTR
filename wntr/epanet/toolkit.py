@@ -37,9 +37,7 @@ logger = logging.getLogger(__name__)
 
 # import warnings
 
-
-class EpanetException(Exception):
-    pass
+from .exceptions import EpanetException, EN_ERROR_CODES
 
 
 def ENgetwarning(code, sec=-1):
@@ -48,41 +46,15 @@ def ENgetwarning(code, sec=-1):
         sec -= hours * 3600
         mm = int(sec / 60.0)
         sec -= mm * 60
-        header = "At %3d:%.2d:%.2d, " % (hours, mm, sec)
+        header = "%3d:%.2d:%.2d" % (hours, mm, sec)
     else:
-        header = ""
-    if code == 1:
-        return (
-                header
-                + "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
-        )
-    elif code == 2:
-        return (
-                header
-                + "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
-        )
-    elif code == 3:
-        return (
-                header
-                + "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
-        )
-    elif code == 4:
-        return (
-                header
-                + "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
-        )
-    elif code == 5:
-        return (
-                header
-                + "Vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
-        )
-    elif code == 6:
-        return (
-                header
-                + "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
-        )
+        header = "{}".format(code)
+    if code < 100:
+        msg = EN_ERROR_CODES.get(code, 'Unknown warning %s')
     else:
-        return header + "Unknown warning: %d" % code
+        raise EpanetException(code)
+    
+    return msg % header
 
 def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
@@ -187,19 +159,22 @@ class ENepanet:
         """Checks to see if the file is open"""
         return self.fileLoaded
 
-    def _error(self):
+    def _error(self, *args):
         """Print the error text the corresponds to the error code returned"""
         if not self.errcode:
             return
         # errtxt = self.ENlib.ENgeterror(self.errcode)
-        logger.error("EPANET error: %d", self.errcode)
+        errtext =  EN_ERROR_CODES.get(self.errcode, 'unknown error')
+        if '%' in errtext and len(args) == 1:
+            errtext % args
         if self.errcode >= 100:
             self.Errflag = True
-            self.errcodelist.append(self.errcode)
-            raise EpanetException("EPANET Error {}".format(self.errcode))
+            logger.error("EPANET error {} - {}".format(self.errcode, errtext))
+            raise EpanetException(self.errcode)
         else:
             self.Warnflag = True
             # warnings.warn(ENgetwarning(self.errcode))
+            logger.warning('EPANET warning {} - {}'.format(self.errcode, ENgetwarning(self.errcode, self.cur_time)))
             self.errcodelist.append(ENgetwarning(self.errcode, self.cur_time))
         return
 
@@ -538,21 +513,6 @@ class ENepanet:
         self._error()
         return iCode.value
 
-    def ENgetnodeid(self, iIndex):
-        """
-        desc: Gets the ID name of a node given its index.
-
-        :param a node's index (starting from 1).
-        :return the node's ID name.
-        """
-        fValue = ctypes.create_string_buffer(SizeLimits.EN_MAX_ID.value)
-        if self._project is not None:
-            self.errcode = self.ENlib.EN_getnodeid(self._project, iIndex, byref(fValue))
-        else:
-            self.errcode = self.ENlib.ENgetnodeid(iIndex, byref(fValue))
-        self._error()
-        return str(fValue.value, 'UTF-8')
-
     def ENgetnodeindex(self, sId):
         """Retrieves index of a node with specific ID
 
@@ -573,22 +533,6 @@ class ENepanet:
             self.errcode = self.ENlib.ENgetnodeindex(sId.encode("latin-1"), byref(iIndex))
         self._error()
         return iIndex.value
-
-    def ENgetnodetype(self, iIndex):
-        """
-        desc: Retrieves a node's type given its index.
-
-        :param iIndex: idx
-        :param nodeType: the node's type (see EN_NodeType).
-        :return int node type
-        """
-        fValue = ctypes.c_int()
-        if self._project is not None:
-            self.errcode = self.ENlib.EN_getnodetype(self._project, iIndex, byref(fValue))
-        else:
-            self.errcode = self.ENlib.ENgetnodetype(iIndex, byref(fValue))
-        self._error()
-        return fValue.value
 
     def ENgetnodevalue(self, iIndex, iCode):
         """
@@ -636,21 +580,6 @@ class ENepanet:
         self._error()
         return iIndex.value
 
-    def ENgetlinktype(self, iIndex):
-        """
-        Retrieves a link's type.
-
-        :param iIndex: index
-        :return:linkType
-        """
-        fValue = ctypes.c_int()
-        if self._project is not None:
-            self.errcode = self.ENlib.EN_getlinktype(self._project, iIndex, byref(fValue))
-        else:
-            self.errcode = self.ENlib.EN_getlinktype(iIndex, byref(fValue))
-        self._error()
-        return fValue.value
-
     def ENgetlinkvalue(self, iIndex, iCode):
         """Retrieves parameter value for a link
 
@@ -690,8 +619,8 @@ class ENepanet:
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_setlinkvalue(self._project,
-                                                      ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
-                                                      )
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
+            )
         else:
             self.errcode = self.ENlib.ENsetlinkvalue(
                 ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
@@ -713,8 +642,8 @@ class ENepanet:
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_setnodevalue(self._project,
-                                                      ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
-                                                      )
+                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
+            )
         else:
             self.errcode = self.ENlib.ENsetnodevalue(
                 ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
@@ -764,6 +693,173 @@ class ENepanet:
         else:
             self.errcode = self.ENlib.ENgettimeparam(
                 ctypes.c_int(eParam), byref(lValue)
+            )
+        self._error()
+        return lValue.value
+
+    def ENaddcontrol(self, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float) -> int:
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+
+        Returns
+        -------
+        int
+            _description_
+        """
+        lValue = ctypes.c_int()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_addcontrol(
+                self._project, 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        else:
+            self.errcode = self.ENlib.ENaddcontrol(
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel),
+                byref(lValue)
+            )
+        self._error()
+        return lValue.value
+
+    def ENgetcontrol(self, iIndex: int):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        """
+        iType = ctypes.c_int()
+        iLinkIndex = ctypes.c_int()
+        dSetting = ctypes.c_double()
+        iNodeIndex = ctypes.c_int()
+        dLevel = ctypes.c_double()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getcontrol(
+                self._project, 
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        else:
+            self.errcode = self.ENlib.ENgetcontrol(
+                ctypes.c_int(iIndex), 
+                byref(iType),
+                byref(iLinkIndex), 
+                byref(dSetting), 
+                byref(iNodeIndex), 
+                byref(dLevel)
+            )
+        self._error()
+        return dict(index=iIndex, type=iType.value, linkindex=iLinkIndex.value, setting=dSetting.value, nodeindex=iNodeIndex.value, level=dLevel.value)
+
+    def ENsetcontrol(self, iIndex: int, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float):
+        """
+        Add a new simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            _description_
+        iType : int
+            _description_
+        iLinkIndex : int
+            _description_
+        dSetting : float
+            _description_
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            _description_
+
+        Warning
+        ------- 
+        There is an error in EPANET 2.2 that sets the :param:`dLevel` to 0.0 on Macs
+        regardless of the value the user passes in. This means that to use this toolkit
+        functionality on a Mac, the user must delete and create a new control to change
+        the level.
+        
+        """
+        if self._project is not None:
+            try:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_double(dLevel)
+                )
+            except:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project, 
+                    ctypes.c_int(iIndex), 
+                    ctypes.c_int(iType), 
+                    ctypes.c_int(iLinkIndex), 
+                    ctypes.c_double(dSetting), 
+                    ctypes.c_int(iNodeIndex), 
+                    ctypes.c_float(dLevel)
+                )
+        else:
+            self.errcode = self.ENlib.ENsetcontrol(
+                ctypes.c_int(iIndex), 
+                ctypes.c_int(iType), 
+                ctypes.c_int(iLinkIndex), 
+                ctypes.c_double(dSetting), 
+                ctypes.c_int(iNodeIndex), 
+                ctypes.c_double(dLevel)
+            )
+        self._error()
+
+    def ENdeletecontrol(self, iControlIndex):
+        """
+        Get a time parameter value
+
+        Parameters
+        ----------
+        iControlIndex : int
+            the time parameter to get
+
+        Returns
+        -------
+        int
+            the index of the new control
+        """
+        lValue = ctypes.c_long()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_deletecontrol(
+                self._project, 
+                ctypes.c_int(iControlIndex)
+            )
+        else:
+            self.errcode = self.ENlib.ENdeletecontrol(
+                ctypes.c_int(iControlIndex)
             )
         self._error()
         return lValue.value
