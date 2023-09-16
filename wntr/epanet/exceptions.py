@@ -1,3 +1,6 @@
+# coding: utf-8
+"""Exceptions for EPANET toolkit and IO operations."""
+
 from enum import IntEnum
 from typing import List
 
@@ -79,8 +82,10 @@ EN_ERROR_CODES = {
     308: "cannot save results to binary file %s",
     309: "cannot save results to report file %s",
 }
+"""A list of the error codes and their meanings from the EPANET toolkit."""
 
 class EpanetErrors(IntEnum):
+    """A list of short phrases that can be used in place of the error code numbers."""
     insufficient_memory = 101
     no_network = 102
     no_init_hyd = 103
@@ -151,6 +156,20 @@ class EpanetErrors(IntEnum):
 class EpanetException(Exception):
 
     def __init__(self, code: int, *args: List[object], line_num=None, line=None) -> None:
+        """An Exception class for EPANET Toolkit and IO exceptions.
+
+        Parameters
+        ----------
+        code : int or str or EpanetErrors
+            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+        args : additional non-keyword arguments, optional
+            If there is a string-format within the error code's text, these will be used to 
+            replace the format, otherwise they will be output at the end of the Exception message.
+        line_num : int, optional
+            The line number, if reading an INP file, by default None
+        line : str, optional
+            The contents of the line, by default None
+        """
         if isinstance(code, EpanetErrors):
             code = int(code)
         elif isinstance(code, str):
@@ -177,12 +196,59 @@ class EpanetException(Exception):
 
 class ENSyntaxError(EpanetException, SyntaxError):
     def __init__(self, code, *args, line_num=None, line=None) -> None:
+        """An EPANET exception class that also subclasses SyntaxError
+
+        Parameters
+        ----------
+        code : int or str or EpanetErrors
+            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+        args : additional non-keyword arguments, optional
+            If there is a string-format within the error code's text, these will be used to 
+            replace the format, otherwise they will be output at the end of the Exception message.
+        line_num : int, optional
+            The line number, if reading an INP file, by default None
+        line : str, optional
+            The contents of the line, by default None
+        """
         super().__init__(code, *args, line_num=line_num, line=line)
 
 class ENKeyError(EpanetException, KeyError):
     def __init__(self, code, name, *args, line_num=None, line=None) -> None:
+        """An EPANET exception class that also subclasses KeyError.
+
+        Parameters
+        ----------
+        code : int or str or EpanetErrors
+            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+        name : str
+            The key/name/id that is missing
+        args : additional non-keyword arguments, optional
+            If there is a string-format within the error code's text, these will be used to 
+            replace the format, otherwise they will be output at the end of the Exception message.
+        line_num : int, optional
+            The line number, if reading an INP file, by default None
+        line : str, optional
+            The contents of the line, by default None
+        """
+
         super().__init__(code, name, *args, line_num=line_num, line=line)
 
 class ENValueError(EpanetException, ValueError):
     def __init__(self, code, value, *args, line_num=None, line=None) -> None:
+        """An EPANET exception class that also subclasses ValueError
+
+        Parameters
+        ----------
+        code : int or str or EpanetErrors
+            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+        value : Any
+            The value that is invalid
+        args : additional non-keyword arguments, optional
+            If there is a string-format within the error code's text, these will be used to 
+            replace the format, otherwise they will be output at the end of the Exception message.
+        line_num : int, optional
+            The line number, if reading an INP file, by default None
+        line : str, optional
+            The contents of the line, by default None
+        """
         super().__init__(code, value, *args, line_num=line_num, line=line)
