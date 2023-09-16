@@ -21,24 +21,24 @@ EN_ERROR_CODES = {
     110: "cannot solve network hydraulic equations",
     120: "cannot solve water quality transport equations",
     # Apply only to an input file
-    200: "one or more errors in input file",
-    201: "syntax error",
+    200: "one or more errors in input file %s",
+    201: "syntax error (%s)",
     # Apply to both IO file and API functions
-    202: "illegal numeric value",
-    203: "undefined node %s",
-    204: "undefined link %s",
-    205: "undefined time pattern %s",
-    206: "undefined curve %s",
+    202: "illegal numeric value, %s",
+    203: "undefined node, %s",
+    204: "undefined link, %s",
+    205: "undefined time pattern, %s",
+    206: "undefined curve, %s",
     207: "attempt to control a CV/GPV link",
     208: "illegal PDA pressure limits",
     209: "illegal node property value",
     211: "illegal link property value",
     212: "undefined trace node",
-    213: "invalid option value",
+    213: "invalid option value %s",
     214: "too many characters in input line",
     215: "duplicate ID label",
     216: "reference to undefined pump",
-    217: "invalid pump energy data",
+    217: "pump has no head curve or power defined",
     219: "illegal valve connection to tank node",
     220: "illegal valve connection to another valve",
     221: "misplaced rule clause in rule-based control",
@@ -176,14 +176,13 @@ class EpanetException(Exception):
         super().__init__(msg)
 
 class ENSyntaxError(EpanetException, SyntaxError):
-    def __init__(self, code, *args) -> None:
-        super().__init__(code, *args)
+    def __init__(self, code, *args, line_num=None, line=None) -> None:
+        super().__init__(code, *args, line_num=line_num, line=line)
 
-class ENNameError(EpanetException, NameError):
-    def __init__(self, code, name, *args) -> None:
-        super().__init__(code, name, *args)
+class ENKeyError(EpanetException, KeyError):
+    def __init__(self, code, name, *args, line_num=None, line=None) -> None:
+        super().__init__(code, name, *args, line_num=line_num, line=line)
 
 class ENValueError(EpanetException, ValueError):
-    def __init__(self, code, value, *args) -> None:
-        super().__init__(code, value, *args)
-
+    def __init__(self, code, value, *args, line_num=None, line=None) -> None:
+        super().__init__(code, value, *args, line_num=line_num, line=line)
