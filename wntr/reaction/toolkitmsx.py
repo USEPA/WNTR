@@ -19,8 +19,9 @@ from ctypes import byref
 
 from pkg_resources import resource_filename
 
-from ..epanet.toolkit import ENepanet, EpanetException
+from ..epanet.toolkit import ENepanet
 from ..epanet.util import SizeLimits
+from .exceptions import EpanetMsxException
 
 epanet_toolkit = "wntr.epanet.toolkit"
 
@@ -37,99 +38,6 @@ else:
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-class EpanetMsxToolkitError(Exception):
-    ERROR_CODES = {
-        101: "insufficient memory available.",
-        102: "no network data available.",
-        103: "hydraulics not initialized.",
-        104: "no hydraulics for water quality analysis.",
-        105: "water quality not initialized.",
-        106: "no results saved to report on.",
-        107: "hydraulics supplied from external file.",
-        108: "cannot use external file while hydraulics solver is active.",
-        109: "cannot change time parameter when solver is active.",
-        110: "cannot solve network hydraulic equations.",
-        120: "cannot solve water quality transport equations.",
-        200: "Cannot read EPANET-MSX file.",
-        201: "Syntax error",
-        202: "Function call contains an illegal numeric value",
-        203: "Function call refers to an undefined node",
-        204: "Function call refers to an undefined link",
-        205: "Function call refers to an undefined time pattern",
-        206: "Function call refers to an undefined curve",
-        207: "Function call attempts to control a check valve pipe or a GPV valve",
-        208: "Function call contains illegal PDA pressure limits",
-        209: "Function call contains an illegal node property value",
-        211: "Function call contains an illegal link property value",
-        212: "Function call refers to an undefined Trace Node",
-        213: "Function call contains an invalid option value",
-        214: "Too many characters in a line of an input file",
-        215: "Function call contains a duplicate ID label",
-        216: "Function call refers to an undefined pump",
-        217: "Invalid pump energy data",
-        219: "Illegal valve connection to tank node",
-        220: "Illegal valve connection to another valve",
-        221: "Mis-placed clause in rule-based control",
-        222: "Link assigned same start and end nodes",
-        223: "Not enough nodes in network",
-        224: "No tanks or reservoirs in network",
-        225: "Invalid lower/upper levels for tank",
-        226: "No head curve or power rating for pump",
-        227: "Invalid head curve for pump",
-        230: "Nonincreasing x-values for curve",
-        233: "Network has unconnected node",
-        240: "Function call refers to nonexistent water quality source",
-        241: "Function call refers to nonexistent control",
-        250: "Function call contains invalid format (e.g. too long an ID name)",
-        251: "Function call contains invalid parameter code",
-        253: "Function call refers to nonexistent demand category",
-        254: "Function call refers to node with no coordinates",
-        257: "Function call refers to nonexistent rule",
-        258: "Function call refers to nonexistent rule clause",
-        259: "Function call attempts to delete a node that still has links connected to it",
-        260: "Function call attempts to delete node assigned as a Trace Node",
-        261: "Function call attempts to delete a node or link contained in a control",
-        262: "Function call attempts to modify network structure while a solver is open",
-        301: "Identical file names used for different types of files",
-        302: "Cannot open input file",
-        303: "Cannot open report file",
-        304: "Cannot open output file",
-        305: "Cannot open hydraulics file",
-        306: "Hydraulics file does not match network data",
-        307: "Cannot read hydraulics file",
-        308: "Cannot save results to binary file",
-        309: "Cannot save results to report file",
-        501: "insufficient memory available.",
-        502: "no EPANET data file supplied.",
-        503: "could not open MSX input file.",
-        504: "could not open hydraulic results file.",
-        505: "could not read hydraulic results file.",
-        506: "could not read MSX input file.",
-        507: "too few pipe reaction expressions.",
-        508: "too few tank reaction expressions.",
-        509: "could not open differential equation solver.",
-        510: "could not open algebraic equation solver.",
-        511: "could not open binary results file.",
-        512: "read/write  on binary results file.",
-        513: "could not integrate reaction rate expressions.",
-        514: "could not solve reaction equilibrium expressions.",
-        515: "reference made to an unknown type of object.",
-        516: "reference made to an illegal object index.",
-        517: "reference made to an undefined object ID.",
-        518: "invalid property values were specified.",
-        519: "an MSX project was not opened.",
-        520: "an MSX project is already opened.",
-        521: "could not open MSX report file.",
-        522: "could not compile chemistry functions.",
-        523: "could not load functions from compiled chemistry file.",
-        524: "illegal math operation.",
-    }
-
-    def __init__(self, code, *args: object) -> None:
-        msg = self.ERROR_CODES.get(code, "EPANET MSX error: {}".format(code))
-        super().__init__(msg, *args)
 
 
 class MSXepanet(ENepanet):
@@ -185,7 +93,7 @@ class MSXepanet(ENepanet):
         """
         ierr = self.ENlib.MSXopen(ctypes.c_char_p(nomeinp.encode()))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXclose(
         self,
@@ -193,13 +101,13 @@ class MSXepanet(ENepanet):
         """Closes down the Toolkit system (including all files being processed)"""
         ierr = self.ENlib.MSXclose()
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXusehydfile(self, fname):
         """Uses the contents of the specified file as the current binary hydraulics file"""
         ierr = self.ENlib.MSXusehydfile(ctypes.c_char_p(fname.encode()))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsolveH(
         self,
@@ -208,14 +116,14 @@ class MSXepanet(ENepanet):
         for all time periods written to the binary Hydraulics file."""
         ierr = self.ENlib.MSXsolveH()
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXinit(self, saveFlag=0):
         """Initializes the MSX system before solving for water quality results in step-wise fashion
         set saveFlag to 1 if water quality results should be saved to a scratch binary file, or to 0 is not saved to file"""
         ierr = self.ENlib.MSXinit(saveFlag)
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsolveQ(
         self,
@@ -223,7 +131,7 @@ class MSXepanet(ENepanet):
         """solves for water quality over the entire simulation period and saves the results to an internal scratch file"""
         ierr = self.ENlib.MSXsolveQ()
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXstep(
         self,
@@ -234,7 +142,7 @@ class MSXepanet(ENepanet):
         tleft = ctypes.c_long()
         ierr = self.ENlib.MSXstep(ctypes.byref(t), ctypes.byref(tleft))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         out = [t.value, tleft.value]
         return out
 
@@ -242,13 +150,13 @@ class MSXepanet(ENepanet):
         """saves water quality results computed for each node, link and reporting time period to a named binary file"""
         ierr = self.ENlib.MSXsaveoutfile(ctypes.c_char_p(fname.encode()))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsavemsxfile(self, fname):
         """saves the data associated with the current MSX project into a new MSX input file"""
         ierr = self.ENlib.MSXsavemsxfile(ctypes.c_char_p(fname.encode()))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXreport(
         self,
@@ -256,7 +164,7 @@ class MSXepanet(ENepanet):
         """Writes water quality simulations results as instructed by the MSX input file to a text file"""
         ierr = self.ENlib.MSXreport()
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     # ---------get parameters---------------------------------------------------------------
     def MSXgetindex(self, type, name):
@@ -281,7 +189,7 @@ class MSXepanet(ENepanet):
         ind = ctypes.c_int()
         ierr = self.ENlib.MSXgetindex(type_ind, ctypes.c_char_p(name.encode()), ctypes.byref(ind))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return ind.value
 
     def MSXgetIDlen(self, type, index):
@@ -306,7 +214,7 @@ class MSXepanet(ENepanet):
         len = ctypes.c_int()
         ierr = self.ENlib.MSXgetIDlen(type_ind, ctypes.c_int(index), ctypes.byref(len))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return len.value
 
     def MSXgetID(self, type, index):
@@ -333,7 +241,7 @@ class MSXepanet(ENepanet):
         id = ctypes.create_string_buffer(maxlen)
         ierr = self.ENlib.MSXgetID(type_ind, ctypes.c_int(index), ctypes.byref(id), ctypes.c_int(maxlen - 1))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         # the .decode() added my MF 6/3/21
         return id.value.decode()
 
@@ -354,7 +262,7 @@ class MSXepanet(ENepanet):
         iniqual = ctypes.c_double()
         ierr = self.ENlib.MSXgetinitqual(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(spe), ctypes.byref(iniqual))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return iniqual.value
 
     def MSXgetqual(self, type, ind, spe):
@@ -374,7 +282,7 @@ class MSXepanet(ENepanet):
         qual = ctypes.c_double()
         ierr = self.ENlib.MSXgetqual(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(spe), ctypes.byref(qual))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return qual.value
 
     def MSXgetconstant(self, ind):
@@ -384,7 +292,7 @@ class MSXepanet(ENepanet):
         const = ctypes.c_double()
         ierr = self.ENlib.MSXgetconstant(ind, ctypes.byref(const))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return const.value
 
     def MSXgetparameter(self, type, ind, param_ind):
@@ -403,7 +311,7 @@ class MSXepanet(ENepanet):
         param = ctypes.c_double()
         ierr = self.ENlib.MSXgetparameter(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(param_ind), ctypes.byref(param))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return param.value
 
     def MSXgetsource(self, node, spe):
@@ -421,7 +329,7 @@ class MSXepanet(ENepanet):
         pat = ctypes.c_int()
         ierr = self.ENlib.MSXgetsource(ctypes.c_int(node), ctypes.c_int(spe), ctypes.byref(type), ctypes.byref(level), ctypes.byref(pat))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         src_out = [type.value, level.value, pat.value]
         return src_out
 
@@ -432,7 +340,7 @@ class MSXepanet(ENepanet):
         len = ctypes.c_int()
         ierr = self.ENlib.MSXgetpatternlen(pat, ctypes.byref(len))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return len.value
 
     def MSXgetpatternvalue(self, pat, period):
@@ -444,7 +352,7 @@ class MSXepanet(ENepanet):
         val = ctypes.c_double()
         ierr = self.ENlib.MSXgetpatternvalue(pat, period, ctypes.byref(val))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return val.value
 
     def MSXgetcount(self, type):
@@ -469,7 +377,7 @@ class MSXepanet(ENepanet):
         count = ctypes.c_int()
         ierr = self.ENlib.MSXgetcount(type_ind, ctypes.byref(count))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         return count.value
 
     def MSXgetspecies(self, spe):
@@ -485,7 +393,7 @@ class MSXepanet(ENepanet):
         rTol = ctypes.c_double()
         ierr = self.ENlib.MSXgetspecies(spe, ctypes.byref(type_ind), ctypes.byref(units), ctypes.byref(aTol), ctypes.byref(rTol))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
         spe_out = [type_ind.value, units.value, aTol.value, rTol.value]
         return spe_out
 
@@ -508,7 +416,7 @@ class MSXepanet(ENepanet):
         value is the new value to be assigned to the constant"""
         ierr = self.ENlib.MSXsetconstant(ctypes.c_int(ind), ctypes.c_double(value))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsetparameter(self, type, ind, param, value):
         """assigns a value to a particular reaction parameter for a given TANK or PIPE
@@ -525,7 +433,7 @@ class MSXepanet(ENepanet):
             raise Exception("unrecognized type")
         ierr = self.ENlib.MSXsetparameter(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(param), ctypes.c_double(value))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsetinitqual(self, type, ind, spe, value):
         """Retrieves the initial concentration of a particular chemical species assigned to a specific node
@@ -543,7 +451,7 @@ class MSXepanet(ENepanet):
             raise Exception("unrecognized type")
         ierr = self.ENlib.MSXsetinitqual(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(spe), ctypes.c_double(value))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsetsource(self, node, spe, type_n, level, pat):
         """sets the attributes of an external source of a particular chemical species in a specific node of the pipe network
@@ -570,7 +478,7 @@ class MSXepanet(ENepanet):
             raise Exception("unrecognized type")
         ierr = self.ENlib.MSXsetsource(ctypes.c_int(node), ctypes.c_int(spe), ctypes.c_int(type_ind), ctypes.c_double(level), ctypes.c_int(pat))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsetpattern(self, pat, mult):
         """assigns a new set of multipliers to a given MSX SOURCE time pattern
@@ -585,7 +493,7 @@ class MSXepanet(ENepanet):
             cfactors[i] = float(mult[i])
         ierr = self.ENlib.MSXsetpattern(ctypes.c_int(pat), cfactors, ctypes.c_int(length))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXsetpatternvalue(self, pat, period, value):
         """Sets the multiplier factor for a specific period within a SOURCE time pattern.
@@ -595,7 +503,7 @@ class MSXepanet(ENepanet):
         value:  multiplier factor for the period"""
         ierr = self.ENlib.MSXsetpatternvalue(ctypes.c_int(pat), ctypes.c_int(period), ctypes.c_double(value))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)
 
     def MSXaddpattern(self, patternid):
         """Adds a new, empty MSX source time pattern to an MSX project.
@@ -603,4 +511,4 @@ class MSXepanet(ENepanet):
         pattern id: c-string name of pattern"""
         ierr = self.ENlib.MSXaddpattern(ctypes.c_char_p(patternid.encode()))
         if ierr != 0:
-            raise EpanetMsxToolkitError(ierr)
+            raise EpanetMsxException(ierr)

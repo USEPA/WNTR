@@ -8,11 +8,11 @@ import sys
 from wntr.network.elements import Source
 from wntr.reaction.base import MSXComment, RxnLocationType, RxnVariableType
 from wntr.reaction.model import WaterQualityReactionsModel
+from .exceptions import EpanetMsxException
 from wntr.reaction.variables import Parameter, Species
 from wntr.utils.citations import Citation
 
 sys_default_enc = sys.getdefaultencoding()
-
 
 logger = logging.getLogger(__name__)
 
@@ -87,64 +87,69 @@ class MsxFile(object):
         for sec in _INP_SECTIONS:
             self.sections[sec] = []
 
-        section = None
-        lnum = 0
-        edata = {"fname": msx_file}
-        with open(msx_file, "r", encoding=sys_default_enc) as f:
-            for line in f:
-                lnum += 1
-                edata["lnum"] = lnum
-                line = line.strip()
-                nwords = len(line.split())
-                if len(line) == 0 or nwords == 0:
-                    # Blank line
-                    continue
-                elif line.startswith("["):
-                    vals = line.split(None, 1)
-                    sec = vals[0].upper()
-                    # Add handlers to deal with extra 'S'es (or missing 'S'es) in INP file
-                    if sec not in _INP_SECTIONS:
-                        trsec = sec.replace("]", "S]")
-                        if trsec in _INP_SECTIONS:
-                            sec = trsec
-                    if sec not in _INP_SECTIONS:
-                        trsec = sec.replace("S]", "]")
-                        if trsec in _INP_SECTIONS:
-                            sec = trsec
-                    edata["sec"] = sec
-                    if sec in _INP_SECTIONS:
-                        section = sec
-                        # logger.info('%(fname)s:%(lnum)-6d %(sec)13s section found' % edata)
+        def _read():
+            section = None
+            lnum = 0
+            edata = {"fname": msx_file}
+            with open(msx_file, "r", encoding=sys_default_enc) as f:
+                for line in f:
+                    lnum += 1
+                    edata["lnum"] = lnum
+                    line = line.strip()
+                    nwords = len(line.split())
+                    if len(line) == 0 or nwords == 0:
+                        # Blank line
                         continue
-                    elif sec == "[END]":
-                        # logger.info('%(fname)s:%(lnum)-6d %(sec)13s end of file found' % edata)
-                        section = None
-                        break
-                    else:
-                        raise RuntimeError('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
-                elif section is None and line.startswith(";"):
-                    self.top_comments.append(line[1:])
-                    continue
-                elif section is None:
-                    logger.debug("Found confusing line: %s", repr(line))
-                    raise RuntimeError("%(fname)s:%(lnum)d: Non-comment outside of valid section!" % edata)
-                # We have text, and we are in a section
-                self.sections[section].append((lnum, line))
-
-        self._read_title()
-        self._read_options()
-        self._read_species()
-        self._read_coefficients()
-        self._read_terms()
-        self._read_pipes()
-        self._read_tanks()
-        self._read_sources()
-        self._read_quality()
-        self._read_parameters()
-        self._read_diffusivity()
-        self._read_patterns()
-        self._read_report()
-        return self.rxn
+                    elif line.startswith("["):
+                        vals = line.split(None, 1)
+                        sec = vals[0].upper()
+                        # Add handlers to deal with extra 'S'es (or missing 'S'es) in INP file
+                        if sec not in _INP_SECTIONS:
+                            trsec = sec.replace("]", "S]")
+                            if trsec in _INP_SECTIONS:
+                                sec = trsec
+                        if sec not in _INP_SECTIONS:
+                            trsec = sec.replace("S]", "]")
+                            if trsec in _INP_SECTIONS:
+                                sec = trsec
+                        edata["sec"] = sec
+                        if sec in _INP_SECTIONS:
+                            section = sec
+                            # logger.info('%(fname)s:%(lnum)-6d %(sec)13s section found' % edata)
+                            continue
+                        elif sec == "[END]":
+                            # logger.info('%(fname)s:%(lnum)-6d %(sec)13s end of file found' % edata)
+                            section = None
+                            break
+                        else:
+                            logger.warning('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
+                            raise EpanetMsxException(201, note='at line {}:\n{}'.format(lnum, line))
+                    elif section is None and line.startswith(";"):
+                        self.top_comments.append(line[1:])
+                        continue
+                    elif section is None:
+                        logger.debug("Found confusing line: %s", repr(line))
+                        raise EpanetMsxException(201, note='at line {}:\n{}'.format(lnum, line))
+                    # We have text, and we are in a section
+                    self.sections[section].append((lnum, line))
+        try:
+            _read()
+            self._read_title()
+            self._read_options()
+            self._read_species()
+            self._read_coefficients()
+            self._read_terms()
+            self._read_pipes()
+            self._read_tanks()
+            self._read_sources()
+            self._read_quality()
+            self._read_parameters()
+            self._read_diffusivity()
+            self._read_patterns()
+            self._read_report()
+            return self.rxn
+        except Exception as e:
+            raise EpanetMsxException(200) from e
 
     def _read_title(self):
         lines = []
@@ -169,8 +174,8 @@ class MsxFile(object):
         for lnum, line in self.sections["[OPTIONS]"]:
             vals, comment = _split_line(line)
             try:
-                if len(vals) != 2:
-                    raise SyntaxError("Invalid [OPTIONS] entry")
+                if len(vals) < 2:
+                    raise EpanetMsxException(402, note="at line {} of [OPTIONS] section:\n{}".format(lnum, line))
                 name, val = vals[0].upper(), vals[1].upper()
                 if name == "AREA_UNITS":
                     self.rxn._options.quality.area_units = val
@@ -192,8 +197,14 @@ class MsxFile(object):
                     self.rxn._options.quality.segments = int(val)
                 elif name == "PECLET":
                     self.rxn._options.quality.peclet = int(val)
+                else:
+                    raise EpanetMsxException(403, note='at line {} of [OPTIONS] section:\n{}'.format(lnum, line))
+            except ValueError:
+                raise EpanetMsxException(404, note='at line {} of [OPTIONS] section:\n{}'.format(lnum, line))
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [OPTIONS] section:\n{}'.format(lnum, line)) from e
 
     def _read_species(self):
         lines = []
@@ -207,15 +218,18 @@ class MsxFile(object):
             try:
                 if comment is not None:
                     note.post = comment
-                if len(vals) not in [3, 5]:
-                    raise SyntaxError("Invalid [SPECIES] entry")
-
+                if len(vals) < 3:
+                    raise EpanetMsxException(402, note='at line {} of [SPECIES] section:\n{}'.format(lnum, line))
                 if len(vals) == 3:
                     species = self.rxn.add_species(vals[0], vals[1], vals[2], note=note)
                 elif len(vals) == 5:
                     species = self.rxn.add_species(vals[0], vals[1], vals[2], float(vals[3]), float(vals[4]), note=note)
+                else:
+                    raise EpanetMsxException(201, note='at line {} of [SPECIES] section:\n{}'.format(lnum, line))
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [SPECIES] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -231,11 +245,13 @@ class MsxFile(object):
             try:
                 if comment is not None:
                     note.post = comment
-                if len(vals) != 3:
-                    raise SyntaxError("Invalid [COEFFICIENTS] entry")
+                if len(vals) < 3:
+                    raise EpanetMsxException(402, note='at line {} of [COEFFICIENTS] section:\n{}'.format(lnum, line))
                 coeff = self.rxn.add_coefficient(vals[0], vals[1], float(vals[2]), note=note)
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [COEFFICIENTS] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -254,8 +270,10 @@ class MsxFile(object):
                 if len(vals) < 2:
                     raise SyntaxError("Invalid [TERMS] entry")
                 term = self.rxn.add_other_term(vals[0], " ".join(vals[1:]), note=note)
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [TERMS] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -274,8 +292,10 @@ class MsxFile(object):
                 if len(vals) < 3:
                     raise SyntaxError("Invalid [PIPES] entry")
                 reaction = self.rxn.add_pipe_reaction(vals[1], vals[0], " ".join(vals[2:]), note=note)
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [PIPES] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -294,8 +314,10 @@ class MsxFile(object):
                 if len(vals) < 3:
                     raise SyntaxError("Invalid [TANKS] entry")
                 reaction = self.rxn.add_tank_reaction(vals[1], vals[0], " ".join(vals[2:]), note=note)
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [TANKS] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -317,13 +339,15 @@ class MsxFile(object):
                 else:
                     typ, node, spec, strength, pat = vals
                 if not self.rxn.has_variable(spec):
-                    raise ValueError("Undefined species in [QUALITY] section: {}".format(spec))
+                    raise ValueError("Undefined species in [SOURCES] section: {}".format(spec))
                 if spec not in self.rxn._sources.keys():
                     self.rxn._sources[spec] = dict()
                 source = dict(source_type=typ, strength=strength, pattern=pat, note=note)
                 self.rxn._sources[spec][node] = source
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [SOURCES] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -355,8 +379,10 @@ class MsxFile(object):
                     self.rxn._inital_quality[spec]["nodes"][netid] = float(concen)
                 elif cmd[1].lower() == "l":
                     self.rxn._inital_quality[spec]["links"][netid] = float(concen)
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [QUALITY] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -375,16 +401,18 @@ class MsxFile(object):
                 typ, netid, paramid, value = vals
                 coeff = self.rxn.get_variable(paramid)
                 if not isinstance(coeff, Parameter):
-                    raise RuntimeError("Invalid parameter {}".format(paramid))
+                    raise ValueError("Invalid parameter {}".format(paramid))
                 value = float(value)
                 if typ.lower()[0] == "p":
                     coeff.pipe_values[netid] = value
                 elif typ.lower()[0] == "t":
                     coeff.tank_values[netid] = value
                 else:
-                    raise RuntimeError("Invalid parameter type {}".format(typ))
+                    raise ValueError("Invalid parameter type {}".format(typ))
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [PARAMETERS] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -406,8 +434,10 @@ class MsxFile(object):
                 if not isinstance(species, Species):
                     raise RuntimeError("Invalid species {} in diffusivity".format(vals[0]))
                 species.diffusivity = float(vals[1])
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [DIFFUSIVITIES] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
@@ -484,8 +514,10 @@ class MsxFile(object):
                         self.rxn._options.report.species_precision[vals[1]] = int(vals[3])
                 else:
                     raise SyntaxError("Invalid syntax in [REPORT] section: unknown first word")
+            except EpanetMsxException:
+                raise
             except Exception as e:
-                raise RuntimeError('Error on line {} of file "{}": {}'.format(lnum, self.rxn.filename, line)) from e
+                raise EpanetMsxException(201, note='at line {} of [REPORT] section:\n{}'.format(lnum, line)) from e
             else:
                 note = MSXComment()
 
