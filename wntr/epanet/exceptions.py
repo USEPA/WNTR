@@ -82,75 +82,156 @@ EN_ERROR_CODES = {
     308: "cannot save results to binary file %s",
     309: "cannot save results to report file %s",
 }
-"""A list of the error codes and their meanings from the EPANET toolkit."""
+"""A dictionary of the error codes and their meanings from the EPANET toolkit.
+See :class:`EpanetErrors` for the documentation of each code number.
 
-class EpanetErrors(IntEnum):
+:meta hide-value:
+"""
+
+class EpanetErrorEnum(IntEnum):
     """A list of short phrases that can be used in place of the error code numbers."""
+    warn_unbalanced = 1
+    """system hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"""
+    warn_unstable = 2
+    """system may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"""
+    warn_disconnected = 3
+    """system disconnected - one or more nodes with positive demands were disconnected for all supply sources"""
+    warn_pumps = 4
+    """pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"""
+    warn_valves = 5
+    """vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"""
+    warn_pressures = 6
+    """system has negative pressures - negative pressures occurred at one or more junctions with positive demand"""
     insufficient_memory = 101
+    """insufficient memory available"""
     no_network = 102
+    """no network data available"""
     no_init_hyd = 103
+    """hydraulics not initialized"""
     no_hydraulics = 104
+    """no hydraulics for water quality analysis"""
     no_init_qual = 105
+    """water quality not initialized"""
     no_results = 106
+    """no results saved to report on"""
     hyd_file = 107
+    """hydraulics supplied from external file"""
     hyd_init_and_hyd_file = 108
+    """cannot use external file while hydraulics solver is active"""
     modify_time_during_solve = 109
+    """cannot change time parameter when solver is active"""
     solve_hyd_fail = 110
+    """cannot solve network hydraulic equations"""
     solve_qual_fail = 120
+    """cannot solve water quality transport equations"""
     input_file_error = 200
+    """one or more errors in input file"""
     syntax_error = 201
+    """syntax error"""
     illegal_numeric_value = 202
+    """illegal numeric value"""
     undefined_node = 203
+    """undefined node"""
     undefined_link = 204
+    """undefined link"""
     undefined_pattern = 205
+    """undefined time pattern"""
     undefined_curve = 206
+    """undefined curve"""
     control_on_cv_gpv = 207
+    """attempt to control a CV/GPV link"""
     illegal_pda_limits = 208
+    """illegal PDA pressure limits"""
     illegal_node_property = 209
+    """illegal node property value"""
     illegal_link_property = 211
+    """illegal link property value"""
     undefined_trace_node = 212
+    """undefined trace node"""
     invalid_option_value = 213
+    """invalid option value"""
     too_many_chars_inp = 214
+    """too many characters in input line"""
     duplicate_id = 215
+    """duplicate ID label"""
     undefined_pump = 216
+    """reference to undefined pump"""
     invalid_energy_value = 217
+    """pump has no head curve or power defined"""
     illegal_valve_tank = 219
+    """illegal valve connection to tank node"""
     illegal_tank_valve = 219
+    """illegal valve connection to tank node"""
     illegal_valve_valve = 220
+    """illegal valve connection to another valve"""
     misplaced_rule = 221
+    """misplaced rule clause in rule-based control"""
     link_to_self = 222
+    """link assigned same start and end nodes"""
     not_enough_nodes = 223
+    """not enough nodes in network"""
     no_tanks_or_res = 224
+    """no tanks or reservoirs in network"""
     invalid_tank_levels = 225
+    """invalid lower/upper levels for tank"""
     missing_pump_data = 226
+    """no head curve or power rating for pump"""
     invalid_head_curve = 227
+    """invalid head curve for pump"""
     nonincreasing_x_curve = 230
+    """nonincreasing x-values for curve"""
     unconnected_node = 233
+    """network has unconnected node"""
     unconnected_node_id = 234
+    """network has an unconnected node with ID"""
     no_such_source_node = 240
+    """nonexistent water quality source"""
     no_such_control = 241
+    """nonexistent control"""
     invalid_name_format = 250
+    """invalid format (e.g. too long an ID name)"""
     invalid_parameter_code = 251
+    """invalid parameter code"""
     invalid_id_name = 252
+    """invalid ID name"""
     no_such_demand_category = 253
+    """nonexistent demand category"""
     missing_coords = 254
+    """node with no coordinates"""
     invalid_vertex = 255
+    """invalid link vertex"""
     no_such_rule = 257
+    """nonexistent rule"""
     no_such_rule_clause = 258
+    """nonexistent rule clause"""
     delete_node_still_linked = 259
+    """attempt to delete a node that still has links connected to it"""
     delete_node_is_trace = 260
+    """attempt to delete node assigned as a Trace Node"""
     delete_node_in_control = 261
+    """attempt to delete a node or link contained in a control"""
     modify_network_during_solve = 262
+    """attempt to modify network structure while a solver is open"""
     node_not_a_tank = 263
+    """node is not a tank"""
     same_file_names = 301
+    """identical file names used for different types of files"""
     open_inp_fail = 302
+    """cannot open input file"""
     open_rpt_fail = 303
+    """cannot open report file"""
     open_bin_fail = 304
+    """cannot open binary output file"""
     open_hyd_fail = 305
+    """cannot open hydraulics file"""
     hyd_file_different_network = 306
+    """hydraulics file does not match network data"""
     read_hyd_fail = 307
+    """cannot read hydraulics file"""
     save_bin_fail = 308
+    """cannot save results to binary file"""
     save_rpt_fail = 309
+    """cannot save results to report file"""
 
 
 class EpanetException(Exception):
@@ -170,12 +251,12 @@ class EpanetException(Exception):
         line : str, optional
             The contents of the line, by default None
         """
-        if isinstance(code, EpanetErrors):
+        if isinstance(code, EpanetErrorEnum):
             code = int(code)
         elif isinstance(code, str):
             try:
                 code = code.strip().replace('-','_').replace(' ','_')
-                code = int(EpanetErrors[code])
+                code = int(EpanetErrorEnum[code])
             except KeyError:
                 return super().__init__('unknown error code: {}'.format(repr(code)), *args)
         elif not isinstance(code, int):
