@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 import wntr.sim.aml as aml
+from wntr.sim.solvers import NewtonSolver, SolverStatus
 
 
 def compare_evaluation(self, m, true_r, true_j):
@@ -15,6 +16,30 @@ def compare_evaluation(self, m, true_r, true_j):
         self.assertAlmostEqual(true_r[c], r[c.index], 10)
         for v in m.vars():
             self.assertAlmostEqual(true_j[c][v], j[c.index, v.index], 10)
+
+
+class TestModel(unittest.TestCase):
+    def test_var_value_with_decrement(self):
+        m = aml.Model()
+        m.x = aml.Var()
+        m.p = aml.Param(val=1)
+        m.c = aml.Constraint(m.x - m.p)
+        m.set_structure()
+        opt = NewtonSolver({'TOL': 1e-8})
+        status, msg, num_iter = opt.solve(m)
+        self.assertEqual(status, SolverStatus.converged)
+        self.assertAlmostEqual(m.x.value, 1)
+        m.p.value = 2
+        status, msg, num_iter = opt.solve(m)
+        self.assertEqual(status, SolverStatus.converged)
+        self.assertAlmostEqual(m.x.value, 2)
+        del m.c
+        m.c = aml.Constraint(m.x**0.5 - m.p)
+        m.set_structure()
+        self.assertAlmostEqual(m.x.value, 2)  # this is the real test here
+        status, msg, num_iter = opt.solve(m)
+        self.assertEqual(status, SolverStatus.converged)
+        self.assertAlmostEqual(m.x.value, 4)
 
 
 class TestExpression(unittest.TestCase):

@@ -1,10 +1,10 @@
 <h1>
-<img src="https://raw.githubusercontent.com/kaklise/wntr/logo/documentation/figures/logo.jpg" width="375">
+<img src="https://raw.githubusercontent.com/usepa/wntr/main/documentation/figures/logo.jpg" width="375">
 </h1><br>
 
 [![build](https://github.com/USEPA/WNTR/workflows/build/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/USEPA/WNTR/badge.svg?branch=main)](https://coveralls.io/github/USEPA/WNTR?branch=main)
-[![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=latest)](https://wntr.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://github.com/USEPA/WNTR/actions/workflows/build_deploy_pages.yml/badge.svg)](https://github.com/usepa/wntr/actions/workflows/build_deploy_pages.yml)
 
 The Water Network Tool for Resilience (WNTR) is a Python package designed to simulate and 
 analyze resilience of water distribution networks. The software includes capability to:
@@ -18,14 +18,15 @@ analyze resilience of water distribution networks. The software includes capabil
 * Evaluate resilience 
 * Visualize results
 
-For more information, go to http://wntr.readthedocs.io
+For more information, go to https://usepa.github.io/WNTR/ 
 
 Installation
 --------------
 
+
 The latest release of WNTR can be installed from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
 
-* PyPI [![version](https://img.shields.io/pypi/v/wntr.svg?maxAge=3600)](https://pypi.org/project/wntr/) [![Downloads](https://pepy.tech/badge/wntr)](https://pepy.tech/project/wntr)
+* PyPI [![version](https://img.shields.io/pypi/v/wntr.svg?maxAge=3600)](https://pypi.org/project/wntr/) [![Downloads](https://static.pepy.tech/badge/wntr)](https://pepy.tech/project/wntr)
 
   ``pip install wntr``
   
@@ -33,7 +34,7 @@ The latest release of WNTR can be installed from PyPI or Anaconda using one of t
 
   ``conda install -c conda-forge wntr``
   
-See [installation instructions](https://wntr.readthedocs.io/en/latest/installation.html) for more details.
+See [installation instructions](https://usepa.github.io/WNTR/installation.html) for more details.
 
 Citing WNTR
 -----------------

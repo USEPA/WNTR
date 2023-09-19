@@ -98,7 +98,7 @@ def snap(A, B, tolerance):
     closest = closest[closest['snap_distance'] <= tolerance]
     
     # Sort on ascending snap distance, so that closest goes to top
-    closest = closest.sort_values(by=["snap_distance"]) 
+    closest = closest.sort_values(by=["snap_distance", "indexB"]) 
        
     # group by the index of the points and take the first, which is the closest line
     closest = closest.groupby("point").first()      

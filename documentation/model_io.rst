@@ -6,6 +6,7 @@
     :hide:
 	
     >>> import wntr
+    >>> import pandas as pd
     >>> try:
     ...    import geopandas as gpd
     ... except ModuleNotFoundError:
@@ -29,6 +30,8 @@ EPANET INP file
 
 The :class:`~wntr.network.io.read_inpfile` function builds a WaterNetworkModel from an EPANET INP file.
 The EPANET INP file can be in the EPANET 2.00.12 or 2.2.0 format.
+See https://epanet22.readthedocs.io for more information on EPANET INP file format.
+
 The function can also be used to append information from an EPANET INP file into an existing WaterNetworkModel.
 
 .. doctest::
@@ -53,7 +56,9 @@ EPANET INP files can be saved in the EPANET 2.00.12 or 2.2.0 format.
 .. doctest::
 
     >>> wntr.network.write_inpfile(wn, 'filename.inp', version=2.2)
-	
+
+.. _dictionary_representation:
+
 Dictionary representation
 -------------------------
 
@@ -172,8 +177,12 @@ a NetworkX graph could be added in a future version of WNTR.
 JSON file
 ---------------------------------------------------------
 
+JSON (JavaScript Object Notation) files store a collection of name/value pairs that is easy to read in text format.
+More information on JSON files is available at https://www.json.org.
+The format of JSON files in WNTR is based on the :ref:`dictionary_representation` of the WaterNetworkModel.
+
 The :class:`~wntr.network.io.write_json` function writes a 
-JSON (JavaScript Object Notation) file from a WaterNetworkModel.
+JSON file from a WaterNetworkModel.
 The JSON file is a formatted version of the dictionary representation.
 
 .. doctest::
@@ -194,6 +203,33 @@ They simply ignore extraneous or invalid dictionary keys.
 GeoJSON files
 -------------
 
+GeoJSON files are commonly used to store geographic data structures. 
+More information on GeoJSON files can be found at https://geojson.org.
+
+To use GeoJSON files in WNTR, a set of valid base column names are required.
+Valid base GeoJSON column names can be obtained using the 
+:class:`~wntr.network.io.valid_gis_names` function.
+The following example returns valid base GeoJSON column names for junctions.
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> geojson_column_names = wntr.network.io.valid_gis_names()
+    >>> print(geojson_column_names['junctions'])
+    ['name', 'elevation', 'coordinates', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
+
+A minimal list of valid column names can also be obtained by setting ``complete_list`` to False.
+Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> geojson_column_names = wntr.network.io.valid_gis_names(complete_list=False)
+    >>> print(geojson_column_names['junctions'])
+    ['name', 'elevation', 'coordinates']
+
+Note that GeoJSON files can contain additional custom column names that are assigned to WaterNetworkModel objects.
+
 The :class:`~wntr.network.io.write_geojson` function writes a collection of 
 GeoJSON files from a WaterNetworkModel. 
 The GeoJSON files can be loaded into geographic information
@@ -204,7 +240,7 @@ system (GIS) platforms for further analysis and visualization.
 	
     >>> wntr.network.write_geojson(wn, 'Net3')
 
-This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes,  and pumps:
+This creates the following GeoJSON files for junctions, tanks, reservoirs, pipes, and pumps:
 
 * Net3_junctions.geojson
 * Net3_tanks.geojson
@@ -216,7 +252,8 @@ A GeoJSON file for valves, Net3_valves.geojson, is not created since Net3 has no
 Note that patterns, curves, sources, controls, and options are not stored in the GeoJSON files.
 
 The :class:`~wntr.network.io.read_geojson` function creates a WaterNetworkModel from a 
-dictionary of GeoJSON files.
+dictionary of GeoJSON files.  
+Valid base column names and additional custom attributes are added to the model.
 The function can also be used to append information from GeoJSON files into an existing WaterNetworkModel.
 
 .. doctest::
@@ -233,12 +270,65 @@ The function can also be used to append information from GeoJSON files into an e
    :class:`~wntr.gis.network.WaterNetworkGIS.write_geojson` and
    :class:`~wntr.gis.network.WaterNetworkGIS.read_geojson`
    are also methods on the WaterNetworkGIS object. 
-   
-Shapefile files
+
+
+.. _shapefile_format:
+
+Shapefile
 -------------------
 
+A Shapefile is a collection of vector data storage files used to store geographic data.
+The file format is developed and regulated by Esri.
+For more information on Shapefiles, see https://www.esri.com.
+
+To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
+
+* Geospatial data containing junction, tank, reservoir, pipe, pump, and valve data 
+  are stored in separate Shapefile directories.
+
+* The namespace for Node names (which includes junctions, tanks, and reservoirs) 
+  must be unique.  Likewise, the namespace for Links (which includes pipes, 
+  pumps, and valves) must be unique.  For example, this means that a junction
+  cannot have the same name as a tank.
+  
+* The Shapefile geometry is in a format compatible with GeoPandas, namely a 
+  Point, LineString, or MultiLineString.  See :ref:`gis_data` for 
+  more information on geometries.
+  
+* Shapefiles truncate field names to 10 characters, while WaterNetworkModel 
+  node and link attribute names are often longer.  For this reason, it is
+  assumed that the first 10 characters of each attribute are unique.  
+  
+* To create WaterNetworkModel from Shapefiles, a set of valid field names are required.
+  Valid base Shapefiles field names can be obtained using the 
+  :class:`~wntr.network.io.valid_gis_names` function.
+  For Shapefiles, the `truncate` input parameter should be set to 10 (characters).
+  The following example returns valid base Shapefile field names for junctions.
+  Note that attributes like ``base_demand`` are truncated to ``base_deman``. 
+
+  .. doctest::
+      :skipif: gpd is None
+
+      >>> shapefile_field_names = wntr.network.io.valid_gis_names(truncate_names=10)
+      >>> print(shapefile_field_names['junctions'])
+      ['name', 'elevation', 'coordinate', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
+
+  A minimal list of valid field names can also be obtained by setting ``complete_list`` to False.
+  Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
+
+  .. doctest::
+      :skipif: gpd is None
+
+      >>> shapefile_field_names = wntr.network.io.valid_gis_names(complete_list=False, 
+      ...    truncate_names=10)
+      >>> print(shapefile_field_names['junctions'])
+      ['name', 'elevation', 'coordinate']
+	  
+* Shapefiles can contain additional custom field names that are assigned to WaterNetworkModel objects.
+
+  
 The :class:`~wntr.network.io.write_shapefile` function creates 
-Shapefile files from a WaterNetworkModel. 
+Shapefiles from a WaterNetworkModel. 
 The Shapefiles can be loaded into GIS platforms for further analysis and visualization.
 
 .. doctest::
@@ -255,10 +345,11 @@ This creates the following Shapefile directories for junctions, tanks, reservoir
 * Net3_pumps
 
 A Shapefile for valves, Net3_valves, is not created since Net3 has no valves.
-Note that patterns, curves, sources, controls, and options are not stored in the Shapefile files.
+Note that patterns, curves, sources, controls, and options are not stored in the Shapefiles.
 
 The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a dictionary of
 Shapefile directories.
+Valid base field names and additional custom field names are added to the model.
 The function can also be used to append information from Shapefiles into an existing WaterNetworkModel.
 
 .. doctest::

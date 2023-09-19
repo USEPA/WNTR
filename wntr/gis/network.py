@@ -339,7 +339,7 @@ class WaterNetworkGIS:
 
     def read_shapefile(self, files, index_col='index'):
         """
-        Append information from ESRI Shapefiles to a WaterNetworkGIS object
+        Append information from Esri Shapefiles to a WaterNetworkGIS object
 
         Parameters
         ----------
@@ -352,34 +352,7 @@ class WaterNetworkGIS:
         """
         self._read(files, index_col)
 
-        # ESRI Shapefiles truncate field names to 10 characters. The field_name_map
-        # maps truncated names to long names.  The following code assumes the 
-        # first 10 characters are unique.
-        element_attributes = {
-            'junctions': dir(wntr.network.elements.Junction),
-            'tanks': dir(wntr.network.elements.Tank),
-            'reservoirs': dir(wntr.network.elements.Reservoir),
-            'pipes': dir(wntr.network.elements.Pipe),
-            'pumps': dir(wntr.network.elements.Pump) +
-                     dir(wntr.network.elements.PowerPump) +
-                     dir(wntr.network.elements.HeadPump),
-            'valves': dir(wntr.network.elements.Valve) +
-                      dir(wntr.network.elements.PRValve) +
-                      dir(wntr.network.elements.PSValve) +
-                      dir(wntr.network.elements.PBValve) +
-                      dir(wntr.network.elements.FCValve) +
-                      dir(wntr.network.elements.TCValve) +
-                      dir(wntr.network.elements.GPValve)}
-
-        field_name_map = {}
-        for element, attribute in element_attributes.items():
-            field_name_map[element] = {}
-            for field_name in attribute:
-                if (len(field_name) > 10) and (not field_name.startswith('_')):
-                    field_name_map[element][field_name[0:10]] = field_name
-
-        # TODO: pipe property is cv instead of check_valve, this should be updated
-        field_name_map['pipes']['check_valv'] = 'check_valve'
+        field_name_map = self._shapefile_field_name_map()
 
         self.junctions.rename(columns=field_name_map['junctions'], inplace=True)
         self.tanks.rename(columns=field_name_map['tanks'], inplace=True)
@@ -402,7 +375,7 @@ class WaterNetworkGIS:
             pipes, etc.) appended
         driver : str, optional
             GeoPandas driver. Use "GeoJSON" for GeoJSON files, use :code:`None` 
-            for ESRI shapefile folders, by default "GeoJSON"
+            for Esri Shapefile folders, by default "GeoJSON"
 
         """
         
@@ -449,7 +422,7 @@ class WaterNetworkGIS:
 
     def write_shapefile(self, prefix: str):
         """
-        Write the WaterNetworkGIS object to a set of ESRI Shapefiles, one
+        Write the WaterNetworkGIS object to a set of Esri Shapefiles, one
         directory for each network element.
 
         Parameters
@@ -458,3 +431,71 @@ class WaterNetworkGIS:
             File and directory prefix
         """
         self._write(prefix=prefix, driver=None)
+
+    def _valid_names(self, complete_list=True, truncate_names=None):
+        """
+        Valid column/field names for GeoJSON or Shapefiles
+        
+        Note that Shapefile field names are truncated to 10 characters 
+        (set truncate=10)
+        
+        Parameters
+        ----------
+        complete_list : bool
+            Include a complete list of column/field names (beyond basic attributes)
+        truncate_names : None or int
+            Truncate column/field names to specified number of characters, 
+            set truncate=10 for Shapefiles.  None indicates no truncation.
+            
+        Returns
+        ---------
+        dict : Dictionary of valid GeoJSON or Shapefile column/field names
+        """
+        
+        valid_names = {}
+          
+        element_objects = {
+            'junctions': wntr.network.elements.Junction,
+            'tanks': wntr.network.elements.Tank,
+            'reservoirs': wntr.network.elements.Reservoir,
+            'pipes': wntr.network.elements.Pipe,
+            'pumps': wntr.network.elements.Pump,
+            'valves': wntr.network.elements.Valve}
+        
+        valid_names = {}
+        for element, obj in element_objects.items():
+            if complete_list:
+                valid_names[element] = obj._base_attributes + obj._optional_attributes
+            else:
+                valid_names[element] = obj._base_attributes
+                
+        if truncate_names is not None and truncate_names > 0:
+            for element, attributes in valid_names.items():
+                valid_names[element] = [attribute[:truncate_names] for attribute in attributes]
+
+        return valid_names
+    
+    def _shapefile_field_name_map(self):
+        """
+        Return a map (dictionary) of tuncated shapefile field names to 
+        valid base WaterNetworkModel attribute names
+        
+        Esri Shapefiles truncate field names to 10 characters. The field name 
+        map links truncated shapefile field names to complete (and ofen longer)
+        WaterNetworkModel attribute names.  This assumes that the first 10 
+        characters of each attribute name are unique.
+        
+        Returns
+        -------
+        field_name_map : dict
+            Map (dictionary) of valid base shapefile field names to 
+            WaterNetworkModel attribute names
+        """
+        valid_names = self._valid_names()
+
+        field_name_map = {}
+        for element, attributes in valid_names.items():
+            truncated = [attribute[:10] for attribute in attributes]
+            field_name_map[element] = pd.Series(dict(zip(truncated, attributes)))
+
+        return field_name_map

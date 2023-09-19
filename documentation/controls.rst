@@ -10,13 +10,16 @@ EPANET uses "controls" and "rules" to define conditions [Ross00]_. WNTR replicat
 
 **Controls** are defined using an "IF condition; THEN action" format.  
 Controls use a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
+Unlike EPANET simple controls which are evaluated based on the order in which they are defined in the INP file, 
+controls in WNTR can be prioritized to set the order of operation. 
+If controls with conflicting actions should occur at the same time, the control with the highest priority will override all others. 
+Controls are evaluated after each simulation timestep. 
 If a time based or tank level condition is not exactly matched at a simulation timestep, controls make use of partial timesteps to match the condition before the control is deployed.
-Controls in WNTR emulate EPANET simple controls.
 
 **Rules** are more complex; rules are defined using an "IF condition; THEN action1; ELSE action2" format, where the ELSE block is optional.
 Rules can use multiple conditions and multiple actions in each of the logical blocks.  Rules can also be prioritized to set the order of operation.
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override all others.
-Rules operate on a rule timestep specified by the user, which can be different from the simulation timestep.  
+Rules operate on a rule timestep, which can be different from the simulation timestep.  
 Rules in WNTR emulate EPANET rule-based controls.
 
 When generating a water network model from an EPANET INP file, WNTR generates controls and rules based on input from the [CONTROLS] and [RULES] sections.  
@@ -35,7 +38,7 @@ These steps are defined below.
 
 .. only:: latex
 
-   See the `online API documentation <https://wntr.readthedocs.io/en/latest/apidoc/wntr.network.controls.html>`_ for more information on controls.
+   See the `online API documentation <https://usepa.github.io/WNTR/apidoc/wntr.network.controls.html>`_ for more information on controls.
    
 Actions
 -----------------------
@@ -90,6 +93,20 @@ The EpanetSimulator is also limited to always
 repeat conditions that are defined with :class:`~wntr.network.controls.TimeOfDayCondition` and 
 not repeat conditions that are defined within :class:`~wntr.network.controls.SimTimeCondition`.
 The WNTRSimulator can handle repeat or not repeat options for both of these conditions.
+
+Priority
+-----------
+
+Priority levels are defined in the :class:`~wntr.network.controls.ControlPriority` class and 
+include the following options.
+
+* :class:`~wntr.network.controls.ControlPriority.very_low` or 0
+* :class:`~wntr.network.controls.ControlPriority.low` or 1
+* :class:`~wntr.network.controls.ControlPriority.medium_low` or 2
+* :class:`~wntr.network.controls.ControlPriority.medium` or 3
+* :class:`~wntr.network.controls.ControlPriority.medium_high` or 4
+* :class:`~wntr.network.controls.ControlPriority.high` or 5
+* :class:`~wntr.network.controls.ControlPriority.very_high` or 6
 
 Controls
 ---------------------
@@ -212,3 +229,37 @@ The control or rule should be named so that it can be retrieved and modified if 
 		ValueError: The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.
 		>>> wn.remove_control('NewTimeControl')
 		>>> wn.add_control('NewTimeControl', ctrl2)   # doctest: +SKIP
+
+Accessing and modifying controls/rules
+---------------------------------------
+
+Controls and rules can be accessed and modified in several ways. 
+For example, the following example returns a list of control names that are included in the model.
+
+.. doctest::
+
+    >>> control_name_list = wn.control_name_list
+    >>> print(control_name_list)
+    ['control 1', 'control 2', 'control 3', 'control 4', 'control 5', 'control 6', 'control 7', 'control 8', 'control 9', 'control 10', 'control 11', 'control 12', 'control 13', 'control 14', 'control 15', 'control 16', 'control 17', 'control 18']
+    
+The following example loops through all controls in the model and identifies controls that require pipe '330'.
+
+.. doctest::
+
+    >>> pipe = wn.get_link('330')
+    >>> for name, control in wn.controls():
+    ...     if pipe in control.requires():
+    ...         print(name, control)
+    control 17 IF TANK 1 LEVEL BELOW 5.21208 THEN PIPE 330 STATUS IS CLOSED PRIORITY 3
+    control 18 IF TANK 1 LEVEL ABOVE 5.821680000000001 THEN PIPE 330 STATUS IS OPEN PRIORITY 3
+    
+The following example changes the priority of 'control 5' from medium (3) to low (1).
+
+.. doctest::
+
+    >>> control = wn.get_control('control 5')
+    >>> print(control)
+    IF SYSTEM TIME IS 49:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 3
+    >>> control.update_priority(1) # low
+    >>> print(control)
+    IF SYSTEM TIME IS 49:00:00 THEN PUMP 10 STATUS IS OPEN PRIORITY 1

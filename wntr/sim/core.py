@@ -1194,19 +1194,11 @@ class WNTRSimulator(WaterNetworkSimulator):
         Parameters
         ----------
         solver: object
-            wntr.sim.solvers.NewtonSolver or Scipy solver
+            :py:class:`~wntr.sim.solvers.NewtonSolver` or Scipy solver
         backup_solver: object
-            wntr.sim.solvers.NewtonSolver or Scipy solver
+            :py:class:`~wntr.sim.solvers.NewtonSolver` or Scipy solver
         solver_options: dict
-            Solver options are specified using the following dictionary keys:
-
-            * MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 3000)
-            * TOL: tolerance for the hydraulic equations (default = 1e-6)
-            * BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
-            * BT_MAXITER: the maximum number of iterations for each line search (default = 100)
-            * BACKTRACKING: whether or not to use a line search (default = True)
-            * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
-            * THREADS: the number of threads to use in constraint and jacobian computations
+            See :py:class:`~wntr.sim.solvers.NewtonSolver` for possible options
         backup_solver_options: dict
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the
