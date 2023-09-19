@@ -17,6 +17,20 @@ If :class:`sympy` is installed, then there are functions available
 that will convert object instances of these classes into sympy expressions
 and symbols. If the instances are linked to a model, then expressions can 
 be expanded, validated, and even evaluated or simplified symbolically.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    Species
+    BulkSpecies
+    WallSpecies
+    Coefficient
+    Constant
+    Parameter
+    OtherTerm
+    InternalVariable
+
 """
 
 import enum
@@ -25,6 +39,7 @@ import warnings
 from dataclasses import InitVar, asdict, dataclass, field
 from enum import Enum, IntFlag
 from typing import Any, ClassVar, Dict, List, Set, Tuple, Union
+from .base import MSXComment
 
 has_sympy = False
 try:
@@ -47,18 +62,17 @@ from .base import (
     RESERVED_NAMES,
     ExpressionMixin,
     LinkedVariablesMixin,
-    MSXComment,
-    MSXObject,
-    RxnModelRegistry,
-    RxnVariable,
-    RxnVariableType,
+    MsxObjectMixin,
+    AbstractReactionModel,
+    ReactionVariable,
+    VariableType,
 )
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(repr=False)
-class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
+class Species(MsxObjectMixin, LinkedVariablesMixin, ReactionVariable):
 
     units: str
     """The unit used for this species"""
@@ -70,7 +84,7 @@ class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
     """A note about this species, by default None"""
     diffusivity: float = None
     """The diffusivity value for this species, by default None"""
-    variable_registry: InitVar[RxnModelRegistry] = None
+    variable_registry: InitVar[AbstractReactionModel] = None
 
     def __post_init__(self, atol=None, rtol=None, reaction_model=None):
         if isinstance(atol, property):
@@ -175,24 +189,24 @@ class Species(MSXObject, LinkedVariablesMixin, RxnVariable):
 @dataclass(repr=False)
 class BulkSpecies(Species):
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.BULK
+    def var_type(self) -> VariableType:
+        return VariableType.BULK
 
 
 @dataclass(repr=False)
 class WallSpecies(Species):
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.WALL
+    def var_type(self) -> VariableType:
+        return VariableType.WALL
 
 
 @dataclass(repr=False)
-class Coefficient(MSXObject, LinkedVariablesMixin, RxnVariable):
+class Coefficient(MsxObjectMixin, LinkedVariablesMixin, ReactionVariable):
 
     global_value: float
     note: Union[str, Dict[str, str]] = None
     units: str = None
-    variable_registry: InitVar[RxnModelRegistry] = None
+    variable_registry: InitVar[AbstractReactionModel] = None
 
     def __post_init__(self, reaction_model):
         if self.name in RESERVED_NAMES:
@@ -232,8 +246,8 @@ class Coefficient(MSXObject, LinkedVariablesMixin, RxnVariable):
 @dataclass(repr=False)
 class Constant(Coefficient):
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.CONST
+    def var_type(self) -> VariableType:
+        return VariableType.CONST
 
 
 @dataclass(repr=False)
@@ -252,8 +266,8 @@ class Parameter(Coefficient):
             self._tank_values = dict()
 
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.PARAM
+    def var_type(self) -> VariableType:
+        return VariableType.PARAM
 
     def get_value(self, pipe: str = None, tank: str = None) -> float:
         if pipe is not None and tank is not None:
@@ -280,7 +294,7 @@ class Parameter(Coefficient):
 
 
 @dataclass(repr=False)
-class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
+class OtherTerm(MsxObjectMixin, LinkedVariablesMixin, ExpressionMixin, ReactionVariable):
     """A function definition used as a shortcut in reaction expressions (called a 'term' in EPANET-MSX)
 
     Parameters
@@ -299,7 +313,7 @@ class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
     """The expression this named-function is equivalent to"""
     note: Union[str, Dict[str, str]] = None
     """A note about this function/term"""
-    variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
+    variable_registry: InitVar[AbstractReactionModel] = field(default=None, compare=False)
 
     def __post_init__(self, reaction_model):
         if self.name in RESERVED_NAMES:
@@ -310,8 +324,8 @@ class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
         return "{}(name={}, expression={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.expression), repr(self.note))
 
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.TERM
+    def var_type(self) -> VariableType:
+        return VariableType.TERM
 
     def to_msx_string(self) -> str:
         return "{:<8s} {:<64s}".format(self.name, self.expression)
@@ -331,7 +345,7 @@ class OtherTerm(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnVariable):
 
 
 @dataclass(repr=False)
-class InternalVariable(RxnVariable):
+class InternalVariable(ReactionVariable):
     """A hydraulic variable or a placeholder for a built-in reserved word.
 
     For example, "Len" is the EPANET-MSX name for the length of a pipe, and "I" is a sympy
@@ -344,5 +358,5 @@ class InternalVariable(RxnVariable):
         return "{}(name={}, note={}, units={})".format(self.__class__.__name__, repr(self.name), repr(self.note), repr(self.units))
 
     @property
-    def var_type(self) -> RxnVariableType:
-        return RxnVariableType.INTERNAL
+    def var_type(self) -> VariableType:
+        return VariableType.INTERNAL

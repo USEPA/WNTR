@@ -73,7 +73,7 @@ class WaterNetworkModel(AbstractModel):
 
         # Network name
         self.name = None
-        self.citations: Union[str,Citation, List[Union[str,Citation]]] = list()
+        self._citations: Union[str,Citation, List[Union[str,Citation]]] = list()
         """A list of citations that document the source of this model. See also :class:`~wntr.utils.citations.Citation`."""
 
         self._options = Options()

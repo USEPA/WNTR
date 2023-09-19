@@ -1,3 +1,7 @@
+# coding: utf-8
+"""Options for multispecies reaction models.
+"""
+
 import re
 import logging
 import copy
@@ -180,7 +184,7 @@ class UserOptions(_OptionsBase):
             self.__dict__[k] = v
 
 
-class RxnOptions(_OptionsBase):
+class MultispeciesOptions(_OptionsBase):
     """
     Water network model options class.
 
@@ -190,12 +194,6 @@ class RxnOptions(_OptionsBase):
 
     Parameters
     ----------
-    title : str
-        The title to print in the .msx file
-
-    time : TimeOptions
-        Contains all timing options for the scenarios
-
     quality : QualityOptions
         Contains water quality simulation options and source definitions
 

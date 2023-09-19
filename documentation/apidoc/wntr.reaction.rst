@@ -6,6 +6,7 @@ wntr.reaction package
    :undoc-members:
    :show-inheritance:
 
+
 Submodules
 ----------
 
@@ -18,5 +19,4 @@ Submodules
    wntr.reaction.library
    wntr.reaction.model
    wntr.reaction.options
-   wntr.reaction.toolkitmsx
    wntr.reaction.variables

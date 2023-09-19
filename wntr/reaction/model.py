@@ -2,7 +2,11 @@
 """
 Water quality reactions model.
 
-TODO: FIXME: Make sure that we throw the same errors (text/number) as MSX would throw
+.. rubric:: Contents
+
+.. autosummary::
+
+    MultispeciesReactionModel
 
 """
 
@@ -24,7 +28,9 @@ from typing import (
     Tuple,
     Union,
 )
+
 from wntr.network.elements import Source
+from wntr.utils.disjoint_mapping import DisjointMapping, KeyExistsError
 
 has_sympy = False
 try:
@@ -40,97 +46,72 @@ except ImportError:
     convert_xor = None
     has_sympy = False
 
+import wntr.reaction.io
 from wntr.network.model import WaterNetworkModel
+from wntr.utils.citations import Citation
 
-from ..utils.citations import Citation
 from .base import (
     HYDRAULIC_VARIABLES,
     SYMPY_RESERVED,
-    DisjointMapping,
+    DynamicsType,
     LinkedVariablesMixin,
-    RxnDynamicsType,
-    RxnLocationType,
-    RxnModelRegistry,
-    RxnReaction,
-    RxnVariable,
-    RxnVariableType,
-    VariableNameExistsError,
+    LocationType,
+    ReactionDynamics,
+    AbstractReactionModel,
+    ReactionVariable,
+    VariableType,
 )
 from .dynamics import EquilibriumDynamics, FormulaDynamics, RateDynamics
-from .options import RxnOptions
+from .options import MultispeciesOptions
 from .variables import (
     BulkSpecies,
     Coefficient,
     Constant,
     InternalVariable,
+    OtherTerm,
     Parameter,
     Species,
-    OtherTerm,
     WallSpecies,
 )
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["MultispeciesReactionModel"]
 
-@dataclass
-class WaterQualityReactionsModel(RxnModelRegistry):
+
+class MultispeciesReactionModel(AbstractReactionModel):
     """Water quality reactions model object.
 
     Parameters
     ----------
-    title : str, optional
-        The title of reaction model
-    desc : str, optional
-        A long description of the model
-    filename : str, optional
-        The original filename
-    citations : list of Citation or str, optional
-        It is appropriate to cite sources for water quality models
-    allow_sympy_reserved_names : bool, optional
-        Should the extra names from sympy be excluded, by default False
-    options : RxnOptions, optional
-        Reaction MSX options, by default a new object
-    _wn : WaterNetworkModel
-        The water network model to use, by default None
+    msx_file_name : str, optional
+        The name of the MSX input file to read
+
     """
 
-    # FIXME: Make the __init__ just minimal, with a filename
-    # do the rest of stuff directly on the MSX object, make it as
-    # close to WNM as possible
+    def __init__(self, msx_file_name=None):
+        self.name: str = None
+        """A one-line title for the model"""
 
-    title: str = None
-    """A one-line title for the model"""
-    
-    desc: str = None
-    """A multi-line string describing the model"""
-    
-    filename: str = None
-    """The original filename"""
+        self.title: str = None
+        """The title line from the MSX file"""
 
-    citations: List[Union[Citation, str]] = "you ought to provide citations for your model"
-    """A list of citations for the sources of this model's dynamics"""
-    
-    allow_sympy_reserved_names: InitVar[bool] = False
-    """Allow sympy reserved names (I, E, pi)"""
-    
-    options: InitVar[RxnOptions] = None
-    """A link to the options object"""
-    
-    _wn: WaterNetworkModel = None
-    """A link to a water network model"""
+        self._msxfile: str = msx_file_name
+        """The original filename"""
 
-    def __post_init__(self, allow_sympy_reserved_names=False, options=None):
-        if self._wn is not None and not isinstance(self._wn, WaterNetworkModel):
-            raise TypeError("Did not receive a WaterNetworkModel or None as first argument, got {}".format(self._wn))
-        if isinstance(options, property):
-            options = RxnOptions()
-        elif not isinstance(options, RxnOptions):
-            options = RxnOptions.factory(options)
-        self._options = options
-        if isinstance(self.citations, str):
-            self.citations = [self.citations]
-        elif isinstance(self.citations, Citation):
-            self.citations = [self.citations]
+        self._citations: List[Union[Citation, str]] = list()
+        """A list of citations for the sources of this model's dynamics"""
+
+        self._allow_sympy_reserved_names: InitVar[bool] = True
+        """Allow sympy reserved names (I, E, pi)"""
+
+        self._options: InitVar[MultispeciesOptions] = None
+        """A link to the options object"""
+
+        self._wn: WaterNetworkModel = None
+        """A link to a water network model"""
+
+        self._options = MultispeciesOptions()
 
         self._variables: DisjointMapping = DisjointMapping()
         self._species = self._variables.add_disjoint_group("species")
@@ -150,11 +131,16 @@ class WaterQualityReactionsModel(RxnModelRegistry):
 
         for v in HYDRAULIC_VARIABLES:
             self._variables[v["name"]] = InternalVariable(v["name"], note=v["note"])
-        if not allow_sympy_reserved_names:
+        if not self._allow_sympy_reserved_names:
             for name in SYMPY_RESERVED:
                 self._variables[name] = InternalVariable(name, note="sympy reserved name")
+        if msx_file_name is not None:
+            from wntr.epanet.msx.io import MsxFile
 
-    def _is_variable_registered(self, var_or_name: Union[str, RxnVariable]) -> bool:
+            inp = MsxFile()
+            inp.read(msx_file_name, self)
+
+    def _is_variable_registered(self, var_or_name: Union[str, ReactionVariable]) -> bool:
         name = str(var_or_name)
         if name in self._variables.keys():
             return True
@@ -191,11 +177,11 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         return list(self._coeffs.keys())
 
     @property
-    def function_name_list(self) -> List[str]:
+    def other_term_name_list(self) -> List[str]:
         """A list of all defined function (MSX 'terms') names"""
         return list(self._terms.keys())
 
-    def variables(self, var_type: RxnVariableType = None):
+    def variables(self, var_type: VariableType = None):
         """A generator to loop over the variables.
 
         Parameters
@@ -208,13 +194,13 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         RxnVariable
             a variable defined within the model
         """
-        var_type = RxnVariableType.factory(var_type)
+        var_type = VariableType.get(var_type)
         for v in self._variables.values():
             if var_type is not None and v.var_type != var_type:
                 continue
             yield v
 
-    def add_variable(self, var_or_type: Union[RxnVariable, RxnVariableType], name: str = None, **kwargs):
+    def add_variable(self, var_or_type: Union[ReactionVariable, VariableType], name: str = None, **kwargs):
         """Add an new variable to the model, or add an existing, unlinked variable object to the model.
 
         Parameters
@@ -235,19 +221,19 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         VariableNameExistsError
             if the variable or name uses the same name an existing variable already uses
         """
-        if not isinstance(var_or_type, (RxnVariable,)):
+        if not isinstance(var_or_type, (ReactionVariable,)):
             try:
-                var_or_type = RxnVariableType.factory(var_or_type)
+                var_or_type = VariableType.get(var_or_type)
             except Exception as e:
                 raise TypeError("Cannot add an object that is not a RxnVariable subclass or create a new object without a valid var_type") from e
             if name is None:
                 raise ValueError("When adding a new variable, a name must be supplied")
             typ = var_or_type
-            if typ is RxnVariableType.BULK or typ is RxnVariableType.WALL:
+            if typ is VariableType.BULK or typ is VariableType.WALL:
                 self.add_species(var_or_type, name, **kwargs)
-            elif typ is RxnVariableType.CONST or typ is RxnVariableType.PARAM:
+            elif typ is VariableType.CONST or typ is VariableType.PARAM:
                 self.add_coefficient(var_or_type, name, **kwargs)
-            elif typ is RxnVariableType.TERM:
+            elif typ is VariableType.TERM:
                 self.add_other_term(var_or_type, name, **kwargs)
             else:
                 raise TypeError("Cannot create new objects of the INTERNAL type using this function")
@@ -256,25 +242,25 @@ class WaterQualityReactionsModel(RxnModelRegistry):
                 raise ValueError("When adding an existing variable object, no other arguments may be supplied")
             __variable = var_or_type
             if self._is_variable_registered(__variable):
-                raise VariableNameExistsError("A variable with this name already exists in the model")
+                raise KeyExistsError("A variable with this name already exists in the model")
             typ = __variable.var_type
             name = __variable.name
             if isinstance(__variable, LinkedVariablesMixin):
                 __variable._variable_registry = self
-            if typ is RxnVariableType.BULK or typ is RxnVariableType.WALL:
+            if typ is VariableType.BULK or typ is VariableType.WALL:
                 self._variables.add_item_to_group("species", name, __variable)
                 self._inital_quality[name] = dict(global_value=None, nodes=dict(), links=dict())
                 self._sources[name] = dict()
-            elif typ is RxnVariableType.CONST or typ is RxnVariableType.PARAM:
+            elif typ is VariableType.CONST or typ is VariableType.PARAM:
                 self._variables.add_item_to_group("coeffs", name, __variable)
-            elif typ is RxnVariableType.TERM:
+            elif typ is VariableType.TERM:
                 self._variables.add_item_to_group("funcs", name, __variable)
             else:
                 self._variables.add_item_to_group(None, name, __variable)
 
     def add_species(
         self,
-        species_type: Union[str, Literal[RxnVariableType.BULK], Literal[RxnVariableType.WALL]],
+        species_type: Union[str, Literal[VariableType.BULK], Literal[VariableType.WALL]],
         name: str,
         units: str,
         atol: float = None,
@@ -313,19 +299,19 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         TypeError
             if atol and rtol are not both None or both a float
         """
-        species_type = RxnVariableType.factory(species_type)
-        if species_type not in [RxnVariableType.BULK, RxnVariableType.WALL]:
+        species_type = VariableType.get(species_type)
+        if species_type not in [VariableType.BULK, VariableType.WALL]:
             raise ValueError("Species must be BULK or WALL, got {:s}".format(species_type))
         if self._is_variable_registered(name):
-            raise VariableNameExistsError("The variable {} already exists in this model".format(name))
+            raise KeyExistsError("The variable {} already exists in this model".format(name))
         if (atol is None) ^ (rtol is None):
             raise TypeError("atol and rtol must be the same type, got {} and {}".format(atol, rtol))
-        if species_type is RxnVariableType.BULK:
+        if species_type is VariableType.BULK:
             var = BulkSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
-        elif species_type is RxnVariableType.WALL:
+        elif species_type is VariableType.WALL:
             var = WallSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
         self._species[name] = var
-        self._inital_quality[name] = dict([('global', None), ('nodes', dict()), ('links', dict())])
+        self._inital_quality[name] = dict([("global", None), ("nodes", dict()), ("links", dict())])
         self._sources[name] = dict()
         return var
 
@@ -358,7 +344,7 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         TypeError
             if atol and rtol are not both None or both a float
         """
-        return self.add_species(RxnVariableType.BULK, name, units, atol, rtol, note)
+        return self.add_species(VariableType.BULK, name, units, atol, rtol, note)
 
     def add_wall_species(self, name: str, units: str, atol: float = None, rtol: float = None, note: str = None) -> WallSpecies:
         """Add a new wall species to the model.
@@ -389,10 +375,10 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         TypeError
             if atol and rtol are not both None or both a float
         """
-        return self.add_species(RxnVariableType.WALL, name, units, atol, rtol, note)
+        return self.add_species(VariableType.WALL, name, units, atol, rtol, note)
 
     def add_coefficient(
-        self, coeff_type: Union[str, Literal[RxnVariableType.CONST], Literal[RxnVariableType.PARAM]], name: str, global_value: float, note: str = None, units: str = None, **kwargs
+        self, coeff_type: Union[str, Literal[VariableType.CONST], Literal[VariableType.PARAM]], name: str, global_value: float, note: str = None, units: str = None, **kwargs
     ) -> Coefficient:
         """Add a new coefficient to the model.
 
@@ -424,14 +410,14 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         VariableNameExistsError
             if a variable with this name already exists in the model
         """
-        coeff_type = RxnVariableType.factory(coeff_type)
-        if coeff_type not in [RxnVariableType.CONST, RxnVariableType.PARAM]:
+        coeff_type = VariableType.get(coeff_type)
+        if coeff_type not in [VariableType.CONST, VariableType.PARAM]:
             raise ValueError("coeff_type must be CONST or PARAM, got {:s}".format(coeff_type))
         if self._is_variable_registered(name):
-            raise VariableNameExistsError("The variable {} already exists in this model".format(name))
-        if coeff_type is RxnVariableType.CONST:
+            raise KeyExistsError("The variable {} already exists in this model".format(name))
+        if coeff_type is VariableType.CONST:
             var = Constant(name=name, global_value=global_value, note=note, units=units, variable_registry=self)
-        elif coeff_type is RxnVariableType.PARAM:
+        elif coeff_type is VariableType.PARAM:
             var = Parameter(name=name, global_value=global_value, note=note, units=units, variable_registry=self, **kwargs)
         self._coeffs[name] = var
         return var
@@ -464,7 +450,7 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         VariableNameExistsError
             if a variable with this name already exists in the model
         """
-        return self.add_coefficient(RxnVariableType.CONST, name=name, global_value=global_value, note=note, units=units)
+        return self.add_coefficient(VariableType.CONST, name=name, global_value=global_value, note=note, units=units)
 
     def add_parameterized_coeff(
         self, name: str, global_value: float, note: str = None, units: str = None, pipe_values: Dict[str, float] = None, tank_values: Dict[str, float] = None
@@ -500,7 +486,7 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         VariableNameExistsError
             if a variable with this name already exists in the model
         """
-        return self.add_coefficient(RxnVariableType.PARAM, name=name, global_value=global_value, note=note, units=units, _pipe_values=pipe_values, _tank_values=tank_values)
+        return self.add_coefficient(VariableType.PARAM, name=name, global_value=global_value, note=note, units=units, _pipe_values=pipe_values, _tank_values=tank_values)
 
     def add_other_term(self, name: str, expression: str, note: str = None) -> OtherTerm:
         """Add a new user-defined function to the model.
@@ -529,22 +515,46 @@ class WaterQualityReactionsModel(RxnModelRegistry):
             if a variable with this name already exists in the model
         """
         if self._is_variable_registered(name):
-            raise VariableNameExistsError("The variable {} already exists in this model".format(name))
+            raise KeyExistsError("The variable {} already exists in this model".format(name))
         var = OtherTerm(name=name, expression=expression, note=note, variable_registry=self)
         self._terms[name] = var
         return var
 
     def remove_variable(self, name: str):
+        """Remove a variable from the model.
+
+        Parameters
+        ----------
+        name : str
+            variable name
+        """
         if name in self._inital_quality.keys():
             self._inital_quality.__delitem__(name)
         if name in self._sources.keys():
             self._sources.__delitem__(name)
         return self._variables.__delitem__(name)
 
-    def get_variable(self, name: str) -> RxnVariable:
+    def get_variable(self, name: str) -> ReactionVariable:
+        """Get a variable based on its name (symbol).
+        
+        Parameters
+        ----------
+        name : str
+            The variable name
+
+        Returns
+        -------
+        ReactionVariable
+            the variable with the name in question
+
+        Raises
+        ------
+        KeyError
+            a variable with that name does not exist
+        """
         return self._variables[name]
 
-    def reactions(self, location: RxnLocationType = None):
+    def reactions(self, location: LocationType = None):
         """A generator for iterating through reactions in the model.
 
         Parameters
@@ -554,73 +564,154 @@ class WaterQualityReactionsModel(RxnModelRegistry):
 
         Yields
         ------
-        RxnReaction
+        ReactionDynamics
             a reaction defined within the model
         """
-        location = RxnLocationType.factory(location)
+        location = LocationType.get(location)
         for v in self._dynamics.values():
             if location is not None and v.location != location:
                 continue
             yield v
 
-    def add_reaction(self, location: RxnLocationType, species: Union[str, Species], dynamics: Union[str, int, RxnDynamicsType], expression: str, note: str = None):
+    def add_reaction(self, location: LocationType, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None):
+        """Add a multispecies water quality reaction to the model.
+
+        Parameters
+        ----------
+        location : LocationType
+            where the reaction is taking place
+        species : Union[str, Species]
+            the species with the dynamics that are being described
+        dynamics : Union[str, int, DynamicsType]
+            the type of reaction dynamics used to describe this species changes through time
+        expression : str
+            the right-hand-side of the reaction dynamics equation
+        note : str, optional
+            a note about this reaction, by default None
+
+        Returns
+        -------
+        ReactionDynamics
+            the resulting reaction object
+
+        Raises
+        ------
+        ValueError
+            species does not exist
+        RuntimeError
+            species already has reaction defined FIXME: this should be an MSX error
+        ValueError
+            invalid dynamics type
+        ValueError
+            invalid location type
+        """
         # TODO: accept a "both" or "all" value for location
-        location = RxnLocationType.factory(location)
+        location = LocationType.get(location)
         species = str(species)
         if species not in self._species.keys():
             raise ValueError("The species {} does not exist in the model, failed to add reaction.".format(species))
-        _key = RxnReaction.to_key(species, location)
+        _key = ReactionDynamics.to_key(species, location)
         if _key in self._dynamics.keys():
             raise RuntimeError("The species {} already has a {} reaction defined. Use set_reaction instead.")
-        dynamics = RxnDynamicsType.factory(dynamics)
+        dynamics = DynamicsType.get(dynamics)
         new = None
-        if dynamics is RxnDynamicsType.EQUIL:
+        if dynamics is DynamicsType.EQUIL:
             new = EquilibriumDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
-        elif dynamics is RxnDynamicsType.RATE:
+        elif dynamics is DynamicsType.RATE:
             new = RateDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
-        elif dynamics is RxnDynamicsType.FORMULA:
+        elif dynamics is DynamicsType.FORMULA:
             new = FormulaDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
         else:
             raise ValueError("Invalid dynamics type, {}".format(dynamics))
-        if location is RxnLocationType.PIPE:
+        if location is LocationType.PIPE:
             self._pipe_dynamics[str(new)] = new
-        elif location is RxnLocationType.TANK:
+        elif location is LocationType.TANK:
             self._tank_dynamics[str(new)] = new
         else:
             raise ValueError("Invalid location type, {}".format(location))
         return new
 
-    def add_pipe_reaction(self, species: Union[str, Species], dynamics: Union[str, int, RxnDynamicsType], expression: str, note: str = None) -> RxnReaction:
-        return self.add_reaction(RxnLocationType.PIPE, species=species, dynamics=dynamics, expression=expression, note=note)
+    def add_pipe_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> ReactionDynamics:
+        """Add a pipe reaction. See also :meth:`add_reaction`.
 
-    def add_tank_reaction(self, species: Union[str, Species], dynamics: Union[str, int, RxnDynamicsType], expression: str, note: str = None) -> RxnReaction:
-        return self.add_reaction(RxnLocationType.TANK, species=species, dynamics=dynamics, expression=expression, note=note)
+        Parameters
+        ----------
+        species : Union[str, Species]
+            the species with the dynamics that are being described
+        dynamics : Union[str, int, DynamicsType]
+            the type of reaction dynamics used to describe this species changes through time
+        expression : str
+            the right-hand-side of the reaction dynamics equation
+        note : str, optional
+            a note about this reaction, by default None
 
-    def remove_reaction(self, species: Union[str, Species], location: Union[str, int, RxnLocationType, Literal["all"]]):
+        Returns
+        -------
+        ReactionDynamics
+            the reaction object
+        """
+        return self.add_reaction(LocationType.PIPE, species=species, dynamics=dynamics, expression=expression, note=note)
+
+    def add_tank_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> ReactionDynamics:
+        """Add a pipe reaction. See also :meth:`add_reaction`.
+
+        Parameters
+        ----------
+        species : Union[str, Species]
+            the species with the dynamics that are being described
+        dynamics : Union[str, int, DynamicsType]
+            the type of reaction dynamics used to describe this species changes through time
+        expression : str
+            the right-hand-side of the reaction dynamics equation
+        note : str, optional
+            a note about this reaction, by default None
+
+        Returns
+        -------
+        ReactionDynamics
+            the reaction object
+        """
+        return self.add_reaction(LocationType.TANK, species=species, dynamics=dynamics, expression=expression, note=note)
+
+    def remove_reaction(self, species: Union[str, Species], location: Union[str, int, LocationType, Literal["all"]]):
+        """Remove a reaction for a species from the model
+
+        Parameters
+        ----------
+        species : str or Species
+            the species to remove a reaction for
+        location : str, int, LocationType or 'all'
+            the location of the reaction to delete, with 'all' meaning both wall and pipe reactions
+
+        Raises
+        ------
+        ValueError
+            if the value for `location` is invalid
+        """
         if location != "all":
-            location = RxnLocationType.factory(location)
+            location = LocationType.get(location)
         species = str(species)
         if location is None:
             raise TypeError('location cannot be None when removing a reaction. Use "all" for all locations.')
         elif location == "all":
-            name = RxnReaction.to_key(species, RxnLocationType.PIPE)
+            name = ReactionDynamics.to_key(species, LocationType.PIPE)
             try:
                 self._pipe_dynamics.__delitem__(name)
             except KeyError:
                 pass
-            name = RxnReaction.to_key(species, RxnLocationType.TANK)
+            name = ReactionDynamics.to_key(species, LocationType.TANK)
             try:
                 self._tank_dynamics.__delitem__(name)
             except KeyError:
                 pass
-        elif location is RxnLocationType.PIPE:
-            name = RxnReaction.to_key(species, RxnLocationType.PIPE)
+        elif location is LocationType.PIPE:
+            name = ReactionDynamics.to_key(species, LocationType.PIPE)
             try:
                 self._pipe_dynamics.__delitem__(name)
             except KeyError:
                 pass
-        elif location is RxnLocationType.TANK:
-            name = RxnReaction.to_key(species, RxnLocationType.TANK)
+        elif location is LocationType.TANK:
+            name = ReactionDynamics.to_key(species, LocationType.TANK)
             try:
                 self._tank_dynamics.__delitem__(name)
             except KeyError:
@@ -629,11 +720,25 @@ class WaterQualityReactionsModel(RxnModelRegistry):
             raise ValueError("Invalid location, {}".format(location))
 
     def get_reaction(self, species, location):
+        """Get a reaction for a species at either a pipe or tank.
+
+        Parameters
+        ----------
+        species : str or Species
+            the species to get a reaction for
+        location : str, int, or LocationType
+            the location of the reaction
+
+        Returns
+        -------
+        ReactionDynamics
+            the requested reaction object
+        """
         species = str(species)
-        location = RxnLocationType.factory(location)
-        if location == RxnLocationType.PIPE:
+        location = LocationType.get(location)
+        if location == LocationType.PIPE:
             return self._pipe_dynamics.get(species, None)
-        elif location == RxnLocationType.TANK:
+        elif location == LocationType.TANK:
             return self._tank_dynamics.get(species, None)
 
     def init_printing(self, *args, **kwargs):
@@ -641,15 +746,27 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         init_printing(*args, **kwargs)
 
     @property
-    def options(self) -> RxnOptions:
+    def citations(self) -> List[Union[str, Citation]]:
+        """A list of citation strings or Citation objects.
+        The Citation object from wntr.utils does not have to be used, but an object of
+        a different type should have a "to_dict" method to ensure that dictionary and
+        json conversions work as intended.
+        """
+        return self._citations
+
+    @property
+    def options(self) -> MultispeciesOptions:
         """The multispecies reaction model options."""
         return self._options
 
     @options.setter
     def options(self, value):
-        if not isinstance(value, RxnOptions):
+        if isinstance(value, dict):
+            self._options = MultispeciesOptions.factory(value)
+        elif not isinstance(value, MultispeciesOptions):
             raise TypeError("Expected a RxnOptions object, got {}".format(type(value)))
-        self._options = value
+        else:
+            self._options = value
 
     def link_water_network_model(self, wn: WaterNetworkModel):
         self._wn = wn
@@ -658,26 +775,14 @@ class WaterQualityReactionsModel(RxnModelRegistry):
         self._patterns[name] = pat
 
     def to_dict(self) -> dict:
-        rep = dict()
-        rep["version"] = 'wntr.reactions-0.0.1'
-        rep["title"] = self.title
-        rep["desc"] = self.desc
-        rep["original_filename"] = self.filename
-        rep["citations"] = [(c.to_dict() if isinstance(c, Citation) else c) for c in self.citations]
-        rep["options"] = self._options.to_dict()
-        rep["variables"] = dict()
-        rep["variables"]["species"] = [v.to_dict() for v in self._species.values()]
-        rep["variables"]["coefficients"] = [v.to_dict() for v in self._coeffs.values()]
-        rep["variables"]["other_terms"] = [v.to_dict() for v in self._terms.values()]
-        rep["reactions"] = dict()
-        rep["reactions"]["pipes"] = [v.to_dict() for v in self._pipe_dynamics.values()]
-        rep["reactions"]["tanks"] = [v.to_dict() for v in self._tank_dynamics.values()]
-        rep["patterns"] = self._patterns.copy()
-        rep["initial_quality"] = self._inital_quality.copy()
-        # rep["sources"] = dict()
-        # for sp, v in self._sources:
-        #     if v is not None and len(v) > 0:
-        #         rep["sources"][sp] = dict()
-        #         for node, source in v.items():
-        #             rep["sources"][sp][node] = source.to_dict()
-        return rep
+        """Convert this water quality model to a dictionary"""
+        wntr.reaction.io.to_dict()
+
+    def from_dict(self, d) -> dict:
+        """Append to this water quality model from a dictionary"""
+        wntr.reaction.io.from_dict(d, append=self)
+
+    def __repr__(self):
+        if self._msxfile or self.name:
+            return "{}({})".format(self.__class__.__name__, repr(self._msxfile) if self._msxfile else repr(self.name))
+        return super().__repr__()

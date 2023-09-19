@@ -20,7 +20,6 @@ For a ``RATE`` reaction, this equates to:
 
     \frac{d}{dt}C(species) = f(vars,...)
 
-
 The classes in this module can be created directly. However, they are more
 powerful when either, a) created using API calls on a :class:`~wntr.reaction.model.WaterNetworkModel`,
 or, b) linked to a :class:`~wntr.reaction.model.WaterNetworkModel` model object after creation.
@@ -30,12 +29,22 @@ If :class:`sympy` is installed, then there are functions available
 that will convert object instances of these classes into sympy expressions
 and symbols. If the instances are linked to a model, then expressions can 
 be expanded, validated, and even evaluated or simplified symbolically.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    RateDynamics
+    EquilibriumDynamics
+    FormulaDynamics
+
 """
 import enum
 import logging
 from dataclasses import InitVar, asdict, dataclass, field
 from enum import Enum, IntFlag
 from typing import Any, ClassVar, Dict, List, Set, Tuple, Union
+from .base import MSXComment
 
 has_sympy = False
 try:
@@ -52,17 +61,16 @@ except ImportError:
     has_sympy = False
 
 from wntr.network.model import WaterNetworkModel
-from wntr.reaction.base import EXPR_TRANSFORMS, MSXObject, RxnVariableType
+from wntr.reaction.base import EXPR_TRANSFORMS, MsxObjectMixin, VariableType
 
 from .base import (
     ExpressionMixin,
     LinkedVariablesMixin,
-    MSXComment,
-    RxnDynamicsType,
-    RxnLocationType,
-    RxnModelRegistry,
-    RxnReaction,
-    RxnVariableType,
+    DynamicsType,
+    LocationType,
+    AbstractReactionModel,
+    ReactionDynamics,
+    VariableType,
 )
 from .variables import Coefficient, Species, OtherTerm
 
@@ -70,7 +78,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(repr=False)
-class RateDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction):
+class RateDynamics(MsxObjectMixin, LinkedVariablesMixin, ExpressionMixin, ReactionDynamics):
     r"""Used to supply the equation that expresses the rate of change of the given species
     with respect to time as a function of the other species in the model.
 
@@ -94,15 +102,15 @@ class RateDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction
     """
     note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
-    variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
+    variable_registry: InitVar[AbstractReactionModel] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
 
     def __post_init__(self, variable_registry):
         self._variable_registry = variable_registry
 
     @property
-    def expr_type(self) -> RxnDynamicsType:
-        return RxnDynamicsType.RATE
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.RATE
 
     def to_symbolic(self, transformations=...):
         return super().to_symbolic(transformations)
@@ -123,7 +131,7 @@ class RateDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction
 
 
 @dataclass(repr=False)
-class EquilibriumDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction):
+class EquilibriumDynamics(MsxObjectMixin, LinkedVariablesMixin, ExpressionMixin, ReactionDynamics):
     """Used for equilibrium expressions where it is assumed that the expression supplied is being equated to zero.
 
     .. math::
@@ -147,15 +155,15 @@ class EquilibriumDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnR
 
     note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
-    variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
+    variable_registry: InitVar[AbstractReactionModel] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
 
     def __post_init__(self, variable_registry):
         self._variable_registry = variable_registry
 
     @property
-    def expr_type(self) -> RxnDynamicsType:
-        return RxnDynamicsType.EQUIL
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.EQUIL
 
     def to_symbolic(self, transformations=...):
         return super().to_symbolic(transformations)
@@ -175,7 +183,7 @@ class EquilibriumDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnR
 
 
 @dataclass(repr=False)
-class FormulaDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReaction):
+class FormulaDynamics(MsxObjectMixin, LinkedVariablesMixin, ExpressionMixin, ReactionDynamics):
     """Used when the concentration of the named species is a simple function of the remaining species.
 
     .. math::
@@ -199,15 +207,15 @@ class FormulaDynamics(MSXObject, LinkedVariablesMixin, ExpressionMixin, RxnReact
 
     note: Union[str, Dict[str, str]] = None
     """A note or comment about this species reaction dynamics"""
-    variable_registry: InitVar[RxnModelRegistry] = field(default=None, compare=False)
+    variable_registry: InitVar[AbstractReactionModel] = field(default=None, compare=False)
     """A link to the reaction model with variables"""
 
     def __post_init__(self, variable_registry):
         self._variable_registry = variable_registry
 
     @property
-    def expr_type(self) -> RxnDynamicsType:
-        return RxnDynamicsType.FORMULA
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.FORMULA
 
     def to_symbolic(self, transformations=...):
         return super().to_symbolic(transformations)

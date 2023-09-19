@@ -4,30 +4,37 @@
 The base classes for the the wntr.reaction module.
 Other than the enum classes, the classes in this module are all abstract 
 and/or mixin classes, and should not be instantiated directly.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    VariableType
+    LocationType
+    DynamicsType
+    ReactionVariable
+    ReactionDynamics
+    AbstractReactionModel
+    LinkedVariablesMixin
+    ExpressionMixin
+    MsxObjectMixin
+    MSXComment
+
 """
 
 import abc
 import enum
 import logging
 from abc import ABC, abstractmethod, abstractproperty
-from collections.abc import MutableMapping
 from dataclasses import InitVar, dataclass, field
 from enum import Enum, IntFlag
 from typing import (
-    Any,
     ClassVar,
-    Dict,
     Generator,
-    Hashable,
-    ItemsView,
-    Iterator,
-    KeysView,
     List,
-    Set,
-    Tuple,
     Union,
-    ValuesView,
 )
+
 
 has_sympy = False
 try:
@@ -44,8 +51,8 @@ except ImportError:
     has_sympy = False
 
 from wntr.network.model import WaterNetworkModel
-
-from .options import RxnOptions
+from wntr.utils.enumtools import add_get
+from wntr.reaction.options import MultispeciesOptions
 
 logger = logging.getLogger(__name__)
 
@@ -75,19 +82,8 @@ EXPR_TRANSFORMS = standard_transformations + (convert_xor,)
 """The sympy transforms to use in expression parsing"""
 
 
-class KeyInOtherGroupError(KeyError):
-    """The key exists but is in a different disjoint group"""
-
-    pass
-
-
-class VariableNameExistsError(KeyError):
-    """The name already exists in the reaction model"""
-
-    pass
-
-
-class RxnVariableType(Enum):
+@add_get(abbrev=True)
+class VariableType(Enum):
     """The type of reaction variable.
 
     The following types are defined, and aliases of just the first character
@@ -108,7 +104,7 @@ class RxnVariableType(Enum):
 
     .. autosummary::
 
-        factory
+        get
 
     """
 
@@ -142,42 +138,9 @@ class RxnVariableType(Enum):
     PARAM = PARAMETER
     """Alias for :attr:`PARAMETER`"""
 
-    @classmethod
-    def factory(cls, value: Union[str, int, "RxnVariableType"]) -> "RxnVariableType":
-        """Convert a value to a valid RxnVariableType.
 
-        Parameters
-        ----------
-        value : str or int or RxnVariableType
-            the value to change
-
-        Returns
-        -------
-        RxnVariableType
-            the equivalent variable type enum
-
-        Raises
-        ------
-        KeyError
-            the value is unknown/undefined
-        TypeError
-            the type of the value is wrong
-        """
-        if value is None:
-            return
-        if isinstance(value, cls):
-            return value
-        if isinstance(value, int):
-            return cls(value)
-        if isinstance(value, str):
-            try:
-                return cls[value[0].upper()]
-            except KeyError:
-                raise KeyError(value)
-        raise TypeError("Invalid type '{}'".format(type(value)))
-
-
-class RxnLocationType(Enum):
+@add_get(abbrev=True)
+class LocationType(Enum):
     """What type of network component does this reaction occur in
 
     The following types are defined, and aliases of just the first character
@@ -195,7 +158,7 @@ class RxnLocationType(Enum):
 
     .. autosummary::
 
-        factory
+        get
 
     """
 
@@ -208,42 +171,9 @@ class RxnLocationType(Enum):
     T = TANK
     """Alias for :attr:`TANK`"""
 
-    @classmethod
-    def factory(cls, value: Union[str, int, "RxnLocationType"]) -> "RxnLocationType":
-        """Convert a value to a valid RxnLocationType.
 
-        Parameters
-        ----------
-        value : str or int or RxnLocationType
-            the value to process
-
-        Returns
-        -------
-        RxnLocationType
-            the equivalent enum object
-
-        Raises
-        ------
-        KeyError
-            the value is unknown/undefined
-        TypeError
-            the type of the value is wrong
-        """
-        if value is None:
-            return
-        if isinstance(value, cls):
-            return value
-        if isinstance(value, int):
-            return cls(value)
-        if isinstance(value, str):
-            try:
-                return cls[value[0].upper()]
-            except KeyError:
-                raise KeyError(value)
-        raise TypeError("Invalid type '{}'".format(type(value)))
-
-
-class RxnDynamicsType(Enum):
+@add_get(abbrev=True)
+class DynamicsType(Enum):
     """The type of reaction expression.
 
     The following types are defined, and aliases of just the first character
@@ -261,7 +191,7 @@ class RxnDynamicsType(Enum):
 
     .. autosummary::
 
-        factory
+        get
 
     """
 
@@ -278,224 +208,9 @@ class RxnDynamicsType(Enum):
     F = FORMULA
     """Alias for :attr:`FORMULA`"""
 
-    @classmethod
-    def factory(cls, value: Union[str, int, "RxnDynamicsType"]) -> "RxnDynamicsType":
-        """Convert a value to a RxnDynamicsType.
-
-        Parameters
-        ----------
-        value : str or int or RxnDynamicsType
-            the value to convert
-
-        Returns
-        -------
-        RxnDynamicsType
-            the enum value
-
-        Raises
-        ------
-        KeyError
-            the value is unknown/undefined
-        TypeError
-            the type of the value is wrong
-        """
-        if value is None:
-            return
-        if isinstance(value, cls):
-            return value
-        if isinstance(value, int):
-            return cls(value)
-        if isinstance(value, str):
-            try:
-                return cls[value[0].upper()]
-            except KeyError:
-                raise KeyError(value)
-        raise TypeError("Invalid type '{}'".format(type(value)))
-
-
-class DisjointMapping(MutableMapping):
-
-    __data: Dict[Hashable, Hashable] = None
-    __key_groupnames: Dict[Hashable, str] = None
-    __groups: Dict[str, "DisjointMappingGroup"] = None
-    __usage: Dict[Hashable, Set[Any]] = None
-
-    def __init__(self, *args, **kwargs):
-        self.__data: Dict[Hashable, Any] = dict(*args, **kwargs)
-        self.__key_groupnames: Dict[Hashable, str] = dict()
-        self.__groups: Dict[str, "DisjointMappingGroup"] = dict()
-        self.__usage: Dict[Hashable, Set[Any]] = dict()
-        for k, v in self.__data.items():
-            self.__key_groupnames[k] = None
-            self.__usage[k] = set()
-
-    def add_disjoint_group(self, name):
-        if name in self.__groups.keys():
-            raise KeyError("Disjoint group already exists within registry")
-        new = DisjointMappingGroup(name, self)
-        self.__groups.__setitem__(name, new)
-        return new
-
-    def get_disjoint_group(self, name: str):
-        return self.__groups[name]
-
-    def get_groupname(self, __key: Hashable):
-        return self.__key_groupnames[__key]
-
-    def add_item_to_group(self, groupname, key, value):
-        current = self.__key_groupnames.get(key, None)
-        if current is not None and groupname != current:
-            raise KeyInOtherGroupError("The key '{}' is already used in a different group '{}'".format(key, groupname))
-        if groupname is not None:
-            group = self.__groups[groupname]
-            group._data.__setitem__(key, value)
-        self.__key_groupnames[key] = groupname
-        return self.__data.__setitem__(key, value)
-
-    def move_item_to_group(self, new_group_name, key):
-        value = self.__data[key]
-        current = self.get_groupname(key)
-        if new_group_name is not None:
-            new_group = self.__groups[new_group_name]
-            new_group._data[key] = value
-        if current is not None:
-            old_group = self.__groups[current]
-            old_group._data.__delitem__(key)
-        self.__key_groupnames[key] = new_group_name
-
-    def remove_item_from_group(self, groupname, key):
-        current = self.__key_groupnames.get(key, None)
-        if groupname != current:
-            raise KeyInOtherGroupError("The key '{}' is in a different group '{}'".format(key, groupname))
-        if groupname is not None:
-            self.__groups[groupname]._data.__delitem__(key)
-
-    def __getitem__(self, __key: Any) -> Any:
-        return self.__data.__getitem__(__key)
-
-    def __setitem__(self, __key: Any, __value: Any) -> None:
-        current = self.__key_groupnames.get(__key, None)
-        if current is not None:
-            self.__groups[current]._data[__key] = __value
-        return self.__data.__setitem__(__key, __value)
-
-    def __delitem__(self, __key: Any) -> None:
-        current = self.__key_groupnames.get(__key, None)
-        if current is not None:
-            self.__groups[current]._data.__delitem__(__key)
-        return self.__data.__delitem__(__key)
-
-    def __contains__(self, __key: object) -> bool:
-        return self.__data.__contains__(__key)
-
-    def __iter__(self) -> Iterator:
-        return self.__data.__iter__()
-
-    def __len__(self) -> int:
-        return self.__data.__len__()
-
-    def keys(self) -> KeysView:
-        return self.__data.keys()
-
-    def items(self) -> ItemsView:
-        return self.__data.items()
-
-    def values(self) -> ValuesView:
-        return self.__data.values()
-
-    def clear(self) -> None:
-        raise RuntimeError("You cannot clear this")
-
-    def popitem(self) -> tuple:
-        raise RuntimeError("You cannot pop this")
-
-
-class DisjointMappingGroup(MutableMapping):
-    """A dictionary that checks a namespace for existing entries.
-
-    To create a new instance, pass a set to act as a namespace. If the namespace does not
-    exist, a new namespace will be instantiated. If it does exist, then a new, disjoint
-    dictionary will be created that checks the namespace keys before it will allow a new
-    item to be added to the dictionary. An item can only belong to one of the disjoint dictionaries
-    associated with the namespace.
-
-    Examples
-    --------
-    Assume there is a namespace `nodes` that has two distinct subsets of objects, `tanks`
-    and `reservoirs`. A name for a tank cannot also be used for a reservoir, and a node
-    cannot be both a `tank` and a `reservoir`. A DisjointNamespaceDict allows two separate
-    dictionaries to be kept, one for each subtype, but the keys within the two dictionaries
-    will be ensured to not overlap.
-
-    Parameters
-    ----------
-    __keyspace : set
-        the name of the namespace for consistency checking
-    *args, **kwargs : Any
-        regular arguments and keyword arguments passed to the underlying dictionary
-
-    """
-
-    __name: str = None
-    __keyspace: DisjointMapping = None
-    _data: dict = None
-
-    def __new__(cls, name: str, __keyspace: DisjointMapping):
-        if name is None:
-            raise TypeError("A name must be specified")
-        if __keyspace is None:
-            raise TypeError("A registry must be specified")
-        newobj = super().__new__(cls)
-        return newobj
-
-    def __init__(self, name: str, __keyspace: DisjointMapping):
-        if name is None:
-            raise TypeError("A name must be specified")
-        if __keyspace is None:
-            raise TypeError("A registry must be specified")
-        self.__name: str = name
-        self.__keyspace: DisjointMapping = __keyspace
-        self._data = dict()
-
-    def __getitem__(self, __key: Any) -> Any:
-        return self._data[__key]
-
-    def __setitem__(self, __key: Any, __value: Any) -> None:
-        return self.__keyspace.add_item_to_group(self.__name, __key, __value)
-
-    def __delitem__(self, __key: Any) -> None:
-        return self.__keyspace.remove_item_from_group(self.__name, __key)
-
-    def __contains__(self, __key: object) -> bool:
-        return self._data.__contains__(__key)
-
-    def __iter__(self) -> Iterator:
-        return self._data.__iter__()
-
-    def __len__(self) -> int:
-        return self._data.__len__()
-
-    def keys(self) -> KeysView:
-        return self._data.keys()
-
-    def items(self) -> ItemsView:
-        return self._data.items()
-
-    def values(self) -> ValuesView:
-        return self._data.values()
-
-    def clear(self) -> None:
-        raise RuntimeError("Cannot clear a group")
-
-    def popitem(self) -> tuple:
-        raise RuntimeError("Cannot pop from a group")
-
-    def __repr__(self) -> str:
-        return "{}(name={}, data={})".format(self.__class__.__name__, repr(self.__name), self._data)
-
 
 @dataclass
-class RxnVariable(ABC):
+class ReactionVariable(ABC):
     """The base for a reaction variable.
 
     Parameters
@@ -516,7 +231,7 @@ class RxnVariable(ABC):
         return hash(str(self))
 
     @abstractproperty
-    def var_type(self) -> RxnVariableType:
+    def var_type(self) -> VariableType:
         """The variable type."""
         raise NotImplementedError
 
@@ -528,7 +243,7 @@ class RxnVariable(ABC):
         bool
             True if this is a species object, False otherwise
         """
-        return self.var_type == RxnVariableType.BULK or self.var_type == RxnVariableType.WALL
+        return self.var_type == VariableType.BULK or self.var_type == VariableType.WALL
     
     def is_coeff(self) -> bool:
         """Check to see if this variable represents a coefficient (constant or parameter).
@@ -538,9 +253,9 @@ class RxnVariable(ABC):
         bool
             True if this is a coefficient object, False otherwise
         """
-        return self.var_type == RxnVariableType.CONST or self.var_type == RxnVariableType.PARAM
+        return self.var_type == VariableType.CONST or self.var_type == VariableType.PARAM
     
-    def is_term_function(self) -> bool:
+    def is_other_term(self) -> bool:
         """Check to see if this variable represents a function (MSX term).
 
         Returns
@@ -548,7 +263,7 @@ class RxnVariable(ABC):
         bool
             True if this is a term/function object, False otherwise
         """
-        return self.var_type == RxnVariableType.TERM
+        return self.var_type == VariableType.TERM
 
     @property
     def symbol(self):
@@ -557,7 +272,7 @@ class RxnVariable(ABC):
 
 
 @dataclass
-class RxnReaction(ABC):
+class ReactionDynamics(ABC):
     """The base for a reaction.
 
     Parameters
@@ -572,7 +287,7 @@ class RxnReaction(ABC):
 
     species: str
     """The name of the species that this reaction describes"""
-    location: RxnLocationType
+    location: LocationType
     """The location this reaction occurs (pipes vs tanks)"""
     expression: str
     """The expression for the reaction dynamics (or, the right-hand-side of the equation)"""
@@ -586,7 +301,7 @@ class RxnReaction(ABC):
         return hash(str(self))
 
     @abstractproperty
-    def expr_type(self) -> RxnDynamicsType:
+    def expr_type(self) -> DynamicsType:
         """The type of reaction dynamics being described (or, the left-hand-side of the equation)"""
         raise NotImplementedError
 
@@ -607,23 +322,23 @@ class RxnReaction(ABC):
         str
             a species/location unique name
         """
-        location = RxnLocationType.factory(location)
+        location = LocationType.get(location)
         return str(species) + "." + location.name.lower()
 
 
-class RxnModelRegistry(ABC):
+class AbstractReactionModel(ABC):
     @abstractmethod
     def variables(self, var_type=None):
         """Generator over all defined variables, optionally limited by variable type"""
         raise NotImplementedError
 
     @abstractmethod
-    def add_variable(self, __variable: RxnVariable):
+    def add_variable(self, __variable: ReactionVariable):
         """Add a variable *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_variable(self, name: str) -> RxnVariable:
+    def get_variable(self, name: str) -> ReactionVariable:
         """Get a specific variable by name"""
         raise NotImplementedError
 
@@ -638,12 +353,12 @@ class RxnModelRegistry(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def add_reaction(self, __reaction: RxnReaction):
+    def add_reaction(self, __reaction: ReactionDynamics):
         """Add a reaction *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_reaction(self, species, location=None) -> List[RxnReaction]:
+    def get_reaction(self, species, location=None) -> List[ReactionDynamics]:
         """Get reaction(s) for a species, optionally only for one location"""
         raise NotImplementedError
 
@@ -658,12 +373,12 @@ class LinkedVariablesMixin:
     __variable_registry = None
 
     @property
-    def _variable_registry(self) -> RxnModelRegistry:
+    def _variable_registry(self) -> AbstractReactionModel:
         return self.__variable_registry
 
     @_variable_registry.setter
     def _variable_registry(self, value):
-        if value is not None and not isinstance(value, RxnModelRegistry):
+        if value is not None and not isinstance(value, AbstractReactionModel):
             raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
         self.__variable_registry = value
 
@@ -675,7 +390,7 @@ class LinkedVariablesMixin:
         TypeError
             if the model registry isn't linked
         """
-        if not isinstance(self._variable_registry, RxnModelRegistry):
+        if not isinstance(self._variable_registry, AbstractReactionModel):
             raise TypeError("This object is not connected to any RxnModelRegistry")
 
 
@@ -700,7 +415,7 @@ class ExpressionMixin(ABC):
         return parse_expr(self.expression, transformations=transformations)
 
 
-class MSXObject:
+class MsxObjectMixin:
     def to_msx_string(self) -> str:
         """Get the expression as an EPANET-MSX input-file style string.
 
@@ -710,6 +425,7 @@ class MSXObject:
             the expression for use in an EPANET-MSX input file
         """
         raise NotImplementedError
+
 
 @dataclass
 class MSXComment:
@@ -726,4 +442,5 @@ class MSXComment:
             return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string
         else:
             return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string + ' ; ' + self.post
+
 

@@ -14,6 +14,7 @@ Submodules
 
    wntr.epanet.exceptions
    wntr.epanet.io
+   wntr.epanet.msx
    wntr.epanet.toolkit
    wntr.epanet.util
 
