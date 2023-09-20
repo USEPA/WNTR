@@ -4,37 +4,19 @@
 The base classes for the the wntr.reaction module.
 Other than the enum classes, the classes in this module are all abstract 
 and/or mixin classes, and should not be instantiated directly.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    VariableType
-    LocationType
-    DynamicsType
-    ReactionVariable
-    ReactionDynamics
-    AbstractReactionModel
-    LinkedVariablesMixin
-    ExpressionMixin
-    MsxObjectMixin
-    MSXComment
-
 """
 
 import abc
 import enum
 import logging
 from abc import ABC, abstractmethod, abstractproperty
-from dataclasses import InitVar, dataclass, field
+from dataclasses import InitVar, dataclass
 from enum import Enum, IntFlag
-from typing import (
-    ClassVar,
-    Generator,
-    List,
-    Union,
-)
+from typing import ClassVar, Generator, List, Union
 
+from wntr.network.model import WaterNetworkModel
+from wntr.quality.options import MultispeciesOptions
+from wntr.utils.enumtools import add_get
 
 has_sympy = False
 try:
@@ -49,10 +31,6 @@ except ImportError:
     standard_transformations = (None,)
     convert_xor = None
     has_sympy = False
-
-from wntr.network.model import WaterNetworkModel
-from wntr.utils.enumtools import add_get
-from wntr.quality.options import MultispeciesOptions
 
 logger = logging.getLogger(__name__)
 
@@ -209,14 +187,8 @@ class DynamicsType(Enum):
     """Alias for :attr:`FORMULA`"""
 
 
-@dataclass
 class ReactionVariable(ABC):
     """The base for a reaction variable.
-
-    Parameters
-    ----------
-    name : str
-        the name/symbol of the variable
     """
 
     name: str
@@ -229,6 +201,29 @@ class ReactionVariable(ABC):
     def __hash__(self) -> int:
         """Makes the variable hashable by hashing the `str` representation"""
         return hash(str(self))
+
+    __variable_registry = None
+
+    @property
+    def _variable_registry(self) -> "AbstractQualityModel":
+        return self.__variable_registry
+
+    @_variable_registry.setter
+    def _variable_registry(self, value):
+        if value is not None and not isinstance(value, AbstractQualityModel):
+            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
+        self.__variable_registry = value
+
+    def validate(self):
+        """Validate that this object is a member of the RxnModelRegistry
+
+        Raises
+        ------
+        TypeError
+            if the model registry isn't linked
+        """
+        if not isinstance(self._variable_registry, AbstractQualityModel):
+            raise TypeError("This object is not connected to any RxnModelRegistry")
 
     @abstractproperty
     def var_type(self) -> VariableType:
@@ -244,7 +239,7 @@ class ReactionVariable(ABC):
             True if this is a species object, False otherwise
         """
         return self.var_type == VariableType.BULK or self.var_type == VariableType.WALL
-    
+
     def is_coeff(self) -> bool:
         """Check to see if this variable represents a coefficient (constant or parameter).
 
@@ -254,7 +249,7 @@ class ReactionVariable(ABC):
             True if this is a coefficient object, False otherwise
         """
         return self.var_type == VariableType.CONST or self.var_type == VariableType.PARAM
-    
+
     def is_other_term(self) -> bool:
         """Check to see if this variable represents a function (MSX term).
 
@@ -270,8 +265,22 @@ class ReactionVariable(ABC):
         """Representation of the variable's name as a sympy.Symbol"""
         return Symbol(self.name)
 
+    def to_symbolic(self, transformations=EXPR_TRANSFORMS):
+        """Convert to a symbolic expression.
 
-@dataclass
+        Parameters
+        ----------
+        transformations : tuple of sympy transformations
+            transformations to apply to the expression, by default EXPR_TRANSFORMS
+
+        Returns
+        -------
+        sympy.Expr
+            the expression parsed by sympy
+        """
+        return self.symbol
+
+
 class ReactionDynamics(ABC):
     """The base for a reaction.
 
@@ -300,6 +309,29 @@ class ReactionDynamics(ABC):
         """Makes the reaction hashable by hashing the `str` representation"""
         return hash(str(self))
 
+    __variable_registry = None
+
+    @property
+    def _variable_registry(self) -> "AbstractQualityModel":
+        return self.__variable_registry
+
+    @_variable_registry.setter
+    def _variable_registry(self, value):
+        if value is not None and not isinstance(value, AbstractQualityModel):
+            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
+        self.__variable_registry = value
+
+    def validate(self):
+        """Validate that this object is a member of the RxnModelRegistry
+
+        Raises
+        ------
+        TypeError
+            if the model registry isn't linked
+        """
+        if not isinstance(self._variable_registry, AbstractQualityModel):
+            raise TypeError("This object is not connected to any RxnModelRegistry")
+
     @abstractproperty
     def expr_type(self) -> DynamicsType:
         """The type of reaction dynamics being described (or, the left-hand-side of the equation)"""
@@ -325,8 +357,24 @@ class ReactionDynamics(ABC):
         location = LocationType.get(location)
         return str(species) + "." + location.name.lower()
 
+    @abstractmethod
+    def to_symbolic(self, transformations=EXPR_TRANSFORMS):
+        """Convert to a symbolic expression.
 
-class AbstractReactionModel(ABC):
+        Parameters
+        ----------
+        transformations : tuple of sympy transformations
+            transformations to apply to the expression, by default EXPR_TRANSFORMS
+
+        Returns
+        -------
+        sympy.Expr
+            the expression parsed by sympy
+        """
+        return parse_expr(self.expression, transformations=transformations)
+
+
+class AbstractQualityModel(ABC):
     @abstractmethod
     def variables(self, var_type=None):
         """Generator over all defined variables, optionally limited by variable type"""
@@ -366,81 +414,3 @@ class AbstractReactionModel(ABC):
     def remove_reaction(self, species, location=None):
         """Remove reaction(s) for a species, optionally only for one location"""
         raise NotImplementedError
-
-
-class LinkedVariablesMixin:
-
-    __variable_registry = None
-
-    @property
-    def _variable_registry(self) -> AbstractReactionModel:
-        return self.__variable_registry
-
-    @_variable_registry.setter
-    def _variable_registry(self, value):
-        if value is not None and not isinstance(value, AbstractReactionModel):
-            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
-        self.__variable_registry = value
-
-    def validate(self):
-        """Validate that this object is a member of the RxnModelRegistry
-
-        Raises
-        ------
-        TypeError
-            if the model registry isn't linked
-        """
-        if not isinstance(self._variable_registry, AbstractReactionModel):
-            raise TypeError("This object is not connected to any RxnModelRegistry")
-
-
-@dataclass
-class ExpressionMixin(ABC):
-    """A mixin class for converting an expression to a sympy Expr"""
-
-    @abstractmethod
-    def to_symbolic(self, transformations=EXPR_TRANSFORMS):
-        """Convert to a symbolic expression.
-
-        Parameters
-        ----------
-        transformations : tuple of sympy transformations
-            transformations to apply to the expression, by default EXPR_TRANSFORMS
-
-        Returns
-        -------
-        sympy.Expr
-            the expression parsed by sympy
-        """
-        return parse_expr(self.expression, transformations=transformations)
-
-
-class MsxObjectMixin:
-    def to_msx_string(self) -> str:
-        """Get the expression as an EPANET-MSX input-file style string.
-
-        Returns
-        -------
-        str
-            the expression for use in an EPANET-MSX input file
-        """
-        raise NotImplementedError
-
-
-@dataclass
-class MSXComment:
-    pre: List[str] = field(default_factory=list)
-    post: str = None
-
-    def wrap_msx_string(self, string) -> str:
-        if self.pre is None or len(self.pre) == 0:
-            if self.post is None:
-                return '  ' + string
-            else:
-                return '  ' + string + ' ; ' + self.post
-        elif self.post is None:
-            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string
-        else:
-            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string + ' ; ' + self.post
-
-

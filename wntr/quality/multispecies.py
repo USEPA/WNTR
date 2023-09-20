@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Water quality reactions model.
+Multispecies water quality model and elements.
 
-.. rubric:: Contents
-
-.. autosummary::
-
-    MultispeciesReactionModel
-
+This module contains concrete instantiations of the abstract classes described in :class:`wntr.quality.base`.
 """
 
+import enum
 import logging
 import warnings
 from collections.abc import MutableMapping
@@ -29,8 +25,26 @@ from typing import (
     Union,
 )
 
+import wntr.quality.io
+from wntr.epanet.util import ENcomment
 from wntr.network.elements import Source
+from wntr.network.model import WaterNetworkModel
+from wntr.utils.citations import Citation
 from wntr.utils.disjoint_mapping import DisjointMapping, KeyExistsError
+
+from .base import (
+    EXPR_TRANSFORMS,
+    HYDRAULIC_VARIABLES,
+    RESERVED_NAMES,
+    SYMPY_RESERVED,
+    AbstractQualityModel,
+    DynamicsType,
+    LocationType,
+    ReactionDynamics,
+    ReactionVariable,
+    VariableType,
+)
+from .options import MultispeciesOptions
 
 has_sympy = False
 try:
@@ -46,50 +60,610 @@ except ImportError:
     convert_xor = None
     has_sympy = False
 
-import wntr.quality.io
-from wntr.network.model import WaterNetworkModel
-from wntr.utils.citations import Citation
-
-from .base import (
-    HYDRAULIC_VARIABLES,
-    SYMPY_RESERVED,
-    DynamicsType,
-    LinkedVariablesMixin,
-    LocationType,
-    ReactionDynamics,
-    AbstractReactionModel,
-    ReactionVariable,
-    VariableType,
-)
-from .dynamics import EquilibriumDynamics, FormulaDynamics, RateDynamics
-from .options import MultispeciesOptions
-from .variables import (
-    BulkSpecies,
-    Coefficient,
-    Constant,
-    InternalVariable,
-    OtherTerm,
-    Parameter,
-    Species,
-    WallSpecies,
-)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["MultispeciesReactionModel"]
+
+class Species(ReactionVariable):
+    def __init__(
+        self,
+        name: str,
+        units: str,
+        atol: float = None,
+        rtol: float = None,
+        note: Union[str, Dict[str, str]] = None,
+        diffusivity: float = None,
+        *,
+        _qm: AbstractQualityModel = None,
+    ):
+        """A species in a multispecies water quality model.
+
+        Parameters
+        ----------
+        name : str
+            The name (symbol) for the variable, must be a valid MSX name
+        units : str
+            The units used for this species
+        atol : float, optional
+            The absolute tolerance to use when solving for this species, by default None
+        rtol : float, optional
+            The relative tolerance to use when solving for this species, by default None
+        note : str or dict, optional
+            A note about this species, by default None
+        diffusivity : float, optional
+            The diffusivity value for this species, by default None
+
+        Keyword Args
+        ------------
+        _qm : AbstractQualityModel, optional, keyword-only
+            the model this variable is being added to, by default None
+
+        Raises
+        ------
+        ValueError
+            if ``name`` is a reserved name
+        """
+        if name in RESERVED_NAMES:
+            raise ValueError("Name cannot be a reserved name")
+        self.name = name
+        """The name (symbol) for the variable, must be a valid MSX name"""
+        self.units = units
+        """The units used for this species"""
+        self.note = note
+        """A note about this species, by default None"""
+        self.diffusivity = diffusivity
+        """The diffusivity value for this species, by default None"""
+        if atol is not None:
+            atol = float(atol)
+        if rtol is not None:
+            rtol = float(rtol)
+        if (atol is None) ^ (rtol is None):
+            raise TypeError("atol and rtol must be the same type, got {} and {}".format(atol, rtol))
+        self._atol = atol
+        self._rtol = rtol
+        self._variable_registry = _qm
+
+    def __repr__(self):
+        return "{}(name={}, unit={}, atol={}, rtol={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.units), self._atol, self._rtol, repr(self.note))
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__)
+            and self.name == other.name
+            and self.units == other.units
+            and self.diffusivity == other.diffusivity
+            and self._atol == other._atol
+            and self._rtol == other._rtol
+        )
+
+    def get_tolerances(self) -> Tuple[float, float]:
+        """Get the species-specific solver tolerances.
+
+        Returns
+        -------
+        two-tuple or None
+            the absolute and relative tolerances, or None if the global values should be used
+        """
+        if self._atol is not None and self._rtol is not None:
+            return (self._atol, self._rtol)
+        return None
+
+    def set_tolerances(self, absolute: float, relative: float):
+        """Set the species-specific solver tolerances. Using ``None`` for both will
+        clear the tolerances, though using :func:`clear_tolerances` is clearer code.
+
+        Parameters
+        ----------
+        absolute : float
+            the absolute solver tolerance
+        relative : float
+            the relative solver tolerance
+
+        Raises
+        ------
+        TypeError
+            if both absolute and relative are not the same type
+        ValueError
+            if either value is less-than-or-equal-to zero
+        """
+        if absolute is None and relative is None:
+            self._atol = self._rtol = None
+            return
+        try:
+            if not isinstance(absolute, float):
+                absolute = float(absolute)
+            if not isinstance(relative, float):
+                relative = float(relative)
+        except Exception as e:
+            raise TypeError("absolute and relative must be the same type, got {} and {}".format(absolute, relative))
+        if absolute <= 0:
+            raise ValueError("Absolute tolerance must be greater than 0")
+        if relative <= 0:
+            raise ValueError("Relative tolerance must be greater than 0")
+        self._atol = absolute
+        self._rtol = relative
+
+    def clear_tolerances(self):
+        """Resets both tolerances to ``None`` to use the global values."""
+        self._atol = self._rtol = None
+
+    def to_dict(self):
+        rep = dict(name=self.name, unist=self.units)
+        tols = self.get_tolerances()
+        if tols is not None:
+            rep["atol"] = tols[0]
+            rep["rtol"] = tols[1]
+        rep["diffusivity"] = self.diffusivity
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
 
 
-class MultispeciesReactionModel(AbstractReactionModel):
-    """Water quality reactions model object.
+class BulkSpecies(Species):
+    """A bulk species."""
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.BULK
+
+
+class WallSpecies(Species):
+    """A wall species"""
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.WALL
+
+
+class Coefficient(ReactionVariable):
+    def __init__(self, name: str, global_value: float, note: Union[str, Dict[str, str]] = None, units: str = None, *, _qm: AbstractQualityModel = None):
+        """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
+
+        Parameters
+        ----------
+        name : str
+            the name/symbol of the coefficient
+        global_value : float
+            the global value for the coefficient
+        note : Union[str, Dict[str, str]], optional
+            a note for this variable, by default None
+        units : str, optional
+            units for this coefficient, by default None
+
+        Keyword Args
+        ------------
+        _qm : AbstractQualityModel, optional, keyword-only
+            the model this variable is being added to, by default None
+
+        Raises
+        ------
+        ValueError
+            if ``name`` is a reserved name
+        """
+
+        if name in RESERVED_NAMES:
+            raise ValueError("Name cannot be a reserved name")
+        self.name = name
+        """The name (symbol) for the variable, must be a valid MSX name"""
+        self.global_value = float(global_value)
+        """The global value for the coefficient"""
+        self.note = note
+        """A note about this species, by default None"""
+        self.units = units
+        """The units used for this species"""
+        self._variable_registry = _qm
+
+    def __repr__(self):
+        return "{}(name={}, global_value={}, units={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.global_value), repr(self.units), repr(self.note))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name and self.global_value == other.global_value and self.units == other.units
+
+    def get_value(self) -> float:
+        """Get the value of the coefficient
+
+        Returns
+        -------
+        float
+            the global value
+        """
+        return self.global_value
+
+    def to_dict(self):
+        rep = dict(name=self.name, global_value=self.global_value, units=self.units)
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
+
+
+class Constant(Coefficient):
+    """A constant coefficient for reaction expressions."""
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.CONST
+
+
+class Parameter(Coefficient):
+    """A variable parameter for reaction expressions."""
+
+    def __init__(
+        self,
+        name: str,
+        global_value: float,
+        note: Union[str, Dict[str, str]] = None,
+        units: str = None,
+        pipe_values: Dict[str, float] = None,
+        tank_values: Dict[str, float] = None,
+        *,
+        _qm: AbstractQualityModel = None,
+    ):
+        """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
+
+        Parameters
+        ----------
+        name : str
+            the name/symbol of the coefficient
+        global_value : float
+            the global value for the coefficient
+        note : Union[str, Dict[str, str]], optional
+            a note for this variable, by default None
+        units : str, optional
+            units for this coefficient, by default None
+        pipe_values : dict, optional
+            the values of the parameter at specific pipes, by default None
+        tank_values : dict, optional
+            the values of the parameter at specific tanks, by default None
+
+        Keyword Args
+        ------------
+        _qm : AbstractQualityModel, optional, keyword-only
+            the model this variable is being added to, by default None
+
+        Raises
+        ------
+        ValueError
+            if ``name`` is a reserved name
+        """
+        super().__init__(name, global_value=global_value, note=note, units=units, _qm=_qm)
+        self._pipe_values = pipe_values if pipe_values is not None else dict()
+        """A dictionary of parameter values for various pipes"""
+        self._tank_values = tank_values if tank_values is not None else dict()
+        """A dictionary of parameter values for various tanks"""
+
+    def __eq__(self, other):
+        basic = isinstance(other, self.__class__) and self.name == other.name and self.global_value == other.global_value and self.units == other.units
+        if not basic:
+            return False
+        for k, v in self._pipe_values:
+            if other._pipe_values[k] != v:
+                return False
+        for k, v in self._tank_values:
+            if other._tank_values[k] != v:
+                return False
+        return True
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.PARAM
+
+    def get_value(self, pipe: str = None, tank: str = None) -> float:
+        """Get the value of the parameter, either globally or for a specific pipe or tank.
+
+        Parameters
+        ----------
+        pipe : str, optional
+            a pipe to get the value for, by default None
+        tank : str, optional
+            a tank to get the value for, by default None
+
+        Returns
+        -------
+        float
+            either a specific parameter value for the specified pipe or tank, or the global value
+            if nothing is specified OR if the pipe or tank requested does not have a special value.
+
+        Raises
+        ------
+        TypeError
+            if both pipe and tank are specified
+        """
+        if pipe is not None and tank is not None:
+            raise TypeError("Cannot get a value for a pipe and tank at the same time - one or both must be None")
+        if pipe is not None:
+            return self._pipe_values.get(pipe, self.global_value)
+        if tank is not None:
+            return self._tank_values.get(tank, self.global_value)
+        return self.global_value
+
+    @property
+    def pipe_values(self) -> Dict[str, float]:
+        """A dictionary of values, iff different from the global value, for specific pipes"""
+        return self._pipe_values
+
+    @property
+    def tank_values(self) -> Dict[str, float]:
+        """A dictionary of values, iff different from the global value, for specific tanks"""
+        return self._tank_values
+
+    def to_dict(self):
+        rep = super().to_dict()
+        rep["pipe_values"] = self._pipe_values.copy()
+        rep["tank_values"] = self._tank_values.copy()
+        return rep
+
+
+@dataclass(repr=False)
+class OtherTerm(ReactionVariable):
+    """A function definition used as a shortcut in reaction expressions (called a 'term' in EPANET-MSX)
 
     Parameters
     ----------
-    msx_file_name : str, optional
-        The name of the MSX input file to read
+    name : str
+        the name/symbol of the function (term)
+    expression : str
+        the mathematical expression described by this function
+    note : str, optional
+        a note for this function, by default None
+
+    Keyword Args
+    ------------
+    _qm : AbstractQualityModel, optional, keyword-only
+        the model this variable is being added to, by default None
+    """
+
+    def __init__(
+        self,
+        name: str,
+        expression: str,
+        note: Union[str, Dict[str, str]] = None,
+        *,
+        _qm: AbstractQualityModel = None,
+    ):
+        if name in RESERVED_NAMES:
+            raise ValueError("Name cannot be a reserved name")
+        self.name = name
+        """The name (symbol) for the variable, must be a valid MSX name"""
+        self.expression = expression
+        """The expression this named-function is equivalent to"""
+        self.note = note
+        """A note about this function/term"""
+        self._variable_registry = _qm
+
+    def __repr__(self):
+        return "{}(name={}, expression={}, note={})".format(self.__class__.__name__, repr(self.name), repr(self.expression), repr(self.note))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name and self.expression == other.expression
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.TERM
+
+    def to_symbolic(self, transformations=...):
+        return super().to_symbolic(transformations)
+
+    def to_dict(self):
+        rep = dict(name=self.name, expression=self.expression)
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
+
+
+@dataclass(repr=False)
+class InternalVariable(ReactionVariable):
+    """A hydraulic variable or a placeholder for a built-in reserved word.
+
+    For example, "Len" is the EPANET-MSX name for the length of a pipe, and "I" is a sympy
+    reserved symbol for the imaginary number."""
+
+    def __init__(
+        self,
+        name: str,
+        note: Union[str, Dict[str, str]] = "internal variable - not output to MSX",
+        units: str = None,
+    ):
+        self.name = name
+        """The name (symbol) for the variable, must be a valid MSX name"""
+        self.note = note
+        """A note about this function/term"""
+        self.units = units
+        """The units used for this species"""
+
+    def __repr__(self):
+        return "{}(name={}, note={}, units={})".format(self.__class__.__name__, repr(self.name), repr(self.note), repr(self.units))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name
+
+    @property
+    def var_type(self) -> VariableType:
+        return VariableType.INTERNAL
+
+
+@dataclass(repr=False)
+class RateDynamics(ReactionDynamics):
+    r"""A rate-of-change reaction dynamics expression.
+
+    Used to supply the equation that expresses the rate of change of the given species
+    with respect to time as a function of the other species in the model.
+
+    .. math::
+
+        \frac{d}{dt} C(species) = expression
+
+    Parameters
+    ----------
+    species : str
+        the name of the species whose reaction dynamics is being described
+    location : RxnLocationType or str
+        the location the reaction occurs (pipes or tanks)
+    expression : str
+        the expression for the reaction dynamics, which is the rate-of-change of the species concentration
+    note : str, optional
+        a note about this reaction
+
+    Keyword Args
+    ------------
+    _qm : AbstractQualityModel, optional, keyword-only
+        the model this variable is being added to, by default None
+    """
+
+    def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        self.species = species
+        self.location = location
+        self.expression = expression
+        self.note = note
+        """A note or comment about this species reaction dynamics"""
+        self._variable_registry = _qm
+
+    @property
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.RATE
+
+    def to_symbolic(self, transformations=...):
+        return super().to_symbolic(transformations)
+
+    def to_dict(self) -> dict:
+        rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
+
+
+@dataclass(repr=False)
+class EquilibriumDynamics(ReactionDynamics):
+    """An equilibrium reaction expression.
+
+    Used for equilibrium expressions where it is assumed that the expression supplied is being equated to zero.
+
+    .. math::
+
+        0 = expression
+
+    Parameters
+    ----------
+    species : str
+        the name of the species whose reaction dynamics is being described
+    location : RxnLocationType or str
+        the location the reaction occurs (pipes or tanks)
+    expression : str
+        the expression for the reaction dynamics, which should equal to zero
+    note : str, optional
+        a note about this reaction
+
+    Keyword Args
+    ------------
+    _qm : AbstractQualityModel, optional, keyword-only
+        the model this variable is being added to, by default None
 
     """
 
+    def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        self.species = species
+        self.location = location
+        self.expression = expression
+        self.note = note
+        """A note or comment about this species reaction dynamics"""
+        self._variable_registry = _qm
+
+    @property
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.EQUIL
+
+    def to_symbolic(self, transformations=...):
+        return super().to_symbolic(transformations)
+
+    def to_dict(self) -> dict:
+        rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
+
+
+@dataclass(repr=False)
+class FormulaDynamics(ReactionDynamics):
+    """A formula based reaction dynamics.
+
+    Used when the concentration of the named species is a simple function of the remaining species.
+
+    .. math::
+
+        C(species) = expression
+
+    Parameters
+    ----------
+    species : str
+        the name of the species whose reaction dynamics is being described
+    location : RxnLocationType or str
+        the location the reaction occurs (pipes or tanks)
+    expression : str
+        the expression for the reaction formula, which is used to calculate the concentration of the species
+    note : str, optional
+        a note about this reaction
+
+    Keyword Args
+    ------------
+    _qm : RxnModelRegistry, optional
+        a link to the remainder of the larger model
+    """
+
+    def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        self.species = species
+        self.location = location
+        self.expression = expression
+        self.note = note
+        """A note or comment about this species reaction dynamics"""
+        self._variable_registry = _qm
+
+    @property
+    def expr_type(self) -> DynamicsType:
+        return DynamicsType.FORMULA
+
+    def to_symbolic(self, transformations=...):
+        return super().to_symbolic(transformations)
+
+    def to_dict(self) -> dict:
+        rep = dict(species=self.species, expr_type=self.expr_type.name.lower(), expression=self.expression)
+        if isinstance(self.note, str):
+            rep["note"] = self.note
+        elif isinstance(self.note, ENcomment):
+            rep["note"] = asdict(self.note) if self.note.pre else self.note.post
+        else:
+            rep["note"] = None
+        return rep
+
+
+class MultispeciesQualityModel(AbstractQualityModel):
     def __init__(self, msx_file_name=None):
+        """Water quality reactions model object.
+
+        Parameters
+        ----------
+        msx_file_name : str, optional
+            The name of the MSX input file to read
+
+        """
         self.name: str = None
         """A one-line title for the model"""
 
@@ -245,7 +819,7 @@ class MultispeciesReactionModel(AbstractReactionModel):
                 raise KeyExistsError("A variable with this name already exists in the model")
             typ = __variable.var_type
             name = __variable.name
-            if isinstance(__variable, LinkedVariablesMixin):
+            if hasattr(__variable, "_variable_registry"):
                 __variable._variable_registry = self
             if typ is VariableType.BULK or typ is VariableType.WALL:
                 self._variables.add_item_to_group("species", name, __variable)
@@ -307,9 +881,9 @@ class MultispeciesReactionModel(AbstractReactionModel):
         if (atol is None) ^ (rtol is None):
             raise TypeError("atol and rtol must be the same type, got {} and {}".format(atol, rtol))
         if species_type is VariableType.BULK:
-            var = BulkSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
+            var = BulkSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, _qm=self)
         elif species_type is VariableType.WALL:
-            var = WallSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, variable_registry=self)
+            var = WallSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, _qm=self)
         self._species[name] = var
         self._inital_quality[name] = dict([("global", None), ("nodes", dict()), ("links", dict())])
         self._sources[name] = dict()
@@ -416,9 +990,9 @@ class MultispeciesReactionModel(AbstractReactionModel):
         if self._is_variable_registered(name):
             raise KeyExistsError("The variable {} already exists in this model".format(name))
         if coeff_type is VariableType.CONST:
-            var = Constant(name=name, global_value=global_value, note=note, units=units, variable_registry=self)
+            var = Constant(name=name, global_value=global_value, note=note, units=units, _qm=self)
         elif coeff_type is VariableType.PARAM:
-            var = Parameter(name=name, global_value=global_value, note=note, units=units, variable_registry=self, **kwargs)
+            var = Parameter(name=name, global_value=global_value, note=note, units=units, _qm=self, **kwargs)
         self._coeffs[name] = var
         return var
 
@@ -486,7 +1060,7 @@ class MultispeciesReactionModel(AbstractReactionModel):
         VariableNameExistsError
             if a variable with this name already exists in the model
         """
-        return self.add_coefficient(VariableType.PARAM, name=name, global_value=global_value, note=note, units=units, _pipe_values=pipe_values, _tank_values=tank_values)
+        return self.add_coefficient(VariableType.PARAM, name=name, global_value=global_value, note=note, units=units, pipe_values=pipe_values, tank_values=tank_values)
 
     def add_other_term(self, name: str, expression: str, note: str = None) -> OtherTerm:
         """Add a new user-defined function to the model.
@@ -516,7 +1090,7 @@ class MultispeciesReactionModel(AbstractReactionModel):
         """
         if self._is_variable_registered(name):
             raise KeyExistsError("The variable {} already exists in this model".format(name))
-        var = OtherTerm(name=name, expression=expression, note=note, variable_registry=self)
+        var = OtherTerm(name=name, expression=expression, note=note, _qm=self)
         self._terms[name] = var
         return var
 
@@ -536,7 +1110,7 @@ class MultispeciesReactionModel(AbstractReactionModel):
 
     def get_variable(self, name: str) -> ReactionVariable:
         """Get a variable based on its name (symbol).
-        
+
         Parameters
         ----------
         name : str
@@ -616,11 +1190,11 @@ class MultispeciesReactionModel(AbstractReactionModel):
         dynamics = DynamicsType.get(dynamics)
         new = None
         if dynamics is DynamicsType.EQUIL:
-            new = EquilibriumDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
+            new = EquilibriumDynamics(species=species, location=location, expression=expression, note=note, _qm=self)
         elif dynamics is DynamicsType.RATE:
-            new = RateDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
+            new = RateDynamics(species=species, location=location, expression=expression, note=note, _qm=self)
         elif dynamics is DynamicsType.FORMULA:
-            new = FormulaDynamics(species=species, location=location, expression=expression, note=note, variable_registry=self)
+            new = FormulaDynamics(species=species, location=location, expression=expression, note=note, _qm=self)
         else:
             raise ValueError("Invalid dynamics type, {}".format(dynamics))
         if location is LocationType.PIPE:

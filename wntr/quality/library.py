@@ -10,30 +10,24 @@ sources of values or models. In most cases updates will be necessary to use for 
 models - that is, sources, pipes, nodes are for a given network, and must be updated for different 
 models.
 
-.. autosummary::
-
-    nicotine
-    nicotine_ri
-    lead_ppm
-
 """
 import logging
 
 from wntr.utils.citations import Citation
-from wntr.quality.model import MultispeciesReactionModel
+from wntr.quality.multispecies import MultispeciesQualityModel
 
 logger = logging.getLogger(__name__)
 
 # ===================== Nicotine-chlorine model
 #
-def nicotine() -> MultispeciesReactionModel:
+def nicotine() -> MultispeciesQualityModel:
     """A nicotine-chlorine reaction model"""
-    msx = MultispeciesReactionModel()
+    msx = MultispeciesQualityModel()
     msx.name = "nicotine"
     msx.title = ("Nicotine - Chlorine reaction",)
-    msx.options.quality.area_units = "M2"
-    msx.options.quality.rate_units = "MIN"
-    msx.options.quality.timestep = 1
+    msx.options.area_units = "M2"
+    msx.options.rate_units = "MIN"
+    msx.options.timestep = 1
     msx.add_bulk_species("Nx", units="MG", note="Nicotine")
     msx.add_bulk_species("HOCL", units="MG", note="Free chlorine")
     msx.add_constant_coeff("kd", global_value=2.33e-3, units="min^(-1)", note="decay rate")
@@ -47,19 +41,20 @@ def nicotine() -> MultispeciesReactionModel:
     msx.add_tank_reaction("HOCL", "rate", "0")
     return msx
 
+
 # ===================== Nicotine-chlorine reactive intermediate species
 #
-def nicotine_ri() -> MultispeciesReactionModel:
+def nicotine_ri() -> MultispeciesQualityModel:
     """A nicotine-chlorine reaction with a reactive intermediate"""
-    msx = MultispeciesReactionModel()
-    msx.name = 'nicotine_ri'
+    msx = MultispeciesQualityModel()
+    msx.name = "nicotine_ri"
     msx.title = ("Nicotine - Chlorine reaction with reactive intermediate",)
     # Set the options
-    msx.options.quality.area_units = "M2"
-    msx.options.quality.rate_units = "MIN"
-    msx.options.quality.timestep = 1
-    msx.options.quality.atol = 1.0e-10
-    msx.options.quality.rtol = 1.0e-10
+    msx.options.area_units = "M2"
+    msx.options.rate_units = "MIN"
+    msx.options.timestep = 1
+    msx.options.atol = 1.0e-10
+    msx.options.rtol = 1.0e-10
     # Add species
     msx.add_bulk_species("Nx", units="MG", note="Nicotine")
     msx.add_bulk_species("HOCL", units="MG", note="Free Chlorine")
@@ -84,21 +79,21 @@ def nicotine_ri() -> MultispeciesReactionModel:
     msx.add_tank_reaction("NX2", "RATE", expression="RXNX2")
     return msx
 
+
 # ===================== Lead plumbosolvency model
 #
-def lead_ppm() -> MultispeciesReactionModel:
+def lead_ppm() -> MultispeciesQualityModel:
     """A lead plumbosolvency model [BWMS20]_.
 
     .. [BWMS20]
-        J. B. Burkhardt, et al. (2020) 
-        "Framework for Modeling Lead in Premise Plumbing Systems Using EPANET". 
-        `Journal of water resources planning and management`. 
-        **146** (12). 
-        https://doi.org/10.1061/(asce)wr.1943-5452.0001304
+       J. B. Burkhardt, et al. (2020)
+       "Framework for Modeling Lead in Premise Plumbing Systems Using EPANET".
+       `Journal of water resources planning and management`.
+       **146** (12). https://doi.org/10.1061/(asce)wr.1943-5452.0001304
 
     """
-    msx = MultispeciesReactionModel()
-    msx.name = 'lead_ppm'
+    msx = MultispeciesQualityModel()
+    msx.name = "lead_ppm"
     msx.title = "Lead Plumbosolvency Model (from Burkhardt et al 2020)"
     msx.desc = "Parameters for EPA HPS Simulator Model"
     msx.citations.append(
@@ -138,13 +133,11 @@ def lead_ppm() -> MultispeciesReactionModel:
             "nodes": "all",
             "links": "all",
         },
-        "quality": {
-            "timestep": 1,
-            "area_units": "M2",
-            "rate_units": "SEC",
-            "rtol": 1e-08,
-            "atol": 1e-08,
-        },
+        "timestep": 1,
+        "area_units": "M2",
+        "rate_units": "SEC",
+        "rtol": 1e-08,
+        "atol": 1e-08,
     }
     msx.add_bulk_species("PB2", "ug", note="dissolved lead (Pb)")
     msx.add_constant_coeff("M", global_value=0.117, note="Desorption rate (ug/m^2/s)", units="ug * m^(-1) * s^(-1)")

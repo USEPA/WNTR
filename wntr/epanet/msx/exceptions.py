@@ -3,152 +3,128 @@
 
 from enum import IntEnum
 from typing import List
-from ..exceptions import EpanetException, EN_ERROR_CODES, EpanetErrorEnum
+
+from wntr.utils.enumtools import add_get
+
+from ..exceptions import EN_ERROR_CODES, EpanetException
+
+MSX_ERROR_CODES = {
+    # MSX syntax errors
+    401: "too many characters",
+    402: "too few input items",
+    403: "invalid keyword: '%s'",
+    404: "invalid numeric value: '%s'",
+    405: "reference to undefined object: '%s'",
+    406: "illegal use of reserved name: '%s'",
+    407: "name already used by another object: '%s'",
+    408: "species already assigned an expression: '%s'",
+    409: "illegal math expression",
+    410: "option no longer supported",
+    411: "term '%s' contains a cyclic reference",
+    # MSX runtime errors
+    501: "insufficient memory available",
+    502: "no EPANET data file supplied",
+    503: "could not open MSX input file %s",
+    504: "could not open hydraulic results file",
+    505: "could not read hydraulic results file",
+    506: "could not read MSX input file %s",
+    507: "too few pipe reaction expressions",
+    508: "too few tank reaction expressions",
+    509: "could not open differential equation solver",
+    510: "could not open algebraic equation solver",
+    511: "could not open binary results file",
+    512: "read/write error on binary results file",
+    513: "could not integrate reaction rate expressions",
+    514: "could not solve reaction equilibrium expressions",
+    515: "reference made to an unknown type of object %s",
+    516: "reference made to an illegal object index %s",
+    517: "reference made to an undefined object ID %s",
+    518: "invalid property values were specified",
+    519: "an MSX project was not opened",
+    520: "an MSX project is already opened",
+    522: "could not compile chemistry functions",
+    523: "could not load functions from compiled chemistry file",
+    524: "illegal math operation",
+}
+"""Dictionary of MSX error codes and meanings.
+See :class:`MsxErrorEnum` for the list of error codes and their meanings.
+
+:meta hide-value:
+"""
 
 
-MSX_ERROR_CODES = EN_ERROR_CODES.copy()
-MSX_ERROR_CODES.update(
-    {
-        # MSX syntax errors
-        401: "too many characters",
-        402: "too few input items",
-        403: "invalid keyword: '%s'",
-        404: "invalid numeric value: '%s'",
-        405: "reference to undefined object: '%s'",
-        406: "illegal use of reserved name: '%s'",
-        407: "name already used by another object: '%s'",
-        408: "species already assigned an expression: '%s'",
-        409: "illegal math expression",
-        410: "option no longer supported",
-        411: "term '%s' contains a cyclic reference",
-        # MSX runtime errors
-        501: "insufficient memory available",
-        502: "no EPANET data file supplied",
-        503: "could not open MSX input file %s",
-        504: "could not open hydraulic results file",
-        505: "could not read hydraulic results file",
-        506: "could not read MSX input file %s",
-        507: "too few pipe reaction expressions",
-        508: "too few tank reaction expressions",
-        509: "could not open differential equation solver",
-        510: "could not open algebraic equation solver",
-        511: "could not open binary results file",
-        512: "read/write error on binary results file",
-        513: "could not integrate reaction rate expressions",
-        514: "could not solve reaction equilibrium expressions",
-        515: "reference made to an unknown type of object %s",
-        516: "reference made to an illegal object index %s",
-        517: "reference made to an undefined object ID %s",
-        518: "invalid property values were specified",
-        519: "an MSX project was not opened",
-        520: "an MSX project is already opened",
-        522: "could not compile chemistry functions",
-        523: "could not load functions from compiled chemistry file",
-        524: "illegal math operation",
-    }
-)
+@add_get(prefix="ERR_")
+class MsxErrorEnum(IntEnum):
+    """The EPANET-MSX input and toolkit error numbers, keys, and descriptions"""
 
-
-class MSXErrors(IntEnum):
-    too_many_chars_msx = 401
-    too_few_items = 402
-    invalid_keyword = 403
-    invalid_numeric_value_msx = 404
-    undefined_msx_object = 405
-    illegal_reserved_name = 406
-    name_in_use = 407
-    species_already_assigned = 408
-    illegal_math_expression = 409
-    option_deprecated = 410
-    cyclic_reference = 411
-    insufficient_memory_msx = 501
-    no_epanet_datafile = 502
-    open_msx_fail = 503
-    open_hyd_fail_msx = 504
-    read_hyd_fail_msx = 505
-    read_msx_fail = 506
-    not_enough_pipe_reactions = 507
-    not_enough_tank_reactions = 508
-    open_de_solver_fail = 509
-    open_ae_solver_fail = 510
-    open_bin_fail_msx = 511
-    io_error_msx_bin = 512
-    solve_rate_failed = 513
-    solve_equil_failed = 514
-    unknown_object_type = 515
-    illegal_object_index = 516
-    undefined_object_id = 517
-    invalid_property_value = 518
-    msx_project_not_open = 519
-    msx_project_open = 520
-    compile_chem_failed = 522
-    load_compiled_chem_failed = 523
-    illegal_math_operation = 524
-    insufficient_memory = 101
-    no_network = 102
-    no_init_hyd = 103
-    no_hydraulics = 104
-    no_init_qual = 105
-    no_results = 106
-    hyd_file = 107
-    hyd_init_and_hyd_file = 108
-    modify_time_during_solve = 109
-    solve_hyd_fail = 110
-    solve_qual_fail = 120
-    input_file_error = 200
-    syntax_error = 201
-    illegal_numeric_value = 202
-    undefined_node = 203
-    undefined_link = 204
-    undefined_pattern = 205
-    undefined_curve = 206
-    control_on_cv_gpv = 207
-    illegal_pda_limits = 208
-    illegal_node_property = 209
-    illegal_link_property = 211
-    undefined_trace_node = 212
-    invalid_option_value = 213
-    too_many_chars_inp = 214
-    duplicate_id = 215
-    undefined_pump = 216
-    invalid_energy_value = 217
-    illegal_valve_tank = 219
-    illegal_tank_valve = 219
-    illegal_valve_valve = 220
-    misplaced_rule = 221
-    link_to_self = 222
-    not_enough_nodes = 223
-    no_tanks_or_res = 224
-    invalid_tank_levels = 225
-    missing_pump_data = 226
-    invalid_head_curve = 227
-    nonincreasing_x_curve = 230
-    unconnected_node = 233
-    unconnected_node_id = 234
-    no_such_source_node = 240
-    no_such_control = 241
-    invalid_name_format = 250
-    invalid_parameter_code = 251
-    invalid_id_name = 252
-    no_such_demand_category = 253
-    missing_coords = 254
-    invalid_vertex = 255
-    no_such_rule = 257
-    no_such_rule_clause = 258
-    delete_node_still_linked = 259
-    delete_node_is_trace = 260
-    delete_node_in_control = 261
-    modify_network_during_solve = 262
-    node_not_a_tank = 263
-    same_file_names = 301
-    open_inp_fail = 302
-    open_rpt_fail = 303
-    open_bin_fail = 304
-    open_hyd_fail = 305
-    hyd_file_different_network = 306
-    read_hyd_fail = 307
-    save_bin_fail = 308
-    save_rpt_fail = 309
+    MAX_CHARS = 401
+    "too many characters"
+    NUM_ITEMS = 402
+    "too few input items"
+    INVALID_KEYWORD = 403
+    "invalid keyword"
+    INVALID_NUMBER = 404
+    "invalid numeric value"
+    UNDEFINED_OBJECT_TYPE = 405
+    "reference to undefined object"
+    RESERVED_NAME = 406
+    "illegal use of reserved name"
+    NAME = 407
+    "name already used by another object"
+    SPECIES_EXPR = 408
+    "species already assigned an expression"
+    ILLEGAL_MATH_EXPR = 409
+    "illegal math expression"
+    DEPRECATED = 410
+    "option no longer supported"
+    CYCLIC_REFERENCE = 411
+    "term contains a cyclic reference"
+    MEMORY = 501
+    "insufficient memory available"
+    NO_EPANET_FILE = 502
+    "no EPANET data file supplied"
+    OPEN_MSX_FILE = 503
+    "could not open MSX input file"
+    OPEN_HYD_FILE = 504
+    "could not open hydraulic results file"
+    READ_HYD_FILE = 505
+    "could not read hydraulic results file"
+    MSX_INPUT = 506
+    "could not read MSX input file"
+    NUM_PIPE_EXPR = 507
+    "too few pipe reaction expressions"
+    NUM_TANK_EXPR = 508
+    "too few tank reaction expressions"
+    INTEGRATOR_OPEN = 509
+    """could not open differential equation solver"""
+    NEWTON_OPEN = 510
+    "could not open algebraic equation solver"
+    OPEN_OUT_FILE = 511
+    """could not open binary results file"""
+    IO_OUT_FILE = 512
+    """read/write error on binary results file"""
+    INTEGRATION = 513
+    """could not integrate reaction rate expressions"""
+    NEWTON = 514
+    """could not solve reaction equilibrium expressions"""
+    INVALID_OBJECT_TYPE = 515
+    """reference made to an unknown type of object"""
+    INVALID_OBJECT_INDEX = 516
+    """reference made to an illegal object index"""
+    UNDEFINED_OBJECT_ID = 517
+    """reference made to an undefined object ID"""
+    INVALID_OBJECT_PARAMS = 518
+    """invalid property values were specified"""
+    MSX_NOT_OPENED = 519
+    """an MSX project was not opened"""
+    MSX_OPENED = 520
+    """an MSX project is already opened"""
+    COMPILE_FAILED = 522
+    """could not compile chemistry functions"""
+    COMPLED_LOAD = 523
+    """could not load functions from compiled chemistry file"""
+    ILLEGAL_MATH = 524
+    """illegal math operation"""
 
 
 class EpanetMsxException(EpanetException):
@@ -160,23 +136,19 @@ class EpanetMsxException(EpanetException):
         code : int or str or MSXErrors
             The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
         line : str, optional
             The contents of the line, by default None
         """
-        if isinstance(code, (EpanetErrorEnum, MSXErrors)):
-            code = int(code)
-        elif isinstance(code, str):
-            try:
-                code = code.strip().replace("-", "_").replace(" ", "_")
-                code = int(MSXErrors[code])
-            except KeyError:
-                return super(Exception, self).__init__("unknown error code: {}".format(repr(code)), *args)
-        elif not isinstance(code, int):
-            return super(Exception, self).__init__("unknown error code: {}".format(repr(code)), *args)
+        try:
+            code = MsxErrorEnum.get(code)
+        except:
+            return super().__init__(code, *args, line_num=line_num, line=line)
+        if int(code) < 400:
+            return super().__init__(code, *args, line_num=line_num, line=line)
         msg = MSX_ERROR_CODES.get(code, "unknown error")
         if args is not None:
             args = [*args]
@@ -201,7 +173,7 @@ class MSXSyntaxError(EpanetMsxException, SyntaxError):
         code : int or str or MSXErrors
             The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
@@ -222,7 +194,7 @@ class MSXKeyError(EpanetMsxException, KeyError):
         name : str
             The key/name/id that is missing
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
@@ -243,7 +215,7 @@ class MSXValueError(EpanetMsxException, ValueError):
         value : Any
             The value that is invalid
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None

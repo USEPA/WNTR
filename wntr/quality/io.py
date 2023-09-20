@@ -1,13 +1,6 @@
 # coding: utf-8
 """Mulispecies reaction model I/O functions.
 
-.. rubric:: Contents
-
-.. autosummary::
-
-    to_dict
-    from_dict
-
 """
 
 import wntr.epanet.msx
@@ -17,6 +10,7 @@ from wntr.utils.citations import Citation, to_jsontypes
 
 
 def to_dict(msx):
+    """Convert a multispecies reaction model to a dictionary representation"""
     from wntr import __version__
     rep = dict(
         version="wntr-{}".format(__version__),
@@ -43,3 +37,6 @@ def to_dict(msx):
     #         for node, source in v.items():
     #             rep["sources"][sp][node] = source.to_dict()
     return rep
+
+def from_dict(d):
+    raise NotImplementedError

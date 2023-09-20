@@ -14,9 +14,7 @@ Submodules
    :maxdepth: 1
 
    wntr.quality.base
-   wntr.quality.dynamics
    wntr.quality.io
    wntr.quality.library
-   wntr.quality.model
+   wntr.quality.multispecies
    wntr.quality.options
-   wntr.quality.variables

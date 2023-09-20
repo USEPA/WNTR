@@ -30,7 +30,6 @@ designed to simulate and analyze resilience of water distribution networks.
    graphics
    gis
    advancedsim
-   advancedqual
    license
    whatsnew
    developers

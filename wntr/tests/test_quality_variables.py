@@ -52,7 +52,7 @@ class Test(unittest.TestCase):
         self.assertEqual(const1.get_value(), const1.global_value)
         test_pipe_dict = {"PIPE": 0.38}
         test_tank_dict = {"TANK": 222.23}
-        param2 = wntr.quality.Parameter("Kb", 0.482, note="test", _pipe_values=test_pipe_dict, _tank_values=test_tank_dict)
+        param2 = wntr.quality.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
         self.assertEqual(param2.get_value(), param2.global_value)
         self.assertEqual(param2.get_value(pipe="PIPE"), test_pipe_dict["PIPE"])
         self.assertEqual(param2.get_value(pipe="FOO"), param2.global_value)
@@ -67,14 +67,9 @@ class Test(unittest.TestCase):
         term1 = wntr.quality.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
 
         self.assertEqual(str(species1), "Cl")
-        self.assertEqual(species1.to_msx_string(), "BULK Cl mg  ;")
-        self.assertEqual(species2.to_msx_string(), "WALL Cl mg 0.01 0.0001 ;Testing stuff")
         self.assertEqual(str(const1), "Kb")
         self.assertEqual(str(param1), "Ka")
-        self.assertEqual(const1.to_msx_string(), "CONSTANT Kb 0.482 ;")
-        self.assertEqual(param1.to_msx_string(), "PARAMETER Ka 0.482 ;foo")
         self.assertEqual(str(term1), "T0")
-        self.assertEqual(term1.to_msx_string(), "T0 -3.2 * Kb * Cl^2 ;bar")
 
     def test_Species_tolerances(self):
         # """RxnSpecies(*s) tolerance settings"""
@@ -87,14 +82,14 @@ class Test(unittest.TestCase):
         self.assertRaises(ValueError, species1.set_tolerances, -0.51, 0.01)
         self.assertRaises(ValueError, species1.set_tolerances, 0.0, 0.0)
         species1.set_tolerances(0.01, 0.0001)
-        self.assertEqual(species1.atol, 0.01)
-        self.assertEqual(species1.rtol, 0.0001)
+        self.assertEqual(species1._atol, 0.01)
+        self.assertEqual(species1._rtol, 0.0001)
         species1.set_tolerances(None, None)
-        self.assertIsNone(species1.atol)
-        self.assertIsNone(species1.rtol)
+        self.assertIsNone(species1._atol)
+        self.assertIsNone(species1._rtol)
         species2.clear_tolerances()
-        self.assertIsNone(species1.atol)
-        self.assertIsNone(species1.rtol)
+        self.assertIsNone(species1._atol)
+        self.assertIsNone(species1._rtol)
         self.assertIsNone(species2.get_tolerances())
 
     def test_BulkSpecies_creation(self):
@@ -107,15 +102,15 @@ class Test(unittest.TestCase):
         self.assertEqual(species.name, "Cl")
         self.assertEqual(species.units, "mg")
         self.assertEqual(species.var_type, wntr.quality.VariableType.BULK)
-        self.assertIsNone(species.atol)
-        self.assertIsNone(species.rtol)
+        self.assertIsNone(species._atol)
+        self.assertIsNone(species._rtol)
         self.assertIsNone(species.note)
         species = wntr.quality.BulkSpecies("Cl", "mg", 0.01, 0.0001, note="Testing stuff")
         self.assertEqual(species.var_type, wntr.quality.VariableType.BULK)
         self.assertEqual(species.name, "Cl")
         self.assertEqual(species.units, "mg")
-        self.assertEqual(species.atol, 0.01)
-        self.assertEqual(species.rtol, 0.0001)
+        self.assertEqual(species._atol, 0.01)
+        self.assertEqual(species._rtol, 0.0001)
         self.assertEqual(species.note, "Testing stuff")
 
     def test_WallSpecies_creation(self):
@@ -128,15 +123,15 @@ class Test(unittest.TestCase):
         self.assertEqual(species.name, "Cl")
         self.assertEqual(species.units, "mg")
         self.assertEqual(species.var_type, wntr.quality.VariableType.WALL)
-        self.assertIsNone(species.atol)
-        self.assertIsNone(species.rtol)
+        self.assertIsNone(species._atol)
+        self.assertIsNone(species._rtol)
         self.assertIsNone(species.note)
         species = wntr.quality.WallSpecies("Cl", "mg", 0.01, 0.0001, note="Testing stuff")
         self.assertEqual(species.var_type, wntr.quality.VariableType.WALL)
         self.assertEqual(species.name, "Cl")
         self.assertEqual(species.units, "mg")
-        self.assertEqual(species.atol, 0.01)
-        self.assertEqual(species.rtol, 0.0001)
+        self.assertEqual(species._atol, 0.01)
+        self.assertEqual(species._rtol, 0.0001)
         self.assertEqual(species.note, "Testing stuff")
 
     def test_Constant_creation(self):
@@ -162,7 +157,7 @@ class Test(unittest.TestCase):
         self.assertEqual(param1.note, "test")
         test_pipe_dict = {"PIPE": 0.38}
         test_tank_dict = {"TANK": 222.23}
-        param2 = wntr.quality.Parameter("Kb", 0.482, note="test", _pipe_values=test_pipe_dict, _tank_values=test_tank_dict)
+        param2 = wntr.quality.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
         self.assertDictEqual(param2.pipe_values, test_pipe_dict)
         self.assertDictEqual(param2.tank_values, test_tank_dict)
 
@@ -179,9 +174,6 @@ class Test(unittest.TestCase):
         equil1 = wntr.quality.EquilibriumDynamics("Cl", wntr.quality.LocationType.PIPE, "-Ka + Kb * Cl + T0")
         rate1 = wntr.quality.RateDynamics("Cl", wntr.quality.LocationType.TANK, "-Ka + Kb * Cl + T0", note="Foo Bar")
         formula1 = wntr.quality.FormulaDynamics("Cl", wntr.quality.LocationType.PIPE, "-Ka + Kb * Cl + T0")
-        self.assertEqual(equil1.to_msx_string(), "EQUIL Cl -Ka + Kb * Cl + T0 ;")
-        self.assertEqual(rate1.to_msx_string(), "RATE Cl -Ka + Kb * Cl + T0 ;Foo Bar")
-        self.assertEqual(formula1.to_msx_string(), "FORMULA Cl -Ka + Kb * Cl + T0 ;")
 
     def test_Equilibrium_creation(self):
         equil1 = wntr.quality.EquilibriumDynamics("Cl", wntr.quality.LocationType.PIPE, "-Ka + Kb * Cl + T0")
@@ -203,7 +195,7 @@ class Test(unittest.TestCase):
         self.assertEqual(formula1.expr_type, wntr.quality.DynamicsType.FORMULA)
 
     def test_WaterQualityReactionsModel_creation_specific_everything(self):
-        rxn_model1 = wntr.quality.MultispeciesReactionModel()
+        rxn_model1 = wntr.quality.MultispeciesQualityModel()
         bulk1 = wntr.quality.BulkSpecies("Cl", "mg")
         wall1 = wntr.quality.WallSpecies("ClOH", "mg", 0.01, 0.0001, note="Testing stuff")
         const1 = wntr.quality.Constant("Kb", 0.482)
@@ -237,7 +229,7 @@ class Test(unittest.TestCase):
         param1 = wntr.quality.Parameter("Ka", 0.482, note="foo")
         term1 = wntr.quality.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
 
-        rxn_model2 = wntr.quality.MultispeciesReactionModel()
+        rxn_model2 = wntr.quality.MultispeciesQualityModel()
 
         self.assertRaises(ValueError, rxn_model2.add_species, wntr.quality.VariableType.CONST, "Cl", "mg")
         self.assertRaises(TypeError, rxn_model2.add_coefficient, None, "Kb", 0.482)

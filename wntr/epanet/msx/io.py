@@ -1,16 +1,16 @@
 # coding: utf-8
+"""I/O functions for EPANET-MSX toolkit compatibility"""
 
 import datetime
-from io import FileIO, TextIOWrapper
 import logging
 import sys
+from io import FileIO, TextIOWrapper
 
+from wntr.epanet.msx.exceptions import EpanetMsxException
+from wntr.epanet.util import ENcomment
 from wntr.network.elements import Source
 from wntr.quality.base import LocationType, VariableType
-from wntr.quality.base import MSXComment
-from wntr.quality.model import MultispeciesReactionModel
-from wntr.epanet.msx.exceptions import EpanetMsxException
-from wntr.quality.variables import Parameter, Species
+from wntr.quality.multispecies import MultispeciesQualityModel, Parameter, Species
 from wntr.utils.citations import Citation
 
 sys_default_enc = sys.getdefaultencoding()
@@ -54,6 +54,8 @@ def _split_line(line):
 
 class MsxFile(object):
     def __init__(self):
+        """An MSX input file, usually ".msx" extension.
+        """
         self.sections = dict()
         for sec in _INP_SECTIONS:
             self.sections[sec] = []
@@ -78,7 +80,7 @@ class MsxFile(object):
             the model with the new species, reactions and other options added
         """
         if rxn_model is None:
-            rxn_model = MultispeciesReactionModel()
+            rxn_model = MultispeciesQualityModel()
         self.rxn = rxn_model
         # if not isinstance(msx_file, list):
         #     msx_file = [msx_file]
@@ -173,7 +175,7 @@ class MsxFile(object):
 
     def _read_options(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[OPTIONS]"]:
             vals, comment = _split_line(line)
             try:
@@ -211,7 +213,7 @@ class MsxFile(object):
 
     def _read_species(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[SPECIES]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -234,11 +236,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [SPECIES] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_coefficients(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[COEFFICIENTS]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -256,11 +258,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [COEFFICIENTS] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_terms(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[TERMS]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -278,11 +280,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [TERMS] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_pipes(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[PIPES]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -300,11 +302,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [PIPES] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_tanks(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[TANKS]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -322,11 +324,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [TANKS] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_sources(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[SOURCES]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -352,11 +354,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [SOURCES] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_quality(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[QUALITY]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -387,11 +389,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [QUALITY] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_parameters(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[PARAMETERS]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -417,11 +419,11 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [PARAMETERS] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_diffusivity(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[DIFFUSIVITY]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -442,7 +444,7 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [DIFFUSIVITIES] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
     def _read_patterns(self):
         _patterns = dict()
@@ -466,7 +468,7 @@ class MsxFile(object):
 
     def _read_report(self):
         lines = []
-        note = MSXComment()
+        note = ENcomment()
         for lnum, line in self.sections["[REPORT]"]:
             vals, comment = _split_line(line)
             if vals is None:
@@ -522,10 +524,19 @@ class MsxFile(object):
             except Exception as e:
                 raise EpanetMsxException(201, note='at line {} of [REPORT] section:\n{}'.format(lnum, line)) from e
             else:
-                note = MSXComment()
+                note = ENcomment()
 
-    def write(self, filename: str, rxn: MultispeciesReactionModel):
-        self.rxn = rxn
+    def write(self, filename: str, msx: MultispeciesQualityModel):
+        """Write an MSX input file.
+
+        Parameters
+        ----------
+        filename : str
+            the filename to write
+        rxn : MultispeciesQualityModel
+            the multispecies reaction model
+        """
+        self.rxn = msx
         with open(filename, "w") as fout:
 
             fout.write("; WNTR-reactions MSX file generated {}\n".format(datetime.datetime.now()))
@@ -549,20 +560,6 @@ class MsxFile(object):
         fout.write("[TITLE]\n")
         fout.write("  {}\n".format(self.rxn.title))
         fout.write("\n")
-        # if self.rxn.desc is not None:
-        #     desc = self.rxn.desc.splitlines()
-        #     desc = " ".join(desc)
-        #     fout.write("; @desc={}\n".format(desc))
-        #     fout.write("\n")
-        # if self.rxn.citations is not None:
-        #     if isinstance(self.rxn.citations, list):
-        #         for citation in self.rxn.citations:
-        #             fout.write("; @cite={}\n".format(citation.to_dict() if isinstance(citation, Citation) else str(citation)))
-        #             fout.write("\n")
-        #     else:
-        #         citation = self.rxn.citations
-        #         fout.write("; @cite={}\n".format(citation.to_dict() if isinstance(citation, Citation) else str(citation)))
-        # fout.write("\n")
 
     def _write_options(self, fout):
         opts = self.rxn._options
@@ -581,78 +578,103 @@ class MsxFile(object):
 
     def _write_species(self, fout):
         fout.write("[SPECIES]\n")
+        def to_msx_string(self) -> str:
+            tols = self.get_tolerances()
+            if tols is None:
+                tolstr = ""
+            else:
+                tolstr = " {:12.6g} {:12.6g}".format(*tols)
+            return "{:<12s} {:<8s} {:<8s}{:s}".format(
+                self.var_type.name.upper(),
+                self.name,
+                self.units,
+                tolstr,
+            )
         for var in self.rxn.variables(var_type=VariableType.BULK):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(to_msx_string(var))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format(to_msx_string(var), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format(to_msx_string(var)))
         for var in self.rxn.variables(var_type=VariableType.WALL):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(to_msx_string(var))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format(to_msx_string(var), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format(to_msx_string(var)))
         fout.write("\n")
 
     def _write_coefficients(self, fout):
         fout.write("[COEFFICIENTS]\n")
+        def to_msx_string(self) -> str:
+            # if self.units is not None:
+            #     post = r' ; {"units"="' + str(self.units) + r'"}'
+            # else:
+            post = ''
+            return "{:<12s} {:<8s} {:<16s}{}".format(
+                self.var_type.name.upper(),
+                self.name,
+                str(self.global_value),
+                post
+            )
         for var in self.rxn.variables(var_type=VariableType.CONST):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(to_msx_string(var))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format(to_msx_string(var), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format(to_msx_string(var)))
         for var in self.rxn.variables(var_type=VariableType.PARAM):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(to_msx_string(var))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format(to_msx_string(var), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format(to_msx_string(var)))
         fout.write("\n")
 
     def _write_terms(self, fout):
         fout.write("[TERMS]\n")
+        def to_msx_string(self) -> str:
+            return "{:<8s} {:<64s}".format(self.name, self.expression)
         for var in self.rxn.variables(var_type=VariableType.TERM):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string(to_msx_string(var))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format(to_msx_string(var), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format(to_msx_string(var)))
         fout.write("\n")
 
     def _write_pipes(self, fout):
         fout.write("[PIPES]\n")
         for var in self.rxn.reactions(location=LocationType.PIPE):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression)))
         fout.write("\n")
 
     def _write_tanks(self, fout):
         fout.write("[TANKS]\n")
         for var in self.rxn.reactions(location=LocationType.TANK):
-            if isinstance(var.note, MSXComment):
-                fout.write("{}\n".format(var.note.wrap_msx_string(var.to_msx_string())))
+            if isinstance(var.note, ENcomment):
+                fout.write("{}\n".format(var.note.wrap_msx_string("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression))))
             elif isinstance(var.note, str):
-                fout.write("  {} ; {}\n".format(var.to_msx_string(), var.note))
+                fout.write("  {} ; {}\n".format("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression), var.note))
             else:
-                fout.write("  {}\n".format(var.to_msx_string()))
+                fout.write("  {}\n".format("{:<12s} {:<8s} {:<32s}".format(var.expr_type.name.upper(), str(var.species), var.expression)))
         fout.write("\n")
 
     def _write_sources(self, fout):
         fout.write("[SOURCES]\n")
         for species in self.rxn._sources.keys():
             for node, src in self.rxn._sources[species].items():
-                if isinstance(src["note"], MSXComment):
+                if isinstance(src["note"], ENcomment):
                     fout.write(
                         src["note"].wrap_msx_string(
                             "{:<10s} {:<8s} {:<8s} {:12s} {:<12s}".format(src["source_type"], node, species, src["strength"], src["pattern"] if src["pattern"] is not None else "")
@@ -748,9 +770,11 @@ class MsxFile(object):
             fout.write("  PAGESIZE  {}\n".format(self.rxn._options.report.pagesize))
         fout.write("\n")
 
-import wntr.network
 import numpy as np
 import pandas as pd
+
+import wntr.network
+
 
 def MsxBinFile(filename, wn: wntr.network.WaterNetworkModel):
     duration = int(wn.options.time.duration)

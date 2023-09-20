@@ -7,8 +7,6 @@ Programmers Toolkit DLLs.
     Code in this section taken from code originally written by Junli Hao 07/29/2018, 
     "EPANET-MSX-Python-wrapper" on GitHub, licensed under the BSD license. See LICENSE.txt for more 
     details.
-
-
 """
 import ctypes
 from enum import IntEnum
