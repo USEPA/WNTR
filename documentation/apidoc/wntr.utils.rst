@@ -14,5 +14,6 @@ Submodules
 
    wntr.utils.citations
    wntr.utils.disjoint_mapping
+   wntr.utils.enumtools
    wntr.utils.logger
    wntr.utils.ordered_set

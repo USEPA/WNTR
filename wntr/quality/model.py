@@ -46,7 +46,7 @@ except ImportError:
     convert_xor = None
     has_sympy = False
 
-import wntr.reaction.io
+import wntr.quality.io
 from wntr.network.model import WaterNetworkModel
 from wntr.utils.citations import Citation
 
@@ -776,11 +776,11 @@ class MultispeciesReactionModel(AbstractReactionModel):
 
     def to_dict(self) -> dict:
         """Convert this water quality model to a dictionary"""
-        wntr.reaction.io.to_dict()
+        wntr.quality.io.to_dict()
 
     def from_dict(self, d) -> dict:
         """Append to this water quality model from a dictionary"""
-        wntr.reaction.io.from_dict(d, append=self)
+        wntr.quality.io.from_dict(d, append=self)
 
     def __repr__(self):
         if self._msxfile or self.name:

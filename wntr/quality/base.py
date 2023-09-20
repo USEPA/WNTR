@@ -52,7 +52,7 @@ except ImportError:
 
 from wntr.network.model import WaterNetworkModel
 from wntr.utils.enumtools import add_get
-from wntr.reaction.options import MultispeciesOptions
+from wntr.quality.options import MultispeciesOptions
 
 logger = logging.getLogger(__name__)
 

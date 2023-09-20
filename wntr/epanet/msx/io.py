@@ -6,11 +6,11 @@ import logging
 import sys
 
 from wntr.network.elements import Source
-from wntr.reaction.base import LocationType, VariableType
-from wntr.reaction.base import MSXComment
-from wntr.reaction.model import MultispeciesReactionModel
+from wntr.quality.base import LocationType, VariableType
+from wntr.quality.base import MSXComment
+from wntr.quality.model import MultispeciesReactionModel
 from wntr.epanet.msx.exceptions import EpanetMsxException
-from wntr.reaction.variables import Parameter, Species
+from wntr.quality.variables import Parameter, Species
 from wntr.utils.citations import Citation
 
 sys_default_enc = sys.getdefaultencoding()
@@ -748,10 +748,74 @@ class MsxFile(object):
             fout.write("  PAGESIZE  {}\n".format(self.rxn._options.report.pagesize))
         fout.write("\n")
 
+import wntr.network
+import numpy as np
+import pandas as pd
 
-class MsxBinFile(object):
-    def __init__(self):
-        pass
+def MsxBinFile(filename, wn: wntr.network.WaterNetworkModel):
+    duration = int(wn.options.time.duration)
+    
+    with open(filename, 'rb') as fin:
+          ftype = '=f4'
+          idlen = 32
+          prolog = np.fromfile(fin, dtype = np.int32, count=6)
+          magic1 = prolog[0]
+          version = prolog[1]
+          nnodes = prolog[2] 
+          nlinks = prolog[3]
+          nspecies = prolog[4]
+          reportstep = prolog[5]
+          species_list = []
+          node_list = wn.node_name_list
+          link_list = wn.link_name_list
+          
+          for i in range(nspecies):
+                  species_len = int(np.fromfile(fin, dtype = np.int32, count=1))
+                  species_name = ''.join(chr(f) for f in np.fromfile(fin, dtype = np.uint8, count=species_len) if f!=0)
+                  species_list.append(species_name)
+          species_mass = []
+          for i in range(nspecies):
+                  species_mass.append(''.join(chr(f) for f in np.fromfile(fin, dtype = np.uint8, count=16) if f != 0))
+          timerange = range(0, duration+1, reportstep)
+          
+          tr = len(timerange)
+          
+          row1 = ['node']*nnodes*len(species_list)+['link']*nlinks*len(species_list)
+          row2 = []
+          for i in [nnodes,nlinks]:
+                  for j in species_list:
+                        row2.append([j]*i)
+          row2 = [y for x in row2 for y in x]
+          row3 = [node_list for i in species_list] + [link_list for i in species_list]
+          row3 = [y for x in row3 for y in x]    
+          
+          tuples = list(zip(row1, row2, row3))
+          index = pd.MultiIndex.from_tuples(tuples, names = ['type','species','name'])
+          
+          try:
+                  data = np.fromfile(fin, dtype = np.dtype(ftype), count = tr*(len(species_list*(nnodes + nlinks))))
+                  data = np.reshape(data, (tr, len(species_list*(nnodes + nlinks))))
+          except Exception as e:
+              print(e)
+              print ("oops")
+              
+          postlog = np.fromfile(fin, dtype = np.int32, count=4)
+          offset = postlog[0]
+          numreport = postlog[1]
+          errorcode = postlog[2]
+          magicnew = postlog[3] 
+          if errorcode !=0:
+              print(f'ERROR CODE: {errorcode}')
+              print(offset, numreport)
+              
+          df_fin = pd.DataFrame(index=index, columns=timerange).transpose()
+          if magic1 == magicnew:
+              # print("Magic# Match")
+              df_fin = pd.DataFrame(data.transpose(), index=index, columns=timerange)
+              df_fin = df_fin.transpose()
+              
+          else:
+              print("Magic#s do not match!")
+    return df_fin
 
-    def read(self, filename):
-        pass
+

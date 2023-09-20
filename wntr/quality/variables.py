@@ -56,7 +56,7 @@ except ImportError:
     has_sympy = False
 
 from wntr.network.model import WaterNetworkModel
-from wntr.reaction.base import EXPR_TRANSFORMS
+from wntr.quality.base import EXPR_TRANSFORMS
 
 from .base import (
     RESERVED_NAMES,

@@ -1,7 +1,7 @@
-wntr.reaction.library module
+wntr.quality.dynamics module
 ============================
 
-.. automodule:: wntr.reaction.library
+.. automodule:: wntr.reaction.quality
    :members:
    :undoc-members:
    :show-inheritance:

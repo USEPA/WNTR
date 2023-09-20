@@ -20,7 +20,7 @@ models.
 import logging
 
 from wntr.utils.citations import Citation
-from wntr.reaction.model import MultispeciesReactionModel
+from wntr.quality.model import MultispeciesReactionModel
 
 logger = logging.getLogger(__name__)
 
