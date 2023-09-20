@@ -1,7 +1,7 @@
 wntr.quality.dynamics module
 ============================
 
-.. automodule:: wntr.reaction.quality
+.. automodule:: wntr.quality.dynamics
    :members:
    :undoc-members:
    :show-inheritance:
