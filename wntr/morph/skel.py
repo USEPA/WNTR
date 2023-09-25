@@ -14,7 +14,8 @@ from wntr.sim import EpanetSimulator
 logger = logging.getLogger(__name__)
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
-                parallel_pipe_merge=True, max_cycles=None, use_epanet=True, 
+                parallel_pipe_merge=True, max_cycles=None, use_epanet=True,
+                pipes_to_exclude:list=[], nodes_to_exclude:list=[],
                 return_map=False, return_copy=True):
     """
     Perform network skeletonization using branch trimming, series pipe merge, 
@@ -43,6 +44,10 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     use_epanet: bool, optional
         If True, use the EpanetSimulator to compute headloss in pipes.  
         If False, use the WNTRSimulator to compute headloss in pipes.
+    pipes_to_exclude: list, optional
+        List of pipe names to exclude from skeletonization
+    nodes_to_exclude: list, optional
+        List of node names to exclude from skeletonization
     return_map: bool, optional
         If True, return a skeletonization map. The map is a dictionary 
         that includes original nodes as keys and a list of skeletonized nodes 
@@ -60,7 +65,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
         nodes as keys and a list of skeletonized nodes that were merged into 
         each original node as values.
     """
-    skel = _Skeletonize(wn, use_epanet, return_copy)
+    skel = _Skeletonize(wn, use_epanet, return_copy, pipes_to_exclude, nodes_to_exclude)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
              parallel_pipe_merge, max_cycles)
@@ -73,7 +78,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 		
 class _Skeletonize(object):
     
-    def __init__(self, wn, use_epanet, return_copy):
+    def __init__(self, wn, use_epanet, return_copy, pipes_to_exclude, nodes_to_exclude):
         
         if return_copy:
             # Get a copy of the WaterNetworkModel
@@ -102,7 +107,9 @@ class _Skeletonize(object):
                 elif isinstance(req, Pipe):
                     pipe_with_controls.append(req.name)
         self.junc_with_controls = list(set(junc_with_controls))
+        self.junc_with_controls.extend(nodes_to_exclude)
         self.pipe_with_controls = list(set(pipe_with_controls))
+        self.pipe_with_controls.extend(pipes_to_exclude)
         
         # Calculate pipe headloss using a single period EPANET simulation
         duration = self.wn.options.time.duration

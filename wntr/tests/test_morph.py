@@ -315,6 +315,29 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
         self.assertEqual(skel_wn.num_links, wn.num_links - 22)
 
+    def test_skeletonize_with_excluding_nodes_and_pipes(self):
+
+        inp_file = join(datadir, "skeletonize.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False, nodes_to_exclude=["13"], pipes_to_exclude=["60"])
+
+        self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
+        self.assertEqual(skel_wn.num_links, wn.num_links - 22)
+
+        wn = wntr.network.WaterNetworkModel(inp_file)
+
+        # Change link 60 and 11 diameter to > 12, should get some results as above
+        link = wn.get_link("60")
+        link.diameter = 16 * 0.0254
+        link = wn.get_link("11")
+        link.diameter = 16 * 0.0254
+
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
+
+        self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
+        self.assertEqual(skel_wn.num_links, wn.num_links - 22)
+
     def test_series_merge_properties(self):
 
         wn = wntr.network.WaterNetworkModel()
