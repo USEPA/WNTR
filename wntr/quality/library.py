@@ -21,7 +21,13 @@ logger = logging.getLogger(__name__)
 # ===================== Nicotine-chlorine model
 #
 def nicotine() -> MultispeciesQualityModel:
-    """A nicotine-chlorine reaction model"""
+    """A nicotine-chlorine reaction model.
+    
+    Returns
+    -------
+    MultispeciesQualityModel
+        a new model for a nicotine-chlorine reaction
+    """
     msx = MultispeciesQualityModel()
     msx.name = "nicotine"
     msx.title = ("Nicotine - Chlorine reaction",)
@@ -45,7 +51,13 @@ def nicotine() -> MultispeciesQualityModel:
 # ===================== Nicotine-chlorine reactive intermediate species
 #
 def nicotine_ri() -> MultispeciesQualityModel:
-    """A nicotine-chlorine reaction with a reactive intermediate"""
+    """A nicotine-chlorine reaction with a reactive intermediate.
+    
+    Returns
+    -------
+    MultispeciesQualityModel
+        a new model for a nicotine-chlorine reaction with a reactive intermediate
+    """
     msx = MultispeciesQualityModel()
     msx.name = "nicotine_ri"
     msx.title = ("Nicotine - Chlorine reaction with reactive intermediate",)
@@ -85,12 +97,19 @@ def nicotine_ri() -> MultispeciesQualityModel:
 def lead_ppm() -> MultispeciesQualityModel:
     """A lead plumbosolvency model [BWMS20]_.
 
+    Returns
+    -------
+    MultispeciesQualityModel
+        a new lead plumbosolvency model
+
+    Notes
+    -----
+
     .. [BWMS20]
        J. B. Burkhardt, et al. (2020)
        "Framework for Modeling Lead in Premise Plumbing Systems Using EPANET".
        `Journal of water resources planning and management`.
        **146** (12). https://doi.org/10.1061/(asce)wr.1943-5452.0001304
-
     """
     msx = MultispeciesQualityModel()
     msx.name = "lead_ppm"

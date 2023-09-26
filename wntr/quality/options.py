@@ -78,36 +78,29 @@ class MultispeciesOptions(_OptionsBase):
     ----------
     timestep : int >= 1
         Water quality timestep (seconds), by default 60 (one minute).
-
     area_units : str, optional
         The units of area to use in surface concentration forms, by default ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
-
     rate_units : str, optional
         The time units to use in all rate reactions, by default ``MIN``. Valid values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
-
     solver : str, optional
         The solver to use, by default ``RK5``. Options are ``RK5`` (5th order Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or ``EUL`` (Euler method).
-
     coupling : str, optional
         Use coupling method for solution, by default ``NONE``. Valid options are ``FULL`` or ``NONE``.
-
     atol : float, optional
         Absolute concentration tolerance, by default 0.01 (regardless of species concentration units).
-
     rtol : float, optional
         Relative concentration tolerance, by default 0.001 (±0.1%).
-
     compiler : str, optional
         Whether to use a compiler, by default ``NONE``. Valid options are ``VC``, ``GC``, or ``NONE``
-
     segments : int, optional
         Maximum number of segments per pipe (MSX 2.0 or newer only), by default 5000.
-
     peclet : int, optional
         Peclet threshold for applying dispersion (MSX 2.0 or newer only), by default 1000.
-
-    report : ReportOptions
-        Contains options for how for format and save report
+    
+    Other Parameters
+    ----------------
+    report : ReportOptions or dict
+        Options on how to report out results.
 
     """
 
@@ -123,30 +116,31 @@ class MultispeciesOptions(_OptionsBase):
         compiler: str = "NONE",
         segments: int = 5000,
         peclet: int = 1000,
-        global_initial_quality: Dict[str, float] = None,
+        # global_initial_quality: Dict[str, float] = None,
         report: ReportOptions = None,
     ):
-        self.timestep = timestep
+        self.timestep: int = timestep
         """The timestep, in seconds, by default 360"""
-        self.area_units = area_units
+        self.area_units: str = area_units
         """The units used to express pipe wall surface area where, by default FT2. Valid values are FT2, M2, and CM2."""
-        self.rate_units = rate_units
+        self.rate_units: str = rate_units
         """The units in which all reaction rate terms are expressed, by default HR. Valid values are HR, MIN, SEC, and DAY."""
-        self.solver = solver
+        self.solver: str = solver
         """The solver to use, by default EUL. Valid values are EUL, RK5, and ROS2."""
-        self.coupling = coupling
+        self.coupling: str = coupling
         """Whether coupling should occur during solving, by default NONE. Valid values are NONE and FULL."""
-        self.rtol = rtol
+        self.rtol: float = rtol
         """The relative tolerance used during solvers ROS2 and RK5, by default 0.001 for all species. Can be overridden on a per-species basis."""
-        self.atol = atol
+        self.atol: float = atol
         """The absolute tolerance used by the solvers, by default 0.01 for all species regardless of concentration units. Can be overridden on a per-species basis."""
-        self.compiler = compiler
+        self.compiler: str = compiler
         """A compier to use if the equations should be compiled by EPANET-MSX, by default NONE. Valid options are VC, GC and NONE."""
-        self.segments = segments
+        self.segments: int = segments
         """The number of segments per-pipe to use, by default 5000."""
-        self.peclet = peclet
+        self.peclet: int = peclet
         """The threshold for applying dispersion, by default 1000."""
-        self.report = ReportOptions.factory(report)
+        self.report: ReportOptions = ReportOptions.factory(report)
+        """The reporting output options."""
 
     def __setattr__(self, name, value):
         if name == "report":

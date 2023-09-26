@@ -8,6 +8,22 @@ class ObjectType(IntEnum):
     """The enumeration for object type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        NODE
+        LINK
+        PIPE
+        TANK
+        SPECIES
+        TERM
+        PARAMETER
+        CONSTANT
+        PATTERN
     """
     NODE = 0
     """EPANET node"""
@@ -35,6 +51,18 @@ class SourceType(IntEnum):
     """The enumeration for source type used in EPANET-MSX.
     
     .. warning:: These enum values start with -1.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        NOSOURCE
+        CONCEN
+        MASS
+        SETPOINT
+        FLOWPACED
     """
     NOSOURCE = -1
     """No source"""
@@ -53,6 +81,15 @@ class UnitSystemType(IntEnum):
     """The enumeration for the units system used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        US
+        SI
     """
     US = 0
     """US units (ft, ft2, gal)"""
@@ -65,6 +102,23 @@ class FlowUnitsType(IntEnum):
     """The enumeration for the flow units used in EPANET-MSX (determined from EPANET INP file read in with the toolkit).
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        CFS
+        GPM
+        MGD
+        IMGD
+        AFD
+        LPS
+        LPM
+        MLD
+        CMH
+        CMD
     """
     CFS = 0
     """cubic feet per second"""
@@ -93,6 +147,17 @@ class MixType(IntEnum):
     """The enumeration for the mixing model used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        MIX1
+        MIX2
+        FIFO
+        LIFO
     """
     MIX1 = 0
     """full mixing, 1 compartment"""
@@ -109,6 +174,15 @@ class SpeciesType(IntEnum):
     """The enumeration for species type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        BULK
+        WALL
     """
     BULK = 0
     """bulk species"""
@@ -121,6 +195,17 @@ class ExpressionType(IntEnum):
     """The enumeration for the expression type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        NO_EXPR
+        RATE
+        FORMULA
+        EQUIL
     """
     NO_EXPR = 0
     """no expression defined"""
@@ -137,6 +222,16 @@ class SolverType(IntEnum):
     """The enumeration for the solver type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        EUL
+        RK5
+        ROS2
     """
     EUL = 0
     """Euler solver"""
@@ -151,6 +246,15 @@ class CouplingType(IntEnum):
     """The enumeration for the coupling type option used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        NO_COUPLING
+        FULL_COUPLING
     """
     NO_COUPLING = 0
     """no coupling"""
@@ -163,6 +267,17 @@ class MassUnitsType(IntEnum):
     """The enumeration for mass units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        MG
+        UG
+        MOLE
+        MMOLE
     """
     MG = 0
     """milligrams"""
@@ -179,6 +294,16 @@ class AreaUnitsType(IntEnum):
     """The enumeration for area units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        FT2
+        M2
+        CM2
     """
     FT2 = 0
     """square feet"""
@@ -193,6 +318,17 @@ class RateUnitsType(IntEnum):
     """The enumeration for rate units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        SECONDS
+        MINUTES
+        HOURS
+        DAYS
     """
     SECONDS = 0
     """per second"""
@@ -209,6 +345,20 @@ class UnitsType(IntEnum):
     """The position for units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        LENGTH_UNITS
+        DIAM_UNITS
+        AREA_UNITS
+        VOL_UNITS
+        FLOW_UNITS
+        CONC_UNITS
+        RATE_UNITS
     """
     LENGTH_UNITS = 0
     """the length unit index"""
@@ -232,6 +382,22 @@ class HydVarType(IntEnum):
     """The enumeration for hydraulic variable used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        DIAMETER
+        FLOW
+        VELOCITY
+        REYNOLDS
+        SHEAR
+        FRICTION
+        AREAVOL
+        ROUGHNESS
+        LENGTH
     """
     DIAMETER = 1
     """pipe diameter"""
@@ -259,6 +425,18 @@ class TstatType(IntEnum):
     """The enumeration used for time statistic in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        SERIES
+        AVERAGE
+        MINIMUM
+        MAXIMUM
+        RANGE
     """
     SERIES = 0
     """output a time series"""
@@ -277,6 +455,23 @@ class OptionType(IntEnum):
     """The enumeration used for choosing an option in EPANET-MSX toolkit.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        AREA_UNITS_OPTION
+        RATE_UNITS_OPTION
+        SOLVER_OPTION
+        COUPLING_OPTION
+        TIMESTEP_OPTION
+        RTOL_OPTION
+        ATOL_OPTION
+        COMPILER_OPTION
+        MAXSEGMENT_OPTION
+        PECLETNUMBER_OPTION
     """
     AREA_UNITS_OPTION = 0
     """area units"""
@@ -305,6 +500,16 @@ class CompilerType(IntEnum):
     """The enumeration used for specifying compiler options in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        NO_COMPILER
+        VC
+        GC
     """
     NO_COMPILER = 0
     """do not compile reaction dynamics"""
@@ -319,6 +524,16 @@ class FileModeType(IntEnum):
     """The enumeration for file model used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
+
+    .. rubric:: Enum Members
+
+    The following enum names are defined, and, if using the :meth:`get` method, then
+    they are case insensitive and can be optionally prefixed with "MSX\_".
+
+    .. autosummary::
+        SCRATCH_FILE
+        SAVED_FILE
+        USED_FILE
     """
     SCRATCH_FILE = 0
     """use a scratch file"""

@@ -55,7 +55,8 @@ See :class:`MsxErrorEnum` for the list of error codes and their meanings.
 
 @add_get(prefix="ERR_")
 class MsxErrorEnum(IntEnum):
-    """The EPANET-MSX input and toolkit error numbers, keys, and descriptions"""
+    """The EPANET-MSX input and toolkit error numbers, keys, and descriptions.
+    """
 
     MAX_CHARS = 401
     "too many characters"

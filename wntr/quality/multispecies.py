@@ -28,7 +28,7 @@ from typing import (
 import wntr.quality.io
 from wntr.epanet.util import ENcomment
 from wntr.network.elements import Source
-from wntr.network.model import WaterNetworkModel
+from wntr.network.model import PatternRegistry, SourceRegistry, WaterNetworkModel
 from wntr.utils.citations import Citation
 from wntr.utils.disjoint_mapping import DisjointMapping, KeyExistsError
 
@@ -65,6 +65,36 @@ logger = logging.getLogger(__name__)
 
 
 class Species(ReactionVariable):
+    """A species in a multispecies water quality model.
+
+    This is the abstract model for a water quality species. The preferred way 
+    to create a new species is to use one of the following:
+    
+    - :meth:`MultispeciesQualityModel.add_bulk_species()`
+    - :meth:`MultispeciesQualityModel.add_wall_species()`
+    - :meth:`MultispeciesQualityModel.add_species()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        units
+        note
+        diffusivity
+        var_type
+    """
+
+    name: str = None
+    """The name (symbol) for the variable, must be a valid MSX name"""
+    units: str = None
+    """The units used for concentration of this species"""
+    note: Union[str, Dict[str, str]] = None
+    """A note to go with this species"""
+    diffusivity: float = None
+    """A value for diffusivity for this species"""
+    initial_quality: float = None
+    """Global initial quality for this species"""
+
     def __init__(
         self,
         name: str,
@@ -73,11 +103,11 @@ class Species(ReactionVariable):
         rtol: float = None,
         note: Union[str, Dict[str, str]] = None,
         diffusivity: float = None,
+        initial_quality: float = None,
         *,
         _qm: AbstractQualityModel = None,
     ):
-        """A species in a multispecies water quality model.
-
+        """
         Parameters
         ----------
         name : str
@@ -92,21 +122,18 @@ class Species(ReactionVariable):
             A note about this species, by default None
         diffusivity : float, optional
             The diffusivity value for this species, by default None
+        initial_quality: float, optional
+            The global initial quality for this species, by default None
 
-        Keyword Args
-        ------------
-        _qm : AbstractQualityModel, optional, keyword-only
-            the model this variable is being added to, by default None
-
-        Raises
-        ------
-        ValueError
-            if ``name`` is a reserved name
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_species()` API.
         """
         if name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.name = name
-        """The name (symbol) for the variable, must be a valid MSX name"""
+        """The name of the variable"""
         self.units = units
         """The units used for this species"""
         self.note = note
@@ -204,25 +231,83 @@ class Species(ReactionVariable):
 
 
 class BulkSpecies(Species):
-    """A bulk species."""
+    """A bulk species.
+
+    The preferred way to create a new bulk species is to use one of the following:
+    
+    - :meth:`MultispeciesQualityModel.add_bulk_species()`
+    - :meth:`MultispeciesQualityModel.add_species()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        units
+        note
+        diffusivity
+        var_type
+    """
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.BULK
 
 
 class WallSpecies(Species):
-    """A wall species"""
+    """A wall species.
+    
+    The preferred way to create a new wall species is to use one of the following:
+    
+    - :meth:`MultispeciesQualityModel.add_wall_species()`
+    - :meth:`MultispeciesQualityModel.add_species()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        units
+        note
+        diffusivity
+        var_type
+    """
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.WALL
 
 
 class Coefficient(ReactionVariable):
-    def __init__(self, name: str, global_value: float, note: Union[str, Dict[str, str]] = None, units: str = None, *, _qm: AbstractQualityModel = None):
-        """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
+    """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
 
+    This is the abstract model for a reaction expression coefficient. The preferred way 
+    to create a new coefficient is to use one of the following:
+    
+    - :meth:`MultispeciesQualityModel.add_constant_coeff()`
+    - :meth:`MultispeciesQualityModel.add_parameterized_coeff()`
+    - :meth:`MultispeciesQualityModel.add_coefficient()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        global_value
+        units
+        note
+        var_type
+    """
+
+    name: str = None
+    """The name (symbol) for the variable, must be a valid MSX name"""
+    units: str = None
+    """The units used for this variable"""
+    note: Union[str, Dict[str, str]] = None
+    """A note to go with this varibale"""
+    global_value: float = None
+    """The global value for the coefficient"""
+
+
+    def __init__(self, name: str, global_value: float, note: Union[str, Dict[str, str]] = None, units: str = None, *, _qm: AbstractQualityModel = None):
+        """
         Parameters
         ----------
         name : str
@@ -234,21 +319,15 @@ class Coefficient(ReactionVariable):
         units : str, optional
             units for this coefficient, by default None
 
-        Keyword Args
-        ------------
-        _qm : AbstractQualityModel, optional, keyword-only
-            the model this variable is being added to, by default None
-
-        Raises
-        ------
-        ValueError
-            if ``name`` is a reserved name
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_coefficient()` API.
         """
-
         if name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.name = name
-        """The name (symbol) for the variable, must be a valid MSX name"""
+        """The name of the variable"""
         self.global_value = float(global_value)
         """The global value for the coefficient"""
         self.note = note
@@ -285,15 +364,47 @@ class Coefficient(ReactionVariable):
 
 
 class Constant(Coefficient):
-    """A constant coefficient for reaction expressions."""
+    """A constant coefficient for reaction expressions.
+    
+    The preferred way to create a constant coefficient is to use one of the following:
+
+    - :meth:`MultispeciesQualityModel.add_constant_coeff()`
+    - :meth:`MultispeciesQualityModel.add_coefficient()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        global_value
+        units
+        note
+        var_type
+    """
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.CONST
 
 
 class Parameter(Coefficient):
-    """A variable parameter for reaction expressions."""
+    """A variable parameter for reaction expressions.
+    
+    The preferred way to create a constant coefficient is to use one of the following:
+
+    - :meth:`MultispeciesQualityModel.add_parameterized_coeff()`
+    - :meth:`MultispeciesQualityModel.add_coefficient()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        global_value
+        units
+        note
+        var_type
+        pipe_values
+        tank_values
+    """
 
     def __init__(
         self,
@@ -306,8 +417,7 @@ class Parameter(Coefficient):
         *,
         _qm: AbstractQualityModel = None,
     ):
-        """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
-
+        """
         Parameters
         ----------
         name : str
@@ -323,15 +433,10 @@ class Parameter(Coefficient):
         tank_values : dict, optional
             the values of the parameter at specific tanks, by default None
 
-        Keyword Args
-        ------------
-        _qm : AbstractQualityModel, optional, keyword-only
-            the model this variable is being added to, by default None
-
-        Raises
-        ------
-        ValueError
-            if ``name`` is a reserved name
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_coefficient()` API.
         """
         super().__init__(name, global_value=global_value, note=note, units=units, _qm=_qm)
         self._pipe_values = pipe_values if pipe_values is not None else dict()
@@ -352,7 +457,7 @@ class Parameter(Coefficient):
         return True
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.PARAM
 
     def get_value(self, pipe: str = None, tank: str = None) -> float:
@@ -403,22 +508,26 @@ class Parameter(Coefficient):
 
 @dataclass(repr=False)
 class OtherTerm(ReactionVariable):
-    """A function definition used as a shortcut in reaction expressions (called a 'term' in EPANET-MSX)
+    """An expression term defined as a function of species, coefficients, or other terms.
 
-    Parameters
-    ----------
-    name : str
-        the name/symbol of the function (term)
-    expression : str
-        the mathematical expression described by this function
-    note : str, optional
-        a note for this function, by default None
+    The preferred way to create a term is to use one of the following:
+    
+    - :meth:`MultispeciesQualityModel.add_other_term()`
+    - :meth:`MultispeciesQualityModel.add_variable()`
 
-    Keyword Args
-    ------------
-    _qm : AbstractQualityModel, optional, keyword-only
-        the model this variable is being added to, by default None
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        expression
+        note
     """
+
+    name: str = None
+    """The name (symbol) for the variable, must be a valid MSX name"""
+    expression: str = None
+    """The mathematical expression this term represents"""
+    note: Union[str, Dict[str, str]] = None
+    """A note to go with this term"""
 
     def __init__(
         self,
@@ -428,10 +537,25 @@ class OtherTerm(ReactionVariable):
         *,
         _qm: AbstractQualityModel = None,
     ):
+        """
+        Parameters
+        ----------
+        name : str
+            the name/symbol of the function (term)
+        expression : str
+            the mathematical expression described by this function
+        note : str, optional
+            a note for this function, by default None
+
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_variable()` API.
+        """
         if name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.name = name
-        """The name (symbol) for the variable, must be a valid MSX name"""
+        """The name of the variable"""
         self.expression = expression
         """The expression this named-function is equivalent to"""
         self.note = note
@@ -445,7 +569,7 @@ class OtherTerm(ReactionVariable):
         return isinstance(other, self.__class__) and self.name == other.name and self.expression == other.expression
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.TERM
 
     def to_symbolic(self, transformations=...):
@@ -467,7 +591,23 @@ class InternalVariable(ReactionVariable):
     """A hydraulic variable or a placeholder for a built-in reserved word.
 
     For example, "Len" is the EPANET-MSX name for the length of a pipe, and "I" is a sympy
-    reserved symbol for the imaginary number."""
+    reserved symbol for the imaginary number.
+    Objects of this type are instantiated when creating a new :class:`MultispeciesQualityModel`, 
+    and should not need to be created by hand.
+
+    .. rubric:: Attributes
+    .. autosummary::
+        name
+        units
+        note
+    """
+
+    name: str = None
+    """The name (symbol) for the variable, must be a valid MSX name"""
+    units: str = None
+    """The units used for this variable"""
+    note: Union[str, Dict[str, str]] = None
+    """A note to go with this variable"""
 
     def __init__(
         self,
@@ -475,8 +615,18 @@ class InternalVariable(ReactionVariable):
         note: Union[str, Dict[str, str]] = "internal variable - not output to MSX",
         units: str = None,
     ):
+        """
+        Parameters
+        ----------
+        name : str
+            The name and symbol for the new variable
+        note : str or dict, optional
+            A note to go on the object, by default "internal variable - not output to MSX"
+        units : str, optional
+            Units used by values stored in this variable, by default None
+        """
         self.name = name
-        """The name (symbol) for the variable, must be a valid MSX name"""
+        """The name of the variable"""
         self.note = note
         """A note about this function/term"""
         self.units = units
@@ -489,7 +639,7 @@ class InternalVariable(ReactionVariable):
         return isinstance(other, self.__class__) and self.name == other.name
 
     @property
-    def var_type(self) -> VariableType:
+    def var_type(self):
         return VariableType.INTERNAL
 
 
@@ -504,30 +654,51 @@ class RateDynamics(ReactionDynamics):
 
         \frac{d}{dt} C(species) = expression
 
-    Parameters
-    ----------
-    species : str
-        the name of the species whose reaction dynamics is being described
-    location : RxnLocationType or str
-        the location the reaction occurs (pipes or tanks)
-    expression : str
-        the expression for the reaction dynamics, which is the rate-of-change of the species concentration
-    note : str, optional
-        a note about this reaction
+    The preferred way to create a new reaction is to use one of:
+    
+    - :meth:`MultispeciesQualityModel.add_pipe_reaction()`
+    - :meth:`MultispeciesQualityModel.add_tank_reaction()`
+    - :meth:`MultispeciesQualityModel.add_reaction()`
 
-    Keyword Args
-    ------------
-    _qm : AbstractQualityModel, optional, keyword-only
-        the model this variable is being added to, by default None
+    .. rubric:: Attributes
+    .. autosummary::
+        ~RateDynamics.species
+        ~RateDynamics.location
+        ~RateDynamics.expression
+        ~RateDynamics.expr_type
+        ~RateDynamics.note
     """
 
     def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        """
+        Parameters
+        ----------
+        species : str
+            the name of the species whose reaction dynamics is being described
+        location : RxnLocationType or str
+            the location the reaction occurs (pipes or tanks)
+        expression : str
+            the expression for the reaction dynamics, which should equal to zero
+        note : str, optional
+            a note about this reaction
+
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_reaction()` API.
+        """
         self.species = species
+        """Name of the species being described"""
         self.location = location
+        """Location this reaction occurs"""
         self.expression = expression
+        """The expression"""
         self.note = note
         """A note or comment about this species reaction dynamics"""
         self._variable_registry = _qm
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name and self.location == other.location and self.expression == other.expression
 
     @property
     def expr_type(self) -> DynamicsType:
@@ -557,31 +728,52 @@ class EquilibriumDynamics(ReactionDynamics):
 
         0 = expression
 
-    Parameters
-    ----------
-    species : str
-        the name of the species whose reaction dynamics is being described
-    location : RxnLocationType or str
-        the location the reaction occurs (pipes or tanks)
-    expression : str
-        the expression for the reaction dynamics, which should equal to zero
-    note : str, optional
-        a note about this reaction
+    The preferred way to create a new reaction is to use one of:
+    
+    - :meth:`MultispeciesQualityModel.add_pipe_reaction()`
+    - :meth:`MultispeciesQualityModel.add_tank_reaction()`
+    - :meth:`MultispeciesQualityModel.add_reaction()`
 
-    Keyword Args
-    ------------
-    _qm : AbstractQualityModel, optional, keyword-only
-        the model this variable is being added to, by default None
 
+    .. rubric:: Attributes
+    .. autosummary::
+        ~EquilibriumDynamics.species
+        ~EquilibriumDynamics.location
+        ~EquilibriumDynamics.expression
+        ~EquilibriumDynamics.expr_type
+        ~EquilibriumDynamics.note
     """
 
     def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        """
+        Parameters
+        ----------
+        species : str
+            the name of the species whose reaction dynamics is being described
+        location : RxnLocationType or str
+            the location the reaction occurs (pipes or tanks)
+        expression : str
+            the expression for the reaction dynamics, which should equal to zero
+        note : str, optional
+            a note about this reaction
+
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_reaction()` API.
+        """
         self.species = species
+        """Name of the species being described"""
         self.location = location
+        """Location this reaction occurs"""
         self.expression = expression
+        """The expression"""
         self.note = note
         """A note or comment about this species reaction dynamics"""
         self._variable_registry = _qm
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name and self.location == other.location and self.expression == other.expression
 
     @property
     def expr_type(self) -> DynamicsType:
@@ -603,7 +795,7 @@ class EquilibriumDynamics(ReactionDynamics):
 
 @dataclass(repr=False)
 class FormulaDynamics(ReactionDynamics):
-    """A formula based reaction dynamics.
+    """A formula-based reaction dynamics expression.
 
     Used when the concentration of the named species is a simple function of the remaining species.
 
@@ -611,30 +803,51 @@ class FormulaDynamics(ReactionDynamics):
 
         C(species) = expression
 
-    Parameters
-    ----------
-    species : str
-        the name of the species whose reaction dynamics is being described
-    location : RxnLocationType or str
-        the location the reaction occurs (pipes or tanks)
-    expression : str
-        the expression for the reaction formula, which is used to calculate the concentration of the species
-    note : str, optional
-        a note about this reaction
+    The preferred way to create a new reaction is to use one of:
+    
+    - :meth:`MultispeciesQualityModel.add_pipe_reaction()`
+    - :meth:`MultispeciesQualityModel.add_tank_reaction()`
+    - :meth:`MultispeciesQualityModel.add_reaction()`
 
-    Keyword Args
-    ------------
-    _qm : RxnModelRegistry, optional
-        a link to the remainder of the larger model
+    .. rubric:: Attributes
+    .. autosummary::
+        ~FormulaDynamics.species
+        ~FormulaDynamics.location
+        ~FormulaDynamics.expression
+        ~FormulaDynamics.expr_type
+        ~FormulaDynamics.note
     """
 
     def __init__(self, species: str, location: LocationType, expression: str, note: Union[str, Dict[str, str]] = None, *, _qm: AbstractQualityModel = None):
+        """
+        Parameters
+        ----------
+        species : str
+            the name of the species whose reaction dynamics is being described
+        location : RxnLocationType or str
+            the location the reaction occurs (pipes or tanks)
+        expression : str
+            the expression for the reaction formula, which is used to calculate the concentration of the species
+        note : str, optional
+            a note about this reaction
+
+        Other Parameters
+        ----------------
+        _qm : MultispeciesQualityModel
+            the model to link with, used internally when created via the :meth:`~MultispeciesQualityModel.add_reaction()` API.
+        """
         self.species = species
+        """Name of the species being described"""
         self.location = location
+        """Location this reaction occurs"""
         self.expression = expression
+        """The expression"""
         self.note = note
         """A note or comment about this species reaction dynamics"""
         self._variable_registry = _qm
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name and self.location == other.location and self.expression == other.expression
 
     @property
     def expr_type(self) -> DynamicsType:
@@ -655,14 +868,23 @@ class FormulaDynamics(ReactionDynamics):
 
 
 class MultispeciesQualityModel(AbstractQualityModel):
+    """A multispecies water quality reactions model, for use with EPANET-MSX.
+
+    .. rubric:: Attributes
+    .. autosummary::
+        ~MultispeciesQualityModel.name
+        ~MultispeciesQualityModel.title
+        ~MultispeciesQualityModel.citations
+        ~MultispeciesQualityModel.options
+    """
+
     def __init__(self, msx_file_name=None):
-        """Water quality reactions model object.
+        """Create a new multispecies water quality reaction model.
 
         Parameters
         ----------
         msx_file_name : str, optional
             The name of the MSX input file to read
-
         """
         self.name: str = None
         """A one-line title for the model"""
@@ -698,9 +920,10 @@ class MultispeciesQualityModel(AbstractQualityModel):
 
         self._usage: Dict[str, Set[str]] = dict()  # FIXME: currently no usage tracking
 
-        self._sources: Dict[str, Dict[str, Source]] = dict()
-        self._inital_quality: Dict[str, Dict[str, Dict[str, float]]] = dict()
-        self._patterns: Dict[str, Any] = dict()
+        self._source_dict: Dict[str, Dict[str, Source]] = dict()
+        self._inital_qual_dict: Dict[str, Dict[str, Dict[str, float]]] = dict()
+        self._pattern_dict: Dict[str, List[float]] = dict()
+        
         self._report = list()
 
         for v in HYDRAULIC_VARIABLES:
@@ -823,8 +1046,8 @@ class MultispeciesQualityModel(AbstractQualityModel):
                 __variable._variable_registry = self
             if typ is VariableType.BULK or typ is VariableType.WALL:
                 self._variables.add_item_to_group("species", name, __variable)
-                self._inital_quality[name] = dict(global_value=None, nodes=dict(), links=dict())
-                self._sources[name] = dict()
+                self._inital_qual_dict[name] = dict(global_value=None, nodes=dict(), links=dict())
+                self._source_dict[name] = dict()
             elif typ is VariableType.CONST or typ is VariableType.PARAM:
                 self._variables.add_item_to_group("coeffs", name, __variable)
             elif typ is VariableType.TERM:
@@ -834,7 +1057,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
 
     def add_species(
         self,
-        species_type: Union[str, Literal[VariableType.BULK], Literal[VariableType.WALL]],
+        species_type: Union[str, int, VariableType],
         name: str,
         units: str,
         atol: float = None,
@@ -885,8 +1108,8 @@ class MultispeciesQualityModel(AbstractQualityModel):
         elif species_type is VariableType.WALL:
             var = WallSpecies(name=name, units=units, atol=atol, rtol=rtol, note=note, _qm=self)
         self._species[name] = var
-        self._inital_quality[name] = dict([("global", None), ("nodes", dict()), ("links", dict())])
-        self._sources[name] = dict()
+        self._inital_qual_dict[name] = dict([("global", None), ("nodes", dict()), ("links", dict())])
+        self._source_dict[name] = dict()
         return var
 
     def add_bulk_species(self, name: str, units: str, atol: float = None, rtol: float = None, note: str = None) -> BulkSpecies:
@@ -952,7 +1175,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
         return self.add_species(VariableType.WALL, name, units, atol, rtol, note)
 
     def add_coefficient(
-        self, coeff_type: Union[str, Literal[VariableType.CONST], Literal[VariableType.PARAM]], name: str, global_value: float, note: str = None, units: str = None, **kwargs
+        self, coeff_type: Union[str, int, VariableType], name: str, global_value: float, note: str = None, units: str = None, **kwargs
     ) -> Coefficient:
         """Add a new coefficient to the model.
 
@@ -1102,10 +1325,10 @@ class MultispeciesQualityModel(AbstractQualityModel):
         name : str
             variable name
         """
-        if name in self._inital_quality.keys():
-            self._inital_quality.__delitem__(name)
-        if name in self._sources.keys():
-            self._sources.__delitem__(name)
+        if name in self._inital_qual_dict.keys():
+            self._inital_qual_dict.__delitem__(name)
+        if name in self._source_dict.keys():
+            self._source_dict.__delitem__(name)
         return self._variables.__delitem__(name)
 
     def get_variable(self, name: str) -> ReactionVariable:
@@ -1308,12 +1531,17 @@ class MultispeciesQualityModel(AbstractQualityModel):
         ReactionDynamics
             the requested reaction object
         """
+        if species is None:
+            raise TypeError('species must be a string or Species')
+        if location is None:
+            raise TypeError('location must be a string, int, or LocationType')
         species = str(species)
         location = LocationType.get(location)
+        loc = location.name.lower()
         if location == LocationType.PIPE:
-            return self._pipe_dynamics.get(species, None)
+            return self._pipe_dynamics.get(species+'.'+loc)
         elif location == LocationType.TANK:
-            return self._tank_dynamics.get(species, None)
+            return self._tank_dynamics.get(species+'.'+loc)
 
     def init_printing(self, *args, **kwargs):
         """Call sympy.init_printing"""
@@ -1344,9 +1572,6 @@ class MultispeciesQualityModel(AbstractQualityModel):
 
     def link_water_network_model(self, wn: WaterNetworkModel):
         self._wn = wn
-
-    def add_pattern(self, name, pat):
-        self._patterns[name] = pat
 
     def to_dict(self) -> dict:
         """Convert this water quality model to a dictionary"""

@@ -10,13 +10,19 @@ import abc
 import enum
 import logging
 from abc import ABC, abstractmethod, abstractproperty
+from collections.abc import MutableMapping
 from dataclasses import InitVar, dataclass
 from enum import Enum, IntFlag
 from typing import ClassVar, Generator, List, Union
 
+import numpy as np
+
+from wntr.network.base import AbstractModel
 from wntr.network.model import WaterNetworkModel
+from wntr.network.elements import Pattern
 from wntr.quality.options import MultispeciesOptions
 from wntr.utils.enumtools import add_get
+from wntr.utils.ordered_set import OrderedSet
 
 has_sympy = False
 try:
@@ -48,16 +54,22 @@ HYDRAULIC_VARIABLES = [
     {"name": "Av", "note": "Surface area per unit volume (area units/L) "},
     {"name": "Len", "note": "Pipe length (feet or meters)"},
 ]
-"""The hydraulic variables defined in EPANET-MSX"""
+"""The hydraulic variables defined in EPANET-MSX.
+
+:meta hide-value:
+"""
 
 RESERVED_NAMES = tuple([v["name"] for v in HYDRAULIC_VARIABLES])
-"""The MSX reserved names as a tuple"""
+"""The MSX reserved names."""
 
 SYMPY_RESERVED = ("E", "I", "pi")
 """Some extra names reserved by sympy"""
 
 EXPR_TRANSFORMS = standard_transformations + (convert_xor,)
-"""The sympy transforms to use in expression parsing"""
+"""The sympy transforms to use in expression parsing.
+
+:meta hide-value:
+"""
 
 
 @add_get(abbrev=True)
@@ -67,10 +79,8 @@ class VariableType(Enum):
     The following types are defined, and aliases of just the first character
     are also defined.
 
-    .. rubric:: Valid Values
-
+    .. rubric:: Enum Members
     .. autosummary::
-
         BULK
         WALL
         CONSTANT
@@ -78,9 +88,9 @@ class VariableType(Enum):
         TERM
         INTERNAL
 
-    .. rubric:: Class methods
-
+    .. rubric:: Class Methods
     .. autosummary::
+        :nosignatures:
 
         get
 
@@ -100,22 +110,15 @@ class VariableType(Enum):
     """An internal variable - see :attr:`~wntr.reaction.base.RESERVED_NAMES`"""
 
     B = BULK
-    """Alias for :attr:`BULK`"""
     W = WALL
-    """Alias for :attr:`WALL`"""
     C = CONSTANT
-    """Alias for :attr:`CONSTANT`"""
     P = PARAMETER
-    """Alias for :attr:`PARAMETER`"""
     T = TERM
-    """Alias for :attr:`TERM`"""
     I = INTERNAL
-    """Alias for :attr:`INTERNAL`"""
-    CONST = CONSTANT
-    """Alias for :attr:`CONSTANT`"""
-    PARAM = PARAMETER
-    """Alias for :attr:`PARAMETER`"""
 
+    CONST = CONSTANT
+    PARAM = PARAMETER
+    
 
 @add_get(abbrev=True)
 class LocationType(Enum):
@@ -124,30 +127,25 @@ class LocationType(Enum):
     The following types are defined, and aliases of just the first character
     are also defined.
 
-
-    .. rubric:: Valid values
-
+    .. rubric:: Enum Members
     .. autosummary::
-
         PIPE
         TANK
 
-    .. rubric:: Class methods
-
+    .. rubric:: Class Methods
     .. autosummary::
-
+        :nosignatures:
+    
         get
-
     """
 
     PIPE = 1
     """The expression describes a reaction in pipes"""
     TANK = 2
     """The expression describes a reaction in tanks"""
+
     P = PIPE
-    """Alias for :attr:`PIPE`"""
     T = TANK
-    """Alias for :attr:`TANK`"""
 
 
 @add_get(abbrev=True)
@@ -157,18 +155,16 @@ class DynamicsType(Enum):
     The following types are defined, and aliases of just the first character
     are also defined.
 
-    .. rubric:: Valid values
-
+    .. rubric:: Enum Members
     .. autosummary::
-
         EQUIL
         RATE
         FORMULA
 
-    .. rubric:: Class methods
-
+    .. rubric:: Class Methods
     .. autosummary::
-
+        :nosignatures:
+        
         get
 
     """
@@ -179,27 +175,26 @@ class DynamicsType(Enum):
     """used to supply the equation that expresses the rate of change of the given species with respect to time as a function of the other species in the model"""
     FORMULA = 3
     """used when the concentration of the named species is a simple function of the remaining species"""
+
     E = EQUIL
-    """Alias for :attr:`EQUIL`"""
     R = RATE
-    """Alias for :attr:`RATE`"""
     F = FORMULA
-    """Alias for :attr:`FORMULA`"""
 
 
 class ReactionVariable(ABC):
     """The base for a reaction variable.
-    """
 
-    name: str
-    """The name (symbol) for the variable, must be a valid MSX name"""
+    Attributes
+    ----------
+    name : str
+        The name (symbol) for the variable, must be a valid MSX name
+    """
 
     def __str__(self) -> str:
         """Returns the name of the variable"""
         return self.name
 
     def __hash__(self) -> int:
-        """Makes the variable hashable by hashing the `str` representation"""
         return hash(str(self))
 
     __variable_registry = None
@@ -284,7 +279,7 @@ class ReactionVariable(ABC):
 class ReactionDynamics(ABC):
     """The base for a reaction.
 
-    Parameters
+    Attributes
     ----------
     species : str
         the name of the species whose reaction dynamics is being described
@@ -293,13 +288,6 @@ class ReactionDynamics(ABC):
     expression : str
         the expression for the reaction dynamics (right-hand-side)
     """
-
-    species: str
-    """The name of the species that this reaction describes"""
-    location: LocationType
-    """The location this reaction occurs (pipes vs tanks)"""
-    expression: str
-    """The expression for the reaction dynamics (or, the right-hand-side of the equation)"""
 
     def __str__(self) -> str:
         """Names the reaction with the format `species-dot-location` (for example, ``PB2.pipe``)"""
@@ -375,6 +363,8 @@ class ReactionDynamics(ABC):
 
 
 class AbstractQualityModel(ABC):
+    """Abstract methods any water quality model should include."""
+
     @abstractmethod
     def variables(self, var_type=None):
         """Generator over all defined variables, optionally limited by variable type"""

@@ -78,6 +78,8 @@ def add_get(cls=None, *, prefix=None, abbrev=False):
             ValueError
                 if ``value`` is invalid
             """
+            if value is None:
+                return None
             name = str(value)
             if isinstance(value, cls):
                 return value

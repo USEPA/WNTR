@@ -35,8 +35,8 @@ __all__ = [
 
 class SizeLimits(enum.Enum):
     """
-        Limits on the size of character arrays used to store ID names
-        and text messages.
+    Limits on the size of character arrays used to store ID names
+    and text messages.
     """
     # // ! < Max.  # characters in ID name
     EN_MAX_ID = 31
@@ -46,9 +46,9 @@ class SizeLimits(enum.Enum):
 
 class InitHydOption(enum.Enum):
     """
-        Hydraulic initialization options.
-        These options are used to initialize a new hydraulic analysis
-        when EN_initH is called.
+    Hydraulic initialization options.
+    These options are used to initialize a new hydraulic analysis
+    when EN_initH is called.
     """
     # !< Don't save hydraulics; don't re-initialize flows
     EN_NOSAVE = 0
