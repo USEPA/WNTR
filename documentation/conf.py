@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # 'numpydoc',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
@@ -40,15 +41,51 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-]
+    'sphinx_design',
+]    
 
+add_function_parentheses = True
+add_module_names = False
+python_display_short_literal_types = True
+
+toc_object_entries = True
+toc_object_entries_show_parents = 'hide'
+
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = True
+napoleon_preprocess_types = False
+napoleon_use_ivar = True
+napoleon_use_param = False
 napoleon_use_rtype = False
-viewcode_import = True
-numpydoc_show_class_members = True
-numpydoc_show_inherited_class_members = False
-numpydoc_class_members_toctree = False
-autodoc_member_order = 'bysource'
+napoleon_use_keyword = True
+napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members', 'Model Description']
+
+# viewcode_import = False
+
+autodoc_default_options = {
+    # 'members': True,
+    'undoc-members': True,
+    'private-members': False,
+    'special-members': False,
+    'inherited-members': True,
+    'show-inheritance': True,
+    'member-order': 'groupwise',
+    'typehints': 'description',
+    'typehints-format': 'short',
+}
+
+# autodoc_class_signature = 'separated'
+autodoc_typehints_format = 'short'
+autodoc_type_aliases = {'Literal': 'Literal', 'Name':'Name', 'NameList':'NameList', 'LiteralList':'LiteralList', 'Key':'Key', 'KeyList':'KeyList','Verbatim': 'Verbatim', 'URI': 'URI', 'Date':'Date', 'Range':'Range', 'SeparatedValues':'SeparatedValues',}
+
 autoclass_content = 'both'
+
 numfig=True
 numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
 
@@ -56,7 +93,8 @@ numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Lis
 templates_path = ['_templates']
 
 import glob
-autosummary_generate = glob.glob("apidoc/*.rst")
+autosummary_generate = ["wntr-api.rst",] + glob.glob("apidoc/*.rst")
+autosummary_generate_overwrite = True
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -134,26 +172,58 @@ todo_include_todos = True
 # a list of builtin themes.
 #html_theme = 'sphinx_rtd_theme'
 
-def setup(app):
-  app.add_css_file( "wntr.css")
   
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    html_style = 'wntr.css'
+    html_theme = 'pydata_sphinx_theme'
+    
 else:
+    def setup(app):
+        app.add_css_file( "wntr.css")
     html_theme = 'default'
 #    html_context = {
 #        'css_files': ['_static/wntr.css'],
 #    }  
-    
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
-
+html_theme_options = {
+    "icon_links": [
+        {
+            # Label for this link
+            "name": "GitHub",
+            # URL where the link will redirect
+            "url": "https://github.com/USEPA/WNTR",  # required
+            # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
+            "icon": "fa-brands fa-github",
+            # The type of image to be used (see below for details)
+            "type": "fontawesome",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/wntr",
+            "icon": "fa-brands fa-pypi",
+        },
+        {
+            "name": "Sandia National Laboratories",
+            "url": "https://sandia.gov",  # required
+            "icon": "_static/snl_logo.png",
+            "type": "local",
+        },
+        {
+            "name": "U.S. Environmental Protection Agency",
+            "url": "https://epa.gov",  # required
+            "icon": "_static/epa_logo.png",
+            "type": "local",
+        },
+    ],
+    "use_edit_page_button": False,
+    "primary_sidebar_end": ["indices.html"],
+    "show_toc_level": 2,
+    # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
+    "navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html",],
+}
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
@@ -166,12 +236,12 @@ else:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = 'figures/wntr.png'
+html_logo = '_static/logo.jpg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = "_static/wntr-favicon.svg"
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths

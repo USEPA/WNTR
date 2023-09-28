@@ -15,7 +15,9 @@ rtree; sys_platform == "darwin" or sys_platform == "linux"
 
 # Documentation
 sphinx
+sphinx_design
 sphinx_rtd_theme
+pydata_sphinx_theme
 
 # Testing
 pytest
