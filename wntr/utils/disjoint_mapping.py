@@ -52,8 +52,8 @@ class DisjointMapping(MutableMapping):
     def get_disjoint_group(self, name: str):
         return self.__groups[name]
 
-    def get_groupname(self, __key: Hashable):
-        return self.__key_groupnames[__key]
+    def get_groupname(self, _key: Hashable):
+        return self.__key_groupnames[_key]
 
     def add_item_to_group(self, groupname, key, value):
         current = self.__key_groupnames.get(key, None)
@@ -153,21 +153,21 @@ class DisjointMappingGroup(MutableMapping):
     __keyspace: "DisjointMapping" = None
     _data: dict = None
 
-    def __new__(cls, name: str, __keyspace: "DisjointMapping"):
+    def __new__(cls, name: str, _keyspace: "DisjointMapping"):
         if name is None:
             raise TypeError("A name must be specified")
-        if __keyspace is None:
+        if _keyspace is None:
             raise TypeError("A registry must be specified")
         newobj = super().__new__(cls)
         return newobj
 
-    def __init__(self, name: str, __keyspace: "DisjointMapping"):
+    def __init__(self, name: str, _keyspace: "DisjointMapping"):
         if name is None:
             raise TypeError("A name must be specified")
-        if __keyspace is None:
+        if _keyspace is None:
             raise TypeError("A registry must be specified")
         self.__name: str = name
-        self.__keyspace: DisjointMapping = __keyspace
+        self.__keyspace: DisjointMapping = _keyspace
         self._data = dict()
 
     def __getitem__(self, __key: Any) -> Any:

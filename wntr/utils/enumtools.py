@@ -36,27 +36,6 @@ def add_get(cls=None, *, prefix=None, abbrev=False):
         def get(cls, value: Union[str, int, Enum], prefix='', abbrev=False):
             """Get the proper enum based on the name or value of the argument.
 
-            The get method behaves as follows.
-            For an integer, the integer value will be used to select the proper member.
-            For an :class:`Enum` object, the object's ``name`` will be used, and it will
-            be processed as a string. For a string, the method will:
-            
-            1. capitalize the string
-            2. remove leading or trailing spaces
-            3. convert interior spaces or dashes to underscores
-            4. optionally, remove a specified prefix from a string (using ``prefix``, which 
-               should have a default assigned by the :func:`wntr.utils.enumtools.add_get` 
-               function.)
-
-            It will then try to get the member with the name corresponding to the converted
-            string.
-            
-            5. optionally, if ``abbrev`` is True, then the string will be truncated to the first
-               letter, only, after trying to use the full string as passed in. The ``abbrev``
-               parameter will have a default value based on how the :func:`~wntr.utils.enumtools.add_get`
-               decorator was called on this class.
-
-
             Parameters
             ----------
             value : Union[str, int, Enum]
@@ -77,6 +56,29 @@ def add_get(cls=None, *, prefix=None, abbrev=False):
                 if ``value`` is an invalid type
             ValueError
                 if ``value`` is invalid
+
+            Notes
+            -----
+            The get method behaves as follows.
+            For an integer, the integer value will be used to select the proper member.
+            For an :class:`Enum` object, the object's ``name`` will be used, and it will
+            be processed as a string. For a string, the method will:
+            
+            1. capitalize the string
+            2. remove leading or trailing spaces
+            3. convert interior spaces or dashes to underscores
+            4. optionally, remove a specified prefix from a string (using ``prefix``, which 
+               should have a default assigned by the :func:`wntr.utils.enumtools.add_get` 
+               function.)
+
+            It will then try to get the member with the name corresponding to the converted
+            string.
+            
+            5. optionally, if ``abbrev`` is True, then the string will be truncated to the first
+               letter, only, after trying to use the full string as passed in. The ``abbrev``
+               parameter will have a default value based on how the :func:`~wntr.utils.enumtools.add_get`
+               decorator was called on this class.
+
             """
             if value is None:
                 return None

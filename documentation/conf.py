@@ -104,6 +104,7 @@ exclude_patterns = ['_build']
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 #default_role = None
+napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members', 'Model Description']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
