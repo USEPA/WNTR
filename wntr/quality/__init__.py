@@ -9,8 +9,8 @@ from ..epanet.msx.exceptions import EpanetMsxException
 from .base import (
     DynamicsType,
     LocationType,
-    ReactionDynamics,
-    ReactionVariable,
+    AbstractReaction,
+    AbstractVariable,
     VariableType,
 )
 from .multispecies import FormulaDynamics

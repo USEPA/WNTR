@@ -40,8 +40,8 @@ from .base import (
     AbstractQualityModel,
     DynamicsType,
     LocationType,
-    ReactionDynamics,
-    ReactionVariable,
+    AbstractReaction,
+    AbstractVariable,
     VariableType,
 )
 from .options import MultispeciesOptions
@@ -64,7 +64,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class Species(ReactionVariable):
+class Species(AbstractVariable):
     """A species in a multispecies water quality model.
 
     .. rubric:: Constructor
@@ -259,7 +259,7 @@ class WallSpecies(Species):
         return VariableType.WALL
 
 
-class Coefficient(ReactionVariable):
+class Coefficient(AbstractVariable):
     """A coefficient, either constant or parameterized by pipe or tank, that is used in reaction expressions.
 
     .. rubric:: Constructor
@@ -468,7 +468,7 @@ class Parameter(Coefficient):
 
 
 @dataclass(repr=False)
-class OtherTerm(ReactionVariable):
+class OtherTerm(AbstractVariable):
     """An expression term defined as a function of species, coefficients, or other terms.
 
     .. rubric:: Constructor
@@ -544,7 +544,7 @@ class OtherTerm(ReactionVariable):
 
 
 @dataclass(repr=False)
-class InternalVariable(ReactionVariable):
+class InternalVariable(AbstractVariable):
     """A hydraulic variable or a placeholder for a built-in reserved word.
 
     For example, "Len" is the EPANET-MSX name for the length of a pipe, and "I" is a sympy
@@ -594,11 +594,11 @@ class InternalVariable(ReactionVariable):
 
     @property
     def var_type(self):
-        return VariableType.INTERNAL
+        return VariableType.EXTERNAL
 
 
 @dataclass(repr=False)
-class RateDynamics(ReactionDynamics):
+class RateDynamics(AbstractReaction):
     r"""A rate-of-change reaction dynamics expression.
 
     Used to supply the equation that expresses the rate of change of the given species
@@ -667,7 +667,7 @@ class RateDynamics(ReactionDynamics):
 
 
 @dataclass(repr=False)
-class EquilibriumDynamics(ReactionDynamics):
+class EquilibriumDynamics(AbstractReaction):
     """An equilibrium reaction expression.
 
     Used for equilibrium expressions where it is assumed that the expression supplied is being equated to zero.
@@ -735,7 +735,7 @@ class EquilibriumDynamics(ReactionDynamics):
 
 
 @dataclass(repr=False)
-class FormulaDynamics(ReactionDynamics):
+class FormulaDynamics(AbstractReaction):
     """A formula-based reaction dynamics expression.
 
     Used when the concentration of the named species is a simple function of the remaining species.
@@ -826,13 +826,11 @@ class MultispeciesQualityModel(AbstractQualityModel):
         self._citations: List[Union[Citation, str]] = list()
         """A list of citations for the sources of this model's dynamics"""
 
-        self._options: InitVar[MultispeciesOptions] = None
+        self._options: MultispeciesOptions()
         """A link to the options object"""
 
         self._wn: WaterNetworkModel = None
         """A link to a water network model"""
-
-        self._options = MultispeciesOptions()
 
         self._variables: DisjointMapping = DisjointMapping()
         self._species = self._variables.add_disjoint_group("species")
@@ -863,7 +861,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
             inp = MsxFile()
             inp.read(msx_file_name, self)
 
-    def _is_variable_registered(self, var_or_name: Union[str, ReactionVariable]) -> bool:
+    def _is_variable_registered(self, var_or_name: Union[str, AbstractVariable]) -> bool:
         name = str(var_or_name)
         if name in self._variables.keys():
             return True
@@ -933,7 +931,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
                 continue
             yield v
 
-    def add_variable(self, var_or_type: Union[ReactionVariable, VariableType], name: str = None, **kwargs):
+    def add_variable(self, var_or_type: Union[AbstractVariable, VariableType], name: str = None, **kwargs):
         """Add an new variable to the model, or add an existing, unlinked variable object to the model.
 
         Parameters
@@ -954,7 +952,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
         VariableNameExistsError
             if the variable or name uses the same name an existing variable already uses
         """
-        if not isinstance(var_or_type, (ReactionVariable,)):
+        if not isinstance(var_or_type, (AbstractVariable,)):
             try:
                 var_or_type = VariableType.get(var_or_type)
             except Exception as e:
@@ -1265,7 +1263,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
             self._source_dict.__delitem__(name)
         return self._variables.__delitem__(name)
 
-    def get_variable(self, name: str) -> ReactionVariable:
+    def get_variable(self, name: str) -> AbstractVariable:
         """Get a variable based on its name (symbol).
 
         Parameters
@@ -1341,7 +1339,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
         species = str(species)
         if species not in self._species.keys():
             raise ValueError("The species {} does not exist in the model, failed to add reaction.".format(species))
-        _key = ReactionDynamics.to_key(species, location)
+        _key = AbstractReaction.to_key(species, location)
         if _key in self._dynamics.keys():
             raise RuntimeError("The species {} already has a {} reaction defined. Use set_reaction instead.")
         dynamics = DynamicsType.get(dynamics)
@@ -1362,7 +1360,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
             raise ValueError("Invalid location type, {}".format(location))
         return new
 
-    def add_pipe_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> ReactionDynamics:
+    def add_pipe_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> AbstractReaction:
         """Add a pipe reaction. See also :meth:`add_reaction`.
 
         Parameters
@@ -1383,7 +1381,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
         """
         return self.add_reaction(LocationType.PIPE, species=species, dynamics=dynamics, expression=expression, note=note)
 
-    def add_tank_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> ReactionDynamics:
+    def add_tank_reaction(self, species: Union[str, Species], dynamics: Union[str, int, DynamicsType], expression: str, note: str = None) -> AbstractReaction:
         """Add a pipe reaction. See also :meth:`add_reaction`.
 
         Parameters
@@ -1425,24 +1423,24 @@ class MultispeciesQualityModel(AbstractQualityModel):
         if location is None:
             raise TypeError('location cannot be None when removing a reaction. Use "all" for all locations.')
         elif location == "all":
-            name = ReactionDynamics.to_key(species, LocationType.PIPE)
+            name = AbstractReaction.to_key(species, LocationType.PIPE)
             try:
                 self._pipe_dynamics.__delitem__(name)
             except KeyError:
                 pass
-            name = ReactionDynamics.to_key(species, LocationType.TANK)
+            name = AbstractReaction.to_key(species, LocationType.TANK)
             try:
                 self._tank_dynamics.__delitem__(name)
             except KeyError:
                 pass
         elif location is LocationType.PIPE:
-            name = ReactionDynamics.to_key(species, LocationType.PIPE)
+            name = AbstractReaction.to_key(species, LocationType.PIPE)
             try:
                 self._pipe_dynamics.__delitem__(name)
             except KeyError:
                 pass
         elif location is LocationType.TANK:
-            name = ReactionDynamics.to_key(species, LocationType.TANK)
+            name = AbstractReaction.to_key(species, LocationType.TANK)
             try:
                 self._tank_dynamics.__delitem__(name)
             except KeyError:
@@ -1500,7 +1498,7 @@ class MultispeciesQualityModel(AbstractQualityModel):
         if isinstance(value, dict):
             self._options = MultispeciesOptions.factory(value)
         elif not isinstance(value, MultispeciesOptions):
-            raise TypeError("Expected a RxnOptions object, got {}".format(type(value)))
+            raise TypeError("Expected a MultispeciesOptions object, got {}".format(type(value)))
         else:
             self._options = value
 

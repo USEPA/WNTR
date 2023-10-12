@@ -252,7 +252,7 @@ class VariableType(Enum):
     """A coefficient that has a value dependent on the pipe or tank"""
     TERM = 16
     """A term that is aliased for ease of writing expressions"""
-    INTERNAL = 32
+    EXTERNAL = 32
     """An internal variable - see :attr:`~wntr.reaction.base.RESERVED_NAMES`"""
 
     B = BULK
@@ -260,7 +260,7 @@ class VariableType(Enum):
     C = CONSTANT
     P = PARAMETER
     T = TERM
-    I = INTERNAL
+    E = EXTERNAL
 
     CONST = CONSTANT
     PARAM = PARAMETER
@@ -328,7 +328,7 @@ class DynamicsType(Enum):
     F = FORMULA
 
 
-class ReactionVariable(ABC):
+class AbstractVariable(ABC):
     """The base for a reaction variable.
 
     Attributes
@@ -423,7 +423,7 @@ class ReactionVariable(ABC):
         return self.symbol
 
 
-class ReactionDynamics(ABC):
+class AbstractReaction(ABC):
     """The base for a reaction.
 
     Attributes
@@ -525,12 +525,12 @@ class AbstractQualityModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def add_variable(self, __variable: ReactionVariable):
+    def add_variable(self, __variable: AbstractVariable):
         """Add a variable *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_variable(self, name: str) -> ReactionVariable:
+    def get_variable(self, name: str) -> AbstractVariable:
         """Get a specific variable by name"""
         raise NotImplementedError
 
@@ -545,12 +545,12 @@ class AbstractQualityModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def add_reaction(self, __reaction: ReactionDynamics):
+    def add_reaction(self, __reaction: AbstractReaction):
         """Add a reaction *object* to the model"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_reaction(self, species, location=None) -> List[ReactionDynamics]:
+    def get_reaction(self, species, location=None) -> List[AbstractReaction]:
         """Get reaction(s) for a species, optionally only for one location"""
         raise NotImplementedError
 

@@ -502,7 +502,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def initial_quality(self):
-        """float or dict : The initial quality (concentration) at the node, or a dict of species and quality if multispecies"""
+        """float or dict : a dict of species and quality if multispecies is active"""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality

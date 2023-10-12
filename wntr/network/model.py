@@ -83,6 +83,7 @@ class WaterNetworkModel(AbstractModel):
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
         self._sources = SourceRegistry(self)
+        self._msx = None
 
         self._node_reg._finalize_(self)
         self._link_reg._finalize_(self)
@@ -326,6 +327,19 @@ class WaterNetworkModel(AbstractModel):
     def gpvs(self):
         """Iterator over all general purpose valves (GPVs)"""
         return self._link_reg.gpvs
+
+    @property
+    def msx(self):
+        """A multispecies water quality model, if defined"""
+        return self._msx
+    
+    @msx.setter
+    def msx(self, msx):
+        if msx is None:
+            self._msx = None
+        from wntr.quality.base import AbstractQualityModel
+        if not isinstance(msx, AbstractQualityModel):
+            raise TypeError('Expected AbstractQualityModel (or derived), got {}'.format(type(msx)))
 
     """
     ### # 

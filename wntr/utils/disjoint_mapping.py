@@ -42,10 +42,15 @@ class DisjointMapping(MutableMapping):
             self.__key_groupnames[k] = None
             self.__usage[k] = set()
 
-    def add_disjoint_group(self, name):
+    def add_disjoint_group(self, name, cls = None):
         if name in self.__groups.keys():
             raise KeyError("Disjoint group already exists within registry")
-        new = DisjointMappingGroup(name, self)
+        if cls is None:
+            new = DisjointMappingGroup(name, self)
+        elif issubclass(cls, DisjointMappingGroup):
+            new = cls(name, self)
+        else:
+            raise TypeError('cls must be a subclass of DisjointMappingGroup, got {}'.format(cls))
         self.__groups.__setitem__(name, new)
         return new
 
