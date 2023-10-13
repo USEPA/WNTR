@@ -20,7 +20,7 @@ except ModuleNotFoundError:
     has_geopandas = False
 
 
-def snap(A, B, tolerance):  
+def snap(A, B, tolerance, N=1):  
     """
     Snap Points in A to Points or Lines in B
 
@@ -35,7 +35,9 @@ def snap(A, B, tolerance):
         GeoDataFrame containing Point, LineString, or MultiLineString geometries.
     tolerance : float
         Maximum allowable distance (in the coordinate reference system units) 
-        between Points in A and Points or Lines in B.  
+        between Points in A and Points or Lines in B.
+    N : int
+        Number of points to snap to. Defaults to 1.
     
     Returns
     -------
@@ -53,7 +55,7 @@ def snap(A, B, tolerance):
             - snap_distance: distance between Point A and snapped point
             - line_position: normalized distance of snapped point along Line in B from the start node (0.0) and end node (1.0)
             - geometry: GeoPandas Point object of the snapped point
-    """   
+    """
     if not has_shapely or not has_geopandas:
         raise ModuleNotFoundError('shapley and geopandas are required')
         
@@ -62,79 +64,93 @@ def snap(A, B, tolerance):
     isinstance(B, gpd.GeoDataFrame)
     assert (B['geometry'].geom_type).isin(['Point', 'LineString', 'MultiLineString']).all()
     assert A.crs == B.crs
-    
-    # Modify B to include "indexB" as a separate column
-    B = B.reset_index()
-    B.rename(columns={'index':'indexB'}, inplace=True)
+    assert N >= 1
     
     # Define the coordinate reference system, based on B
     crs = B.crs
     
+    # Dev note: the internals of this function uses
+    #   integer index of A and B so as to avoid
+    #   issues from non-standard indexes (eg multi-index).
+    A_int = A.reset_index(drop=True)
+    
     # Determine which Bs are closest to each A
-    bbox = A.bounds + [-tolerance, -tolerance, tolerance, tolerance]       
-    hits = bbox.apply(lambda row: list(B.loc[list(B.sindex.intersection(row))]['indexB']), axis=1)        
+    bbox = A_int.bounds + [-tolerance, -tolerance, tolerance, tolerance]
+    hits = bbox.apply(lambda row: list(B.sindex.intersection(row)), axis=1)
+
     closest = pd.DataFrame({
         # index of points table
-        "point": np.repeat(hits.index, hits.apply(len)),
-        # name of link
-        "indexB": np.concatenate(hits.values)
+        "A_index": np.repeat(hits.index, hits.apply(len)),
+        "B_int_index": np.concatenate(hits.values),
         })
     
-    # Merge the closest dataframe with the lines dataframe on the line names
-    closest = pd.merge(closest, B, on="indexB")
-
-    # Join back to the original points to get their geometry
+    # Merge the closest dataframe with B to obtain geometry
+    closest = pd.merge(closest, B.reset_index(drop=True), left_on="B_int_index", 
+        right_index=True, how="left")
+    
+    # Join back to the points in A to get their geometry
     # rename the point geometry as "points"
-    closest = closest.join(A.geometry.rename("points"), on="point")
+    closest = closest.join(A_int.geometry.rename("A_point"), on="A_index")
     
     # Convert back to a GeoDataFrame, so we can do spatial ops
-    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)  
+    closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)
     
     # Calculate distance between the point and nearby links
-    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.points, crs=crs))
+    closest["snap_distance"] = closest.geometry.distance(gpd.GeoSeries(closest.A_point, crs=crs))
         
     # Collect only point/link pairs within snap distance radius
     # This is needed because B.sindex.intersection(row) above can return false positives
     closest = closest[closest['snap_distance'] <= tolerance]
     
     # Sort on ascending snap distance, so that closest goes to top
-    closest = closest.sort_values(by=["snap_distance", "indexB"]) 
-       
-    # group by the index of the points and take the first, which is the closest line
-    closest = closest.groupby("point").first()      
+    closest = closest.sort_values(by=["A_index", "snap_distance", "B_int_index"])
     
+    # replace B integer index with original B index
+    closest.B_int_index = closest.apply(lambda row: B.iloc[row.B_int_index].name, axis=1)
+    closest = closest.rename(columns={"B_int_index":"B_index"})
+    
+    # get N closest points
+    closest = closest.groupby("A_index").head(N)
+
     # construct a GeoDataFrame of the closest elements of B
     closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)
     
-    # Reset B index
-    B.set_index('indexB', inplace=True)
-    B.index.name = None
-    
     # snap to points
     if B['geometry'].geom_type.isin(['Point']).all():
-        snapped_points = closest.rename(columns={"indexB":"node"})
-        snapped_points = snapped_points[["node", "snap_distance", "geometry"]]
-        snapped_points.index.name = None      
+        closest = closest.rename(columns={"B_index":"node"})
+        closest = closest[["A_index", "node", "snap_distance", "geometry"]]
+        closest.index.name = None
         
     # snap to lines
     if B['geometry'].geom_type.isin(['LineString', 'MultiLineString']).all():
-        closest = closest.rename(columns={"indexB":"link"})        
-        # position of nearest point from start of the line
-        pos = closest.geometry.project(gpd.GeoSeries(closest.points))        
-        # get new point location geometry
-        snapped_points = closest.geometry.interpolate(pos)
-        snapped_points = gpd.GeoDataFrame(data=closest ,geometry=snapped_points, crs=crs)
-        # determine whether the snapped point is closer to the start or end node
-        snapped_points["line_position"] = closest.geometry.project(snapped_points, normalized=True)
-        if ("start_node_name" in closest.columns) and ("end_node_name" in closest.columns):
-            snapped_points.loc[snapped_points["line_position"]<0.5, "node"] = closest["start_node_name"]
-            snapped_points.loc[snapped_points["line_position"]>=0.5, "node"] = closest["end_node_name"]
-            snapped_points = snapped_points[["link", "node", "snap_distance", "line_position", "geometry"]]
-        else:
-            snapped_points = snapped_points[["link", "snap_distance", "line_position", "geometry"]]
-        snapped_points.index.name = None
+        closest = closest.rename(columns={"B_index":"link"})
         
-    return snapped_points
+        # position of nearest point from start of the link
+        closest["pos"] = closest.geometry.project(gpd.GeoSeries(closest.A_point)) 
+
+        # get new point location geometry
+        closest["snapped_points"] = closest.geometry.interpolate(closest["pos"])
+        
+        # determine whether the snapped point is closer to the start or end node
+        closest["line_position"] = closest.geometry.project(closest["snapped_points"], normalized=True)
+        closest.geometry = closest.snapped_points
+        
+        if ("start_node_name" in closest.columns) and ("end_node_name" in closest.columns):
+            closest.loc[closest["line_position"]<0.5, "node"] = closest["start_node_name"]
+            closest.loc[closest["line_position"]>=0.5, "node"] = closest["end_node_name"]
+            closest = closest[["A_index", "link", "node", "snap_distance", "line_position", "geometry"]]
+        else:
+            closest = closest[["A_index", "link", "snap_distance", "line_position", "geometry"]]
+    
+    if N > 1:   
+        closest = closest.groupby("A_index").agg(list)
+    else:
+        closest = closest.drop("A_index", axis=1)
+        closest = gpd.GeoDataFrame(closest, geometry = "geometry", crs=crs)
+    
+    closest.index = A.index
+    
+    return closest
 
 def _backgound(A, B):
     
