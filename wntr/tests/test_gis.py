@@ -243,13 +243,70 @@ class TestGIS(unittest.TestCase):
             self.assertTrue(isfile(filename))
 
     def test_snap_points_to_points(self):
-        
         snapped_points = wntr.gis.snap(self.points, self.gis_data.junctions, tolerance=5.0)        
         # distance = np.sqrt(2)*2, 5, np.sqrt(2)*3
         expected = pd.DataFrame([{'node': '12', 'snap_distance': 2.23607, 'geometry': Point([50.0,70.0])},
                                  {'node': '23', 'snap_distance': 5.0,      'geometry': Point([70.0,40.0])},
                                  {'node': '21', 'snap_distance': 4.242641, 'geometry': Point([30.0,40.0])}])
         
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        
+        # Test multi-index
+        index_tuples = [('bar', 'one'),
+                        ('bar', 'two'),
+                        ('bar', 'three'),
+                        ('baz', 'one'),
+                        ('baz', 'two'),
+                        ('baz', 'three'),
+                        ('foo', 'one'),
+                        ('foo', 'two'),
+                        ('foo', 'three')]
+        points_multi_index = pd.MultiIndex.from_tuples(index_tuples[:3])
+        junctions_multi_index = pd.MultiIndex.from_tuples(index_tuples)
+        snapped_points = wntr.gis.snap(self.points.set_index(points_multi_index), 
+                                       self.gis_data.junctions.set_index(junctions_multi_index), 
+                                       tolerance=5.0)        
+        expected = pd.DataFrame([{'node': ('bar', 'three'), 'snap_distance': 2.23607, 'geometry': Point([50.0,70.0])},
+                                 {'node': ('foo', 'one'), 'snap_distance': 5.0,      'geometry': Point([70.0,40.0])},
+                                 {'node': ('baz', 'two'), 'snap_distance': 4.242641, 'geometry': Point([30.0,40.0])}])
+        expected = expected.set_index(points_multi_index)
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        
+        # Test returning multiple nearest points
+        snapped_points = wntr.gis.snap(self.points, self.gis_data.junctions, tolerance=30.0, N=2)
+        expected = pd.DataFrame([{'node': ['12', '13'], 'snap_distance': [2.23607, 18.02776], 'geometry': [Point([50.0, 70.0]), Point([70.0, 70.0])]},
+                                 {'node': ['23', '22'], 'snap_distance': [5.0, 25.0],         'geometry': [Point(70.0, 40.0), Point([50.0, 40.0])]},
+                                 {'node': ['21', '22'], 'snap_distance': [4.24264, 23.19483], 'geometry': [Point([30.0, 40.0]), Point([50.0, 40.0])]}])
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        """
+        # DEBUGGING CODE
+        def create_connections(points, snapped_data):
+            from shapely.geometry import LineString
+            # There must be a better way to create this geodataframe
+            df = {}
+            geom = []
+            count = 0
+            for i, row in snapped_data.iterrows():
+                geom.append(LineString([points.loc[i, 'geometry'], row['geometry']]))
+                df[count] = row['node']
+                count = count + 1
+            connectors = gpd.GeoDataFrame(pd.Series(df), geometry=geom)
+            return connectors
+            
+        snapped_points = snapped_points.explode(["node", "snap_distance", "geometry"])
+        connections = create_connections(self.points, snapped_points)
+        ax = self.points.plot()
+        self.gis_data.junctions.plot(ax=ax)
+        connections.plot(ax=ax)
+        """
+        # Test non-unique indices
+        snapped_points = wntr.gis.snap(self.points.set_index(pd.Index([1]*3)), 
+                                       self.gis_data.junctions.set_index(pd.Index([1]*9)), 
+                                       tolerance=5.0)
+        expected = pd.DataFrame([{'node': 1, 'snap_distance': 2.23607, 'geometry': Point([50.0,70.0])},
+                                 {'node': 1, 'snap_distance': 5.0,      'geometry': Point([70.0,40.0])},
+                                 {'node': 1, 'snap_distance': 4.242641, 'geometry': Point([30.0,40.0])}])
+        expected = expected.set_index(pd.Index([1]*3))
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
         
 
@@ -259,9 +316,72 @@ class TestGIS(unittest.TestCase):
         
         # distance = 1,5,3
         expected = pd.DataFrame([{'link': '12', 'node': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
-                                 {'link': '113', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link': '22', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
         
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        
+        # Test multi-index
+        index_tuples = [('bar', 'one'),
+                        ('bar', 'two'),
+                        ('bar', 'three'),
+                        ('baz', 'one'),
+                        ('baz', 'two'),
+                        ('baz', 'three'),
+                        ('foo', 'one'),
+                        ('foo', 'two'),
+                        ('foo', 'three'),
+                        ('qux', 'one'),
+                        ('qux', 'two'),
+                        ('qux', 'three'),]
+        points_multi_index = pd.MultiIndex.from_tuples(index_tuples[:3])
+        junctions_multi_index = pd.MultiIndex.from_tuples(index_tuples)
+        snapped_points = wntr.gis.snap(self.points.set_index(points_multi_index), 
+                                       self.gis_data.pipes.set_index(junctions_multi_index), 
+                                       tolerance=5.0)        
+        expected = pd.DataFrame([{'link': ('bar', 'three'), 'node': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
+                                 {'link': ('baz', 'two'), 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link': ('qux', 'two'), 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
+        expected = expected.set_index(points_multi_index)
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        
+        # Test returning multiple nearest points
+        snapped_points = wntr.gis.snap(self.points, self.gis_data.pipes, tolerance=30.0, N=2)
+        expected = pd.DataFrame([{'link': ['12', '110'], 'node': ['12', '12'], 'snap_distance':[1.0, 2.0], 'line_position': [0.1, 0.95], 'geometry': [Point([52.0,70.0]), Point([50.0,71.0])]},
+                                 {'link': ['22', '113'], 'node': ['23', '23'], 'snap_distance':[5.0, 5.0], 'line_position': [1.0, 1.0], 'geometry': [Point([70.0,40.0]), Point([70.0,40.0])]},
+                                 {'link': ['121', '21'], 'node': ['21', '21'], 'snap_distance':[3.0, 4.24264], 'line_position': [0.1, 0.0], 'geometry': [Point([30.0,37.0]), Point([30.0,40.0])]}])
+        assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+        """
+        # DEBUGGING CODE
+        def create_connections(points, snapped_data):
+            from shapely.geometry import LineString
+            # There must be a better way to create this geodataframe
+            df = {}
+            geom = []
+            count = 0
+            for i, row in snapped_data.iterrows():
+                geom.append(LineString([points.loc[i, 'geometry'], row['geometry']]))
+                df[count] = row['link']
+                count = count + 1
+            connectors = gpd.GeoDataFrame(pd.Series(df), geometry=geom)
+            return connectors
+            
+        snapped_points = snapped_points.explode(["node", "snap_distance", "line_position", "geometry"])
+        connections = create_connections(self.points, snapped_points)
+        ax = self.points.plot()
+        self.gis_data.pipes.plot(ax=ax)
+        connections.plot(ax=ax)
+        """
+        
+        # Test non-unique indices
+        snapped_points = wntr.gis.snap(self.points.set_index(pd.Index([1]*3)), 
+                                       self.gis_data.pipes.set_index(pd.Index([1]*12)), 
+                                       tolerance=5.0)
+        expected = pd.DataFrame([{'link': 1, 'node': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
+                                 {'link': 1, 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link': 1, 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
+        
+        expected = expected.set_index(pd.Index([1]*3))
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
 
 if __name__ == "__main__":
