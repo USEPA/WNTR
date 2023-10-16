@@ -1,4 +1,4 @@
-wntr.morph package
+wntr.stormwater package
 ====================
 
 .. automodule:: wntr.stormwater
