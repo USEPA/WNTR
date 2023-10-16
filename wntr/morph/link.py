@@ -3,11 +3,14 @@ The wntr.morph.link module contains functions to split/break pipes.
 """
 import logging
 import copy
+
+import wntr.network
 from wntr.network.elements import Reservoir, Pipe
+from wntr.network import WaterNetworkModel
 
 logger = logging.getLogger(__name__)
 
-        
+
 def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
                add_pipe_at_end=True, split_at_point=0.5, return_copy=True):
     """
@@ -59,15 +62,15 @@ def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
     wntr WaterNetworkModel
         Water network model with split pipe
     """
-    wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
-                            [new_junction_name],
-                            add_pipe_at_end, split_at_point, 'SPLIT', return_copy)
-    
+    wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
+                               [new_junction_name],
+                               add_pipe_at_end, split_at_point, 'SPLIT', return_copy)
+
     return wn2
-    
+
 
 def break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
-               new_junction_name_new_pipe, add_pipe_at_end=True, 
+               new_junction_name_new_pipe, add_pipe_at_end=True,
                split_at_point=0.5, return_copy=True):
     """
     Break a pipe by adding a two unconnected junctions and one new pipe segment.
@@ -124,23 +127,23 @@ def break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe
     wntr WaterNetworkModel
         Water network model with pipe break
     """
-    wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
-                            [new_junction_name_old_pipe, new_junction_name_new_pipe],
-                            add_pipe_at_end, split_at_point, 'BREAK', return_copy)
-    
+    wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
+                               [new_junction_name_old_pipe, new_junction_name_new_pipe],
+                               add_pipe_at_end, split_at_point, 'BREAK', return_copy)
+
     return wn2
 
-def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
+
+def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                          new_junction_names, add_pipe_at_end, split_at_point,
                          flag, return_copy):
-    
-    if return_copy: # Get a copy of the WaterNetworkModel
+    if return_copy:  # Get a copy of the WaterNetworkModel
         wn2 = copy.deepcopy(wn)
     else:
         wn2 = wn
-    
+
     pipe = wn2.get_link(pipe_name_to_split)
-    
+
     # Do sanity checks
     if not isinstance(pipe, Pipe):
         raise ValueError('You can only split pipes.')
@@ -159,7 +162,7 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
     # Get start and end node info
     start_node = pipe.start_node
     end_node = pipe.end_node
-    
+
     # calculate the new elevation
     if isinstance(start_node, Reservoir):
         junction_elevation = end_node.elevation
@@ -183,19 +186,19 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
         for i in range(len(pipe_vertices) - 1):
             start_pos = pipe_vertices[i]
             end_pos = pipe_vertices[i + 1]
-            segment_length = (sum([(a-b)**2 for (a,b) in zip(start_pos, end_pos)])
+            segment_length = (sum([(a - b) ** 2 for (a, b) in zip(start_pos, end_pos)])
                               ** 0.5)
             segments.append({'start_pos': start_pos,
                              'end_pos': end_pos,
                              'length': segment_length,
                              'subtotal': subtotal})
-            
+
             subtotal += segment_length
-            
+
         last_segment = segments[-1]
         length = last_segment['subtotal'] + last_segment['length']
         split_length = length * split_at_point
-        
+
         # Loop over segments and assign vertices (start_pos) to the first or 
         # second pipe. Skip the first segment (its start_pos is not a vertice)
         for segment in segments:
@@ -205,12 +208,11 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                 first_vertices.append(segment['start_pos'])
             else:
                 last_vertices.append(segment['start_pos'])
-            
+
         # Identify the segment that cross the split point and compute the new
         # junction coordinates
         for segment in segments:
-            if (segment['subtotal'] + segment['length'] >= split_length
-                    and segment['subtotal'] < split_length):
+            if segment['subtotal'] + segment['length'] >= split_length > segment['subtotal']:
                 split_at = ((split_length - segment['subtotal'])
                             / segment['length'])
                 x0 = segment['start_pos'][0]
@@ -220,7 +222,7 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
                 junction_coordinates = (x0 + dx * split_at,
                                         y0 + dy * split_at)
     # calculate the new coordinates without vertices            
-    else: 
+    else:
         x0 = pipe.start_node.coordinates[0]
         dx = pipe.end_node.coordinates[0] - x0
         y0 = pipe.start_node.coordinates[1]
@@ -230,8 +232,8 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
 
     # add the new junction
     for new_junction_name in new_junction_names:
-        wn2.add_junction(new_junction_name, base_demand=0.0, 
-                         demand_pattern=None, elevation=junction_elevation, 
+        wn2.add_junction(new_junction_name, base_demand=0.0,
+                         demand_pattern=None, elevation=junction_elevation,
                          coordinates=junction_coordinates)
 
     original_length = pipe.length
@@ -242,30 +244,68 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
     elif flag == 'SPLIT':
         j0 = new_junction_names[0]
         j1 = new_junction_names[0]
-            
+
     if add_pipe_at_end:
-        pipe.end_node = wn2.get_node(j0) 
+        pipe.end_node = wn2.get_node(j0)
         # add new pipe and change original length
         wn2.add_pipe(new_pipe_name, j1, end_node.name,
-                     original_length*(1-split_at_point), pipe.diameter, 
+                     original_length * (1 - split_at_point), pipe.diameter,
                      pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
-        pipe.length = original_length*split_at_point
+        pipe.length = original_length * split_at_point
         pipe.vertices = first_vertices
         new_pipe = wn2.get_link(new_pipe_name)
         new_pipe.vertices = last_vertices
-    else: # add pipe at start
-        pipe.start_node = wn2.get_node(j0) 
+    else:  # add pipe at start
+        pipe.start_node = wn2.get_node(j0)
         # add new pipe and change original length
-        wn2.add_pipe(new_pipe_name, start_node.name, j1, 
-                     original_length*split_at_point, pipe.diameter, 
+        wn2.add_pipe(new_pipe_name, start_node.name, j1,
+                     original_length * split_at_point, pipe.diameter,
                      pipe.roughness, pipe.minor_loss, pipe.status, pipe.check_valve)
-        pipe.length = original_length*(1-split_at_point)
+        pipe.length = original_length * (1 - split_at_point)
         pipe.vertices = last_vertices
         new_pipe = wn2.get_link(new_pipe_name)
         new_pipe.vertices = first_vertices
-        
+
     if pipe.check_valve:
         logger.warn('You are splitting a pipe with a check valve. The new \
                     pipe will not have a check valve.')
-    
-    return wn2 
+
+    return wn2
+
+
+def reverse_link(wn: WaterNetworkModel, link_name: str, return_copy=True) -> WaterNetworkModel:
+    """
+    Reverse a link to switch between the start and end nodes
+    The function can reverse any link (pipe, pump or valve)
+    Vertices order will be reversed to maintain the link layout
+
+    Parameters
+    ----------
+    wn:             WaterNetworkModel
+                    The network object where link should be reversed.
+    link_name:      string
+                    The name of the link to revers.
+    return_copy:    bool, optional
+                    If True, modify and return a copy of the WaterNetworkModel object.
+                    If False, modify and return the original WaterNetworkModel object.
+
+    Returns
+    -------
+    WaterNetworkModel
+    A network object after link was reversed
+    """
+    if return_copy:  # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
+
+    link = wn2.get_link(link_name)
+    start_node = link.start_node
+    end_node = link.end_node
+    vertices = link.vertices
+
+    link.start_node = end_node
+    link.end_node = start_node
+    link.vertices = vertices[::-1]
+
+    return wn2
