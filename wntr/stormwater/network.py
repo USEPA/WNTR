@@ -23,33 +23,46 @@ class StormWaterNetworkModel(object):
 
     def __init__(self, inp_file_name=None):
         
-        """
-        swmmio.Model.links.geodataframe returns a geodataframe containing 
-        PUMPS, CONDUITS, WEIRS, and ORIFICES joined with XSECTIONS and 
-        COORDINATES
-        """
-        
         if inp_file_name:
             self._swmmio_model = swmmio.Model(inp_file_name)
             
-            # These dataframes can be used to modify the network model
-            # prior to running pyswmm, the updates are saved to a new INP file
-            # before running the simulation
-            self.nodes = self._swmmio_model.nodes.geodataframe.copy()
-            self.links = self._swmmio_model.links.geodataframe.copy()
-            self.subcatchments = self._swmmio_model.subcatchments.geodataframe.copy()
-            self.raingages = self._swmmio_model.inp.raingages.copy()
-            self.options = self._swmmio_model.inp.options.copy()
+            # Attributes of StormWaterNetworkModel link to attributes 
+            # in swmmio.Model.inp, which contains dataframes from an INP file.
+            # The swmmio.Model.inp object also includes a .save method to 
+            # write a new INP file.
+            
+            # Nodes = Junctions, outfall, and storage nodes
+            self.junctions = self._swmmio_model.inp.junctions
+            self.outfalls = self._swmmio_model.inp.outfalls
+            self.storage = self._swmmio_model.inp.junctions
+            
+            # Links = Conduits, weirs, orifices, and pumps
+            self.conduits = self._swmmio_model.inp.conduits
+            self.weirs = self._swmmio_model.inp.weirs
+            self.orifices = self._swmmio_model.inp.orifices
+            self.pumps = self._swmmio_model.inp.pumps
+            
+            self.subcatchments = self._swmmio_model.inp.subcatchments
+            self.subareas = self._swmmio_model.inp.subareas
+            
+            self.raingages = self._swmmio_model.inp.raingages 
+            self.infiltration = self._swmmio_model.inp.infiltration
+            self.inflows = self._swmmio_model.inp.inflows
+            #self.dwf = self._swmmio_model.inp.dwf
+            
+            self.curves = self._swmmio_model.inp.curves
+            self.timeseries = self._swmmio_model.inp.timeseries
+            
+            self.options = self._swmmio_model.inp.options
+            self.files = self._swmmio_model.inp.files
+            
+            self.coordinates = self._swmmio_model.inp.coordinates
+            self.vertices = self._swmmio_model.inp.vertices
+            self.polygons = self._swmmio_model.inp.polygons
+            self.xsections = self._swmmio_model.inp.xsections
 
         else:
             self._swmmio_model = None
-            
-            self.nodes = None
-            self.links  = None
-            self.subcatchments = None
-            self.raingages = None
-            self.options = None
-            
 
     @property
     def node_name_list(self):
@@ -60,7 +73,8 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return self.junction_name_list + self.outfall_name_list + self.storage_name_list
+        return self.junction_name_list + self.outfall_name_list + \
+            self.storage_name_list
     
     @property
     def junction_name_list(self):
@@ -71,7 +85,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.junctions.index)
+        return list(self.junctions.index)
 
 
     @property
@@ -83,7 +97,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.outfalls.index)
+        return list(self.outfalls.index)
     
     
     @property
@@ -95,7 +109,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.storage.index)
+        return list(self.storage.index)
     
     @property
     def link_name_list(self):
@@ -118,7 +132,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.conduits.index)
+        return list(self.conduits.index)
     
     @property
     def weir_name_list(self):
@@ -129,7 +143,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.weirs.index)
+        return list(self.weirs.index)
     
     @property
     def orifice_name_list(self):
@@ -140,7 +154,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.orifices.index)
+        return list(self.orifices.index)
     
     @property
     def pump_name_list(self):
@@ -151,7 +165,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.pumps.index)
+        return list(self.pumps.index)
     
     @property
     def subcatchment_name_list(self):
@@ -162,7 +176,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.subcatchments.index)
+        return list(self.subcatchments.index)
     
     @property
     def raingage_name_list(self):
@@ -173,7 +187,7 @@ class StormWaterNetworkModel(object):
         list of strings
         
         """
-        return list(self._swmmio_model.inp.raingages.index)
+        return list(self.raingages.index)
     
     @property
     def num_nodes(self):
@@ -258,30 +272,3 @@ class StormWaterNetworkModel(object):
         networkx MultiDiGraph
         """
         return to_graph(self)
-    
-    
-    def udpate_model_inp(self, filename=None):
-        """
-        Update self._swmmio_model.inp based udpates to self.nodes, self.links, 
-        self.subcatchments, and self.raingages
-        """
-        model_inp = self._swmmio_model.inp
-        
-        # nodes
-        for df in [model_inp.junctions, model_inp.outfalls, model_inp.storage]:
-            df = self.nodes.loc[df.index, df.columns]
-        # links
-        for df in [model_inp.conduits, model_inp.weirs, model_inp.orifices, model_inp.pumps]:
-            df = self.links.loc[df.index, df.columns]
-        # subcatchments
-        for df in [model_inp.subcatchments]:
-            df = self.subcatchments.loc[df.index, df.columns]
-        # raingages
-        for df in [model_inp.raingages]:
-            df = self.raingages.loc[df.index, df.columns]
-        # options
-        for df in [model_inp.options]:
-            df = self.options.loc[df.index, df.columns]
-
-        if filename:
-            write_inpfile(self, filename)

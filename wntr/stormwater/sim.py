@@ -1,7 +1,7 @@
 import os
 import pyswmm
 
-from wntr.stormwater.io import read_outfile
+from wntr.stormwater.io import write_inpfile, read_outfile
 
 os.environ["CONDA_DLL_SEARCH_MODIFICATION_ENABLE"] = "1"
 # See https://github.com/OpenWaterAnalytics/pyswmm/issues/298
@@ -16,12 +16,17 @@ class SWMMSimulator(object):
 
         inpfile = file_prefix + '.inp'
         outfile = file_prefix + '.out'
-        
-        # Update swmmio model inp based on swn data
-        self._swn.udpate_model_inp(inpfile)
 
-        sim = pyswmm.Simulation(inpfile)
-        sim.execute()
+        write_inpfile(self._swn, inpfile)
+
+        # The use of swmmio run command seems slower and would not report errors
+        # import subprocess
+        # subprocess.run("python -m swmmio --run " + inpfile)
+
+        with pyswmm.Simulation(inpfile) as sim: 
+            for step in sim:
+                pass
+            sim.report()
 
         results = read_outfile(outfile)
 
