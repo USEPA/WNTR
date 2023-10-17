@@ -1,7 +1,7 @@
-wntr.stormwater.sim module
+wntr.stormwater.metrics module
 =====================================
 
-.. automodule:: wntr.stormwater.sim
+.. automodule:: wntr.stormwater.metrics
     :members:
     :inherited-members:
     :no-undoc-members:

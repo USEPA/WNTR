@@ -1,7 +1,7 @@
-wntr.stormwater.sim module
+wntr.stormwater.graphics module
 =====================================
 
-.. automodule:: wntr.stormwater.sim
+.. automodule:: wntr.stormwater.graphics
     :members:
     :inherited-members:
     :no-undoc-members:

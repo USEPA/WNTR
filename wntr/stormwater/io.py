@@ -1,20 +1,36 @@
 import logging
 import pandas as pd
+import networkx as nx
 import pyswmm
 import swmmio
 from swmm.toolkit.shared_enum import NodeAttribute, LinkAttribute, \
                                      SubcatchAttribute, SystemAttribute
 
 from wntr.sim import SimulationResults
-from wntr.gis import WaterNetworkGIS
+from wntr.stormwater.gis import StormWaterNetworkGIS
+import wntr.stormwater
 
 logger = logging.getLogger(__name__)
 
 
 def to_graph(swn):
-
+    """
+    Convert a StormWaterNetworkModel into a NetworkX graph
+    
+    Parameters
+    ----------
+    swn : StormWaterNetworkModel
+        Storm water network model
+        
+    Returns
+    -------
+    NetworkX graph
+    
+    """
     G = swn._swmmio_model.network
-
+    geom = nx.get_node_attributes(G, 'geometry')
+    pos = dict([(k,v['coordinates']) for k,v in geom.items()])
+    nx.set_node_attributes(G, pos, 'pos')
     return G
 
 
@@ -31,42 +47,58 @@ def to_gis(swn, crs=None):
 
     Returns
     -------
-    WaterNetworkGIS object that contains GeoDataFrames
+    StormWaterNetworkGIS object that contains GeoDataFrames
         
     """
-    gis_data = WaterNetworkGIS()
-    
-    # nodes
-    gis_data.junctions = swn.nodes.loc[swn.junction_name_list,:]
-    gis_data.outfalls = swn.nodes.loc[swn.outfall_name_list,:]
-    gis_data.storages = swn.nodes.loc[swn.storage_name_list,:]
-    
-    # links
-    gis_data.conduits = swn.links.loc[swn.conduit_name_list,:]
-    gis_data.weirs = swn.links.loc[swn.weir_name_list,:]
-    gis_data.orifices = swn.links.loc[swn.orifice_name_list,:]
-    gis_data.pumps = swn.links.loc[swn.pump_name_list,:]
-    
-    # subcatchments
-    gis_data.subcatchments = swn.subcatchments.loc[swn.subcatchment_name_list,:]
-
+    gis_data = StormWaterNetworkGIS()
+    gis_data._create_gis(swn, crs)
     return gis_data
 
 
 def write_inpfile(swn, filename):
-
+    """
+    Write the StormWaterNetworkModel to an EPANET INP file
+    
+    Parameters
+    ----------
+    swn : WaterNetworkModel
+        Water network model
+    filename : string
+       Name of the inp file
+    """
     swn._swmmio_model.inp.save(filename)
 
-
 def read_inpfile(filename):
+    """
+    Create a StormWaterNetworkModel from an SWMM INP file
+    
+    Parameters
+    ----------
+    filename : string
+       Name of the inp file
+       
+    Returns
+    -------
+    StormWaterNetworkModel
+    """
+    swn = wntr.stormwater.network.StormWaterNetworkModel(filename)
 
-    model = swmmio.Model(filename)
-
-    return model
+    return swn
 
 
-def read_outfile(outfile):
+def read_outfile(filename):
+    """
+    Read a SWMM binary output file
 
+    Parameters
+    ----------
+    filename : string
+       Name of the SWMM binary output file
+    
+    Returns
+    -------
+    SimulationResults
+    """
     results = SimulationResults()
     
     # Node results = INVERT_DEPTH, HYDRAULIC_HEAD, PONDED_VOLUME, 
@@ -88,7 +120,7 @@ def read_outfile(outfile):
     # EVAP_RATE
     results.system = {}
     
-    with pyswmm.Output(outfile) as out:
+    with pyswmm.Output(filename) as out:
         times = out.times
         
         for attribute in NodeAttribute:
@@ -118,3 +150,21 @@ def read_outfile(outfile):
         results.system = pd.DataFrame(data=temp, index=times)
         
     return results
+
+def write_geojson(swn, prefix: str, crs=None):
+    """
+    Write the StormWaterNetworkModel to a set of GeoJSON files, one file for each
+    network element.
+
+    Parameters
+    ----------
+    swn : wntr StormWaterNetworkModel
+        Storm water network model
+    prefix : str
+        File prefix
+    crs : str, optional
+        Coordinate reference system, by default None
+    """
+
+    swn_gis = swn.to_gis(crs)
+    swn_gis.write_geojson(prefix=prefix)

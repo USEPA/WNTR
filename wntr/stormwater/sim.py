@@ -8,12 +8,14 @@ os.environ["CONDA_DLL_SEARCH_MODIFICATION_ENABLE"] = "1"
 
 
 class SWMMSimulator(object):
-
+    """
+    SWMM simulator class.
+    """
     def __init__(self, swn):
         self._swn = swn
 
     def run_sim(self, file_prefix='temp'):
-
+        """Run a SWMM simulation"""
         inpfile = file_prefix + '.inp'
         outfile = file_prefix + '.out'
 

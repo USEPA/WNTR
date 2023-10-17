@@ -1,7 +1,7 @@
-wntr.stormwater.sim module
+wntr.stormwater.scenario module
 =====================================
 
-.. automodule:: wntr.stormwater.sim
+.. automodule:: wntr.stormwater.scenario
     :members:
     :inherited-members:
     :no-undoc-members:
