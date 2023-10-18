@@ -36,7 +36,7 @@ class StormWaterNetworkModel(object):
             # Nodes = Junctions, outfall, and storage nodes
             self.junctions = self._swmmio_model.inp.junctions
             self.outfalls = self._swmmio_model.inp.outfalls
-            self.storage = self._swmmio_model.inp.junctions
+            self.storage = self._swmmio_model.inp.storage
 
             # Links = Conduits, weirs, orifices, and pumps
             self.conduits = self._swmmio_model.inp.conduits
