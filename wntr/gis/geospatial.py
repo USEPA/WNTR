@@ -72,10 +72,12 @@ def snap(A, B, tolerance, N=1):
     # Dev note: the internals of this function uses
     #   integer index of A and B so as to avoid
     #   issues from non-standard indexes (eg multi-index).
-    A_int = A.reset_index(drop=True)
+    A_index = A.index
+    A_index_name = A.index.name
+    A = A.reset_index(drop=True)
     
     # Determine which Bs are closest to each A
-    bbox = A_int.bounds + [-tolerance, -tolerance, tolerance, tolerance]
+    bbox = A.bounds + [-tolerance, -tolerance, tolerance, tolerance]
     hits = bbox.apply(lambda row: list(B.sindex.intersection(row)), axis=1)
 
     closest = pd.DataFrame({
@@ -90,7 +92,7 @@ def snap(A, B, tolerance, N=1):
     
     # Join back to the points in A to get their geometry
     # rename the point geometry as "points"
-    closest = closest.join(A_int.geometry.rename("A_point"), on="A_index")
+    closest = closest.join(A.geometry.rename("A_point"), on="A_index")
     
     # Convert back to a GeoDataFrame, so we can do spatial ops
     closest = gpd.GeoDataFrame(closest, geometry="geometry", crs=crs)
@@ -148,8 +150,11 @@ def snap(A, B, tolerance, N=1):
         closest = closest.drop("A_index", axis=1)
         closest = gpd.GeoDataFrame(closest, geometry = "geometry", crs=crs)
     
-    closest.index = A.index
-    
+    # apply the original A index
+    A.index = A_index
+    A.index.name = A_index_name
+    closest.index = A_index
+    closest.index.name = A_index_name    
     return closest
 
 def _backgound(A, B):
