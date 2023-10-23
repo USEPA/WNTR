@@ -212,13 +212,13 @@ def intersect(A, B, attributes=None, include_background=False):
     if include_background:
         background = _backgound(A, B)
         B = pd.concat([B, background])
-    
+        
     original_A_index = A.index
     A = A.reset_index(drop=True)
     
     original_B_index = B.index
     B = B.reset_index(drop=True)
-     
+
     intersects = gpd.sjoin(A, B, predicate='intersects')
     
     Ai = intersects.loc[:,'geometry'].reset_index()
@@ -236,11 +236,11 @@ def intersect(A, B, attributes=None, include_background=False):
     intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
     # Sort values by index and intersecting object
-    intersects['sort_order'] = 1 # make sure 'BACKGROUND' is listed first
-    intersects.loc[intersects['index_right'] == 'BACKGROUND', 'sort_order'] = 0
-    intersects.sort_values(['_tmp_index_name', 'sort_order', 'index_right'], inplace=True)
+    intersects.sort_values(['_tmp_index_name', 'index_right'], inplace=True)
     
-    intersects.index_right = original_B_index[intersects.index_right] # bring original B indices back for B_indices list
+    # bring original B indices back for B_indices list
+    # intersects.index_right = intersects.index_right.apply(lambda x: "BACKGROUND" if x == "BACKGROUND" else original_A_index[x]) 
+    intersects.index_right = intersects.index_right.apply(lambda x: original_B_index[x]) 
     B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
     B_fraction = intersects.groupby('_tmp_index_name')['intersection_fraction'].apply(list)
     B_n = B_indices.apply(len)

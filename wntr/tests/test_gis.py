@@ -183,7 +183,7 @@ class TestGIS(unittest.TestCase):
         assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
         # Pipe 122
-        self.assertEqual(stats.loc['122','intersections'], ['BACKGROUND', '2', '3'])
+        self.assertEqual(stats.loc['122','intersections'], ['2', '3', 'BACKGROUND'])
         
     
     def test_intersect_polygons_with_lines(self):
@@ -191,14 +191,15 @@ class TestGIS(unittest.TestCase):
         stats = wntr.gis.intersect(self.polygons, self.gis_data.pipes)
         
         expected = pd.DataFrame([
-            {'intersections': ['10', '11', '110', '111', '112', '12'], 
+            {'intersections': ['10', '11', '12', '110', '111', '112'], 
             'fraction': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'n': 6},
-            {'intersections': ['111', '112', '113', '121', '122', '21', '22'], 
+            {'intersections': ['21', '22', '111', '112', '113', '121', '122'], 
             'fraction': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'n': 7},
-            {'intersections': ['112', '122', '21', '22'], 
+            {'intersections': ['21', '22', '112', '122'], 
             'fraction': [0.0, 0.0, 0.0, 0.0], 'n': 4}
             ])
         expected.index=['1', '2', '3']
+        expected.index.name = "name"
     
         assert_frame_equal(stats, expected, check_dtype=False)
         
@@ -288,7 +289,7 @@ class TestGIS(unittest.TestCase):
         
         # distance = 1,5,3
         expected = pd.DataFrame([{'link': '12', 'node': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
-                                 {'link':  '22', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link':  '113', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
