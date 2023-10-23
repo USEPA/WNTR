@@ -93,7 +93,8 @@ class StormWaterNetworkGIS:
         self.orifices = m.links.geodataframe.loc[swn.orifice_name_list,:]
         self.pumps = m.links.geodataframe.loc[swn.pump_name_list,:]
         
-        self.set_crs(crs, allow_override=True)
+        if crs is not None:
+            self.set_crs(crs, allow_override=True)
         
     def _create_swn(self, append=None):
         raise NotImplementedError

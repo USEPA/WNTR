@@ -17,14 +17,20 @@ class SWMMSimulator(object):
     def run_sim(self, file_prefix='temp'):
         """Run a SWMM simulation"""
         inpfile = file_prefix + '.inp'
+        if os.path.isfile(inpfile):
+            os.remove(inpfile)
+        
         outfile = file_prefix + '.out'
+        if os.path.isfile(outfile):
+            os.remove(outfile)
 
         write_inpfile(self._swn, inpfile)
 
-        # The use of swmmio run command seems slower and would not report errors
+        # The use of swmmio run command seems slower 
         # import subprocess
         # subprocess.run("python -m swmmio --run " + inpfile)
 
+        # The use of pyswmm has compatibility issues with some inp files
         with pyswmm.Simulation(inpfile) as sim: 
             for step in sim:
                 pass
