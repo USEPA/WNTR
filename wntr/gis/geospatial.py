@@ -218,9 +218,7 @@ def intersect(A, B, attributes=None, include_background=False):
     
     original_B_index = B.index
     B = B.reset_index(drop=True)
-    
-
-        
+     
     intersects = gpd.sjoin(A, B, predicate='intersects')
     
     Ai = intersects.loc[:,'geometry'].reset_index()

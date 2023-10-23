@@ -106,21 +106,52 @@ class TestGIS(unittest.TestCase):
                          
     def test_intersect_points_with_polygons(self):
         
-        stats = wntr.gis.intersect(self.gis_data.junctions, self.polygons, 'value')
+        stats = wntr.gis.intersect(self.gis_data.junctions, self.polygons, attributes=['value'])
         
         # Junction 22 intersects poly2 val=20, intersects poly3 val=30
         # weighted mean = (1*20+0.5*30)/2 = 17.5
-        expected = pd.Series({'intersections': ['2','3'], 'values': [20,30]})
-        expected['n'] = len(expected['values'])
-        expected['fraction'] = [np.nan, np.nan]
-        expected['sum'] = float(sum(expected['values']))
-        expected['min'] = float(min(expected['values']))
-        expected['max'] = float(max(expected['values']))
-        expected['mean'] = expected['sum']/expected['n']
+        expected = pd.Series({'intersections': ['2','3'], 
+                              'value': [20,30],
+                              'n': 2,
+                              'fraction': [np.nan, np.nan]})
+
+        # expected['sum'] = float(sum(expected['value']))
+        # expected['min'] = float(min(expected['value']))
+        # expected['max'] = float(max(expected['value']))
+        # expected['mean'] = expected['sum']/expected['n']
         expected = expected.reindex(stats.columns)
         
         self.assertEqual(stats.shape[0],5)
         assert_series_equal(stats.loc['22',:], expected, check_dtype=False, check_names=False)
+        
+        
+        # Test multi-index
+        index_tuples = [('bar', 'one'),
+                        ('bar', 'two'),
+                        ('bar', 'three'),
+                        ('baz', 'one'),
+                        ('baz', 'two'),
+                        ('baz', 'three'),
+                        ('foo', 'one'),
+                        ('foo', 'two'),
+                        ('foo', 'three')]
+        junctions_multi_index = pd.MultiIndex.from_tuples(index_tuples[:9])
+        polygons_multi_index = pd.MultiIndex.from_tuples(index_tuples[:3])
+        stats = wntr.gis.intersect(self.gis_data.junctions.set_index(junctions_multi_index), 
+                                   self.polygons.set_index(polygons_multi_index), 
+                                   attributes=['value'])
+        
+        expected = pd.Series({'intersections': [('bar', 'two'), ('bar', 'three')], 
+                        'value': [20,30],
+                        'n': 2,
+                        'fraction': [np.nan, np.nan]})
+
+        expected = expected.reindex(stats.columns)
+        
+        self.assertEqual(stats.shape[0],5)
+        assert_series_equal(stats.loc[('baz', 'three'),:], expected, check_dtype=False, check_names=False)
+        
+        
         
     def test_intersect_lines_with_polygons(self):
         
