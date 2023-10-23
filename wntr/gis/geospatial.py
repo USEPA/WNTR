@@ -154,7 +154,7 @@ def _backgound(A, B):
     background = background.to_frame('geometry')
     background.index = ['BACKGROUND']
     
-    background.plot()
+    # background.plot()
     
     return background
 
