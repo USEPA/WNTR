@@ -148,7 +148,7 @@ def _str_time_to_sec(s):
             if bool(time_tuple):
                 return int(time_tuple.groups()[0])*60*60
             else:
-                raise ENValueError('invalid-option-value', s)
+                raise ENValueError(213, s)
 
 
 def _clock_time_to_sec(s, am_pm):
@@ -176,7 +176,7 @@ def _clock_time_to_sec(s, am_pm):
     elif am_pm.upper() == 'PM':
         am = False
     else:
-        raise ENValueError('invalid-option-value', s, 'Ambiguous time of day')
+        raise ENValueError(213, s, 'Ambiguous time of day')
 
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -188,7 +188,7 @@ def _clock_time_to_sec(s, am_pm):
             time_sec -= 3600*12
         if not am:
             if time_sec >= 3600*12:
-                raise ENValueError('invalid-option-value', s, 'Cannot specify am/pm for times greater than 12:00:00')
+                raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
             time_sec += 3600*12
         return time_sec
     else:
@@ -201,7 +201,7 @@ def _clock_time_to_sec(s, am_pm):
                 time_sec -= 3600*12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise ENValueError('invalid-option-value', s, 'Cannot specify am/pm for times greater than 12:00:00')
+                    raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
                 time_sec += 3600*12
             return time_sec
         else:
@@ -213,11 +213,11 @@ def _clock_time_to_sec(s, am_pm):
                     time_sec -= 3600*12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise ENValueError('invalid-option-value', s, 'Cannot specify am/pm for times greater than 12:00:00')
+                        raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
                     time_sec += 3600*12
                 return time_sec
             else:
-                raise ENValueError('invalid-option-value', s, 'Cannot parse time')
+                raise ENValueError(213, s, 'Cannot parse time')
 
 
 def _sec_to_string(sec):
