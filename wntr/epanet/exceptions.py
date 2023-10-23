@@ -1,7 +1,6 @@
 # coding: utf-8
 """Exceptions for EPANET toolkit and IO operations."""
 
-from enum import IntEnum
 from typing import List
 
 EN_ERROR_CODES = {
@@ -87,7 +86,9 @@ EN_ERROR_CODES = {
 .. table:: EPANET warnings
 
     =========== ==============================================================================================================================================================================  
-    **Err No.** **Description**
+    *Err No.*   *Description*
+    ----------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    **1-6**     **Simulation warnings**
     ----------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     1           At `time`, system hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials
     2           At `time`, system may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed
@@ -217,7 +218,7 @@ class EpanetException(Exception):
         Parameters
         ----------
         code : int
-            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+            The EPANET error code
         args : additional non-keyword arguments, optional
             If there is a string-format within the error code's text, these will be used to 
             replace the format, otherwise they will be output at the end of the Exception message.
@@ -247,7 +248,7 @@ class ENSyntaxError(EpanetException, SyntaxError):
         Parameters
         ----------
         code : int
-            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+            The EPANET error code
         args : additional non-keyword arguments, optional
             If there is a string-format within the error code's text, these will be used to 
             replace the format, otherwise they will be output at the end of the Exception message.
@@ -265,7 +266,7 @@ class ENKeyError(EpanetException, KeyError):
         Parameters
         ----------
         code : int
-            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+            The EPANET error code
         name : str
             The key/name/id that is missing
         args : additional non-keyword arguments, optional
@@ -285,8 +286,8 @@ class ENValueError(EpanetException, ValueError):
 
         Parameters
         ----------
-        code : int or str or EpanetErrors
-            The EPANET error code (int) or a string mapping to the EpanetErrors enum members
+        code : int
+            The EPANET error code
         value : Any
             The value that is invalid
         args : additional non-keyword arguments, optional
