@@ -10,8 +10,7 @@ import enum
 import logging
 from abc import ABC, abstractmethod, abstractproperty
 from collections.abc import MutableMapping
-from dataclasses import InitVar, dataclass
-from enum import Enum, IntFlag
+from enum import Enum, IntFlag, IntEnum
 from typing import Any, ClassVar, Dict, Generator, List, Union
 
 import numpy as np
@@ -25,30 +24,89 @@ from wntr.utils.ordered_set import OrderedSet
 
 has_sympy = False
 try:
-    from sympy import Float, Symbol, init_printing, symbols, Function, Mul, Add, Pow, Integer
-    from sympy.functions import cos, sin, tan, cot, Abs, sign, sqrt, log, exp, asin, acos, atan, acot, sinh, cosh, tanh, coth, Heaviside
+    from sympy import (
+        Float,
+        Symbol,
+        init_printing,
+        symbols,
+        Function,
+        Mul,
+        Add,
+        Pow,
+        Integer,
+    )
+    from sympy.functions import (
+        cos,
+        sin,
+        tan,
+        cot,
+        Abs,
+        sign,
+        sqrt,
+        log,
+        exp,
+        asin,
+        acos,
+        atan,
+        acot,
+        sinh,
+        cosh,
+        tanh,
+        coth,
+        Heaviside,
+    )
     from sympy.parsing import parse_expr
-    from sympy.parsing.sympy_parser import convert_xor, standard_transformations, auto_number, auto_symbol
+    from sympy.parsing.sympy_parser import (
+        convert_xor,
+        standard_transformations,
+        auto_number,
+        auto_symbol,
+    )
+
     class _log10(Function):
         @classmethod
         def eval(cls, x):
             return log(x, 10)
+
     has_sympy = True
 except ImportError:
     sympy = None
     has_sympy = False
-    logging.critical("This python installation does not have SymPy installed. Certain functionality will be disabled.")
+    logging.critical(
+        "This python installation does not have SymPy installed. Certain functionality will be disabled."
+    )
     standard_transformations = (None,)
     convert_xor = None
     if not has_sympy:
-        from numpy import cos, sin, tan, abs, sign, sqrt, log, exp, arcsin, arccos, arctan, sinh, cosh, tanh, heaviside, log10
-        cot = lambda x : 1 / tan(x)
+        from numpy import (
+            cos,
+            sin,
+            tan,
+            abs,
+            sign,
+            sqrt,
+            log,
+            exp,
+            arcsin,
+            arccos,
+            arctan,
+            sinh,
+            cosh,
+            tanh,
+            heaviside,
+            log10,
+        )
+
+        def _cot(x): return 1 / tan(x)
+        cot = _cot
         Abs = abs
         asin = arcsin
         acos = arccos
         atan = arctan
-        acot = lambda x : 1 / arctan(1 / x)
-        coth = lambda x : 1 / tanh(x)
+        def _acot(x): return 1 / arctan(1 / x)
+        acot = _acot
+        def _coth(x): return 1 / tanh(x)
+        coth = _coth
         Heaviside = heaviside
         _log10 = log10
 
@@ -163,7 +221,7 @@ RESERVED_NAMES = (
     + tuple([k for k, v in EXPR_FUNCTIONS.items()])
     + tuple([k.upper() for k, v in EXPR_FUNCTIONS.items()])
     + tuple([k.capitalize() for k, v in EXPR_FUNCTIONS.items()])
-    + ('Mul', 'Add', 'Pow', 'Integer', 'Float')
+    + ("Mul", "Add", "Pow", "Integer", "Float")
 )
 """The WNTR reserved names. This includes the MSX hydraulic variables
 (see :numref:`table-msx-hyd-vars`) and the MSX defined functions 
@@ -180,11 +238,11 @@ for k, v in EXPR_FUNCTIONS.items():
     _global_dict[k.upper()] = v
 for v in HYDRAULIC_VARIABLES:
     _global_dict[v["name"]] = symbols(v["name"])
-_global_dict['Mul'] = Mul
-_global_dict['Add'] = Add
-_global_dict['Pow'] = Pow
-_global_dict['Integer'] = Integer
-_global_dict['Float'] = Float
+_global_dict["Mul"] = Mul
+_global_dict["Add"] = Add
+_global_dict["Pow"] = Pow
+_global_dict["Integer"] = Integer
+_global_dict["Float"] = Float
 
 EXPR_TRANSFORMS = (
     auto_symbol,
@@ -217,9 +275,17 @@ EXPR_TRANSFORMS = (
 :meta hide-value:
 """
 
+class AnnotatedFloat(float):
+    def __new__(self, value, note=None):
+        return float.__new__(self, value)
+    
+    def __init__(self, value, note=None):
+        float.__init__(value)
+        self.note = note
+
 
 @add_get(abbrev=True)
-class VariableType(Enum):
+class QualityVarType(IntEnum):
     """The type of reaction variable.
 
     The following types are defined, and aliases of just the first character
@@ -227,12 +293,49 @@ class VariableType(Enum):
 
     .. rubric:: Enum Members
     .. autosummary::
-        BULK
-        WALL
+
+        SPECIES
         CONSTANT
         PARAMETER
         TERM
-        INTERNAL
+        RESERVED
+
+    .. rubric:: Class Methods
+    .. autosummary::
+        :nosignatures:
+
+        get
+
+    """
+
+    SPECIES = 3
+    """A chemical or biological water quality species"""
+    TERM = 4
+    """A functional term - ie named expression - for use in reaction expressions"""
+    PARAMETER = 5
+    """A reaction expression coefficient that is parameterized by tank or pipe"""
+    CONSTANT = 6
+    """A constant coefficient for use in reaction expressions"""
+    RESERVED = 9
+    """A 'variable' that is either a hydraulic variable or other reserved word"""
+    S = SPEC = SPECIES
+    T = TERM
+    P = PARAM = PARAMETER
+    C = CONST = CONSTANT
+    R = RES = RESERVED
+
+
+@add_get(abbrev=True)
+class SpeciesType(IntEnum):
+    """The enumeration for species type.
+
+    .. warning:: These enum values are note the same as the MSX SpeciesType.
+
+    .. rubric:: Enum Members
+
+    .. autosummary::
+        BULK
+        WALL
 
     .. rubric:: Class Methods
     .. autosummary::
@@ -243,28 +346,12 @@ class VariableType(Enum):
     """
 
     BULK = 1
-    """A species that reacts with other bulk chemicals"""
+    """bulk species"""
     WALL = 2
-    """A species that reacts with the pipe walls"""
-    CONSTANT = 4
-    """A constant coefficient for use in a reaction expression"""
-    PARAMETER = 8
-    """A coefficient that has a value dependent on the pipe or tank"""
-    TERM = 16
-    """A term that is aliased for ease of writing expressions"""
-    EXTERNAL = 32
-    """An internal variable - see :attr:`~wntr.reaction.base.RESERVED_NAMES`"""
-
+    """wall species"""
     B = BULK
     W = WALL
-    C = CONSTANT
-    P = PARAMETER
-    T = TERM
-    E = EXTERNAL
-
-    CONST = CONSTANT
-    PARAM = PARAMETER
-
+    
 
 @add_get(abbrev=True)
 class LocationType(Enum):
@@ -353,7 +440,9 @@ class AbstractVariable(ABC):
     @_variable_registry.setter
     def _variable_registry(self, value):
         if value is not None and not isinstance(value, AbstractQualityModel):
-            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
+            raise TypeError(
+                "Linked model must be a RxnModelRegistry, got {}".format(type(value))
+            )
         self.__variable_registry = value
 
     def validate(self):
@@ -368,7 +457,7 @@ class AbstractVariable(ABC):
             raise TypeError("This object is not connected to any RxnModelRegistry")
 
     @abstractproperty
-    def var_type(self) -> VariableType:
+    def var_type(self) -> QualityVarType:
         """The variable type."""
         raise NotImplementedError
 
@@ -380,7 +469,7 @@ class AbstractVariable(ABC):
         bool
             True if this is a species object, False otherwise
         """
-        return self.var_type == VariableType.BULK or self.var_type == VariableType.WALL
+        return self.var_type == QualityVarType.SPECIES
 
     def is_coeff(self) -> bool:
         """Check to see if this variable represents a coefficient (constant or parameter).
@@ -390,7 +479,10 @@ class AbstractVariable(ABC):
         bool
             True if this is a coefficient object, False otherwise
         """
-        return self.var_type == VariableType.CONST or self.var_type == VariableType.PARAM
+        return (
+            self.var_type == QualityVarType.CONST
+            or self.var_type == QualityVarType.PARAM
+        )
 
     def is_other_term(self) -> bool:
         """Check to see if this variable represents a function (MSX term).
@@ -400,7 +492,7 @@ class AbstractVariable(ABC):
         bool
             True if this is a term/function object, False otherwise
         """
-        return self.var_type == VariableType.TERM
+        return self.var_type == QualityVarType.TERM
 
     @property
     def symbol(self):
@@ -430,19 +522,34 @@ class AbstractReaction(ABC):
     ----------
     species : str
         the name of the species whose reaction dynamics is being described
-    location : RxnLocationType or str
+    location : LocationType | str
         the location the reaction occurs (pipes or tanks)
+    dynamics : DynamicsType | str
+        the type of reaction dynamics (left-hand-side)
     expression : str
         the expression for the reaction dynamics (right-hand-side)
     """
 
     def __str__(self) -> str:
-        """Names the reaction with the format `species-dot-location` (for example, ``PB2.pipe``)"""
-        return self.to_key(self.species, self.location)
+        """Name of the species"""
+        return self.species  # self.to_key(self.species, self.location)
 
     def __hash__(self) -> int:
         """Makes the reaction hashable by hashing the `str` representation"""
-        return hash(str(self))
+        return hash(self.to_key(self.species, self.location))
+
+    def __repr__(self) -> str:
+        return "{}(species={}, location={}, expression={}, note={})".format(
+            self.__class__.__name__,
+            repr(self.species),
+            repr(
+                self.location.name
+                if isinstance(self.location, LocationType)
+                else self.location
+            ),
+            repr(self.expression),
+            repr(self.note.to_dict() if hasattr(self.note, "to_dict") else self.note),
+        )
 
     __variable_registry = None
 
@@ -453,7 +560,9 @@ class AbstractReaction(ABC):
     @_variable_registry.setter
     def _variable_registry(self, value):
         if value is not None and not isinstance(value, AbstractQualityModel):
-            raise TypeError("Linked model must be a RxnModelRegistry, got {}".format(type(value)))
+            raise TypeError(
+                "Linked model must be a RxnModelRegistry, got {}".format(type(value))
+            )
         self.__variable_registry = value
 
     def validate(self):
@@ -468,7 +577,7 @@ class AbstractReaction(ABC):
             raise TypeError("This object is not connected to any RxnModelRegistry")
 
     @abstractproperty
-    def expr_type(self) -> DynamicsType:
+    def dynamics(self) -> DynamicsType:
         """The type of reaction dynamics being described (or, the left-hand-side of the equation)"""
         raise NotImplementedError
 
@@ -490,7 +599,7 @@ class AbstractReaction(ABC):
             a species/location unique name
         """
         location = LocationType.get(location)
-        return str(species) + "." + location.name.lower()
+        return str(species) + "::" + location.name.lower()
 
     @abstractmethod
     def to_symbolic(self, transformations: tuple = EXPR_TRANSFORMS):
@@ -508,7 +617,15 @@ class AbstractReaction(ABC):
         """
         if not has_sympy:
             return self.expression
-        return parse_expr(self.expression, local_dict=self._variable_registry.variable_dict() if self._variable_registry is not None else None, transformations=transformations, global_dict=_global_dict, evaluate=False)
+        return parse_expr(
+            self.expression,
+            local_dict=self._variable_registry.variable_dict()
+            if self._variable_registry is not None
+            else None,
+            transformations=transformations,
+            global_dict=_global_dict,
+            evaluate=False,
+        )
 
 
 class AbstractQualityModel(ABC):
