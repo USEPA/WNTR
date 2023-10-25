@@ -2,12 +2,10 @@
 """Options for multispecies reaction models.
 """
 
-import re
 import logging
-import copy
 from typing import Dict, List, Literal, Union
 
-from wntr.network.options import _float_or_None, _int_or_None, _OptionsBase
+from wntr.network.options import _OptionsBase
 
 logger = logging.getLogger(__name__)
 

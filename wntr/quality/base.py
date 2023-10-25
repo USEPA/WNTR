@@ -5,22 +5,16 @@ Other than the enum classes, the classes in this module are all abstract
 and/or mixin classes, and should not be instantiated directly.
 """
 
-import abc
-import enum
-import logging
 from abc import ABC, abstractmethod, abstractproperty
-from collections.abc import MutableMapping
-from enum import Enum, IntFlag, IntEnum
-from typing import Any, ClassVar, Dict, Generator, List, Union
+import logging
+from enum import Enum, IntEnum
+from typing import Any, Dict
+from wntr.epanet.util import ENcomment
+from wntr.quality.multispecies import Species
+from wntr.utils.disjoint_mapping import KeyExistsError, VariablesRegistry
 
-import numpy as np
 
-from wntr.network.base import AbstractModel
-from wntr.network.model import WaterNetworkModel
-from wntr.network.elements import Pattern
-from wntr.quality.options import MultispeciesOptions
 from wntr.utils.enumtools import add_get
-from wntr.utils.ordered_set import OrderedSet
 
 has_sympy = False
 try:
@@ -218,9 +212,9 @@ for use as variable names.
 
 RESERVED_NAMES = (
     tuple([v["name"] for v in HYDRAULIC_VARIABLES])
-    + tuple([k for k, v in EXPR_FUNCTIONS.items()])
-    + tuple([k.upper() for k, v in EXPR_FUNCTIONS.items()])
-    + tuple([k.capitalize() for k, v in EXPR_FUNCTIONS.items()])
+    + tuple([k.lower() for k in EXPR_FUNCTIONS.keys()])
+    + tuple([k.upper() for k in EXPR_FUNCTIONS.keys()])
+    + tuple([k.capitalize() for k in EXPR_FUNCTIONS.keys()])
     + ("Mul", "Add", "Pow", "Integer", "Float")
 )
 """The WNTR reserved names. This includes the MSX hydraulic variables
@@ -232,7 +226,6 @@ RESERVED_NAMES = (
 
 _global_dict = dict()
 for k, v in EXPR_FUNCTIONS.items():
-    _global_dict[k] = v
     _global_dict[k.lower()] = v
     _global_dict[k.capitalize()] = v
     _global_dict[k.upper()] = v
@@ -414,264 +407,131 @@ class DynamicsType(Enum):
     R = RATE
     F = FORMULA
 
+__all__ = [
+    'HYDRAULIC_VARIABLES',
+    'EXPR_FUNCTIONS',
+    'RESERVED_NAMES',
+    'EXPR_TRANSFORMS',
+    'QualityVarType',
+    'SpeciesType',
+    'LocationType',
+    'DynamicsType',
+    'WaterQualityVariable',
+    'WaterQualityReaction',
+]
 
-class AbstractVariable(ABC):
-    """The base for a reaction variable.
 
-    Attributes
-    ----------
-    name : str
-        The name (symbol) for the variable, must be a valid MSX name
-    """
+class WaterQualityReaction(ABC):
+    def __init__(self, dynamics_type: DynamicsType, *, note=None) -> None:
+        """A water quality reaction definition.
 
-    def __str__(self) -> str:
-        """Returns the name of the variable"""
-        return self.name
+        This abstract class must be subclassed.
 
-    def __hash__(self) -> int:
-        return hash(str(self))
+        Arguments
+        ---------
+        dynamics_type : DynamicsType
+            The type of reaction dynamics being described by the expression: one of RATE, FORMULA, or EQUIL.
 
-    __variable_registry = None
 
-    @property
-    def _variable_registry(self) -> "AbstractQualityModel":
-        return self.__variable_registry
+        Keyword Arguments
+        -----------------
+        note : str | dict | ENcomment, optional
+            Supplementary information regarding this reaction, by default None (see :class:`~wntr.epanet.util.ENcomment` for dict structure).
 
-    @_variable_registry.setter
-    def _variable_registry(self, value):
-        if value is not None and not isinstance(value, AbstractQualityModel):
-            raise TypeError(
-                "Linked model must be a RxnModelRegistry, got {}".format(type(value))
-            )
-        self.__variable_registry = value
-
-    def validate(self):
-        """Validate that this object is a member of the RxnModelRegistry
 
         Raises
         ------
         TypeError
-            if the model registry isn't linked
+            if dynamics_type is invalid
         """
-        if not isinstance(self._variable_registry, AbstractQualityModel):
-            raise TypeError("This object is not connected to any RxnModelRegistry")
+        dynamics_type = DynamicsType.get(dynamics_type)
+        if dynamics_type is None:
+            raise TypeError("dynamics cannot be None")
+        self._dynamics_type = dynamics_type
+        self.note = note
+
+    def dynamics_type(self) -> DynamicsType:
+        """The type of dynamics being described.
+        See :class:`DynamicsType` for valid values.
+        """
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        """Return a string representation of the reaction"""
+        return "{}({}) = ".format(self.__class__.__name__, self._dynamics_type.name)
+
+    def __repr__(self) -> str:
+        return (
+            "{}(".format(self.__class__.__name__)
+            + ", ".join(["{}={}".format(k, repr(v)) for k, v in self.to_dict().items()])
+            + ")"
+        )
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        raise NotImplementedError
+
+
+class WaterQualityVariable(ABC):
+    """A multi-species water quality model variable.
+
+    This abstract class must be extended before use. There are several concrete classes
+    that inhert from this class, including
+    :class:`~wntr.quality.msx.Species`,
+    :class:`~wntr.quality.msx.Constant`,
+    :class:`~wntr.quality.msx.Parameter`,
+    and :class:`~wntr.quality.msx.Term`.
+    See also the :class:`~wntr.quality.msx.MultispeciesModel`, which has the functions
+    required to create these variables and define reactions.
+    """
+
+    def __init__(self, name: str, *, note=None, _vars=None) -> None:
+        """Multi-species variable constructor arguments.
+
+        Arguments
+        ---------
+        name : str
+            The name/symbol for the variable. Must be a valid MSX variable name.
+
+        Keyword Arguments
+        -----------------
+        note : str | dict | ENcomment, optional
+            Supplementary information regarding this variable, by default None (see :class:`~wntr.epanet.util.ENcomment` for dict structure).
+            As dict it can have two keys, "pre" and "post". See :class:`ENcomment`
+            for more details.
+
+        Raises
+        ------
+        KeyExistsError
+            the name is already taken
+        ValueError
+            the name is a reserved word
+
+
+        The following should only be used by model building functions, and the
+        user should never need to pass these arguments.
+
+        Other Parameters
+        ----------------
+        _vars : VariablesRegistry, optional
+            the variables registry object of the model this variable was added to, by default None
+        """
+        if _vars is not None and name in _vars:
+            raise KeyExistsError("This variable name is already taken")
+        elif name in RESERVED_NAMES:
+            raise ValueError("Name cannot be a reserved name")
+        self.name: str = name
+        """The name/ID of this variable, must be a valid EPANET/MSX ID"""
+        self.note = note
+        """A note related to this variable"""
+        self._vars: VariablesRegistry = _vars
 
     @abstractproperty
     def var_type(self) -> QualityVarType:
-        """The variable type."""
-        raise NotImplementedError
-
-    def is_species(self) -> bool:
-        """Check to see if this variable represents a species (bulk or wall).
-
-        Returns
-        -------
-        bool
-            True if this is a species object, False otherwise
-        """
-        return self.var_type == QualityVarType.SPECIES
-
-    def is_coeff(self) -> bool:
-        """Check to see if this variable represents a coefficient (constant or parameter).
-
-        Returns
-        -------
-        bool
-            True if this is a coefficient object, False otherwise
-        """
-        return (
-            self.var_type == QualityVarType.CONST
-            or self.var_type == QualityVarType.PARAM
-        )
-
-    def is_other_term(self) -> bool:
-        """Check to see if this variable represents a function (MSX term).
-
-        Returns
-        -------
-        bool
-            True if this is a term/function object, False otherwise
-        """
-        return self.var_type == QualityVarType.TERM
-
-    @property
-    def symbol(self):
-        """Representation of the variable's name as a sympy.Symbol"""
-        return Symbol(self.name)
-
-    def to_symbolic(self, transformations=EXPR_TRANSFORMS):
-        """Convert to a symbolic expression.
-
-        Parameters
-        ----------
-        transformations : tuple of sympy transformations
-            transformations to apply to the expression, by default EXPR_TRANSFORMS
-
-        Returns
-        -------
-        sympy.Expr
-            the expression parsed by sympy
-        """
-        return self.symbol
-
-
-class AbstractReaction(ABC):
-    """The base for a reaction.
-
-    Attributes
-    ----------
-    species : str
-        the name of the species whose reaction dynamics is being described
-    location : LocationType | str
-        the location the reaction occurs (pipes or tanks)
-    dynamics : DynamicsType | str
-        the type of reaction dynamics (left-hand-side)
-    expression : str
-        the expression for the reaction dynamics (right-hand-side)
-    """
-
-    def __str__(self) -> str:
-        """Name of the species"""
-        return self.species  # self.to_key(self.species, self.location)
-
-    def __hash__(self) -> int:
-        """Makes the reaction hashable by hashing the `str` representation"""
-        return hash(self.to_key(self.species, self.location))
-
-    def __repr__(self) -> str:
-        return "{}(species={}, location={}, expression={}, note={})".format(
-            self.__class__.__name__,
-            repr(self.species),
-            repr(
-                self.location.name
-                if isinstance(self.location, LocationType)
-                else self.location
-            ),
-            repr(self.expression),
-            repr(self.note.to_dict() if hasattr(self.note, "to_dict") else self.note),
-        )
-
-    __variable_registry = None
-
-    @property
-    def _variable_registry(self) -> "AbstractQualityModel":
-        return self.__variable_registry
-
-    @_variable_registry.setter
-    def _variable_registry(self, value):
-        if value is not None and not isinstance(value, AbstractQualityModel):
-            raise TypeError(
-                "Linked model must be a RxnModelRegistry, got {}".format(type(value))
-            )
-        self.__variable_registry = value
-
-    def validate(self):
-        """Validate that this object is a member of the RxnModelRegistry
-
-        Raises
-        ------
-        TypeError
-            if the model registry isn't linked
-        """
-        if not isinstance(self._variable_registry, AbstractQualityModel):
-            raise TypeError("This object is not connected to any RxnModelRegistry")
-
-    @abstractproperty
-    def dynamics(self) -> DynamicsType:
-        """The type of reaction dynamics being described (or, the left-hand-side of the equation)"""
-        raise NotImplementedError
-
-    @classmethod
-    def to_key(cls, species, location):
-        """Generate a dictionary key (equivalent to the ``str`` casting of a reaction)
-        without having the object itself.
-
-        Parameters
-        ----------
-        species : str
-            the species for the reaction
-        location : RxnLocationType or str
-            the location of the reaction
-
-        Returns
-        -------
-        str
-            a species/location unique name
-        """
-        location = LocationType.get(location)
-        return str(species) + "::" + location.name.lower()
-
-    @abstractmethod
-    def to_symbolic(self, transformations: tuple = EXPR_TRANSFORMS):
-        """Convert to a symbolic expression.
-
-        Parameters
-        ----------
-        transformations : tuple of sympy transformations
-            transformations to apply to the expression, by default :data:`EXPR_TRANSFORMS`
-
-        Returns
-        -------
-        sympy.Expr or sympy.Symbol
-            the expression parsed by sympy
-        """
-        if not has_sympy:
-            return self.expression
-        return parse_expr(
-            self.expression,
-            local_dict=self._variable_registry.variable_dict()
-            if self._variable_registry is not None
-            else None,
-            transformations=transformations,
-            global_dict=_global_dict,
-            evaluate=False,
-        )
-
-
-class AbstractQualityModel(ABC):
-    """Abstract methods any water quality model should include."""
-
-    @abstractmethod
-    def variables(self, var_type=None):
-        """Generator over all defined variables, optionally limited by variable type"""
+        """The type of reaction model variable"""
         raise NotImplementedError
 
     @abstractmethod
-    def variable_dict(self) -> Dict[str, Any]:
-        """Create a dictionary of variable names and their sympy represenations"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def add_variable(self, __variable: AbstractVariable):
-        """Add a variable *object* to the model"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_variable(self, name: str) -> AbstractVariable:
-        """Get a specific variable by name"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def remove_variable(self, name: str):
-        """Delete a specified variable from the model"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def reactions(self, location=None):
-        """Generator over all defined reactions, optionally limited by reaction location"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def add_reaction(self, __reaction: AbstractReaction):
-        """Add a reaction *object* to the model"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_reaction(self, species, location=None) -> List[AbstractReaction]:
-        """Get reaction(s) for a species, optionally only for one location"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def remove_reaction(self, species, location=None):
-        """Remove reaction(s) for a species, optionally only for one location"""
+    def to_dict(self) -> Dict[str, Any]:
+        """Represent the object as a dictionary"""
         raise NotImplementedError
