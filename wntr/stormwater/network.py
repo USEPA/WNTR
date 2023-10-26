@@ -43,7 +43,7 @@ class StormWaterNetworkModel(object):
             self.weirs = self._swmmio_model.inp.weirs
             self.orifices = self._swmmio_model.inp.orifices
             self.pumps = self._swmmio_model.inp.pumps
-
+            
             self.subcatchments = self._swmmio_model.inp.subcatchments
             self.subareas = self._swmmio_model.inp.subareas
 
@@ -67,196 +67,128 @@ class StormWaterNetworkModel(object):
             self._swmmio_model = None
             
     @property
-    # def junctions(self):
-    #     """Generator to get all junctions
-        
-    #     Yields
-    #     ------
-    #     name : str
-    #         The name of the junction
-    #     node : Junction
-    #         The junction object    
-            
-    #     """
-    #     for name, junc in self.junctions.iterrows():
-    #         yield name, junc
-            
+    def nodes(self):
+        """Nodes database (read only)"""
+        return pd.concat([self.junctions, 
+                          self.outfalls,
+                          self.storage])
+    
+    @property
+    def links(self):
+        """Links database (read only)"""
+        return pd.concat([self.conduits, 
+                          self.weirs,
+                          self.orifices,
+                          self.pumps])
+
     @property
     def node_name_list(self):
-        """Get a list of node names
-
-        Returns
-        -------
-        list of strings
-
-        """
-        return self.junction_name_list + self.outfall_name_list + \
-            self.storage_name_list
+        """List of node names"""
+        return list(self.nodes.index)
 
     @property
     def junction_name_list(self):
-        """Get a list of junction names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of junction names"""
         return list(self.junctions.index)
 
     @property
     def outfall_name_list(self):
-        """Get a list of outfall names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of outfall names"""
         return list(self.outfalls.index)
 
     @property
     def storage_name_list(self):
-        """Get a list of storage names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of storage names"""
         return list(self.storage.index)
 
     @property
     def link_name_list(self):
-        """Get a list of link names
-
-        Returns
-        -------
-        list of strings
-
-        """
-        return self.conduit_name_list + self.weir_name_list + \
-            self.orifice_name_list + self.pump_name_list
+        """List of link names"""
+        return list(self.links.index)
 
     @property
     def conduit_name_list(self):
-        """Get a list of conduit names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of conduit names"""
         return list(self.conduits.index)
 
     @property
     def weir_name_list(self):
-        """Get a list of weir names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of weir names"""
         return list(self.weirs.index)
 
     @property
     def orifice_name_list(self):
-        """Get a list of orifice names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of orifice names"""
         return list(self.orifices.index)
 
     @property
     def pump_name_list(self):
-        """Get a list of pump names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of pump names"""
         return list(self.pumps.index)
 
     @property
     def subcatchment_name_list(self):
-        """Get a list of subcatchment names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of subcatchment names"""
         return list(self.subcatchments.index)
 
     @property
     def raingage_name_list(self):
-        """Get a list of raingage names
-
-        Returns
-        -------
-        list of strings
-
-        """
+        """List of raingage names"""
         return list(self.raingages.index)
 
     @property
     def num_nodes(self):
-        """The number of nodes"""
+        """Number of nodes"""
         return len(self.node_name_list)
 
     @property
     def num_junctions(self):
-        """The number of junctions"""
+        """Number of junctions"""
         return len(self.junction_name_list)
 
     @property
     def num_outfalls(self):
-        """The number of outfalls"""
+        """Number of outfalls"""
         return len(self.outfall_name_list)
 
     @property
     def num_storages(self):
-        """The number of storages"""
+        """Number of storages"""
         return len(self.storage_name_list)
 
     @property
     def num_links(self):
-        """The number of links"""
+        """Number of links"""
         return len(self.link_name_list)
 
     @property
     def num_conduits(self):
-        """The number of conduits"""
+        """Number of conduits"""
         return len(self.conduit_name_list)
 
     @property
     def num_weirs(self):
-        """The number of weirs"""
+        """Number of weirs"""
         return len(self.weir_name_list)
 
     @property
     def num_orifices(self):
-        """The number of orifices"""
+        """Number of orifices"""
         return len(self.orifice_name_list)
 
     @property
     def num_pumps(self):
-        """The number of pumps"""
+        """Number of pumps"""
         return len(self.pump_name_list)
 
     @property
     def num_subcatchments(self):
-        """The number of subcatchments"""
+        """Number of subcatchments"""
         return len(self.subcatchment_name_list)
 
     @property
     def num_raingages(self):
-        """The number of raingages"""
+        """Number of raingages"""
         return len(self.raingage_name_list)
 
     def get_node(self, name):
@@ -269,10 +201,10 @@ class StormWaterNetworkModel(object):
 
         Returns
         -------
-        Junction, Outfall, or Storage
+        Node
 
         """
-        return Node(self, name)
+        return Node(name, self.nodes.loc[name,:])
 
     def get_link(self, name):
         """Get a specific link
@@ -284,22 +216,10 @@ class StormWaterNetworkModel(object):
 
         Returns
         -------
-        Pipe, Pump, or Valve
+        Link
 
         """
-        if name in self.conduit_name_list:
-            data = self.conduits
-        elif name in self.weir_name_list:
-            data = self.weirs
-        elif name in self.orifice_name_list:
-            data = self.orifices
-        elif name in self.pump_name_list:
-            data = self.pumps
-            
-        start_node_name = data.loc[name, 'InletNode']
-        end_node_name = data.loc[name, 'OutletNode']
-        
-        return Link(self, name, start_node_name, end_node_name)
+        return Link(name, self.links.loc[name,:])
 
     def to_gis(self, crs=None):
         """
@@ -312,7 +232,7 @@ class StormWaterNetworkModel(object):
         """
         return to_gis(self, crs)
 
-    def to_graph(self):
+    def to_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
         Convert a StormWaterNetworkModel into a networkx MultiDiGraph
 
@@ -320,7 +240,7 @@ class StormWaterNetworkModel(object):
         --------
         networkx MultiDiGraph
         """
-        return to_graph(self)
+        return to_graph(self, node_weight, link_weight, modify_direction)
 
 
 class Node(object):
@@ -328,7 +248,7 @@ class Node(object):
     Base class for nodes.
     """
 
-    def __init__(self, swn, name):
+    def __init__(self, name, data):
 
         # Set the node name
         self._name = name
@@ -344,15 +264,15 @@ class Link(object):
     Base class for links.
     """
 
-    def __init__(self, swn, link_name, start_node_name, end_node_name):
+    def __init__(self, name, data):
 
-        self._link_name = link_name
-        self._start_node_name = start_node_name
-        self._end_node_name = end_node_name
+        self._link_name = name
+        self._start_node_name = data['InletNode']
+        self._end_node_name = data['OutletNode']
 
     @property
     def name(self):
-        """str: The link name (read-only)"""
+        """str: The link name (read only)"""
         return self._link_name
 
     @property
