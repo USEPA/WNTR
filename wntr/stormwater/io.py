@@ -13,26 +13,58 @@ import wntr.stormwater
 logger = logging.getLogger(__name__)
 
 
-def to_graph(swn):
+def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     """
-    Convert a StormWaterNetworkModel into a NetworkX graph
+    Convert a StormWaterNetworkModel into a NetworkX MultiDiGraph
     
     Parameters
     ----------
     swn : StormWaterNetworkModel
         Storm water network model
-        
+    node_weight :  dict or pandas Series (optional)
+        Node weights
+    link_weight : dict or pandas Series (optional)
+        Link weights
+    modify_direction : bool (optional)
+        If True, then if the link weight is negative, the link start and 
+        end node are switched and the abs(weight) is assigned to the link
+        (this is useful when weighting graphs by flowrate). If False, link 
+        direction and weight are not changed.
+         
     Returns
     -------
-    NetworkX graph
+    NetworkX MultiDiGraph
     
     """
     G = swn._swmmio_model.network
+    
+    # Add a node attribute 'pos' to store the node position as a tuple
     geom = nx.get_node_attributes(G, 'geometry')
     pos = dict([(k,v['coordinates']) for k,v in geom.items()])
     nx.set_node_attributes(G, pos, 'pos')
+    
+    if node_weight is not None:
+        nx.set_node_attributes(G, node_weight, 'weight')
+    
+    if link_weight is not None:
+        for name in swn.link_name_list:
+            link = swn.get_link(name)
+            start_node = link.start_node_name
+            end_node = link.end_node_name
+            try:
+                value = link_weight[name]
+                if modify_direction and value <= 0:  # change the direction of the link and value
+                    G.remove_edge(start_node, end_node, name)
+                    if value == 0:
+                        continue
+                    G.add_edge(end_node, start_node, name)
+                    nx.set_edge_attributes(G, name="weight", values={(end_node, start_node, name): -value})
+                else:
+                    nx.set_edge_attributes(G, name="weight", values={(start_node, end_node, name): value})
+            except:
+                pass
+            
     return G
-
 
 def to_gis(swn, crs=None):
     """
