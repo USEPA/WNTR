@@ -102,9 +102,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         inpfile = file_prefix + '.inp'
         write_inpfile(self._wn, inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         enData = wntr.epanet.toolkit.ENepanet(version=version)
+        self.enData = enData
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
-        
+        if self._wn._msx is not None:
+            save_hyd = True
         if hydfile is None:
             hydfile = file_prefix + '.hyd'
         enData.ENopen(inpfile, rptfile, outfile)
@@ -126,6 +128,26 @@ class EpanetSimulator(WaterNetworkSimulator):
         #os.sys.stderr.write('Finished Closing\n')
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+
+        if self._wn._msx is not None:
+            msxfile = file_prefix + '.msx'
+            rptfile = file_prefix + '.msx-rpt'
+            binfile = file_prefix + '.msx-bin'
+            msxfile2 = file_prefix + '.check.msx'
+            wntr.epanet.msx.io.MsxFile.write(msxfile, self._wn._msx)
+            msx = wntr.epanet.msx.MSXepanet(inpfile, rptfile, outfile, msxfile)
+            msx.ENopen(inpfile, rptfile, outfile)
+            msx.MSXopen(msxfile)
+            msx.MSXusehydfile(hydfile)
+            msx.MSXinit()
+            msx.MSXsolveH()
+            msx.MSXsolveQ()
+            msx.MSXreport()
+            msx.MSXsaveoutfile(binfile)
+            msx.MSXsavemsxfile(msxfile2)
+            msx.MSXclose()
+            msx.ENclose()
+            results = wntr.epanet.msx.io.MsxBinFile(binfile, self._wn, results)
 
         return results
 

@@ -57,6 +57,7 @@ class MSXepanet(ENepanet):
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
+        self.msxfile = msxfile
 
         libnames = ["epanetmsx", "epanetmsx_win32"]
         if "64" in platform.machine():
@@ -97,7 +98,7 @@ class MSXepanet(ENepanet):
         return
 
     # ----------running the simulation-----------------------------------------------------
-    def MSXopen(self, msxfile):
+    def MSXopen(self, msxfile=None):
         """Opens the MSX Toolkit to analyze a particular distribution system.
 
         Parameters
@@ -105,6 +106,8 @@ class MSXepanet(ENepanet):
         msxfile : str
             name of the MSX input file
         """
+        if msxfile is None:
+            msxfile = self.msxfile
         ierr = self.ENlib.MSXopen(ctypes.c_char_p(msxfile.encode()))
         if ierr != 0:
             raise EpanetMsxException(ierr, msxfile)

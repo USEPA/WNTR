@@ -1,3 +1,4 @@
 """The wntr.epanet.msx package provides EPANET-MSX compatibility functions for WNTR.
 """
-from .io import MsxFile
+from .io import MsxFile, MsxBinFile
+from .toolkit import MSXepanet

@@ -8,11 +8,8 @@ and/or mixin classes, and should not be instantiated directly.
 from abc import ABC, abstractmethod, abstractproperty
 import logging
 from enum import Enum, IntEnum
-from typing import Any, Dict
-from wntr.epanet.util import ENcomment
-from wntr.quality.multispecies import Species
-from wntr.utils.disjoint_mapping import KeyExistsError, VariablesRegistry
-
+from typing import Any, Dict, Iterator
+from wntr.utils.disjoint_mapping import DisjointMapping
 
 from wntr.utils.enumtools import add_get
 
@@ -66,9 +63,7 @@ try:
 except ImportError:
     sympy = None
     has_sympy = False
-    logging.critical(
-        "This python installation does not have SymPy installed. Certain functionality will be disabled."
-    )
+    logging.critical("This python installation does not have SymPy installed. Certain functionality will be disabled.")
     standard_transformations = (None,)
     convert_xor = None
     if not has_sympy:
@@ -91,15 +86,23 @@ except ImportError:
             log10,
         )
 
-        def _cot(x): return 1 / tan(x)
+        def _cot(x):
+            return 1 / tan(x)
+
         cot = _cot
         Abs = abs
         asin = arcsin
         acos = arccos
         atan = arctan
-        def _acot(x): return 1 / arctan(1 / x)
+
+        def _acot(x):
+            return 1 / arctan(1 / x)
+
         acot = _acot
-        def _coth(x): return 1 / tanh(x)
+
+        def _coth(x):
+            return 1 / tanh(x)
+
         coth = _coth
         Heaviside = heaviside
         _log10 = log10
@@ -268,10 +271,11 @@ EXPR_TRANSFORMS = (
 :meta hide-value:
 """
 
+
 class AnnotatedFloat(float):
     def __new__(self, value, note=None):
         return float.__new__(self, value)
-    
+
     def __init__(self, value, note=None):
         float.__init__(value)
         self.note = note
@@ -344,10 +348,10 @@ class SpeciesType(IntEnum):
     """wall species"""
     B = BULK
     W = WALL
-    
+
 
 @add_get(abbrev=True)
-class LocationType(Enum):
+class ReactionType(Enum):
     """What type of network component does this reaction occur in
 
     The following types are defined, and aliases of just the first character
@@ -407,30 +411,31 @@ class DynamicsType(Enum):
     R = RATE
     F = FORMULA
 
+
 __all__ = [
-    'HYDRAULIC_VARIABLES',
-    'EXPR_FUNCTIONS',
-    'RESERVED_NAMES',
-    'EXPR_TRANSFORMS',
-    'QualityVarType',
-    'SpeciesType',
-    'LocationType',
-    'DynamicsType',
-    'WaterQualityVariable',
-    'WaterQualityReaction',
+    "HYDRAULIC_VARIABLES",
+    "EXPR_FUNCTIONS",
+    "RESERVED_NAMES",
+    "EXPR_TRANSFORMS",
+    "QualityVarType",
+    "SpeciesType",
+    "ReactionType",
+    "DynamicsType",
+    "WaterQualityVariable",
+    "WaterQualityReaction",
 ]
 
 
 class WaterQualityReaction(ABC):
-    def __init__(self, dynamics_type: DynamicsType, *, note=None) -> None:
+    def __init__(self, species_name: str, *, note=None) -> None:
         """A water quality reaction definition.
 
         This abstract class must be subclassed.
 
         Arguments
         ---------
-        dynamics_type : DynamicsType
-            The type of reaction dynamics being described by the expression: one of RATE, FORMULA, or EQUIL.
+        species_name : str
+            The name of the chemical or biological species being modeled using this reaction.
 
 
         Keyword Arguments
@@ -444,26 +449,27 @@ class WaterQualityReaction(ABC):
         TypeError
             if dynamics_type is invalid
         """
-        dynamics_type = DynamicsType.get(dynamics_type)
-        if dynamics_type is None:
-            raise TypeError("dynamics cannot be None")
-        self._dynamics_type = dynamics_type
+        if species_name is None:
+            raise TypeError("The species_name cannot be None")
+        self._species_name = species_name
         self.note = note
 
-    def dynamics_type(self) -> DynamicsType:
-        """The type of dynamics being described.
-        See :class:`DynamicsType` for valid values.
-        """
-        raise NotImplementedError
+    @property
+    def species_name(self) -> str:
+        return self._species_name
 
+    @abstractproperty
+    def reaction_type(self) -> Enum:
+        """The type of reaction or where this reaction occurs."""
+        raise NotImplementedError
+    
     def __str__(self) -> str:
-        """Return a string representation of the reaction"""
-        return "{}({}) = ".format(self.__class__.__name__, self._dynamics_type.name)
+        return "{}->{}".format(self.species_name, self.reaction_type.name)
 
     def __repr__(self) -> str:
         return (
             "{}(".format(self.__class__.__name__)
-            + ", ".join(["{}={}".format(k, repr(v)) for k, v in self.to_dict().items()])
+            + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()])
             + ")"
         )
 
@@ -485,7 +491,7 @@ class WaterQualityVariable(ABC):
     required to create these variables and define reactions.
     """
 
-    def __init__(self, name: str, *, note=None, _vars=None) -> None:
+    def __init__(self, name: str, *, note=None) -> None:
         """Multi-species variable constructor arguments.
 
         Arguments
@@ -516,15 +522,12 @@ class WaterQualityVariable(ABC):
         _vars : VariablesRegistry, optional
             the variables registry object of the model this variable was added to, by default None
         """
-        if _vars is not None and name in _vars:
-            raise KeyExistsError("This variable name is already taken")
-        elif name in RESERVED_NAMES:
+        if name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.name: str = name
         """The name/ID of this variable, must be a valid EPANET/MSX ID"""
         self.note = note
         """A note related to this variable"""
-        self._vars: VariablesRegistry = _vars
 
     @abstractproperty
     def var_type(self) -> QualityVarType:
@@ -535,3 +538,69 @@ class WaterQualityVariable(ABC):
     def to_dict(self) -> Dict[str, Any]:
         """Represent the object as a dictionary"""
         raise NotImplementedError
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return (
+            "{}(".format(self.__class__.__name__)
+            + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()])
+            + ")"
+        )
+
+
+class WaterQualityReactionSystem(ABC):
+    """Abstract class for reaction systems, which contains variables and reaction expressions.
+
+    This class contains the functions necessary to perform as a mapping view onto the
+    **variables** defined, by their name.
+    """
+
+    def __init__(self) -> None:
+        self._vars = DisjointMapping()
+        self._rxns = dict()
+
+    @abstractmethod
+    def add_variable(self, obj: WaterQualityVariable) -> None:
+        """Add a variable to the system"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    def add_reaction(self, obj: WaterQualityReaction) -> None:
+        """Add a reaction to the system"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    def all_variables(self):
+        """A generator looping through all variables"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    def all_reactions(self):
+        """A generator looping through all reactions"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_dict(self):
+        """Represent the reaction system as a dictionary"""
+        raise NotImplementedError
+
+    def __contains__(self, __key: object) -> bool:
+        return self._vars.__contains__(__key)
+
+    def __eq__(self, __value: object) -> bool:
+        return self._vars.__eq__(__value)
+
+    def __ne__(self, __value: object) -> bool:
+        return self._vars.__ne__(__value)
+
+    def __getitem__(self, __key: str) -> WaterQualityVariable:
+        return self._vars.__getitem__(__key)
+
+    def __iter__(self) -> Iterator:
+        return self._vars.__iter__()
+
+    def __len__(self) -> int:
+        return self._vars.__len__()
+    

@@ -1,11 +1,11 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
 """
-from dataclasses import dataclass, field
+import dataclasses
 import enum
 import logging
+from dataclasses import dataclass, field
 from typing import List
-
 import numpy as np
 import pandas as pd
 
@@ -1400,3 +1400,6 @@ class ENcomment:
             return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string
         else:
             return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string + ' ; ' + self.post
+
+    def to_dict(self):
+        return dataclasses.asdict(self)

@@ -25,7 +25,6 @@ import pandas as pd
 import six
 import wntr.epanet
 import wntr.network.io
-from wntr.utils.citations import Citation
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -73,8 +72,8 @@ class WaterNetworkModel(AbstractModel):
 
         # Network name
         self.name = None
-        self._citations: Union[str,Citation, List[Union[str,Citation]]] = list()
-        """A list of citations that document the source of this model. See also :class:`~wntr.utils.citations.Citation`."""
+        self._references: List[Union[str, dict]] = list()
+        """A list of references that document the source of this model."""
 
         self._options = Options()
         self._node_reg = NodeRegistry(self)
@@ -340,6 +339,15 @@ class WaterNetworkModel(AbstractModel):
         from wntr.quality.base import AbstractQualityModel
         if not isinstance(msx, AbstractQualityModel):
             raise TypeError('Expected AbstractQualityModel (or derived), got {}'.format(type(msx)))
+
+    def add_msx_model(self, msx_filename=None):
+        """Add an msx model from a MSX input file (.msx extension)"""
+        from wntr.quality.multispecies import MultispeciesQualityModel
+        self._msx = MultispeciesQualityModel(msx_file_name=msx_filename)
+
+    def remove_msx_model(self):
+        """Remove an msx model from the network"""
+        self._msx = None
 
     """
     ### # 
