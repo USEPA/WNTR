@@ -20,7 +20,7 @@ Subpackages
     wntr.metrics
     wntr.morph
     wntr.network
-    wntr.quality
+    wntr.msx
     wntr.scenario
     wntr.sim
     wntr.utils

@@ -5,7 +5,7 @@ from os.path import abspath, dirname, join
 import numpy as np
 import pandas as pd
 import wntr
-import wntr.quality
+import wntr.msx
 import wntr.epanet.msx
 import wntr.epanet.msx.toolkit
 import sympy
@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
 
     def test_msx_io(self):
         wn_model = wntr.network.WaterNetworkModel(inp_file_name=inp_filename)
-        msx_model = wntr.quality.MultispeciesQualityModel(msx_file_name=msx_filename)
+        msx_model = wntr.msx.MsxModel(msx_file_name=msx_filename)
         wntr.epanet.msx.toolkit.MSXepanet(inp_filename, msxfile=msx_filename)
         
 

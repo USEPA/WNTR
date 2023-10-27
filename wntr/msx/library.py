@@ -13,7 +13,7 @@ r"""A library of common multispecies reactions.
     path to search for quality model files, (files with an ".msx", ".yaml", 
     or ".json" file extension).
     Multiple folders should be separated using the "``;``" character.
-    See :class:`~wntr.quality.library.ReactionLibrary` for more details.
+    See :class:`~wntr.msx.library.ReactionLibrary` for more details.
 
 """
 
@@ -22,8 +22,8 @@ import os
 from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, ValuesView
 from pkg_resources import resource_filename
 
-from .multispecies import MultispeciesQualityModel
-from .base import ReactionType, SpeciesType, DynamicsType
+from .model import MsxModel
+from .base import ReactionType, SpeciesType, ExpressionType
 
 import json
 
@@ -39,9 +39,9 @@ PIPE = ReactionType.PIPE
 TANK = ReactionType.TANK
 BULK = SpeciesType.BULK
 WALL = SpeciesType.WALL
-RATE = DynamicsType.RATE
-EQUIL = DynamicsType.EQUIL
-FORMULA = DynamicsType.FORMULA
+RATE = ExpressionType.RATE
+EQUIL = ExpressionType.EQUIL
+FORMULA = ExpressionType.FORMULA
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class ReactionLibrary:
                 self.reset_and_reload()
 
     def __repr__(self) -> str:
-        if len(self.__library_paths > 3):
+        if len(self.__library_paths) > 3:
             return "{}(initial_paths=[{}, ..., {}])".format(
                 self.__class__.__name__, repr(self.__library_paths[0]), repr(self.__library_paths[-1])
             )
@@ -219,7 +219,7 @@ class ReactionLibrary:
             load_errors.extend(errs)
         return load_errors
 
-    def add_models_from_dir(self, path_to_dir: str, duplicates: str = "error") -> List[Tuple[str, str, Union[MultispeciesQualityModel, Exception]]]:
+    def add_models_from_dir(self, path_to_dir: str, duplicates: str = "error") -> List[Tuple[str, str, Union[MsxModel, Exception]]]:
         """Load all valid model files in a folder.
 
         Note, this function is not recursive and does not 'walk' a directory tree.
@@ -277,7 +277,7 @@ class ReactionLibrary:
                 continue
             if ext.lower() == ".msx":
                 try:
-                    new = MultispeciesQualityModel(file)
+                    new = MsxModel(file)
                 except Exception as e:
                     logger.exception("Error reading file {}".format(os.path.join(folder, file)))
                     load_errors.append((os.path.join(folder, file), "load-failed", e))
@@ -285,7 +285,7 @@ class ReactionLibrary:
             elif ext.lower() == ".json":
                 with open(os.path.join(folder, file), "r") as fin:
                     try:
-                        new = MultispeciesQualityModel.from_dict(json.load(fin))
+                        new = MsxModel.from_dict(json.load(fin))
                     except Exception as e:
                         logger.exception("Error reading file {}".format(os.path.join(folder, file)))
                         load_errors.append((os.path.join(folder, file), "load-failed", e))
@@ -297,7 +297,7 @@ class ReactionLibrary:
                     continue
                 with open(os.path.join(folder, file), "r") as fin:
                     try:
-                        new = MultispeciesQualityModel.from_dict(yaml.safe_load(fin))
+                        new = MsxModel.from_dict(yaml.safe_load(fin))
                     except Exception as e:
                         logger.exception("Error reading file {}".format(os.path.join(folder, file)))
                         load_errors.append((os.path.join(folder, file), "load-failed", e))
@@ -350,15 +350,15 @@ class ReactionLibrary:
         if ext is None or ext.lower() not in [".msx", ".json", ".yaml"]:
             raise IOError("The file is in an unknown format, {}".format(ext))
         if ext.lower() == ".msx":
-            new = MultispeciesQualityModel(path_and_filename)
+            new = MsxModel(path_and_filename)
         elif ext.lower() == ".json":
             with open(path_and_filename, "r") as fin:
-                new = MultispeciesQualityModel.from_dict(json.load(fin))
+                new = MsxModel.from_dict(json.load(fin))
         elif ext.lower() == ".yaml":
             if yaml is None:
                 raise RuntimeError("Unable to import yaml") from yaml_err
             with open(path_and_filename, "r") as fin:
-                new = MultispeciesQualityModel.from_dict(yaml.safe_load(fin))
+                new = MsxModel.from_dict(yaml.safe_load(fin))
         else:  # pragma: no cover
             raise RuntimeError("This should be impossible to reach, since ext is checked above")
         new._orig_file = path_and_filename
@@ -368,7 +368,7 @@ class ReactionLibrary:
             new.name = name
         self.__data[new.name] = new
 
-    def get_model(self, name: str) -> MultispeciesQualityModel:
+    def get_model(self, name: str) -> MsxModel:
         """Get a reaction model from the library by model name
 
         Parameters

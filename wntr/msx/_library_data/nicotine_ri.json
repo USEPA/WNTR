@@ -2,7 +2,7 @@
     "wntr-version": "1.0.0",
     "name": "nicotine_ri",
     "title": "Nicotine - Chlorine reaction with reactive intermediate",
-    "desc": null,
+    "description": null,
     "references": [],
     "reaction_system": {
         "species": [
@@ -81,34 +81,34 @@
         "pipe_reactions": [
             {
                 "species_name": "Nx",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RXN"
             },
             {
                 "species_name": "HOCL",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RXCL"
             },
             {
                 "species_name": "NX2",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "RXNX2"
             }
         ],
         "tank_reactions": [
             {
                 "species_name": "Nx",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RXN"
             },
             {
                 "species_name": "HOCL",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RXCL"
             },
             {
                 "species_name": "NX2",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "RXNX2"
             }
         ]

@@ -2,7 +2,7 @@
     "wntr-version": "1.0.0",
     "name": "arsenic_chloramine",
     "title": "Arsenic Oxidation/Adsorption Example",
-    "desc": "This example models monochloramine oxidation of arsenite/arsenate and wall adsoption/desorption, as given in section 3 of the EPANET-MSX user manual",
+    "description": "This example models monochloramine oxidation of arsenite/arsenate and wall adsoption/desorption, as given in section 3 of the EPANET-MSX user manual",
     "references": [
         "Shang, F. and Rossman, L.A. and Uber, J.G. (2023) \"EPANET-MSX 2.0 User Manual\". (Cincinnati, OH: Water Infrastructure Division (CESER), U.S. Environmental Protection Agency). EPA/600/R-22/199."
     ],
@@ -92,31 +92,31 @@
         "pipe_reactions": [
             {
                 "species_name": "AS3",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-Ka*AS3*NH2CL",
                 "note": "Arsenite oxidation"
             },
             {
                 "species_name": "AS5",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "Ka*AS3*NH2CL - Av*(K1*(Smax-AS5s)*AS5 - K2*AS5s)",
                 "note": "Arsenate production less adsorption"
             },
             {
                 "species_name": "NH2CL",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-Kb*NH2CL",
                 "note": "Monochloramine decay"
             },
             {
                 "species_name": "AS5s",
-                "dynamics_type": "equil",
+                "expression_type": "equil",
                 "expression": "Ks*Smax*AS5/(1+Ks*AS5) - AS5s",
                 "note": "Arsenate adsorption"
             },
             {
                 "species_name": "AStot",
-                "dynamics_type": "formula",
+                "expression_type": "formula",
                 "expression": "AS3 + AS5",
                 "note": "Total arsenic"
             }
@@ -124,25 +124,25 @@
         "tank_reactions": [
             {
                 "species_name": "AS3",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-Ka*AS3*NH2CL",
                 "note": "Arsenite oxidation"
             },
             {
                 "species_name": "AS5",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "Ka*AS3*NH2CL",
                 "note": "Arsenate production"
             },
             {
                 "species_name": "NH2CL",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-Kb*NH2CL",
                 "note": "Monochloramine decay"
             },
             {
                 "species_name": "AStot",
-                "dynamics_type": "formula",
+                "expression_type": "formula",
                 "expression": "AS3 + AS5",
                 "note": "Total arsenic"
             }

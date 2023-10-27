@@ -7,6 +7,6 @@
 
 from ..epanet.msx.exceptions import EpanetMsxException
 from .base import *
-from .multispecies import *
+from .model import *
 from .options import MultispeciesOptions
 from . import library

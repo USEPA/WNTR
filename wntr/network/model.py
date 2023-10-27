@@ -336,14 +336,14 @@ class WaterNetworkModel(AbstractModel):
     def msx(self, msx):
         if msx is None:
             self._msx = None
-        from wntr.quality.base import AbstractQualityModel
+        from wntr.msx.base import AbstractQualityModel
         if not isinstance(msx, AbstractQualityModel):
             raise TypeError('Expected AbstractQualityModel (or derived), got {}'.format(type(msx)))
 
     def add_msx_model(self, msx_filename=None):
         """Add an msx model from a MSX input file (.msx extension)"""
-        from wntr.quality.multispecies import MultispeciesQualityModel
-        self._msx = MultispeciesQualityModel(msx_file_name=msx_filename)
+        from wntr.msx.model import MsxModel
+        self._msx = MsxModel(msx_file_name=msx_filename)
 
     def remove_msx_model(self):
         """Remove an msx model from the network"""

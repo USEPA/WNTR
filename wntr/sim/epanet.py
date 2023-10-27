@@ -130,6 +130,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
 
         if self._wn._msx is not None:
+            # Attributed to Matthew's package
             msxfile = file_prefix + '.msx'
             rptfile = file_prefix + '.msx-rpt'
             binfile = file_prefix + '.msx-bin'

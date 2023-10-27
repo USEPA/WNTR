@@ -5,10 +5,11 @@ Other than the enum classes, the classes in this module are all abstract
 and/or mixin classes, and should not be instantiated directly.
 """
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 import logging
 from enum import Enum, IntEnum
-from typing import Any, Dict, Iterator
+import os
+from typing import Any, Dict, Iterator, List, Union
 from wntr.utils.disjoint_mapping import DisjointMapping
 
 from wntr.utils.enumtools import add_get
@@ -108,6 +109,22 @@ except ImportError:
         _log10 = log10
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "HYDRAULIC_VARIABLES",
+    "EXPR_FUNCTIONS",
+    "RESERVED_NAMES",
+    "EXPR_TRANSFORMS",
+    "VariableType",
+    "SpeciesType",
+    "ReactionType",
+    "ExpressionType",
+    "AbstractVariable",
+    "AbstractReaction",
+    "ReactionSystem",
+    "VariableValues",
+    "AbstractModel",
+]
 
 HYDRAULIC_VARIABLES = [
     {"name": "D", "note": "pipe diameter (feet or meters) "},
@@ -282,7 +299,7 @@ class AnnotatedFloat(float):
 
 
 @add_get(abbrev=True)
-class QualityVarType(IntEnum):
+class VariableType(IntEnum):
     """The type of reaction variable.
 
     The following types are defined, and aliases of just the first character
@@ -379,7 +396,7 @@ class ReactionType(Enum):
 
 
 @add_get(abbrev=True)
-class DynamicsType(Enum):
+class ExpressionType(Enum):
     """The type of reaction expression.
 
     The following types are defined, and aliases of just the first character
@@ -412,21 +429,7 @@ class DynamicsType(Enum):
     F = FORMULA
 
 
-__all__ = [
-    "HYDRAULIC_VARIABLES",
-    "EXPR_FUNCTIONS",
-    "RESERVED_NAMES",
-    "EXPR_TRANSFORMS",
-    "QualityVarType",
-    "SpeciesType",
-    "ReactionType",
-    "DynamicsType",
-    "WaterQualityVariable",
-    "WaterQualityReaction",
-]
-
-
-class WaterQualityReaction(ABC):
+class AbstractReaction(ABC):
     def __init__(self, species_name: str, *, note=None) -> None:
         """A water quality reaction definition.
 
@@ -447,7 +450,7 @@ class WaterQualityReaction(ABC):
         Raises
         ------
         TypeError
-            if dynamics_type is invalid
+            if expression_type is invalid
         """
         if species_name is None:
             raise TypeError("The species_name cannot be None")
@@ -462,7 +465,7 @@ class WaterQualityReaction(ABC):
     def reaction_type(self) -> Enum:
         """The type of reaction or where this reaction occurs."""
         raise NotImplementedError
-    
+
     def __str__(self) -> str:
         return "{}->{}".format(self.species_name, self.reaction_type.name)
 
@@ -478,16 +481,16 @@ class WaterQualityReaction(ABC):
         raise NotImplementedError
 
 
-class WaterQualityVariable(ABC):
+class AbstractVariable(ABC):
     """A multi-species water quality model variable.
 
     This abstract class must be extended before use. There are several concrete classes
     that inhert from this class, including
-    :class:`~wntr.quality.msx.Species`,
-    :class:`~wntr.quality.msx.Constant`,
-    :class:`~wntr.quality.msx.Parameter`,
-    and :class:`~wntr.quality.msx.Term`.
-    See also the :class:`~wntr.quality.msx.MultispeciesModel`, which has the functions
+    :class:`~wntr.msx.msx.Species`,
+    :class:`~wntr.msx.msx.Constant`,
+    :class:`~wntr.msx.msx.Parameter`,
+    and :class:`~wntr.msx.msx.Term`.
+    See also the :class:`~wntr.msx.msx.MultispeciesModel`, which has the functions
     required to create these variables and define reactions.
     """
 
@@ -530,8 +533,8 @@ class WaterQualityVariable(ABC):
         """A note related to this variable"""
 
     @abstractproperty
-    def var_type(self) -> QualityVarType:
-        """The type of reaction model variable"""
+    def var_type(self) -> Enum:
+        """The type of reaction variable"""
         raise NotImplementedError
 
     @abstractmethod
@@ -550,7 +553,7 @@ class WaterQualityVariable(ABC):
         )
 
 
-class WaterQualityReactionSystem(ABC):
+class ReactionSystem(ABC):
     """Abstract class for reaction systems, which contains variables and reaction expressions.
 
     This class contains the functions necessary to perform as a mapping view onto the
@@ -562,22 +565,22 @@ class WaterQualityReactionSystem(ABC):
         self._rxns = dict()
 
     @abstractmethod
-    def add_variable(self, obj: WaterQualityVariable) -> None:
+    def add_variable(self, obj: AbstractVariable) -> None:
         """Add a variable to the system"""
         raise NotImplementedError
-    
+
     @abstractmethod
-    def add_reaction(self, obj: WaterQualityReaction) -> None:
+    def add_reaction(self, obj: AbstractReaction) -> None:
         """Add a reaction to the system"""
         raise NotImplementedError
-    
+
     @abstractmethod
-    def all_variables(self):
+    def variables(self):
         """A generator looping through all variables"""
         raise NotImplementedError
-    
+
     @abstractmethod
-    def all_reactions(self):
+    def reactions(self):
         """A generator looping through all reactions"""
         raise NotImplementedError
 
@@ -595,7 +598,7 @@ class WaterQualityReactionSystem(ABC):
     def __ne__(self, __value: object) -> bool:
         return self._vars.__ne__(__value)
 
-    def __getitem__(self, __key: str) -> WaterQualityVariable:
+    def __getitem__(self, __key: str) -> AbstractVariable:
         return self._vars.__getitem__(__key)
 
     def __iter__(self) -> Iterator:
@@ -603,4 +606,83 @@ class WaterQualityReactionSystem(ABC):
 
     def __len__(self) -> int:
         return self._vars.__len__()
+
+
+class VariableValues(ABC):
+    """Abstract class for a variable's network-specific values."""
+
+    @abstractproperty
+    def var_type(self) -> Enum:
+        """Define what type of variable this network-specific data is for"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Represent the variable's network-specific values as a dictionary"""
+        raise NotImplementedError
+
+
+class NetworkData(ABC):
+    """Abstract class containing network specific data.
     
+    This class should be populated with things like initial quality,
+    sources, parameterized values, etc.
+    """
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Represent the network specific data as a dictionary"""
+        raise NotImplementedError
+
+
+class AbstractModel(ABC):
+    """Abstract water quality model."""
+
+    def __init__(self, filename=None):
+        self.name: str = None if filename is None else os.path.splitext(os.path.split(filename)[1])[0]
+        """A name for the model, or the MSX model filename (no spaces allowed)"""
+        self.title: str = None
+        """The title line from the MSX file, must be a single line"""
+        self.description: str = None
+        """A longer description, note that multi-line descriptions may not be 
+        represented well in dictionary form."""
+        self._orig_file: str = filename
+        self._options = None
+        self._rxn_system: ReactionSystem = None
+        self._net_data: NetworkData = None
+        self._wn = None
+
+    @abstractproperty
+    def options(self):
+        """The model options structure.
+
+        Concrete classes should implement this with the appropriate typeing and
+        also implement a setter method.
+        """
+        raise NotImplementedError
+
+    @abstractproperty
+    def reaction_system(self) -> ReactionSystem:
+        """The reaction variables defined for this model.
+
+        Concrete classes should implement this with the appropriate typing.
+        """
+        raise NotImplementedError
+
+    @abstractproperty
+    def network_data(self) -> NetworkData:
+        """The network-specific values added to this model.
+
+        Concrete classes should implement this with the appropriate typing.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Represent the model as a dictionary."""
+        raise NotImplementedError
+
+    @abstractclassmethod
+    def from_dict(self, data: dict) -> "AbstractModel":
+        """Create a new model from a dictionary."""
+        raise NotImplementedError

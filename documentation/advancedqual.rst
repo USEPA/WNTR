@@ -28,8 +28,8 @@ for the paper this model was described in.
 
 .. doctest::
 
-    >>> import wntr.quality
-    >>> msx = wntr.quality.MultispeciesQualityModel()
+    >>> import wntr.msx
+    >>> msx = wntr.msx.MultispeciesQualityModel()
     >>> msx.name = "lead_ppm"
     >>> msx.title = "Lead Plumbosolvency Model (from Burkhardt et al 2020)"
     >>> msx.desc = "Parameters for EPA HPS Simulator Model"
@@ -79,7 +79,7 @@ Name                      Type             Units                              No
 :math:`Pb`                bulk species     :math:`\mathrm{μg}_\mathrm{(Pb)}`  dissolved lead
 ========================  ===============  =================================  ========================
 
-To add this species to the model, we can use the model's :meth:`~wntr.quality.multispecies.MultispeciesQualityModel.add_species`
+To add this species to the model, we can use the model's :meth:`~wntr.msx.multispecies.MultispeciesQualityModel.add_species`
 method.
 The method arguments are the name, the species_type (which can either be "bulk" or "wall"), the units,
 and an optional note.
@@ -91,7 +91,7 @@ This method will add the new species to the model and also return a copy of the 
     Species(name='PB2', species_type=<SpeciesType.BULK: 1>, units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
 
 The new species can be accessed by using the item's name and indexing on the model's 
-:attr:`~wntr.quality.multispecies.MultispeciesQualityModel.reaction_system` attribute.
+:attr:`~wntr.msx.multispecies.MultispeciesQualityModel.reaction_system` attribute.
 
     >>> PB2 = msx.reaction_system['PB2']
     >>> PB2
@@ -135,7 +135,7 @@ pipes, so we need to set the tank reaction to be unchanging. The system of equat
 
 Note that the pipe reaction has a variable that we have not defined, :math:`Av`, in its expression;
 this variable is a pre-defined hydraulic variable. The list of these variables can be found in 
-the EPANET-MSX documentation, and also in the :attr:`~wntr.quality.base.HYDRAULIC_VARIABLES`
+the EPANET-MSX documentation, and also in the :attr:`~wntr.msx.base.HYDRAULIC_VARIABLES`
 documentation. The reactions can be described in WNTR as
 
 ================  ==============  ==========================================================================
@@ -145,7 +145,7 @@ pipe              rate            :math:`F \cdot Av \cdot M \cdot \left( E - Pb 
 tank              rate            :math:`0`
 ================  ==============  ==========================================================================
 
-and then added to the reaction model using the :meth:`~wntr.quality.multispecies.MultispeciesQualityModel.add_reaction`
+and then added to the reaction model using the :meth:`~wntr.msx.multispecies.MultispeciesQualityModel.add_reaction`
 method.
 
 .. doctest::
@@ -348,10 +348,10 @@ Creation in WNTR
 
 .. doctest::
 
-    >>> msx = wntr.quality.MultispeciesQualityModel()
+    >>> msx = wntr.msx.MultispeciesQualityModel()
     >>> msx.name = "arsenic_chloramine"
     >>> msx.title = "Arsenic Oxidation/Adsorption Example"
-    >>> msx.references.append(wntr.quality.library.cite_msx())
+    >>> msx.references.append(wntr.msx.library.cite_msx())
     >>> AS3 = msx.add_species(name="AS3", species_type="BULK", units="UG", note="Dissolved arsenite")
     >>> AS5 = msx.add_species(name="AS5", species_type="BULK", units="UG", note="Dissolved arsenate")
     >>> AStot = msx.add_species(name="AStot", species_type="BULK", units="UG", note="Total dissolved arsenic")
@@ -364,29 +364,29 @@ Creation in WNTR
     >>> Smax = msx.add_constant("Smax", 50.0, units="UG / M^2", note="Arsenate adsorption limit")
     >>> Ks = msx.add_term(name="Ks", expression="K1/K2", note="Equil. adsorption coeff.")
     >>> _ = msx.add_reaction(
-    ...     species_name="AS3", reaction_type="pipes", dynamics_type="rate", expression="-Ka*AS3*NH2CL", note="Arsenite oxidation"
+    ...     species_name="AS3", reaction_type="pipes", expression_type="rate", expression="-Ka*AS3*NH2CL", note="Arsenite oxidation"
     ... )
     >>> _ = msx.add_reaction(
     ... "AS5", "pipes", "rate", "Ka*AS3*NH2CL - Av*(K1*(Smax-AS5s)*AS5 - K2*AS5s)", note="Arsenate production less adsorption"
     ... )
     >>> _ = msx.add_reaction(
-    ...     species_name="NH2CL", reaction_type="pipes", dynamics_type="rate", expression="-Kb*NH2CL", note="Monochloramine decay"
+    ...     species_name="NH2CL", reaction_type="pipes", expression_type="rate", expression="-Kb*NH2CL", note="Monochloramine decay"
     ... )
     >>> _ = msx.add_reaction("AS5s", "pipe", "equil", "Ks*Smax*AS5/(1+Ks*AS5) - AS5s", note="Arsenate adsorption")
     >>> _ = msx.add_reaction(
-    ...     species_name="AStot", reaction_type="pipes", dynamics_type="formula", expression="AS3 + AS5", note="Total arsenic"
+    ...     species_name="AStot", reaction_type="pipes", expression_type="formula", expression="AS3 + AS5", note="Total arsenic"
     ... )
     >>> _ = msx.add_reaction(
-    ...     species_name="AS3", reaction_type="tank", dynamics_type="rate", expression="-Ka*AS3*NH2CL", note="Arsenite oxidation"
+    ...     species_name="AS3", reaction_type="tank", expression_type="rate", expression="-Ka*AS3*NH2CL", note="Arsenite oxidation"
     ... )
     >>> _ = msx.add_reaction(
-    ...     species_name="AS5", reaction_type="tank", dynamics_type="rate", expression="Ka*AS3*NH2CL", note="Arsenate production"
+    ...     species_name="AS5", reaction_type="tank", expression_type="rate", expression="Ka*AS3*NH2CL", note="Arsenate production"
     ... )
     >>> _ = msx.add_reaction(
-    ...     species_name="NH2CL", reaction_type="tank", dynamics_type="rate", expression="-Kb*NH2CL", note="Monochloramine decay"
+    ...     species_name="NH2CL", reaction_type="tank", expression_type="rate", expression="-Kb*NH2CL", note="Monochloramine decay"
     ... )
     >>> _ = msx.add_reaction(
-    ...     species_name="AStot", reaction_type="tanks", dynamics_type="formula", expression="AS3 + AS5", note="Total arsenic"
+    ...     species_name="AStot", reaction_type="tanks", expression_type="formula", expression="AS3 + AS5", note="Total arsenic"
     ... )
     >>> msx.options.area_units = "M2"
     >>> msx.options.rate_units = "HR"

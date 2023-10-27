@@ -4,9 +4,8 @@ Programmers Toolkit DLLs.
 
 .. note::
     
-    Code in this section taken from code originally written by Junli Hao 07/29/2018, 
-    "EPANET-MSX-Python-wrapper" on GitHub, licensed under the BSD license. See LICENSE.txt for more 
-    details.
+    Code in this section based on code from "EPANET-MSX-Python-wrapper",
+    licensed under the BSD license. See LICENSE.txt for details.
 """
 import ctypes
 from enum import IntEnum
@@ -45,6 +44,11 @@ logger = logging.getLogger(__name__)
 class MSXepanet(ENepanet):
     def __init__(self, inpfile="", rptfile="", binfile="", msxfile=""):
 
+        if 'WNTR_PATH_TO_EPANETMSX' in os.environ:
+            msx_toolkit = os.environ['WNTR_PATH_TO_EPANETMSX']
+        else:
+            msx_toolkit = None
+
         self.ENlib = None
         self.errcode = 0
         self.errcodelist = []
@@ -62,25 +66,44 @@ class MSXepanet(ENepanet):
         libnames = ["epanetmsx", "epanetmsx_win32"]
         if "64" in platform.machine():
             libnames.insert(0, "epanetmsx_amd64")
-        for lib in libnames:
-            try:
-                if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
-                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                else:
-                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                return
-            except Exception as E1:
-                if lib == libnames[-1]:
-                    raise E1
-                pass
-            finally:
-                self._project = None
-
+        if msx_toolkit:
+            for lib in libnames:
+                try:
+                    if os.name in ["nt", "dos"]:
+                        libepanet = os.path.join(msx_toolkit, "%s.dll" % lib)
+                        self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+                    elif sys.platform in ["darwin"]:
+                        libepanet = os.path.join(msx_toolkit, "lib%s.dylib" % lib)
+                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                    else:
+                        libepanet = os.path.join(msx_toolkit, "lib%s.so" % lib)
+                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                    return
+                except Exception as E1:
+                    if lib == libnames[-1]:
+                        raise E1
+                    pass
+                finally:
+                    self._project = None
+        else:
+            for lib in libnames:
+                try:
+                    if os.name in ["nt", "dos"]:
+                        libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
+                        self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+                    elif sys.platform in ["darwin"]:
+                        libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
+                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                    else:
+                        libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
+                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                    return
+                except Exception as E1:
+                    if lib == libnames[-1]:
+                        raise E1
+                    pass
+                finally:
+                    self._project = None
         return
 
     def _error(self, *args):
@@ -98,7 +121,7 @@ class MSXepanet(ENepanet):
         return
 
     # ----------running the simulation-----------------------------------------------------
-    def MSXopen(self, msxfile=None):
+    def MSXopen(self, msxfile):
         """Opens the MSX Toolkit to analyze a particular distribution system.
 
         Parameters
@@ -106,9 +129,9 @@ class MSXepanet(ENepanet):
         msxfile : str
             name of the MSX input file
         """
-        if msxfile is None:
-            msxfile = self.msxfile
-        ierr = self.ENlib.MSXopen(ctypes.c_char_p(msxfile.encode()))
+        if msxfile is not None:
+            msxfile = ctypes.c_char_p(msxfile.encode())
+        ierr = self.ENlib.MSXopen(msxfile)
         if ierr != 0:
             raise EpanetMsxException(ierr, msxfile)
 

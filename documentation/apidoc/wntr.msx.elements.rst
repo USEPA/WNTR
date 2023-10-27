@@ -1,7 +1,7 @@
-wntr.quality.base module
+wntr.msx.elements module
 ========================
 
-.. automodule:: wntr.quality.base
+.. automodule:: wntr.msx.elements
    :members:
    :undoc-members:
    :show-inheritance:

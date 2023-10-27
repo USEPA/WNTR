@@ -2,7 +2,7 @@
     "wntr-version": "1.0.0",
     "name": "lead_ppm",
     "title": "Lead Plumbosolvency Model (from Burkhardt et al 2020)",
-    "desc": "Parameters for EPA HPS Simulator Model",
+    "description": "Parameters for EPA HPS Simulator Model",
     "references": [
         "J. B. Burkhardt, et al. (2020) \"Framework for Modeling Lead in Premise Plumbing Systems Using EPANET\". J Water Resour Plan Manag. 146(12). https://doi.org/10.1061/(asce)wr.1943-5452.0001304 PMID:33627937"
     ],
@@ -42,14 +42,14 @@
         "pipe_reactions": [
             {
                 "species_name": "PB2",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "F * Av * M * (E - PB2) / E"
             }
         ],
         "tank_reactions": [
             {
                 "species_name": "PB2",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "0"
             }
         ]

@@ -2,7 +2,7 @@
     "wntr-version": "1.0.0",
     "name": "nicotine",
     "title": "Nicotine - Chlorine reaction",
-    "desc": null,
+    "description": null,
     "references": [],
     "reaction_system": {
         "species": [
@@ -57,12 +57,12 @@
         "pipe_reactions": [
             {
                 "species_name": "Nx",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RxN"
             },
             {
                 "species_name": "HOCL",
-                "dynamics_type": "rate",
+                "expression_type": "rate",
                 "expression": "-RxCl"
             }
         ],
