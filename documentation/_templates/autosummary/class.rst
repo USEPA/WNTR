@@ -33,5 +33,5 @@
 {% endblock %}
 
    {% if methods or attributes %}
-   .. rubric:: Class Details
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
    {% endif %}

@@ -14,8 +14,7 @@ designed to simulate and analyze resilience of water distribution networks.
    
    userguide
    wntr-api
-   acronyms
-   reference
+   users
 
 .. rubric:: Citing WNTR
 

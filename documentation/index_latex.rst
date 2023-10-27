@@ -1,5 +1,4 @@
-..
-    :orphan:
+:orphan:
 
 
 WNTR documentation

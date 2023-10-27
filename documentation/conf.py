@@ -51,9 +51,9 @@ python_display_short_literal_types = True
 toc_object_entries = True
 toc_object_entries_show_parents = 'hide'
 
-napoleon_google_docstring = False
+napoleon_google_docstring = True
 napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = False
+napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
 napoleon_use_admonition_for_examples = False
@@ -61,10 +61,10 @@ napoleon_use_admonition_for_notes = False
 napoleon_use_admonition_for_references = True
 napoleon_preprocess_types = False
 napoleon_use_ivar = True
-napoleon_use_param = False
-napoleon_use_rtype = False
-napoleon_use_keyword = True
-napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members', 'Model Description']
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = False
+napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members']
 
 # viewcode_import = False
 
@@ -76,15 +76,15 @@ autodoc_default_options = {
     'inherited-members': True,
     'show-inheritance': True,
     'member-order': 'groupwise',
-    'typehints': 'description',
-    'typehints-format': 'short',
 }
 
-# autodoc_class_signature = 'separated'
+autodoc_class_signature = 'separated'
+autodoc_typehints = 'description'
 autodoc_typehints_format = 'short'
-autodoc_type_aliases = {'Literal': 'Literal', 'Name':'Name', 'NameList':'NameList', 'LiteralList':'LiteralList', 'Key':'Key', 'KeyList':'KeyList','Verbatim': 'Verbatim', 'URI': 'URI', 'Date':'Date', 'Range':'Range', 'SeparatedValues':'SeparatedValues',}
+autodoc_typehints_description_target = 'documented'
+autodoc_type_aliases = {'DataFrame': 'pandas DataFrame',}
 
-autoclass_content = 'both'
+autoclass_content = 'class'
 
 numfig=True
 numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
@@ -256,7 +256,7 @@ html_static_path = ['_static']
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.
-#html_extra_path = []
+html_extra_path = ['_data']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
