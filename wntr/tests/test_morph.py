@@ -217,6 +217,19 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(len(pipe.vertices), 2)
         self.assertEqual(len(pipeB.vertices), 0)
 
+    def test_reverse_pipes(self):
+        inp_file = join(datadir, "io.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn2 = wntr.morph.link.reverse_link(wn, "p1")
+        pipe2 = wn2.get_link("p1")
+
+        # test start and end nodes
+        self.assertEqual(pipe2.start_node, wn2.get_node('j1'))
+        self.assertEqual(pipe2.end_node, wn2.get_node('t1'))
+
+        # test vertices
+        self.assertEqual(pipe2.vertices, [(20.0, 5.0), (15.0, 5.0)])
+
     def test_skeletonize(self):
 
         inp_file = join(datadir, "skeletonize.inp")
