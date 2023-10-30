@@ -204,6 +204,7 @@ class WaterNetworkGIS:
                 df = element.reset_index()
                 df.rename(columns={'index':'name'}, inplace=True)
                 # TODO: create vertices from LineString geometry
+                df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
                 wn_dict['links'].extend(df.to_dict('records'))
         
