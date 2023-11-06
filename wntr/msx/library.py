@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Contributors:
-#   Jonathan Burkhardt, U.S. Environmental Protection Agency, Office of Research and Development
 
-r"""A library of common multispecies reactions.
+r"""A library of common MSX reactions.
 
 
 .. rubric:: Environment Variable
@@ -13,19 +11,19 @@ r"""A library of common multispecies reactions.
     path to search for quality model files, (files with an ".msx", ".yaml", 
     or ".json" file extension).
     Multiple folders should be separated using the "``;``" character.
-    See :class:`~wntr.msx.library.ReactionLibrary` for more details.
-
+    See :class:`~wntr.msx.library.ReactionLibrary` for more details.    
 """
+from __future__ import annotations
 
+import json
 import logging
 import os
 from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, ValuesView
+
 from pkg_resources import resource_filename
 
+from .base import ExpressionType, ReactionType, SpeciesType
 from .model import MsxModel
-from .base import ReactionType, SpeciesType, ExpressionType
-
-import json
 
 try:
     import yaml
@@ -49,10 +47,10 @@ logger = logging.getLogger(__name__)
 def cite_msx() -> dict:
     """A citation generator for the EPANET-MSX user guide.
 
-    References
-    ----------
-    [SRU23]_ Shang, F. and Rossman, L.A. and Uber, J.G. (2023) "EPANET-MSX 2.0 User Manual". (Cincinnati, OH: Water Infrastructure Division (CESER), U.S. Environmental Protection Agency). EPA/600/R-22/199.
-
+    Returns
+    -------
+    str
+        Shang, F. and Rossman, L.A. and Uber, J.G. (2023) "EPANET-MSX 2.0 User Manual". (Cincinnati, OH: Water Infrastructure Division (CESER), U.S. Environmental Protection Agency). EPA/600/R-22/199.
     """
     return 'Shang, F. and Rossman, L.A. and Uber, J.G. (2023) "EPANET-MSX 2.0 User Manual". (Cincinnati, OH: Water Infrastructure Division (CESER), U.S. Environmental Protection Agency). EPA/600/R-22/199.'
     # return dict(
@@ -75,9 +73,7 @@ class ReactionLibrary:
     This object can be accessed and treated like a dictionary, where keys are the model
     names and the values are the model objects.
 
-    The initialization sets up a list of paths, but *will not*
-    automatically read the files in them (use :meth:`load_all` for this).
-    The paths are added in the following order:
+    Paths are added/processed in the following order:
 
     1. the builtin directory of reactions,
     2. any paths specified in the environment variable described below, with directories listed
@@ -85,9 +81,7 @@ class ReactionLibrary:
     3. any extra paths specified in the constructor, searched in the order provided.
 
     Once created, the library paths cannot be modified. However, a model can be added
-    to the library using the :meth:`add_model_from_file` or :meth:`add_models_from_dir`
-    methods. The precedence of the directories can be reversed based on the ``duplicates``
-    argument passed to these functions.
+    to the library using :meth:`add_model_from_file` or :meth:`add_models_from_dir`.
     """
 
     def __init__(self, extra_paths: List[str] = None, include_builtins=True, include_envvar_paths=True, load=True) -> None:
@@ -95,17 +89,17 @@ class ReactionLibrary:
 
         Parameters
         ----------
-        extra_paths : List[str], optional
-            _description_, by default None
+        extra_paths : list of str, optional
+            user-specified list of reaction library directories, by default None
         include_builtins : bool, optional
             load files built-in with wntr, by default True
         include_envvar_paths : bool, optional
             load files from the paths specified in :envvar:`WNTR_RXN_LIBRARY_PATH`, by default True
-        load : bool, optional
-            load the files immediately on creation, by default True
+        load : bool or str, optional
+            load the files immediately on creation, by default True.
 
-            If this is a string, then it will be passed as the `duplicates` argument
-            to the load function. See :meth:`reset_and_reload` for more details.
+            If a string, then it will be passed as the `duplicates` argument
+            to the load function. See :meth:`reset_and_reload` for details.
 
         Raises
         ------
@@ -144,9 +138,7 @@ class ReactionLibrary:
 
     def __repr__(self) -> str:
         if len(self.__library_paths) > 3:
-            return "{}(initial_paths=[{}, ..., {}])".format(
-                self.__class__.__name__, repr(self.__library_paths[0]), repr(self.__library_paths[-1])
-            )
+            return "{}(initial_paths=[{}, ..., {}])".format(self.__class__.__name__, repr(self.__library_paths[0]), repr(self.__library_paths[-1]))
         return "{}({})".format(self.__class__.__name__, repr(self.__library_paths))
 
     def path_list(self) -> List[str]:
@@ -154,7 +146,7 @@ class ReactionLibrary:
 
         Returns
         -------
-        List[str]
+        list of str
             a copy of the paths used to **initially** populate this library
         """
         return self.__library_paths.copy()
@@ -167,25 +159,30 @@ class ReactionLibrary:
 
         The ``duplicates`` argument specifies how models that have the same name,
         or that have the same filename if a name isn't specified in the file,
-        are handled. This effectively changes the priority of the library's data
-        directories specified during library creation.
-        **Warning**, if two files in the same directory have models
+        are handled. **Warning**, if two files in the same directory have models
         with the same name, there is no guarantee which will be read in first.
+
+        The first directory processed is the builtin library data. Next, any
+        paths specified in the environment variable are searched in the order listed
+        in the variable. Finally, any directories specified by the user in the 
+        constructor are processed in the order listed.
 
         Parameters
         ----------
         duplicates : {"error" | "skip" | "replace"}, optional
-            how to handle models with the same name, by default ``"error"``.
+            by default ``"error"``
 
-            A value of of ``"error"`` raises an exception and stops execution. A value of ``"skip"`` will
-            skip models with the same `name` as a model that already exists in the
-            library (prioritizing directories as described in the :class:`ReactionLibrary`
-            documentation). A value of ``"replace"`` will replace any existing model
-            with a model that is read in that has the same `name` (effecitvely, this
-            reverses the precedence of the library's configured directories by
-            prioritizing models in the last
-            user-specified directories, then models in the paths in envvar in reverse order, if
-            applicable, and giving lowest priority to builtin models).
+            - A value of of ``"error"`` raises an exception and stops execution. 
+            - A value of ``"skip"`` will skip models with the same `name` as a model that already
+              exists in the library.
+            - A value of ``"replace"`` will replace any existing model with a model that is read 
+              in that has the same `name`.
+
+        Returns
+        -------
+        (filename, reason, obj) : (str, str, Any)
+            the file not read in, the cause of the problem, and the object that was skipped/overwritten
+            or the exception raised
 
         Raises
         ------
@@ -197,16 +194,6 @@ class ReactionLibrary:
             if `path_to_folder` is not a directory
         KeyError
             if `duplicates` is ``"error"`` and two models have the same name
-
-        Returns
-        -------
-        List[Tuple[str, str, Any]]
-            files that caused problems, with tuple elements:
-
-            0. the full path to the file that caused a problem;
-            1. the reason for the problem;
-            2. the model that was *not* included, or was removed,
-               or the exception that was raised when trying to read the file
         """
         if duplicates and not isinstance(duplicates, str):
             raise TypeError("The `duplicates` argument must be None or a string")
@@ -229,18 +216,24 @@ class ReactionLibrary:
         are handled. **Warning**, if two files in the same directory have models
         with the same name, there is no guarantee which will be read in first.
 
-
         Parameters
         ----------
         path_to_dir : str
             the path to the folder to search
         duplicates : {"error", "skip", "replace"}, optional
-            how to handle models with the same name, by default ``"error"``
+            by default ``"error"``
 
-            A value of of ``"error"`` raises an exception and stops execution. A value
-            of ``"skip"`` will skip models with the same `name` as a model that already
-            exists in the library. A value of ``"replace"`` will replace any existing model
-            with a model that is read in that has the same `name`.
+            - A value of of ``"error"`` raises an exception and stops execution. 
+            - A value of ``"skip"`` will skip models with the same `name` as a model that already
+              exists in the library. 
+            - A value of ``"replace"`` will replace any existing model with a model that is read 
+              in that has the same `name`.
+
+        Returns
+        -------
+        (filename, reason, obj) : tuple[str, str, Any]
+            the file not read in, the cause of the problem, and the object that was skipped/overwritten
+            or the exception raised
 
         Raises
         ------
@@ -252,15 +245,6 @@ class ReactionLibrary:
             if `path_to_folder` is not a directory
         KeyError
             if `duplicates` is ``"error"`` and two models have the same name
-
-        Returns
-        -------
-        str
-            the full path to the file that caused a problem;
-        str
-            the reason for the problem;
-        object
-            the model that was not included, was removed, or the exception raised
         """
         if duplicates and not isinstance(duplicates, str):
             raise TypeError("The `duplicates` argument must be None or a string")
@@ -312,11 +296,7 @@ class ReactionLibrary:
             else:  # this name exists in the library
                 name = new.name
                 if not duplicates or duplicates.lower() == "error":
-                    raise KeyError(
-                        'A model named "{}" already exists in the model; failed processing "{}"'.format(
-                            new.name, os.path.join(folder, file)
-                        )
-                    )
+                    raise KeyError('A model named "{}" already exists in the model; failed processing "{}"'.format(new.name, os.path.join(folder, file)))
                 elif duplicates.lower() == "skip":
                     load_errors.append((new._orig_file, "skipped", new))
                     continue
@@ -338,10 +318,10 @@ class ReactionLibrary:
         Parameters
         ----------
         path_to_file : str
-            The full path **and** filename where the model is described.
-        name : str
+            The full path and filename where the model is described.
+        name : str, optional
             The name to use for the model instead of the name provided in the
-            file or the filename.
+            file or the filename, by default None
         """
         if not os.path.isfile(path_and_filename):
             raise IOError("The following path does not identify a file, {}".format(path_and_filename))
@@ -369,7 +349,7 @@ class ReactionLibrary:
         self.__data[new.name] = new
 
     def get_model(self, name: str) -> MsxModel:
-        """Get a reaction model from the library by model name
+        """Get a reaction model from the library by model name.
 
         Parameters
         ----------
@@ -378,13 +358,19 @@ class ReactionLibrary:
 
         Returns
         -------
-        MultispeciesQualityModel
-            the model
+        MsxModel
+            the model object
         """
         return self.__data[name]
 
     def model_name_list(self) -> List[str]:
-        """Get a list of model names in the library"""
+        """Get the names of all models in the library.
+        
+        Returns
+        -------
+        list of str
+            list of model names
+        """
         return list(self.keys())
 
     def __getitem__(self, __key: Any) -> Any:

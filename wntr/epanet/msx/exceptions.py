@@ -52,82 +52,6 @@ See :class:`MsxErrorEnum` for the list of error codes and their meanings.
 :meta hide-value:
 """
 
-
-@add_get(prefix="ERR_")
-class MsxErrorEnum(IntEnum):
-    """The EPANET-MSX input and toolkit error numbers, keys, and descriptions.
-    """
-
-    MAX_CHARS = 401
-    "too many characters"
-    NUM_ITEMS = 402
-    "too few input items"
-    INVALID_KEYWORD = 403
-    "invalid keyword"
-    INVALID_NUMBER = 404
-    "invalid numeric value"
-    UNDEFINED_OBJECT_TYPE = 405
-    "reference to undefined object"
-    RESERVED_NAME = 406
-    "illegal use of reserved name"
-    NAME = 407
-    "name already used by another object"
-    SPECIES_EXPR = 408
-    "species already assigned an expression"
-    ILLEGAL_MATH_EXPR = 409
-    "illegal math expression"
-    DEPRECATED = 410
-    "option no longer supported"
-    CYCLIC_REFERENCE = 411
-    "term contains a cyclic reference"
-    MEMORY = 501
-    "insufficient memory available"
-    NO_EPANET_FILE = 502
-    "no EPANET data file supplied"
-    OPEN_MSX_FILE = 503
-    "could not open MSX input file"
-    OPEN_HYD_FILE = 504
-    "could not open hydraulic results file"
-    READ_HYD_FILE = 505
-    "could not read hydraulic results file"
-    MSX_INPUT = 506
-    "could not read MSX input file"
-    NUM_PIPE_EXPR = 507
-    "too few pipe reaction expressions"
-    NUM_TANK_EXPR = 508
-    "too few tank reaction expressions"
-    INTEGRATOR_OPEN = 509
-    """could not open differential equation solver"""
-    NEWTON_OPEN = 510
-    "could not open algebraic equation solver"
-    OPEN_OUT_FILE = 511
-    """could not open binary results file"""
-    IO_OUT_FILE = 512
-    """read/write error on binary results file"""
-    INTEGRATION = 513
-    """could not integrate reaction rate expressions"""
-    NEWTON = 514
-    """could not solve reaction equilibrium expressions"""
-    INVALID_OBJECT_TYPE = 515
-    """reference made to an unknown type of object"""
-    INVALID_OBJECT_INDEX = 516
-    """reference made to an illegal object index"""
-    UNDEFINED_OBJECT_ID = 517
-    """reference made to an undefined object ID"""
-    INVALID_OBJECT_PARAMS = 518
-    """invalid property values were specified"""
-    MSX_NOT_OPENED = 519
-    """an MSX project was not opened"""
-    MSX_OPENED = 520
-    """an MSX project is already opened"""
-    COMPILE_FAILED = 522
-    """could not compile chemistry functions"""
-    COMPLED_LOAD = 523
-    """could not load functions from compiled chemistry file"""
-    ILLEGAL_MATH = 524
-    """illegal math operation"""
-
-
 class EpanetMsxException(EpanetException):
     def __init__(self, code: int, *args: List[object], line_num=None, line=None) -> None:
         """An Exception class for EPANET-MSX Toolkit and IO exceptions.
@@ -144,13 +68,9 @@ class EpanetMsxException(EpanetException):
         line : str, optional
             The contents of the line, by default None
         """
-        try:
-            code = MsxErrorEnum.get(code)
-        except:
+        if not code or int(code) < 400:
             return super().__init__(code, *args, line_num=line_num, line=line)
-        if int(code) < 400:
-            return super().__init__(code, *args, line_num=line_num, line=line)
-        msg = MSX_ERROR_CODES.get(code, "unknown error")
+        msg = MSX_ERROR_CODES.get(code, "unknown MSX error number {}".format(code))
         if args is not None:
             args = [*args]
         if r"%" in msg and len(args) > 0:

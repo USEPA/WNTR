@@ -4,7 +4,7 @@ from enum import IntEnum
 from wntr.utils.enumtools import add_get
 
 @add_get(prefix='MSX_')
-class ObjectType(IntEnum):
+class TkObjectType(IntEnum):
     """The enumeration for object type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -47,7 +47,7 @@ class ObjectType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class SourceType(IntEnum):
+class TkSourceType(IntEnum):
     """The enumeration for source type used in EPANET-MSX.
     
     .. warning:: These enum values start with -1.
@@ -77,7 +77,7 @@ class SourceType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class UnitSystemType(IntEnum):
+class TkUnitSystem(IntEnum):
     """The enumeration for the units system used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -98,7 +98,7 @@ class UnitSystemType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class FlowUnitsType(IntEnum):
+class TkFlowUnits(IntEnum):
     """The enumeration for the flow units used in EPANET-MSX (determined from EPANET INP file read in with the toolkit).
     
     .. warning:: These enum values start with 0.
@@ -143,7 +143,7 @@ class FlowUnitsType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class MixType(IntEnum):
+class TkMixType(IntEnum):
     """The enumeration for the mixing model used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -170,7 +170,7 @@ class MixType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class SpeciesType(IntEnum):
+class TkSpeciesType(IntEnum):
     """The enumeration for species type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -191,7 +191,7 @@ class SpeciesType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class ExpressionType(IntEnum):
+class TkExpressionType(IntEnum):
     """The enumeration for the expression type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -218,7 +218,7 @@ class ExpressionType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class SolverType(IntEnum):
+class TkSolverType(IntEnum):
     """The enumeration for the solver type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -242,7 +242,7 @@ class SolverType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class CouplingType(IntEnum):
+class TkCouplingType(IntEnum):
     """The enumeration for the coupling type option used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -263,7 +263,7 @@ class CouplingType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class MassUnitsType(IntEnum):
+class TkMassUnits(IntEnum):
     """The enumeration for mass units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -290,7 +290,7 @@ class MassUnitsType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class AreaUnitsType(IntEnum):
+class TkAreaUnits(IntEnum):
     """The enumeration for area units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -314,7 +314,7 @@ class AreaUnitsType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class RateUnitsType(IntEnum):
+class TkRateUnits(IntEnum):
     """The enumeration for rate units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -341,7 +341,7 @@ class RateUnitsType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class UnitsType(IntEnum):
+class TkUnits(IntEnum):
     """The position for units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -378,7 +378,7 @@ class UnitsType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class HydVarType(IntEnum):
+class TkHydVar(IntEnum):
     """The enumeration for hydraulic variable used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -421,7 +421,7 @@ class HydVarType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class TstatType(IntEnum):
+class TkTstat(IntEnum):
     """The enumeration used for time statistic in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -451,7 +451,7 @@ class TstatType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class OptionType(IntEnum):
+class TkOption(IntEnum):
     """The enumeration used for choosing an option in EPANET-MSX toolkit.
     
     .. warning:: These enum values start with 0.
@@ -496,7 +496,7 @@ class OptionType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class CompilerType(IntEnum):
+class TkCompiler(IntEnum):
     """The enumeration used for specifying compiler options in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
@@ -520,7 +520,7 @@ class CompilerType(IntEnum):
 
 
 @add_get(prefix='MSX_')
-class FileModeType(IntEnum):
+class TkFileMode(IntEnum):
     """The enumeration for file model used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.

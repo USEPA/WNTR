@@ -5,54 +5,55 @@ Other than the enum classes, the classes in this module are all abstract
 and/or mixin classes, and should not be instantiated directly.
 """
 
-from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
 import logging
-from enum import Enum, IntEnum
 import os
-from typing import Any, Dict, Iterator, List, Union
-from wntr.utils.disjoint_mapping import DisjointMapping
+from abc import ABC, abstractclassmethod, abstractmethod, abstractproperty
+from enum import Enum
+from typing import Any, Dict, Iterator, List, Union, Generator
+from wntr.epanet.util import ENcomment, NoteType
 
+from wntr.utils.disjoint_mapping import DisjointMapping
 from wntr.utils.enumtools import add_get
 
 has_sympy = False
 try:
     from sympy import (
+        Add,
         Float,
+        Function,
+        Integer,
+        Mul,
+        Pow,
         Symbol,
         init_printing,
         symbols,
-        Function,
-        Mul,
-        Add,
-        Pow,
-        Integer,
     )
     from sympy.functions import (
-        cos,
-        sin,
-        tan,
-        cot,
         Abs,
-        sign,
-        sqrt,
-        log,
-        exp,
-        asin,
-        acos,
-        atan,
-        acot,
-        sinh,
-        cosh,
-        tanh,
-        coth,
         Heaviside,
+        acos,
+        acot,
+        asin,
+        atan,
+        cos,
+        cosh,
+        cot,
+        coth,
+        exp,
+        log,
+        sign,
+        sin,
+        sinh,
+        sqrt,
+        tan,
+        tanh,
     )
     from sympy.parsing import parse_expr
     from sympy.parsing.sympy_parser import (
-        convert_xor,
-        standard_transformations,
         auto_number,
         auto_symbol,
+        convert_xor,
+        standard_transformations,
     )
 
     class _log10(Function):
@@ -69,22 +70,22 @@ except ImportError:
     convert_xor = None
     if not has_sympy:
         from numpy import (
-            cos,
-            sin,
-            tan,
             abs,
-            sign,
-            sqrt,
-            log,
-            exp,
-            arcsin,
             arccos,
+            arcsin,
             arctan,
-            sinh,
+            cos,
             cosh,
-            tanh,
+            exp,
             heaviside,
+            log,
             log10,
+            sign,
+            sin,
+            sinh,
+            sqrt,
+            tan,
+            tanh,
         )
 
         def _cot(x):
@@ -109,22 +110,6 @@ except ImportError:
         _log10 = log10
 
 logger = logging.getLogger(__name__)
-
-__all__ = [
-    "HYDRAULIC_VARIABLES",
-    "EXPR_FUNCTIONS",
-    "RESERVED_NAMES",
-    "EXPR_TRANSFORMS",
-    "VariableType",
-    "SpeciesType",
-    "ReactionType",
-    "ExpressionType",
-    "AbstractVariable",
-    "AbstractReaction",
-    "ReactionSystem",
-    "VariableValues",
-    "AbstractModel",
-]
 
 HYDRAULIC_VARIABLES = [
     {"name": "D", "note": "pipe diameter (feet or meters) "},
@@ -289,7 +274,7 @@ EXPR_TRANSFORMS = (
 """
 
 
-class AnnotatedFloat(float):
+class _AnnotatedFloat(float):
     def __new__(self, value, note=None):
         return float.__new__(self, value)
 
@@ -299,7 +284,7 @@ class AnnotatedFloat(float):
 
 
 @add_get(abbrev=True)
-class VariableType(IntEnum):
+class VariableType(Enum):
     """The type of reaction variable.
 
     The following types are defined, and aliases of just the first character
@@ -325,13 +310,14 @@ class VariableType(IntEnum):
     SPECIES = 3
     """A chemical or biological water quality species"""
     TERM = 4
-    """A functional term - ie named expression - for use in reaction expressions"""
+    """A functional term, or named expression, for use in reaction expressions"""
     PARAMETER = 5
     """A reaction expression coefficient that is parameterized by tank or pipe"""
     CONSTANT = 6
     """A constant coefficient for use in reaction expressions"""
     RESERVED = 9
-    """A 'variable' that is either a hydraulic variable or other reserved word"""
+    """A variable that is either a hydraulic variable or other reserved word"""
+
     S = SPEC = SPECIES
     T = TERM
     P = PARAM = PARAMETER
@@ -340,10 +326,10 @@ class VariableType(IntEnum):
 
 
 @add_get(abbrev=True)
-class SpeciesType(IntEnum):
+class SpeciesType(Enum):
     """The enumeration for species type.
 
-    .. warning:: These enum values are note the same as the MSX SpeciesType.
+    .. warning:: These enum values are not the same as the MSX SpeciesType.
 
     .. rubric:: Enum Members
 
@@ -363,6 +349,7 @@ class SpeciesType(IntEnum):
     """bulk species"""
     WALL = 2
     """wall species"""
+
     B = BULK
     W = WALL
 
@@ -420,7 +407,8 @@ class ExpressionType(Enum):
     EQUIL = 1
     """used for equilibrium expressions where it is assumed that the expression supplied is being equated to zero"""
     RATE = 2
-    """used to supply the equation that expresses the rate of change of the given species with respect to time as a function of the other species in the model"""
+    """used to supply the equation that expresses the rate of change of the given species with respect to time as a function
+    of the other species in the model"""
     FORMULA = 3
     """used when the concentration of the named species is a simple function of the remaining species"""
 
@@ -429,23 +417,56 @@ class ExpressionType(Enum):
     F = FORMULA
 
 
-class AbstractReaction(ABC):
-    def __init__(self, species_name: str, *, note=None) -> None:
+class ReactionBase(ABC):
+    """A water quality reaction class.
+
+    This is an abstract class for water quality reactions with partial concrete
+    attribute and method definitions. All parameters
+    and methods documented here must be defined by a subclass except for the following:
+
+    .. rubric:: Concrete attribtues
+
+    The :meth:`__init__` method defines the following attributes concretely. Thus,
+    a subclass should call :code:`super().__init__(species_name, note=note)` at the beginning of its own
+    initialization.
+
+    .. autosummary::
+
+        ~ReactionBase._species_name
+        ~ReactionBase.note
+
+    .. rubric:: Concrete properies
+
+    The species name is protected, and a reaction cannot be manually assigned a new species.
+    Therefore, the following property is defined concretely.
+
+    .. autosummary::
+
+        species_name
+
+    .. rubric:: Concrete methods
+
+    The following methods are concretely defined, but can be overridden.
+
+    .. autosummary::
+        :nosignatures:
+
+        __str__
+        __repr__
+    """
+
+    def __init__(self, species_name: str, *, note: NoteType = None) -> None:
         """A water quality reaction definition.
 
         This abstract class must be subclassed.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         species_name : str
             The name of the chemical or biological species being modeled using this reaction.
-
-
-        Keyword Arguments
-        -----------------
-        note : str | dict | ENcomment, optional
-            Supplementary information regarding this reaction, by default None (see :class:`~wntr.epanet.util.ENcomment` for dict structure).
-
+        note : (str | dict | ENcomment), optional keyword
+            Supplementary information regarding this reaction, by default None
+            (see-also :class:`~wntr.epanet.util.NoteType`)
 
         Raises
         ------
@@ -454,60 +475,75 @@ class AbstractReaction(ABC):
         """
         if species_name is None:
             raise TypeError("The species_name cannot be None")
-        self._species_name = species_name
-        self.note = note
+        self._species_name: str = str(species_name)
+        """The protected name of the species"""
+        self.note: NoteType = note
+        """An optional note regarding the reaction (see :class:`~wntr.epanet.util.NoteType`)
+        """
 
     @property
     def species_name(self) -> str:
+        """The name of the species that has a reaction being defined."""
         return self._species_name
 
     @abstractproperty
     def reaction_type(self) -> Enum:
-        """The type of reaction or where this reaction occurs."""
+        """The reaction type (reaction location)."""
         raise NotImplementedError
 
     def __str__(self) -> str:
+        """Return the name of the species and the reaction type, indicated by an arrow. E.g., 'HOCL->PIPE for chlorine reaction in pipes."""
         return "{}->{}".format(self.species_name, self.reaction_type.name)
 
     def __repr__(self) -> str:
-        return (
-            "{}(".format(self.__class__.__name__)
-            + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()])
-            + ")"
-        )
+        """Return a representation of the reaction from the dictionary representation - see :meth:`to_dict`"""
+        return "{}(".format(self.__class__.__name__) + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()]) + ")"
 
     @abstractmethod
     def to_dict(self) -> dict:
+        """Represent the object as a dictionary."""
         raise NotImplementedError
 
 
-class AbstractVariable(ABC):
+class VariableBase(ABC):
     """A multi-species water quality model variable.
 
-    This abstract class must be extended before use. There are several concrete classes
-    that inhert from this class, including
-    :class:`~wntr.msx.msx.Species`,
-    :class:`~wntr.msx.msx.Constant`,
-    :class:`~wntr.msx.msx.Parameter`,
-    and :class:`~wntr.msx.msx.Term`.
-    See also the :class:`~wntr.msx.msx.MultispeciesModel`, which has the functions
-    required to create these variables and define reactions.
+    This is an abstract class for water quality model variables with partial definition
+    of concrete attributes and methods. Parameters
+    and methods documented here must be defined by a subclass except for the following:
+
+    .. rubric:: Concrete attribtues
+
+    The :meth:`__init__` method defines the following attributes concretely. Thus,
+    a subclass should call :code:`super().__init__()` at the beginning of its own
+    initialization.
+
+    .. autosummary::
+
+        ~VariableBase.name
+        ~VariableBase.note
+
+    .. rubric:: Concrete methods
+
+    The following methods are concretely defined, but can be overridden.
+
+    .. autosummary::
+        :nosignatures:
+
+        __str__
+        __repr__
     """
 
-    def __init__(self, name: str, *, note=None) -> None:
+    def __init__(self, name: str, *, note: NoteType = None) -> None:
         """Multi-species variable constructor arguments.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         name : str
             The name/symbol for the variable. Must be a valid MSX variable name.
-
-        Keyword Arguments
-        -----------------
-        note : str | dict | ENcomment, optional
-            Supplementary information regarding this variable, by default None (see :class:`~wntr.epanet.util.ENcomment` for dict structure).
-            As dict it can have two keys, "pre" and "post". See :class:`ENcomment`
-            for more details.
+        note : (str | dict | ENcomment), optional keyword
+            Supplementary information regarding this variable, by default None
+            (see-also :class:`~wntr.epanet.util.NoteType`)
 
         Raises
         ------
@@ -515,22 +551,14 @@ class AbstractVariable(ABC):
             the name is already taken
         ValueError
             the name is a reserved word
-
-
-        The following should only be used by model building functions, and the
-        user should never need to pass these arguments.
-
-        Other Parameters
-        ----------------
-        _vars : VariablesRegistry, optional
-            the variables registry object of the model this variable was added to, by default None
         """
         if name in RESERVED_NAMES:
             raise ValueError("Name cannot be a reserved name")
         self.name: str = name
         """The name/ID of this variable, must be a valid EPANET/MSX ID"""
-        self.note = note
-        """A note related to this variable"""
+        self.note: NoteType = note
+        """An optional note regarding the variable (see :class:`~wntr.epanet.util.NoteType`)
+        """
 
     @abstractproperty
     def var_type(self) -> Enum:
@@ -543,49 +571,79 @@ class AbstractVariable(ABC):
         raise NotImplementedError
 
     def __str__(self) -> str:
+        """Return the name of the variable"""
         return self.name
 
     def __repr__(self) -> str:
-        return (
-            "{}(".format(self.__class__.__name__)
-            + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()])
-            + ")"
-        )
+        """Return a representation of the variable from the dictionary representation - see :meth:`to_dict`"""
+        return "{}(".format(self.__class__.__name__) + ", ".join(["{}={}".format(k, repr(getattr(self, k))) for k, v in self.to_dict().items()]) + ")"
 
 
-class ReactionSystem(ABC):
+class ReactionSystemBase(ABC):
     """Abstract class for reaction systems, which contains variables and reaction expressions.
 
-    This class contains the functions necessary to perform as a mapping view onto the
-    **variables** defined, by their name.
+    This class contains the functions necessary to perform dictionary-style
+    addressing of *variables* by their name. It does not allow dictionary-style
+    addressing of reactions.
+
+    This is an abstract class with some concrete attributes and methods. Parameters
+    and methods documented here must be defined by a subclass except for the following:
+
+    .. rubric:: Concrete attributes
+
+    The :meth:`__init__` method defines the following attributes concretely. Thus,
+    a subclass should call :code:`super().__init__()` or :code:`super().__init__(filename)`.
+
+    .. autosummary::
+
+        ~ReactionSystemBase._vars
+        ~ReactionSystemBase._rxns
+
+    .. rubric:: Concrete methods
+
+    The following special methods are concretely provided to directly access items
+    in the :attr:`_vars` attribute.
+
+    .. autosummary::
+        :nosignatures:
+
+        __contains__
+        __eq__
+        __ne__
+        __getitem__
+        __iter__
+        __len__
     """
 
     def __init__(self) -> None:
-        self._vars = DisjointMapping()
-        self._rxns = dict()
+        """The constructor for the reaction system."""
+        self._vars: DisjointMapping = DisjointMapping()
+        """The variables registry, which is mapped to dictionary functions on the reaction system object"""
+        self._rxns: Dict[str, Any] = dict()
+        """The reactions dictionary"""
 
     @abstractmethod
-    def add_variable(self, obj: AbstractVariable) -> None:
+    def add_variable(self, obj: VariableBase) -> None:
         """Add a variable to the system"""
         raise NotImplementedError
 
     @abstractmethod
-    def add_reaction(self, obj: AbstractReaction) -> None:
+    def add_reaction(self, obj: ReactionBase) -> None:
         """Add a reaction to the system"""
         raise NotImplementedError
 
     @abstractmethod
-    def variables(self):
+    def variables(self) -> Generator[Any, Any, Any]:
         """A generator looping through all variables"""
         raise NotImplementedError
 
     @abstractmethod
-    def reactions(self):
+    def reactions(self) -> Generator[Any, Any, Any]:
         """A generator looping through all reactions"""
         raise NotImplementedError
 
     @abstractmethod
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Represent the reaction system as a dictionary"""
         raise NotImplementedError
 
@@ -598,7 +656,7 @@ class ReactionSystem(ABC):
     def __ne__(self, __value: object) -> bool:
         return self._vars.__ne__(__value)
 
-    def __getitem__(self, __key: str) -> AbstractVariable:
+    def __getitem__(self, __key: str) -> VariableBase:
         return self._vars.__getitem__(__key)
 
     def __iter__(self) -> Iterator:
@@ -608,61 +666,118 @@ class ReactionSystem(ABC):
         return self._vars.__len__()
 
 
-class VariableValues(ABC):
-    """Abstract class for a variable's network-specific values."""
+class VariableValuesBase(ABC):
+    """Abstract class for a variable's network-specific values.
+
+    This class should contain values for different pipes, tanks,
+    etc., that correspond to a specific network for the reaction
+    system. It can be used for intial concentration values, or
+    for initial settings on parameters, but should be information
+    that is clearly tied to a specific type of variable.
+
+    This is a pure abstract class. All parameters
+    and methods documented here must be defined by a subclass.
+    """
 
     @abstractproperty
     def var_type(self) -> Enum:
-        """Define what type of variable this network-specific data is for"""
+        """The type of variable this object holds data for."""
         raise NotImplementedError
 
     @abstractmethod
     def to_dict(self) -> dict:
-        """Represent the variable's network-specific values as a dictionary"""
+        """Represent a specific variable's network-specific values as a dictionary.
+
+        Returns
+        -------
+        dict
+            the network-specific values for a specific variable
+        """
         raise NotImplementedError
 
 
-class NetworkData(ABC):
+class NetworkDataBase(ABC):
     """Abstract class containing network specific data.
-    
+
     This class should be populated with things like initial quality,
     sources, parameterized values, etc.
+
+    This is a pure abstract class. All parameters
+    and methods documented here must be defined by a subclass.
     """
 
     @abstractmethod
     def to_dict(self) -> dict:
-        """Represent the network specific data as a dictionary"""
+        """Represent the quality-relevant network-specific data as a dictionary.
+
+        Returns
+        -------
+        dict
+            the quality-relevant network data
+        """
         raise NotImplementedError
 
 
-class AbstractModel(ABC):
-    """Abstract water quality model."""
+class QualityModelBase(ABC):
+    """Abstract water quality model.
+
+    This is an abstract class for a water quality model. All parameters
+    and methods documented here must be defined by a subclass except for the following:
+
+    .. rubric:: Concrete attributes
+
+    The :meth:`__init__` method defines the following attributes concretely. Thus,
+    a subclass should call :code:`super().__init__()` or :code:`super().__init__(filename)`.
+
+    .. autosummary::
+
+        ~QualityModelBase.name
+        ~QualityModelBase.title
+        ~QualityModelBase.description
+        ~QualityModelBase._orig_file
+        ~QualityModelBase._options
+        ~QualityModelBase._rxn_system
+        ~QualityModelBase._net_data
+        ~QualityModelBase._wn
+    """
 
     def __init__(self, filename=None):
+        """Abstract water quality model.
+
+        Parameters
+        ----------
+        filename : str, optional
+            the file to use to populate the initial data
+        """
         self.name: str = None if filename is None else os.path.splitext(os.path.split(filename)[1])[0]
         """A name for the model, or the MSX model filename (no spaces allowed)"""
         self.title: str = None
         """The title line from the MSX file, must be a single line"""
         self.description: str = None
-        """A longer description, note that multi-line descriptions may not be 
-        represented well in dictionary form."""
+        """A longer description; note that multi-line descriptions may not be 
+        represented well in dictionary form"""
         self._orig_file: str = filename
+        """The protected original filename, if provided in the constructor"""
         self._options = None
-        self._rxn_system: ReactionSystem = None
-        self._net_data: NetworkData = None
+        """The protected options data object"""
+        self._rxn_system: ReactionSystemBase = None
+        """The protected reaction system object"""
+        self._net_data: NetworkDataBase = None
+        """The protected network data object"""
         self._wn = None
+        """The protected water network object"""
 
     @abstractproperty
     def options(self):
         """The model options structure.
 
-        Concrete classes should implement this with the appropriate typeing and
+        Concrete classes should implement this with the appropriate typing and
         also implement a setter method.
         """
         raise NotImplementedError
 
     @abstractproperty
-    def reaction_system(self) -> ReactionSystem:
+    def reaction_system(self) -> ReactionSystemBase:
         """The reaction variables defined for this model.
 
         Concrete classes should implement this with the appropriate typing.
@@ -670,7 +785,7 @@ class AbstractModel(ABC):
         raise NotImplementedError
 
     @abstractproperty
-    def network_data(self) -> NetworkData:
+    def network_data(self) -> NetworkDataBase:
         """The network-specific values added to this model.
 
         Concrete classes should implement this with the appropriate typing.
@@ -679,10 +794,27 @@ class AbstractModel(ABC):
 
     @abstractmethod
     def to_dict(self) -> dict:
-        """Represent the model as a dictionary."""
+        """Represent the model as a dictionary.
+
+        Returns
+        -------
+        dict
+            A dictionary representation of a water quality model
+        """
         raise NotImplementedError
 
     @abstractclassmethod
-    def from_dict(self, data: dict) -> "AbstractModel":
-        """Create a new model from a dictionary."""
+    def from_dict(self, data: dict) -> "QualityModelBase":
+        """Create a new model from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            A dictionary representation of a water quality model
+
+        Returns
+        -------
+        QualityModelBase
+            the new concrete water quality model
+        """
         raise NotImplementedError

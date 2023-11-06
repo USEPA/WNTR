@@ -9,7 +9,8 @@ from wntr.network.options import _OptionsBase
 
 logger = logging.getLogger(__name__)
 
-class ReportOptions(_OptionsBase):
+
+class MsxReportOptions(_OptionsBase):
     """
     Options related to EPANET-MSX report outputs.
     """
@@ -69,8 +70,7 @@ class ReportOptions(_OptionsBase):
         self.__dict__[name] = value
 
 
-
-class MultispeciesOptions(_OptionsBase):
+class MsxSolverOptions(_OptionsBase):
     """
     Multispecies quality model options.
     """
@@ -88,7 +88,7 @@ class MultispeciesOptions(_OptionsBase):
         segments: int = 5000,
         peclet: int = 1000,
         # global_initial_quality: Dict[str, float] = None,
-        report: ReportOptions = None,
+        report: MsxReportOptions = None,
     ):
         """
         Multispecies quality model options.
@@ -139,14 +139,14 @@ class MultispeciesOptions(_OptionsBase):
         """The number of segments per-pipe to use, by default 5000."""
         self.peclet: int = peclet
         """The threshold for applying dispersion, by default 1000."""
-        self.report: ReportOptions = ReportOptions.factory(report)
+        self.report: MsxReportOptions = MsxReportOptions.factory(report)
         """The reporting output options."""
 
     def __setattr__(self, name, value):
         if name == "report":
-            if not isinstance(value, (ReportOptions, dict, tuple, list)):
+            if not isinstance(value, (MsxReportOptions, dict, tuple, list)):
                 raise ValueError("report must be a ReportOptions or convertable object")
-            value = ReportOptions.factory(value)
+            value = MsxReportOptions.factory(value)
         elif name in {"timestep"}:
             try:
                 value = max(1, int(value))

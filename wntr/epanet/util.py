@@ -1,11 +1,13 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
 """
+from __future__ import annotations
+
 import dataclasses
 import enum
 import logging
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Union, TypedDict
 import numpy as np
 import pandas as pd
 
@@ -1387,6 +1389,15 @@ def from_si(
 
 @dataclass
 class ENcomment:
+    """A class for storing EPANET configuration file comments with objects.
+    
+    Attributes
+    ----------
+    pre : list of str
+        a list of comments to put before the output of a configuration line
+    post : str
+        a single comment that is attached to the end of the line
+    """
     pre: List[str] = field(default_factory=list)
     post: str = None
 
@@ -1403,3 +1414,10 @@ class ENcomment:
 
     def to_dict(self):
         return dataclasses.asdict(self)
+
+NoteType = Union[str, dict, ENcomment]
+"""An object that stores EPANET compatible annotation data.
+
+A note (or comment) can be a string, a dictionary of the form :code:`{'pre': List[str], 'post': str}`,
+or an :class:`wntr.epanet.util.ENcomment` object.
+"""

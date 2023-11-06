@@ -8,7 +8,6 @@ Programmers Toolkit DLLs.
     licensed under the BSD license. See LICENSE.txt for details.
 """
 import ctypes
-from enum import IntEnum
 import os
 import os.path
 import platform
@@ -18,11 +17,11 @@ from typing import Union
 
 from pkg_resources import resource_filename
 
-from wntr.epanet.msx.enums import ObjectType, SourceType
+from wntr.epanet.msx.enums import TkObjectType, TkSourceType
 
 from ..toolkit import ENepanet
 from ..util import SizeLimits
-from .exceptions import EpanetMsxException, MSX_ERROR_CODES, MSXKeyError, MSXValueError
+from .exceptions import MSX_ERROR_CODES, EpanetMsxException, MSXKeyError, MSXValueError
 
 epanet_toolkit = "wntr.epanet.toolkit"
 
@@ -216,7 +215,7 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     # ---------get parameters---------------------------------------------------------------
-    def MSXgetindex(self, _type: Union[int, ObjectType], name):
+    def MSXgetindex(self, _type: Union[int, TkObjectType], name):
         """Retrieves the internal index of an MSX object given its name.
 
         Parameters
@@ -239,7 +238,7 @@ class MSXepanet(ENepanet):
             if _type is not a valid MSX object type
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
         type_ind = int(_type)
@@ -265,7 +264,7 @@ class MSXepanet(ENepanet):
             the length of the object ID
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
         type_ind = int(_type)
@@ -291,7 +290,7 @@ class MSXepanet(ENepanet):
             the object ID
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
         type_ind = int(_type)
@@ -331,10 +330,10 @@ class MSXepanet(ENepanet):
             any other error from the C-API
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
-        if _type not in [ObjectType.NODE, ObjectType.LINK]:
+        if _type not in [TkObjectType.NODE, TkObjectType.LINK]:
             raise MSXValueError(515, repr(_type))
         type_ind = int(_type)
         iniqual = ctypes.c_double()
@@ -370,10 +369,10 @@ class MSXepanet(ENepanet):
             any other error from the C-API
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
-        if _type not in [ObjectType.NODE, ObjectType.LINK]:
+        if _type not in [TkObjectType.NODE, TkObjectType.LINK]:
             raise MSXValueError(515, repr(_type))
         type_ind = int(_type)
         qual = ctypes.c_double()
@@ -433,10 +432,10 @@ class MSXepanet(ENepanet):
             _description_
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
-        if _type not in [ObjectType.NODE, ObjectType.LINK]:
+        if _type not in [TkObjectType.NODE, TkObjectType.LINK]:
             raise MSXValueError(515, repr(_type))
         type_ind = int(_type)
         param = ctypes.c_double()
@@ -456,7 +455,7 @@ class MSXepanet(ENepanet):
         ierr = self.ENlib.MSXgetsource(ctypes.c_int(node_index), ctypes.c_int(species_index), ctypes.byref(_type), ctypes.byref(level), ctypes.byref(pat))
         if ierr != 0:
             raise EpanetMsxException(ierr, repr(dict(node_index=node_index, species_index=species_index)))
-        src_out = [SourceType.get(_type.value), level.value, pat.value]
+        src_out = [TkSourceType.get(_type.value), level.value, pat.value]
         return src_out
 
     def MSXgetpatternlen(self, pat):
@@ -530,7 +529,7 @@ class MSXepanet(ENepanet):
             _description_
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
         type_ind = int(_type)
@@ -633,10 +632,10 @@ class MSXepanet(ENepanet):
             _description_
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
-        if _type not in [ObjectType.NODE, ObjectType.LINK]:
+        if _type not in [TkObjectType.NODE, TkObjectType.LINK]:
             raise MSXValueError(515, repr(_type))
         type_ind = int(_type)
         ierr = self.ENlib.MSXsetparameter(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(param), ctypes.c_double(value))
@@ -668,10 +667,10 @@ class MSXepanet(ENepanet):
             _description_
         """
         try:
-            _type = ObjectType.get(_type)
+            _type = TkObjectType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
-        if _type not in [ObjectType.NODE, ObjectType.LINK]:
+        if _type not in [TkObjectType.NODE, TkObjectType.LINK]:
             raise MSXValueError(515, repr(_type))
         type_ind = int(_type)
         ierr = self.ENlib.MSXsetinitqual(ctypes.c_int(type_ind), ctypes.c_int(ind), ctypes.c_int(spe), ctypes.c_double(value))
@@ -702,7 +701,7 @@ class MSXepanet(ENepanet):
             _description_
         """
         try:
-            _type = SourceType.get(_type)
+            _type = TkSourceType.get(_type)
         except KeyError:
             raise MSXKeyError(515, repr(_type))
         type_ind = int(_type)
