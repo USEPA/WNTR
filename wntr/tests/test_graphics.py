@@ -103,6 +103,22 @@ class TestGraphics(unittest.TestCase):
         plt.close()
 
         self.assertTrue(isfile(filename))
+        
+    def test_plot_network_vertices(self):
+        filename = abspath(join(testdir, "plot_network_vertices.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        inp_file = join(test_datadir, "io.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+
+        wntr.graphics.plot_network(
+            wn, link_attribute="diameter", plot_vertices=True
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
 
     def test_plot_interactive_network1(self):
 
