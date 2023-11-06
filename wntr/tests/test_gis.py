@@ -43,6 +43,10 @@ class TestGIS(unittest.TestCase):
         self.results = sim.run_sim()
         self.gis_data = self.wn.to_gis()
         
+        vertex_inp_file = join(datadir, "io.inp")
+        self.vertex_wn = self.wntr.network.WaterNetworkModel(vertex_inp_file)
+        self.vertex_gis_data = self.vertex_wn.to_gis()
+        
         polygon_pts = [[(25,80), (65,80), (65,60), (25,60)],
                        [(25,60), (80,60), (80,30), (25,30)],
                        [(40,50), (60,65), (60,15), (40,15)]]
@@ -102,6 +106,11 @@ class TestGIS(unittest.TestCase):
         G2 = wn2.to_graph()
         
         assert nx.is_isomorphic(G1, G2)
+        
+        # test vertices
+        vertex_wn2 = wntr.network.io.from_gis(self.vertex_gis_data)
+        for name, link in vertex_wn2.links():
+            assert link.vertices == self.vertex_wn.get_link(name).vertices
                          
     def test_intersect_points_with_polygons(self):
         
