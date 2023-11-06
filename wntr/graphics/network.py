@@ -732,7 +732,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     
     m.save(filename)
  
-def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
+def network_animation(wn, node_attribute=None, link_attribute=None, title=None, plot_vertices=False,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None, repeat=True):
@@ -835,7 +835,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     else:
         title_name = '0'
     
-    ax = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
+    ax = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name, plot_vertices=False,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
@@ -859,7 +859,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         fig.clf()  
         ax = plt.gca()
         
-        ax = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
+        ax = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name, plot_vertices=False,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
