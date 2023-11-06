@@ -236,11 +236,11 @@ class SimulationResults(object):
         for key in self.node.keys():
             self.node[key].index += ts
 
-    def append_results_from(self, other):
+    def append(self, other):
         """
         Combine two results objects into a single, new result object.
         If the times overlap, then the results from the `other` object will take precedence 
-        over the values in the calling object. I.e., given ``A.append_results_from(B)``, 
+        over the values in the calling object. I.e., given ``A.append(B)``, 
         where ``A`` and ``B``
         are both `SimluationResults`, any results from ``A`` that relate to times equal to or
         greater than the starting time of results in ``B`` will be dropped.
@@ -262,7 +262,7 @@ class SimulationResults(object):
         
         """
         if not isinstance(other, SimulationResults):
-            raise ValueError("operating on a results object requires both be SimulationResults")
+            raise ValueError("operating on a results object requires both to be SimulationResults")
         start_time = other.node["head"].index.values[0]
         keep = self.node["head"].index.values < start_time
         for key in self.link.keys():
