@@ -117,7 +117,7 @@ class TestStopStartSim(unittest.TestCase):
         #     link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
         # self.res2.node = node_res
         # self.res2.link = link_res
-        self.res2.append_results_from(self.res3)
+        self.res2.append(self.res3)
         self.res4 = abs(self.res1 - self.res2).max()
 
     @classmethod
@@ -191,7 +191,7 @@ class TestStopStartEpanetSim(unittest.TestCase):
         self.res3 = sim.run_sim()
         self.res3._adjust_time(11*3600)
         
-        self.res2.append_results_from(self.res3)
+        self.res2.append(self.res3)
         self.res4 = abs(self.res1 - self.res2).max()
 
     @classmethod
@@ -290,7 +290,7 @@ class TestPickle(unittest.TestCase):
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
         self.res3._adjust_time(10*3600)
         
-        self.res2.append_results_from(self.res3)
+        self.res2.append(self.res3)
         self.res4 = abs(self.res1 - self.res2).max()
 
     @classmethod
