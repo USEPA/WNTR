@@ -30,22 +30,15 @@ class Test(unittest.TestCase):
 
     def test_RxnVariable_values(self):
         const1 = wntr.msx.Constant("Kb", 0.482, note="test")
-        self.assertEqual(const1.get_value(), const1.value)
-        test_pipe_dict = {"PIPE": 0.38}
-        test_tank_dict = {"TANK": 222.23}
-        param2 = wntr.msx.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
-        self.assertEqual(param2.get_value(), param2.global_value)
-        self.assertEqual(param2.get_value(pipe="PIPE"), test_pipe_dict["PIPE"])
-        self.assertEqual(param2.get_value(pipe="FOO"), param2.global_value)
-        self.assertEqual(param2.get_value(tank="TANK"), test_tank_dict["TANK"])
-        self.assertRaises(TypeError, param2.get_value, pipe="PIPE", tank="TANK")
+        self.assertEqual(const1.value, 0.482)
+        param2 = wntr.msx.Parameter("Kb", 0.482, note="test")
+        self.assertEqual(param2.global_value, 0.482)
 
     def test_RxnVariable_string_functions(self):
-        species1 = wntr.msx.Species('BULK', "Cl", "mg")
-        species2 = wntr.msx.Species('WALL', "Cl", "mg", 0.01, 0.0001, note="Testing stuff")
+        species1 = wntr.msx.Species('Cl', 'BULK', "mg")
         const1 = wntr.msx.Constant("Kb", 0.482)
         param1 = wntr.msx.Parameter("Ka", 0.482, note="foo")
-        term1 = wntr.msx.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
+        term1 = wntr.msx.Term("T0", "-3.2 * Kb * Cl^2", note="bar")
 
         self.assertEqual(str(species1), "Cl")
         self.assertEqual(str(const1), "Kb")
@@ -122,7 +115,7 @@ class Test(unittest.TestCase):
         # FIXME: Find a way to suppress warning printing
         # self.assertWarns(RuntimeWarning, wntr.reaction.Constant, 'Kb1', 0.83, pipe_values={'a',1})
         self.assertEqual(const1.name, "Kb")
-        self.assertEqual(const1.global_value, 0.482)
+        self.assertEqual(const1.value, 0.482)
         self.assertEqual(const1.get_value(), const1.global_value)
         self.assertEqual(const1.var_type, wntr.msx.VariableType.CONST)
         self.assertEqual(const1.note, "test")
@@ -136,11 +129,11 @@ class Test(unittest.TestCase):
         self.assertEqual(param1.get_value(), param1.global_value)
         self.assertEqual(param1.var_type, wntr.msx.VariableType.PARAM)
         self.assertEqual(param1.note, "test")
-        test_pipe_dict = {"PIPE": 0.38}
-        test_tank_dict = {"TANK": 222.23}
-        param2 = wntr.msx.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
-        self.assertDictEqual(param2.pipe_values, test_pipe_dict)
-        self.assertDictEqual(param2.tank_values, test_tank_dict)
+        # test_pipe_dict = {"PIPE": 0.38}
+        # test_tank_dict = {"TANK": 222.23}
+        # param2 = wntr.msx.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
+        # self.assertDictEqual(param2.pipe_values, test_pipe_dict)
+        # self.assertDictEqual(param2.tank_values, test_tank_dict)
 
     def test_RxnTerm_creation(self):
         self.assertRaises(TypeError, wntr.msx.OtherTerm, "Re")

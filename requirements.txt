@@ -12,7 +12,6 @@ utm
 openpyxl
 geopandas; sys_platform == "darwin" or sys_platform == "linux"
 rtree; sys_platform == "darwin" or sys_platform == "linux"
-sympy
 
 # Documentation
 sphinx

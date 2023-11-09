@@ -410,26 +410,26 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        _type : _type_
-            _description_
-        node_link_index : _type_
-            _description_
-        param_index : _type_
-            _description_
+        _type : int or str or Enum
+            get the type of the parameter
+        node_link_index : int
+            the link index
+        param_index : int
+            the parameter variable index
 
         Returns
         -------
-        _type_
-            _description_
+        float
+            the parameter value
 
         Raises
         ------
         MSXKeyError
-            _description_
+            if there is no such _type
         MSXValueError
-            _description_
+            if the _type is improper
         EpanetMsxException
-            _description_
+            any other error
         """
         try:
             _type = TkObjectType.get(_type)
@@ -463,18 +463,13 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        pat : _type_
-            _description_
+        pat : int
+            pattern index
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        int
+            number of time periods in the pattern
         """
         len = ctypes.c_int()
         ierr = self.ENlib.MSXgetpatternlen(pat, ctypes.byref(len))
@@ -487,20 +482,15 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        pat : _type_
-            _description_
+        pat : int
+            pattern index
         period : int
             1-indexed period of the pattern to retrieve
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        float
+            the multiplier
         """
         val = ctypes.c_double()
         ierr = self.ENlib.MSXgetpatternvalue(pat, period, ctypes.byref(val))
@@ -513,20 +503,18 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        _type : _type_
-            _description_
+        _type : int or str or Enum
+            the type of object to count
 
         Returns
         -------
-        _type_
-            _description_
+        int
+            the number of objects of specified type
 
         Raises
         ------
         MSXKeyError
-            _description_
-        EpanetMsxException
-            _description_
+            if the _type is invalid
         """
         try:
             _type = TkObjectType.get(_type)
@@ -545,18 +533,13 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        species_index : _type_
-            _description_
+        species_index : int
+            the species to query
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        int, str, float, float
+            the type, units, aTol, and rTol for the species
         """
         type_ind = ctypes.c_int()
         units = ctypes.create_string_buffer(15)
@@ -573,15 +556,21 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        errcode : _type_
-            _description_
+        errcode : int
+            the error code
         len : int, optional
-            _description_, by default 100 and minimum 80
+            the length of the error message, by default 100 and minimum 80
 
         Returns
         -------
-        _type_
-            _description_
+        str
+            returns a string decoded from the DLL
+
+        Warning
+        -------
+        Getting string parameters in this way is not recommended, because it requires
+        setting up string arrays that may or may not be the correct size. Use the 
+        wntr.epanet.msx.enums package to get error information.
         """
         errmsg = ctypes.create_string_buffer(len)
         self.ENlib.MSXgeterror(errcode, ctypes.byref(errmsg), len)
@@ -594,15 +583,10 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        ind : _type_
-            _description_
-        value : _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        ind : int
+            the index to the variable
+        value : float
+            the value to give the constant
         """
         ierr = self.ENlib.MSXsetconstant(ctypes.c_int(ind), ctypes.c_double(value))
         if ierr != 0:
@@ -613,23 +597,21 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        _type : _type_
-            _description_
-        ind : _type_
-            _description_
-        param : _type_
-            _description_
-        value : _type_
-            _description_
+        _type : int or str or enum
+            the type of value to set
+        ind : int
+            the tank or pipe index
+        param : int
+            the parameter variable index
+        value : float
+            the value to be set
 
         Raises
         ------
         MSXKeyError
-            _description_
+            if there is no such _type
         MSXValueError
-            _description_
-        EpanetMsxException
-            _description_
+            if the _type is invalid
         """
         try:
             _type = TkObjectType.get(_type)
@@ -648,23 +630,14 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        _type : _type_
-            _description_
-        ind : _type_
-            _description_
-        spe : _type_
-            _description_
-        value : _type_
-            _description_
-
-        Raises
-        ------
-        MSXKeyError
-            _description_
-        MSXValueError
-            _description_
-        EpanetMsxException
-            _description_
+        _type : int or str or enum
+            what type of network element is being set
+        ind : int
+            the index of the network element
+        spe : int
+            the index of the species
+        value : float
+            the initial quality value
         """
         try:
             _type = TkObjectType.get(_type)
@@ -682,23 +655,16 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        node : _type_
-            _description_
-        spe : _type_
-            _description_
-        _type : _type_
-            _description_
-        level : _type_
-            _description_
-        pat : _type_
-            _description_
-
-        Raises
-        ------
-        MSXKeyError
-            _description_
-        EpanetMsxException
-            _description_
+        node : int
+            the node index
+        spe : int
+            the species index
+        _type : int or str or enum
+            the type of source
+        level : float
+            the source quality value
+        pat : int
+            the pattern index
         """
         try:
             _type = TkSourceType.get(_type)
@@ -714,15 +680,10 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        pat : _type_
-            _description_
-        mult : _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        pat : int
+            the pattern index
+        mult : list-like
+            the pattern multipliers
         """
         length = len(mult)
         cfactors_type = ctypes.c_double * length
@@ -738,17 +699,12 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        pat : _type_
-            _description_
-        period : _type_
-            _description_
-        value : _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        pat : int
+            the pattern index
+        period : int
+            the 1-indexed pattern time period index
+        value : float
+            the value to set at that time period
         """
         ierr = self.ENlib.MSXsetpatternvalue(ctypes.c_int(pat), ctypes.c_int(period), ctypes.c_double(value))
         if ierr != 0:
@@ -759,13 +715,8 @@ class MSXepanet(ENepanet):
 
         Parameters
         ----------
-        patternid : _type_
-            _description_
-
-        Raises
-        ------
-        EpanetMsxException
-            _description_
+        patternid : str
+            the name of the new pattern
         """
         ierr = self.ENlib.MSXaddpattern(ctypes.c_char_p(patternid.encode()))
         if ierr != 0:

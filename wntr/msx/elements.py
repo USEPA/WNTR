@@ -21,21 +21,6 @@ from .base import (
     ReactionSystemBase,
 )
 
-has_sympy = False
-try:
-    from sympy import Float, Symbol, init_printing, symbols
-    from sympy.parsing import parse_expr
-    from sympy.parsing.sympy_parser import convert_xor, standard_transformations
-
-    has_sympy = True
-except ImportError:
-    sympy = None
-    logging.critical("This python installation does not have SymPy installed. " "Certain functionality will be disabled.")
-    standard_transformations = (None,)
-    convert_xor = None
-    has_sympy = False
-
-
 logger = logging.getLogger(__name__)
 
 
