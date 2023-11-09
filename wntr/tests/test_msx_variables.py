@@ -5,8 +5,6 @@ from os.path import abspath, dirname, join
 import numpy as np
 import pandas as pd
 import wntr
-import wntr.msx
-import sympy
 
 testdir = dirname(abspath(str(__file__)))
 test_network_dir = join(testdir, "networks_for_testing")
@@ -28,28 +26,11 @@ class Test(unittest.TestCase):
         self.assertRaises(ValueError, wntr.msx.Species, 'wall', "Q", "mg")
         self.assertRaises(ValueError, wntr.msx.Constant, "Re", 0.52)
         self.assertRaises(ValueError, wntr.msx.Parameter, "Re", 0.52)
-        self.assertRaises(ValueError, wntr.msx.OtherTerm, "Re", 0.52)
-
-    def test_RxnVariable_symbols_and_sympy(self):
-        species1 = wntr.msx.Species('BULK', "Cl", "mg")
-        symbol1 = sympy.symbols("Cl")
-        self.assertEqual(species1.symbol, symbol1)
-
-        const1 = wntr.msx.Constant("Kb", 0.482)
-        symbol2 = sympy.symbols("Kb")
-        self.assertEqual(const1.symbol, symbol2)
-
-        param1 = wntr.msx.Constant("Ka", 0.482)
-        symbol3 = sympy.symbols("Ka")
-        self.assertEqual(param1.symbol, symbol3)
-
-        term1 = wntr.msx.OtherTerm("T0", "-3.2 * Kb * Cl^2", note="bar")
-        symbol4 = sympy.symbols("T0")
-        self.assertEqual(term1.symbol, symbol4)
+        self.assertRaises(ValueError, wntr.msx.Term, "Re", 0.52)
 
     def test_RxnVariable_values(self):
         const1 = wntr.msx.Constant("Kb", 0.482, note="test")
-        self.assertEqual(const1.get_value(), const1.global_value)
+        self.assertEqual(const1.get_value(), const1.value)
         test_pipe_dict = {"PIPE": 0.38}
         test_tank_dict = {"TANK": 222.23}
         param2 = wntr.msx.Parameter("Kb", 0.482, note="test", pipe_values=test_pipe_dict, tank_values=test_tank_dict)
