@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
+autosummary_generate = True
 napoleon_use_rtype = False
 viewcode_import = True
 numpydoc_show_class_members = True
@@ -103,9 +104,11 @@ exclude_patterns = ['_build']
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 #default_role = None
+napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members', 'Model Description']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
+autodoc_type_aliases = {'DataFrame': 'pandas DataFrame', 'MsxVariable': ':class:`~wntr.msx.model.MsxVariable`', 'NoteType': ':class:`~wntr.epanet.util.NoteType`'}
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -126,7 +129,7 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
+html_extra_path = ['extra']
 
 # -- Options for HTML output ----------------------------------------------
 

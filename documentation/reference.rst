@@ -58,6 +58,8 @@ References
 
 .. [SPHC16] Sievert, C., Parmer, C., Hocking, T., Chamberlain, S., Ram, K., Corvellec, M., and Despouy, P. (2016). plotly: Create interactive web graphics via Plotly’s JavaScript graphing library [Software].
 
+.. [SRU23] Shang, F., Rossman, L. A., Uber, J.G. (2023). EPANET-MSX 2.0 User Manual. U.S. Environmental Protection Agency, Cincinnati, OH. EPA/600/R-22/199.
+
 .. [Todi00] Todini, E. (2000). Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
 .. [USEPA14] United States Environmental Protection Agency. (2014). Systems Measures of Water Distribution System Resilience. Washington DC: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA 600/R--14/383, 58p.

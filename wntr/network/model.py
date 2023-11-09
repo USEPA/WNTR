@@ -16,6 +16,7 @@ model.
 """
 import logging
 from collections import OrderedDict
+from typing import List, Union
 from warnings import warn
 
 import networkx as nx
@@ -71,6 +72,8 @@ class WaterNetworkModel(AbstractModel):
 
         # Network name
         self.name = None
+        self._references: List[Union[str, dict]] = list()
+        """A list of references that document the source of this model."""
 
         self._options = Options()
         self._node_reg = NodeRegistry(self)
@@ -79,6 +82,7 @@ class WaterNetworkModel(AbstractModel):
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
         self._sources = SourceRegistry(self)
+        self._msx = None
 
         self._node_reg._finalize_(self)
         self._link_reg._finalize_(self)
@@ -322,6 +326,28 @@ class WaterNetworkModel(AbstractModel):
     def gpvs(self):
         """Iterator over all general purpose valves (GPVs)"""
         return self._link_reg.gpvs
+
+    @property
+    def msx(self):
+        """A multispecies water quality model, if defined"""
+        return self._msx
+    
+    @msx.setter
+    def msx(self, msx):
+        if msx is None:
+            self._msx = None
+        from wntr.msx.base import AbstractQualityModel
+        if not isinstance(msx, AbstractQualityModel):
+            raise TypeError('Expected AbstractQualityModel (or derived), got {}'.format(type(msx)))
+
+    def add_msx_model(self, msx_filename=None):
+        """Add an msx model from a MSX input file (.msx extension)"""
+        from wntr.msx.model import MsxModel
+        self._msx = MsxModel(msx_file_name=msx_filename)
+
+    def remove_msx_model(self):
+        """Remove an msx model from the network"""
+        self._msx = None
 
     """
     ### # 

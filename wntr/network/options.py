@@ -1,13 +1,6 @@
 """
 The wntr.network.options module includes simulation options.
 
-.. note:: 
-
-    This module has been changed in version 0.2.3 to incorporate the new options 
-    that EPANET 2.2 requires. It also reorganizes certain options to better align 
-    with EPANET nomenclature. This change is not backwards compatible, particularly 
-    when trying to use pickle files with older options.
-
 .. rubric:: Classes
 
 .. autosummary::

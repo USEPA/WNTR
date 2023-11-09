@@ -7,6 +7,7 @@ from wntr import scenario
 from wntr import graphics
 from wntr import gis
 from wntr import utils
+from wntr import msx
 
 __version__ = '1.1.0'
 

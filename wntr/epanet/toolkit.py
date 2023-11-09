@@ -13,13 +13,19 @@ Programmers Toolkit DLLs.
 
 """
 import ctypes
+import logging
 import os
 import os.path
 import platform
 import sys
 from ctypes import byref
-from .util import SizeLimits
+
 from pkg_resources import resource_filename
+
+from .exceptions import EN_ERROR_CODES, EpanetException
+from .util import SizeLimits
+
+logger = logging.getLogger(__name__)
 
 epanet_toolkit = "wntr.epanet.toolkit"
 
@@ -30,17 +36,6 @@ elif sys.platform in ["darwin"]:
 else:
     libepanet = resource_filename(__name__, "Linux/libepanet2.so")
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-# import warnings
-
-
-class EpanetException(Exception):
-    pass
-
 
 def ENgetwarning(code, sec=-1):
     if sec >= 0:
@@ -48,50 +43,24 @@ def ENgetwarning(code, sec=-1):
         sec -= hours * 3600
         mm = int(sec / 60.0)
         sec -= mm * 60
-        header = "At %3d:%.2d:%.2d, " % (hours, mm, sec)
+        header = "%3d:%.2d:%.2d" % (hours, mm, sec)
     else:
-        header = ""
-    if code == 1:
-        return (
-                header
-                + "System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials"
-        )
-    elif code == 2:
-        return (
-                header
-                + "System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed"
-        )
-    elif code == 3:
-        return (
-                header
-                + "System disconnected - one or more nodes with positive demands were disconnected for all supply sources"
-        )
-    elif code == 4:
-        return (
-                header
-                + "Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow"
-        )
-    elif code == 5:
-        return (
-                header
-                + "Vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open"
-        )
-    elif code == 6:
-        return (
-                header
-                + "System has negative pressures - negative pressures occurred at one or more junctions with positive demand"
-        )
+        header = "{}".format(code)
+    if code < 100:
+        msg = EN_ERROR_CODES.get(code, "Unknown warning %s")
     else:
-        return header + "Unknown warning: %d" % code
+        raise EpanetException(code)
+
+    return msg % header
+
 
 def runepanet(inpfile, rptfile=None, binfile=None):
     """Run an EPANET command-line simulation
-    
+
     Parameters
     ----------
     inpfile : str
         The input file name
-
     """
     file_prefix, file_ext = os.path.splitext(inpfile)
     if rptfile is None:
@@ -126,11 +95,9 @@ class ENepanet:
         Results file to generate
     version : float
         EPANET version to use (either 2.0 or 2.2)
-    
     """
 
     def __init__(self, inpfile="", rptfile="", binfile="", version=2.2):
-
         self.ENlib = None
         self.errcode = 0
         self.errcodelist = []
@@ -155,19 +122,13 @@ class ENepanet:
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Windows/%s.dll" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Darwin/lib%s.dylib" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(
-                        epanet_toolkit, "Linux/lib%s.so" % lib
-                    )
+                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 return
             except Exception as E1:
@@ -175,7 +136,7 @@ class ENepanet:
                     raise E1
                 pass
             finally:
-                if version >= 2.2 and '32' not in lib:
+                if version >= 2.2 and "32" not in lib:
                     self._project = ctypes.c_uint64()
                 elif version >= 2.2:
                     self._project = ctypes.c_uint32()
@@ -187,19 +148,22 @@ class ENepanet:
         """Checks to see if the file is open"""
         return self.fileLoaded
 
-    def _error(self):
+    def _error(self, *args):
         """Print the error text the corresponds to the error code returned"""
         if not self.errcode:
             return
         # errtxt = self.ENlib.ENgeterror(self.errcode)
-        logger.error("EPANET error: %d", self.errcode)
+        errtext = EN_ERROR_CODES.get(self.errcode, "unknown error")
+        if "%" in errtext and len(args) == 1:
+            errtext % args
         if self.errcode >= 100:
             self.Errflag = True
-            self.errcodelist.append(self.errcode)
-            raise EpanetException("EPANET Error {}".format(self.errcode))
+            logger.error("EPANET error {} - {}".format(self.errcode, errtext))
+            raise EpanetException(self.errcode)
         else:
             self.Warnflag = True
             # warnings.warn(ENgetwarning(self.errcode))
+            logger.warning("EPANET warning {} - {}".format(self.errcode, ENgetwarning(self.errcode, self.cur_time)))
             self.errcodelist.append(ENgetwarning(self.errcode, self.cur_time))
         return
 
@@ -215,7 +179,6 @@ class ENepanet:
             Output file to create (default to constructor value)
         binfile : str
             Binary output file to create (default to constructor value)
-            
         """
         if self._project is not None:
             if self.fileLoaded:
@@ -285,7 +248,6 @@ class ENepanet:
 
         Must be called before ENreport() if no water quality simulation made.
         Should not be called if ENsolveQ() will be used.
-
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_saveH(self._project)
@@ -313,7 +275,6 @@ class ENepanet:
             if link flows should be re-initialized (1) or
             not (0) and 2nd digit indicates if hydraulic
             results should be saved to file (1) or not (0)
-            
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_initH(self._project, iFlag)
@@ -324,16 +285,15 @@ class ENepanet:
 
     def ENrunH(self):
         """Solves hydraulics for conditions at time t
-        
+
         This function is used in a loop with ENnextH() to run
         an extended period hydraulic simulation.
         See ENsolveH() for an example.
-        
+
         Returns
         --------
         int
             Current simulation time (seconds)
-        
         """
         lT = ctypes.c_long()
         if self._project is not None:
@@ -346,16 +306,15 @@ class ENepanet:
 
     def ENnextH(self):
         """Determines time until next hydraulic event
-        
+
         This function is used in a loop with ENrunH() to run
         an extended period hydraulic simulation.
         See ENsolveH() for an example.
-        
+
         Returns
         ---------
         int
             Time (seconds) until next hydraulic event (0 marks end of simulation period)
-         
         """
         lTstep = ctypes.c_long()
         if self._project is not None:
@@ -381,7 +340,6 @@ class ENepanet:
         -------------
         filename : str
             Name of hydraulics file to output
-            
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_savehydfile(self._project, filename.encode("latin-1"))
@@ -397,7 +355,6 @@ class ENepanet:
         -------------
         filename : str
             Name of hydraulics file to use
-            
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_usehydfile(self._project, filename.encode("latin-1"))
@@ -431,7 +388,6 @@ class ENepanet:
         -------------
         iSaveflag : int
              EN_SAVE (1) if results saved to file, EN_NOSAVE (0) if not
-             
         """
         if self._project is not None:
             self.errcode = self.ENlib.EN_initQ(self._project, iSaveflag)
@@ -442,16 +398,15 @@ class ENepanet:
 
     def ENrunQ(self):
         """Retrieves hydraulic and water quality results at time t
-        
+
         This function is used in a loop with ENnextQ() to run
         an extended period water quality simulation. See ENsolveQ() for
         an example.
-        
+
         Returns
         -------
         int
             Current simulation time (seconds)
-         
         """
         lT = ctypes.c_long()
         if self._project is not None:
@@ -467,12 +422,11 @@ class ENepanet:
         This function is used in a loop with ENrunQ() to run
         an extended period water quality simulation. See ENsolveQ() for
         an example.
-        
+
         Returns
         --------
         int
             Time (seconds) until next hydraulic event (0 marks end of simulation period)
-         
         """
         lTstep = ctypes.c_long()
         if self._project is not None:
@@ -512,7 +466,7 @@ class ENepanet:
         ---------
         int
             Number of components in network
-        
+
         """
         iCount = ctypes.c_int()
         if self._project is not None:
@@ -528,7 +482,7 @@ class ENepanet:
         Returns
         -----------
         Code of flow units in use (see toolkit.optFlowUnits)
-        
+
         """
         iCode = ctypes.c_int()
         if self._project is not None:
@@ -539,11 +493,17 @@ class ENepanet:
         return iCode.value
 
     def ENgetnodeid(self, iIndex):
-        """
-        desc: Gets the ID name of a node given its index.
+        """Gets the ID name of a node given its index.
 
-        :param a node's index (starting from 1).
-        :return the node's ID name.
+        Parameters
+        ----------
+        iIndex : int
+            a node's index (starting from 1).
+
+        Returns
+        -------
+        str
+            the node name
         """
         fValue = ctypes.create_string_buffer(SizeLimits.EN_MAX_ID.value)
         if self._project is not None:
@@ -551,7 +511,7 @@ class ENepanet:
         else:
             self.errcode = self.ENlib.ENgetnodeid(iIndex, byref(fValue))
         self._error()
-        return str(fValue.value, 'UTF-8')
+        return str(fValue.value, "UTF-8")
 
     def ENgetnodeindex(self, sId):
         """Retrieves index of a node with specific ID
@@ -564,7 +524,7 @@ class ENepanet:
         Returns
         ---------
         Index of node in list of nodes
-        
+
         """
         iIndex = ctypes.c_int()
         if self._project is not None:
@@ -575,12 +535,17 @@ class ENepanet:
         return iIndex.value
 
     def ENgetnodetype(self, iIndex):
-        """
-        desc: Retrieves a node's type given its index.
+        """Retrieves a node's type given its index.
 
-        :param iIndex: idx
-        :param nodeType: the node's type (see EN_NodeType).
-        :return int node type
+        Parameters
+        ----------
+        iIndex : int
+            The index of the node
+
+        Returns
+        -------
+        int
+            the node type as an integer
         """
         fValue = ctypes.c_int()
         if self._project is not None:
@@ -591,8 +556,7 @@ class ENepanet:
         return fValue.value
 
     def ENgetnodevalue(self, iIndex, iCode):
-        """
-        Retrieves parameter value for a node
+        """Retrieves parameter value for a node
 
         Parameters
         -------------
@@ -612,6 +576,27 @@ class ENepanet:
             self.errcode = self.ENlib.EN_getnodevalue(self._project, iIndex, iCode, byref(fValue))
         else:
             self.errcode = self.ENlib.ENgetnodevalue(iIndex, iCode, byref(fValue))
+        self._error()
+        return fValue.value
+
+    def ENgetlinktype(self, iIndex):
+        """Retrieves a link's type given its index.
+
+        Parameters
+        ----------
+        iIndex : int
+            The index of the link
+
+        Returns
+        -------
+        int
+            the link type as an integer
+        """
+        fValue = ctypes.c_int()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getlinktype(self._project, iIndex, byref(fValue))
+        else:
+            self.errcode = self.ENlib.EN_getlinktype(iIndex, byref(fValue))
         self._error()
         return fValue.value
 
@@ -635,21 +620,6 @@ class ENepanet:
             self.errcode = self.ENlib.ENgetlinkindex(sId.encode("latin-1"), byref(iIndex))
         self._error()
         return iIndex.value
-
-    def ENgetlinktype(self, iIndex):
-        """
-        Retrieves a link's type.
-
-        :param iIndex: index
-        :return:linkType
-        """
-        fValue = ctypes.c_int()
-        if self._project is not None:
-            self.errcode = self.ENlib.EN_getlinktype(self._project, iIndex, byref(fValue))
-        else:
-            self.errcode = self.ENlib.EN_getlinktype(iIndex, byref(fValue))
-        self._error()
-        return fValue.value
 
     def ENgetlinkvalue(self, iIndex, iCode):
         """Retrieves parameter value for a link
@@ -676,8 +646,7 @@ class ENepanet:
         return fValue.value
 
     def ENsetlinkvalue(self, iIndex, iCode, fValue):
-        """
-        Set the value on a link
+        """Set the value on a link
 
         Parameters
         ----------
@@ -689,13 +658,11 @@ class ENepanet:
             the value to set on the link
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_setlinkvalue(self._project,
-                                                      ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
-                                                      )
-        else:
-            self.errcode = self.ENlib.ENsetlinkvalue(
-                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+            self.errcode = self.ENlib.EN_setlinkvalue(
+                self._project, ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
             )
+        else:
+            self.errcode = self.ENlib.ENsetlinkvalue(ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue))
         self._error()
 
     def ENsetnodevalue(self, iIndex, iCode, fValue):
@@ -712,18 +679,15 @@ class ENepanet:
             the value to set on the node
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_setnodevalue(self._project,
-                                                      ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
-                                                      )
-        else:
-            self.errcode = self.ENlib.ENsetnodevalue(
-                ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue)
+            self.errcode = self.ENlib.EN_setnodevalue(
+                self._project, ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_double(fValue)
             )
+        else:
+            self.errcode = self.ENlib.ENsetnodevalue(ctypes.c_int(iIndex), ctypes.c_int(iCode), ctypes.c_float(fValue))
         self._error()
 
     def ENsettimeparam(self, eParam, lValue):
-        """
-        Set a time parameter value
+        """Set a time parameter value
 
         Parameters
         ----------
@@ -733,18 +697,13 @@ class ENepanet:
             the value to set, in seconds
         """
         if self._project is not None:
-            self.errcode = self.ENlib.EN_settimeparam(
-                self._project, ctypes.c_int(eParam), ctypes.c_long(lValue)
-            )
+            self.errcode = self.ENlib.EN_settimeparam(self._project, ctypes.c_int(eParam), ctypes.c_long(lValue))
         else:
-            self.errcode = self.ENlib.ENsettimeparam(
-                ctypes.c_int(eParam), ctypes.c_long(lValue)
-            )
+            self.errcode = self.ENlib.ENsettimeparam(ctypes.c_int(eParam), ctypes.c_long(lValue))
         self._error()
 
     def ENgettimeparam(self, eParam):
-        """
-        Get a time parameter value
+        """Get a time parameter value
 
         Parameters
         ----------
@@ -758,15 +717,164 @@ class ENepanet:
         """
         lValue = ctypes.c_long()
         if self._project is not None:
-            self.errcode = self.ENlib.EN_gettimeparam(
-                self._project, ctypes.c_int(eParam), byref(lValue)
+            self.errcode = self.ENlib.EN_gettimeparam(self._project, ctypes.c_int(eParam), byref(lValue))
+        else:
+            self.errcode = self.ENlib.ENgettimeparam(ctypes.c_int(eParam), byref(lValue))
+        self._error()
+        return lValue.value
+
+    def ENaddcontrol(self, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float) -> int:
+        """Add a new simple control
+
+        Parameters
+        ----------
+        iType : int
+            the type of control
+        iLinkIndex : int
+            the index of the link
+        dSetting : float
+            the new link setting value
+        iNodeIndex : int
+            Set to 0 for time of day or timer
+        dLevel : float
+            the level to compare against
+
+        Returns
+        -------
+        int
+            the new control number
+        """
+        lValue = ctypes.c_int()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_addcontrol(
+                self._project,
+                ctypes.c_int(iType),
+                ctypes.c_int(iLinkIndex),
+                ctypes.c_double(dSetting),
+                ctypes.c_int(iNodeIndex),
+                ctypes.c_double(dLevel),
+                byref(lValue),
             )
         else:
-            self.errcode = self.ENlib.ENgettimeparam(
-                ctypes.c_int(eParam), byref(lValue)
+            self.errcode = self.ENlib.ENaddcontrol(
+                ctypes.c_int(iType),
+                ctypes.c_int(iLinkIndex),
+                ctypes.c_double(dSetting),
+                ctypes.c_int(iNodeIndex),
+                ctypes.c_double(dLevel),
+                byref(lValue),
             )
         self._error()
         return lValue.value
+
+    def ENgetcontrol(self, iIndex: int):
+        """Get values defined by a control.
+
+        Parameters
+        ----------
+        iIndex : int
+            the control number
+        """
+        iType = ctypes.c_int()
+        iLinkIndex = ctypes.c_int()
+        dSetting = ctypes.c_double()
+        iNodeIndex = ctypes.c_int()
+        dLevel = ctypes.c_double()
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getcontrol(
+                self._project,
+                ctypes.c_int(iIndex),
+                byref(iType),
+                byref(iLinkIndex),
+                byref(dSetting),
+                byref(iNodeIndex),
+                byref(dLevel),
+            )
+        else:
+            self.errcode = self.ENlib.ENgetcontrol(
+                ctypes.c_int(iIndex), byref(iType), byref(iLinkIndex), byref(dSetting), byref(iNodeIndex), byref(dLevel)
+            )
+        self._error()
+        return dict(
+            index=iIndex,
+            type=iType.value,
+            linkindex=iLinkIndex.value,
+            setting=dSetting.value,
+            nodeindex=iNodeIndex.value,
+            level=dLevel.value,
+        )
+
+    def ENsetcontrol(self, iIndex: int, iType: int, iLinkIndex: int, dSetting: float, iNodeIndex: int, dLevel: float):
+        """Change values on a simple control
+
+        Parameters
+        ----------
+        iIndex : int
+            the control index
+        iType : int
+            the type of control comparison
+        iLinkIndex : int
+            the link being changed
+        dSetting : float
+            the setting to change to
+        iNodeIndex : int
+            the node being compared against, Set to 0 for time of day or timer
+        dLevel : float
+            the level being checked
+
+        Warning
+        -------
+        There is an error in EPANET 2.2 that sets the `dLevel` parameter to 0.0 on Macs
+        regardless of the value the user passes in. This means that to use this toolkit
+        functionality on a Mac, the user must delete and create a new control to change
+        the level.
+
+        """
+        if self._project is not None:
+            try:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project,
+                    ctypes.c_int(iIndex),
+                    ctypes.c_int(iType),
+                    ctypes.c_int(iLinkIndex),
+                    ctypes.c_double(dSetting),
+                    ctypes.c_int(iNodeIndex),
+                    ctypes.c_double(dLevel),
+                )
+            except:
+                self.errcode = self.ENlib.EN_setcontrol(
+                    self._project,
+                    ctypes.c_int(iIndex),
+                    ctypes.c_int(iType),
+                    ctypes.c_int(iLinkIndex),
+                    ctypes.c_double(dSetting),
+                    ctypes.c_int(iNodeIndex),
+                    ctypes.c_float(dLevel),
+                )
+        else:
+            self.errcode = self.ENlib.ENsetcontrol(
+                ctypes.c_int(iIndex),
+                ctypes.c_int(iType),
+                ctypes.c_int(iLinkIndex),
+                ctypes.c_double(dSetting),
+                ctypes.c_int(iNodeIndex),
+                ctypes.c_double(dLevel),
+            )
+        self._error()
+
+    def ENdeletecontrol(self, iControlIndex):
+        """Delete a control.
+
+        Parameters
+        ----------
+        iControlIndex : int
+            the simple control to delete
+        """
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_deletecontrol(self._project, ctypes.c_int(iControlIndex))
+        else:
+            self.errcode = self.ENlib.ENdeletecontrol(ctypes.c_int(iControlIndex))
+        self._error()
 
     def ENsaveinpfile(self, inpfile):
         """Saves EPANET input file
@@ -774,7 +882,7 @@ class ENepanet:
         Parameters
         -------------
         inpfile : str
-		    EPANET INP output file
+                    EPANET INP output file
 
         """
 

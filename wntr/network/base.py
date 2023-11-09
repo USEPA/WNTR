@@ -245,13 +245,13 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def initial_quality(self):
-        """float: The initial quality (concentration) at the node"""
+        """float or dict: The initial quality (concentration) at the node, or a dict of species-->quality for multispecies quality"""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
     @initial_quality.setter
     def initial_quality(self, value):
-        if value and not isinstance(value, (list, float, int)):
+        if value and not isinstance(value, (list, float, int, dict)):
             raise ValueError('Initial quality must be a float or a list')
         self._initial_quality = value
 
@@ -372,6 +372,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         # Model state variables
         self._user_status = LinkStatus.Opened
         self._internal_status = LinkStatus.Active
+        self._initial_quality = None
         self._prev_setting = None
         self._setting = None
         self._flow = None
@@ -500,6 +501,18 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         # self._user_status = status
     
     @property
+    def initial_quality(self):
+        """float or dict : a dict of species and quality if multispecies is active"""
+        if not self._initial_quality:
+            return 0.0
+        return self._initial_quality
+    @initial_quality.setter
+    def initial_quality(self, value):
+        if value and not isinstance(value, (list, float, int, dict)):
+            raise ValueError('Initial quality must be a float or a list')
+        self._initial_quality = value
+
+    @property
     def quality(self):
         """float : (read-only) current simulated average link quality"""
         return self._quality
@@ -591,8 +604,8 @@ class Registry(MutableMapping):
     """
     
     def __init__(self, wn):
-        if not isinstance(wn, AbstractModel):
-            raise ValueError('Registry must be initialized with a model')
+        # if not isinstance(wn, AbstractModel):
+        #     raise ValueError('Registry must be initialized with a model')
 #        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
