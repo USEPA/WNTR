@@ -27,21 +27,6 @@ from .base import (
 from .elements import Constant, HydraulicVariable, InitialQuality, MathFunction, Parameter, ParameterValues, Reaction, Species, Term
 from .options import MsxSolverOptions
 
-has_sympy = False
-try:
-    from sympy import Float, Symbol, init_printing, symbols
-    from sympy.parsing import parse_expr
-    from sympy.parsing.sympy_parser import convert_xor, standard_transformations
-
-    has_sympy = True
-except ImportError:
-    sympy = None
-    logging.critical("This python installation does not have SymPy installed. " "Certain functionality will be disabled.")
-    standard_transformations = (None,)
-    convert_xor = None
-    has_sympy = False
-
-
 logger = logging.getLogger(__name__)
 
 MsxVariable = Union[Constant, HydraulicVariable, MathFunction, Parameter, Species, Term]

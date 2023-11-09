@@ -15,99 +15,33 @@ from wntr.epanet.util import ENcomment, NoteType
 from wntr.utils.disjoint_mapping import DisjointMapping
 from wntr.utils.enumtools import add_get
 
-has_sympy = False
-try:
-    from sympy import (
-        Add,
-        Float,
-        Function,
-        Integer,
-        Mul,
-        Pow,
-        Symbol,
-        init_printing,
-        symbols,
-    )
-    from sympy.functions import (
-        Abs,
-        Heaviside,
-        acos,
-        acot,
-        asin,
-        atan,
-        cos,
-        cosh,
-        cot,
-        coth,
-        exp,
-        log,
-        sign,
-        sin,
-        sinh,
-        sqrt,
-        tan,
-        tanh,
-    )
-    from sympy.parsing import parse_expr
-    from sympy.parsing.sympy_parser import (
-        auto_number,
-        auto_symbol,
-        convert_xor,
-        standard_transformations,
-    )
+from numpy import (
+    abs,
+    arccos,
+    arcsin,
+    arctan,
+    cos,
+    cosh,
+    exp,
+    heaviside,
+    log,
+    log10,
+    sign,
+    sin,
+    sinh,
+    sqrt,
+    tan,
+    tanh,
+)
 
-    class _log10(Function):
-        @classmethod
-        def eval(cls, x):
-            return log(x, 10)
+def cot(x):
+    return 1 / tan(x)
 
-    has_sympy = True
-except ImportError:
-    sympy = None
-    has_sympy = False
-    logging.critical("This python installation does not have SymPy installed. Certain functionality will be disabled.")
-    standard_transformations = (None,)
-    convert_xor = None
-    if not has_sympy:
-        from numpy import (
-            abs,
-            arccos,
-            arcsin,
-            arctan,
-            cos,
-            cosh,
-            exp,
-            heaviside,
-            log,
-            log10,
-            sign,
-            sin,
-            sinh,
-            sqrt,
-            tan,
-            tanh,
-        )
+def arccot(x):
+    return 1 / arctan(1 / x)
 
-        def _cot(x):
-            return 1 / tan(x)
-
-        cot = _cot
-        Abs = abs
-        asin = arcsin
-        acos = arccos
-        atan = arctan
-
-        def _acot(x):
-            return 1 / arctan(1 / x)
-
-        acot = _acot
-
-        def _coth(x):
-            return 1 / tanh(x)
-
-        coth = _coth
-        Heaviside = heaviside
-        _log10 = log10
+def coth(x):
+    return 1 / tanh(x)
 
 logger = logging.getLogger(__name__)
 
@@ -151,32 +85,27 @@ EXPR_FUNCTIONS = dict(
     abs=abs,
     sgn=sign,
     sqrt=sqrt,
-    step=Heaviside,
+    step=heaviside,
     log=log,
     exp=exp,
     sin=sin,
     cos=cos,
     tan=tan,
     cot=cot,
-    asin=asin,
-    acos=acos,
-    atan=atan,
-    acot=acot,
+    asin=arcsin,
+    acos=arccos,
+    atan=arctan,
+    acot=arccot,
     sinh=sinh,
     cosh=cosh,
     tanh=tanh,
     coth=coth,
-    log10=_log10,
+    log10=log10,
 )
 """Mathematical functions available for use in expressions. See 
 :numref:`table-msx-funcs` for a list and description of the 
 different functions recognized. These names, case insensitive, are 
 considered invalid when naming variables.
-
-Additionally, the following SymPy names - ``Mul``, ``Add``, ``Pow``, 
-``Integer``, ``Float`` - are used to convert numbers and symbolic 
-functions; therefore, these five words, case sensitive, are also invalid
-for use as variable names.
 
 .. _table-msx-funcs:
 .. table:: Functions defined for use in EPANET-MSX expressions.
@@ -184,13 +113,13 @@ for use as variable names.
     ============== ================================================================
     **Name**       **Description**
     -------------- ----------------------------------------------------------------
-    ``abs``        absolute value (:func:`~sympy.functions.Abs`)
-    ``sgn``        sign (:func:`~sympy.functions.sign`)
+    ``abs``        absolute value
+    ``sgn``        sign
     ``sqrt``       square-root
-    ``step``       step function (:func:`~sympy.functions.Heaviside`)
+    ``step``       step function
     ``exp``        natural number, `e`, raised to a power
     ``log``        natural logarithm
-    ``log10``      base-10 logarithm (defined as internal function)
+    ``log10``      base-10 logarithm
     ``sin``        sine
     ``cos``        cosine
     ``tan``        tangent
@@ -203,13 +132,12 @@ for use as variable names.
     ``cosh``       hyperbolic cosine
     ``tanh``       hyperbolic tangent
     ``coth``       hyperbolic cotangent
-    ``*``          multiplication (:func:`~sympy.Mul`)
-    ``/``          division (:func:`~sympy.Mul`)
-    ``+``          addition (:func:`~sympy.Add`)
-    ``-``          negation and subtraction (:func:`~sympy.Add`)
-    ``^``          power/exponents (:func:`~sympy.Pow`)
+    ``*``          multiplication
+    ``/``          division
+    ``+``          addition
+    ``-``          negation and subtraction
+    ``^``          power/exponents
     ``(``, ``)``   groupings and function parameters
-    `numbers`      literal values (:func:`~sympy.Float` and :func:`~sympy.Integer`)
     ============== ================================================================
 
 :meta hide-value:
@@ -220,7 +148,6 @@ RESERVED_NAMES = (
     + tuple([k.lower() for k in EXPR_FUNCTIONS.keys()])
     + tuple([k.upper() for k in EXPR_FUNCTIONS.keys()])
     + tuple([k.capitalize() for k in EXPR_FUNCTIONS.keys()])
-    + ("Mul", "Add", "Pow", "Integer", "Float")
 )
 """The WNTR reserved names. This includes the MSX hydraulic variables
 (see :numref:`table-msx-hyd-vars`) and the MSX defined functions 
@@ -235,52 +162,7 @@ for k, v in EXPR_FUNCTIONS.items():
     _global_dict[k.capitalize()] = v
     _global_dict[k.upper()] = v
 for v in HYDRAULIC_VARIABLES:
-    _global_dict[v["name"]] = symbols(v["name"])
-_global_dict["Mul"] = Mul
-_global_dict["Add"] = Add
-_global_dict["Pow"] = Pow
-_global_dict["Integer"] = Integer
-_global_dict["Float"] = Float
-
-EXPR_TRANSFORMS = (
-    auto_symbol,
-    auto_number,
-    convert_xor,
-)
-"""The sympy transforms to use in expression parsing. See 
-:numref:`table-sympy-transformations` for the list of transformations.
-
-.. _table-sympy-transformations:
-.. table:: Transformations used by WNTR when parsing expressions using SymPy.
-
-    ========================================== ==================
-    **Transformation**                         **Is used?**
-    ------------------------------------------ ------------------
-    ``lambda_notation``                        No
-    ``auto_symbol``                            Yes
-    ``repeated_decimals``                      No
-    ``auto_number``                            Yes
-    ``factorial_notation``                     No
-    ``implicit_multiplication_application``    No
-    ``convert_xor``                            Yes
-    ``implicit_application``                   No
-    ``implicit_multiplication``                No
-    ``convert_equals_signs``                   No
-    ``function_exponentiation``                No
-    ``rationalize``                            No
-    ========================================== ==================
-
-:meta hide-value:
-"""
-
-
-class _AnnotatedFloat(float):
-    def __new__(self, value, note=None):
-        return float.__new__(self, value)
-
-    def __init__(self, value, note=None):
-        float.__init__(value)
-        self.note = note
+    _global_dict[v["name"]] = v["name"]
 
 
 @add_get(abbrev=True)

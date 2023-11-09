@@ -7,7 +7,6 @@ import pandas as pd
 import wntr
 import wntr.msx
 import wntr.epanet.msx
-import sympy
 
 testdir = dirname(abspath(str(__file__)))
 test_network_dir = join(testdir, "networks_for_testing")
