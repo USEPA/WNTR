@@ -123,9 +123,9 @@ class Species(VariableBase):
         ValueError
             if `atol` or `rtol` ≤ 0
         """
-        if (self.atol is None) ^ (self.rtol is None):
+        if (atol is None) ^ (rtol is None):
             raise TypeError("atol and rtol must both be float or both be None")
-        if self.atol is None:
+        if atol is None:
             self._tolerances = None
         elif atol <= 0 or rtol <= 0:
             raise ValueError("atol and rtol must both be positive, got atol={}, rtol={}".format(atol, rtol))
