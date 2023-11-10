@@ -90,3 +90,4 @@ The following example loads a MsxModel from the ReactionLibrary.
 .. doctest::
 
     >>> msx_model = ...
+[TODO finish this example]

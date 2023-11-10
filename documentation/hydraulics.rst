@@ -9,7 +9,7 @@ Hydraulic simulation
 
 WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
-Additional hydraulic simulation options are included in :ref:`advanced_simulation`.
+Additional hydraulic simulation options are discussed in :ref:`advanced_simulation`.
 
 EpanetSimulator
 -----------------
