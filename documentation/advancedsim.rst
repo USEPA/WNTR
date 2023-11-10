@@ -248,3 +248,362 @@ The solution for :math:`u` and :math:`v` is then returned and printed to four si
    1.618
    >>> np.round(m.v.value,4)
    2.618
+
+Building MSX models
+-------------------
+
+The following two examples illustrate how to build :class:`~wntr.msx.model.MsxModel` objects in WNTR
+
+.. _msx_example1_lead:
+
+Plumbosolvency of lead
+^^^^^^^^^^^^^^^^^^^^^^
+
+The following example builds the plumbosolvency of lead model 
+described in [BWMS20]_. The model represents plumbosolvency 
+in lead pipes within a dwelling.
+The MSX model is built without a specific water network model in mind.
+
+Model development starts by defining the model
+name, 
+title, 
+description, and 
+reference.
+
+.. doctest::
+
+    >>> import wntr.msx
+    >>> msx = wntr.msx.MsxModel()
+    >>> msx.name = "lead_ppm"
+    >>> msx.title = "Lead Plumbosolvency Model (from Burkhardt et al 2020)"
+    >>> msx.desc = "Parameters for EPA HPS Simulator Model"
+    >>> msx.references.append(
+    ... """J. B. Burkhardt, et al. (2020) https://doi.org/10.1061/(asce)wr.1943-5452.0001304"""
+    ... )
+    >>> msx
+    MultispeciesQualityModel(name='lead_ppm')
+
+Model options are added as follows:
+
+.. doctest::
+
+    >>> msx.options = {
+    ... "report": {
+    ...     "species": {"PB2": "YES"},
+    ...     "species_precision": {"PB2": 5},
+    ...     "nodes": "all",
+    ...     "links": "all",
+    ... },
+    ... "timestep": 1,
+    ... "area_units": "M2",
+    ... "rate_units": "SEC",
+    ... "rtol": 1e-08,
+    ... "atol": 1e-08,
+    ... }
+
+There is only one species defined in this model, which is dissolved lead.
+
+========================  ===============  =================================  ========================
+Name                      Type             Units                              Note
+------------------------  ---------------  ---------------------------------  ------------------------
+:math:`Pb`                bulk species     :math:`\mathrm{μg}_\mathrm{(Pb)}`  dissolved lead
+========================  ===============  =================================  ========================
+
+The species is added to the MsxModel using the using the 
+:meth:`~wntr.msx.model.MsxModel.add_species` method.
+This method adds the new species to the model and also return a copy of the new species object.
+
+.. doctest::
+
+    >>> msx.add_species(name="PB2", species_type='bulk', units="ug", note="dissolved lead (Pb)")
+    Species(name='PB2', species_type=<SpeciesType.BULK: 1>, units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
+
+The new species can be accessed by using the item's name and indexing on the model's 
+:attr:`~wntr.msx.model.MsxModel.reaction_system` attribute.
+
+    >>> PB2 = msx.reaction_system['PB2']
+    >>> PB2
+    Species(name='PB2', species_type=<SpeciesType.BULK: 1>, units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
+
+The model also includes two constants and one parameter.
+
+===============  ===============  ===============  =================================  ========================
+Type             Name             Value            Units                              Note
+---------------  ---------------  ---------------  ---------------------------------  ------------------------
+constant         :math:`M`        0.117            :math:`\mathrm{μg~m^{-2}~s^{-1}}`  desorption rate
+constant         :math:`E`        140.0            :math:`\mathrm{μg~L^{-1}}`         saturation level
+parameter        :math:`F`        0                `n/a`                              is pipe made of lead?
+===============  ===============  ===============  =================================  ========================
+
+These are added to the MsxModel using the using the 
+:meth:`~wntr.msx.model.MsxModel.add_constant` and 
+:meth:`~wntr.msx.model.MsxModel.add_parameter` methods.
+methods.
+
+.. doctest::
+
+    >>> msx.add_constant("M", value=0.117, note="Desorption rate (ug/m^2/s)", units="ug * m^(-2) * s^(-1)")
+    >>> msx.add_constant("E", value=140.0, note="saturation/plumbosolvency level (ug/L)", units="ug/L")
+    >>> msx.add_parameter("F", global_value=0, note="determines which pipes have reactions")
+
+Note that all models must include both pipe and tank reactions.
+Since the model only has reactions within 
+pipes, tank reactions need to be unchanging. 
+The system of equations defined as follows:
+
+.. math::
+
+    \frac{d}{dt}Pb_p &= F_p \, Av_p \, M \frac{\left( E - Pb_p \right)}{E}, &\quad\text{for all pipes}~p~\text{in network}  \\
+    \frac{d}{dt}Pb_t &= 0, & \quad\text{for all tanks}~t~\text{in network}
+
+Note that the pipe reaction has a variable that has not been defined, :math:`Av`;
+this variable is a pre-defined hydraulic variable. The list of these variables can be found in 
+the EPANET-MSX documentation, and also in the :attr:`~wntr.msx.base.HYDRAULIC_VARIABLES`
+documentation. The reactions are defined as follows:
+
+================  ==============  ==========================================================================
+Reaction type     Dynamics type   Reaction expression
+----------------  --------------  --------------------------------------------------------------------------
+pipe              rate            :math:`F \cdot Av \cdot M \cdot \left( E - Pb \right) / E`
+tank              rate            :math:`0`
+================  ==============  ==========================================================================
+
+The reactions are added to the MsxModel using the :meth:`~wntr.msx.model.MsxModel.add_reaction`
+method.
+
+.. doctest::
+
+    >>> msx.add_reaction("PB2", "pipe", "RATE", expression="F * Av * M * (E - PB2) / E")
+    >>> msx.add_reaction(PB2, "tank", "rate", expression="0")
+
+Arsenic oxidation and adsorption
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This example models monochloramine oxidation of arsenite/arsenate and wall
+adsorption/desorption, as given in section 3 of the EPANET-MSX user manual [SRU23]_.
+
+The system of equations for the reaction in pipes is given in Eq. (2.4) through (2.7)
+in [SRU23]_. This is a simplified model, taken from [GSCL94]_. 
+
+.. math::
+
+    \frac{d}{dt}{(\mathsf{As}^\mathrm{III})} &= -k_a ~ {(\mathsf{As}^\mathrm{III})} ~ {(\mathsf{NH_2Cl})} \\
+    \frac{d}{dt}{(\mathsf{As}^\mathrm{V})}   &=  k_a ~ {(\mathsf{As}^\mathrm{III})} ~ {(\mathsf{NH_2CL})} - Av \left( k_1 \left(S_\max - {(\mathsf{As}^\mathrm{V}_s)} \right) {(\mathsf{As}^\mathrm{V})} - k_2 ~ {(\mathsf{As}^\mathrm{V}_s)} \right) \\
+    \frac{d}{dt}{(\mathsf{NH_2Cl})}          &= -k_b ~ {(\mathsf{NH_2Cl})} \\
+    {(\mathsf{As}^\mathrm{V}_s)}            &= \frac{k_s ~ S_\max ~ {(\mathsf{As}^\mathrm{V})}}{1 + k_s {(\mathsf{As}^\mathrm{V})}}
+
+
+where the various species, coefficients, and expressions are described in the tables below.
+
+
+.. list-table:: Options
+    :header-rows: 1
+    :widths: 3 3 10
+
+    * - Option
+      - Code
+      - Description
+    * - Rate units
+      - "HR"
+      - :math:`\mathrm{h}^{-1}`
+    * - Area units
+      - "M2"
+      - :math:`\mathrm{m}^2`
+
+
+.. list-table:: Species
+    :header-rows: 1
+    :widths: 2 2 2 3 4 6
+
+    * - Name
+      - Type
+      - Value
+      - Symbol
+      - Units
+      - Note
+    * - AS3
+      - Bulk
+      - "UG"
+      - :math:`{\mathsf{As}^\mathrm{III}}`
+      - :math:`\require{upgreek}\upmu\mathrm{g~L^{-1}}`
+      - dissolved arsenite
+    * - AS5
+      - Bulk
+      - "UG"
+      - :math:`{\mathsf{As}^\mathrm{V}}`
+      - :math:`\require{upgreek}\upmu\mathrm{g~L^{-1}}`
+      - dissolved arsenate
+    * - AStot
+      - Bulk
+      - "UG"
+      - :math:`{\mathsf{As}^\mathrm{tot}}`
+      - :math:`\require{upgreek}\upmu\mathrm{g~L^{-1}}`
+      - dissolved arsenic (total)
+    * - NH2CL
+      - Bulk
+      - "MG"
+      - :math:`{\mathsf{NH_2Cl}}`
+      - :math:`\mathrm{mg~L^{-1}}`
+      - dissolved monochloramine
+    * - AS5s
+      - Wall
+      - "UG"
+      - :math:`{\mathsf{As}^\mathrm{V}_{s}}`
+      - :math:`\require{upgreek}\upmu\mathrm{g}~\mathrm{m}^{-2}`
+      - adsorped arsenate (surface)
+
+
+.. list-table:: Coefficients
+    :header-rows: 1
+    :widths: 2 2 2 3 4 6
+
+    * - Name
+      - Type
+      - Value
+      - Symbol
+      - Units
+      - Note
+    * - Ka
+      - Const
+      - :math:`10`
+      - :math:`k_a`
+      - :math:`\mathrm{mg}^{-1}_{\left(\mathsf{NH_2Cl}\right)}~\mathrm{h}^{-1}`
+      - arsenite oxidation
+    * - Kb
+      - Const
+      - :math:`0.1`
+      - :math:`k_b`
+      - :math:`\mathrm{h}^{-1}`
+      - chloromine decay
+    * - K1
+      - Const
+      - :math:`5.0`
+      - :math:`k_1`
+      - :math:`\require{upgreek}\textrm{L}~\upmu\mathrm{g}^{-1}_{\left(\mathsf{As}^\mathrm{V}\right)}~\mathrm{h}^{-1}`
+      - arsenate adsorption
+    * - K2
+      - Const
+      - :math:`1.0`
+      - :math:`k_2`
+      - :math:`\textrm{L}~\mathrm{h}^{-1}`
+      - arsenate desorption
+    * - Smax
+      - Const
+      - :math:`50.0`
+      - :math:`S_{\max}`
+      - :math:`\require{upgreek}\upmu\mathrm{g}_{\left(\mathsf{As}^\mathrm{V}\right)}~\mathrm{m}^{-2}`
+      - arsenate adsorption limit
+
+
+.. list-table:: Other terms
+    :header-rows: 1
+    :widths: 3 3 2 3 10
+
+    * - Name
+      - Symbol
+      - Expression
+      - Units
+      - Note
+    * - Ks
+      - :math:`k_s`
+      - :math:`{k_1}/{k_2}`
+      - :math:`\require{upgreek}\upmu\mathrm{g}^{-1}_{\left(\mathsf{As}^\mathrm{V}\right)}`
+      - equilibrium adsorption coefficient 
+
+
+.. list-table:: Pipe reactions
+    :header-rows: 1
+    :widths: 3 3 16
+
+    * - Species
+      - Type
+      - Expression
+    * - AS3
+      - Rate 
+      - :math:`-k_a \, {\mathsf{As}^\mathrm{III}} \, {\mathsf{NH_2Cl}}`
+    * - AS5
+      - Rate
+      - :math:`k_a \, {\mathsf{As}^\mathrm{III}} \, {\mathsf{NH_2Cl}} -Av \left( k_1 \left(S_{\max}-{\mathsf{As}^\mathrm{V}_{s}} \right) {\mathsf{As}^\mathrm{V}} - k_2 \, {\mathsf{As}^\mathrm{V}_{s}} \right)`
+    * - NH2CL
+      - Rate
+      - :math:`-k_b \, {\mathsf{NH_2Cl}}`
+    * - AStot
+      - Formula
+      - :math:`{\mathsf{As}^\mathrm{III}} + {\mathsf{As}^\mathrm{V}}`
+    * - AS5s
+      - Equil
+      - :math:`k_s \, S_{\max} \frac{{\mathsf{As}^\mathrm{V}}}{1 + k_s \, {\mathsf{As}^\mathrm{V}}} - {\mathsf{As}^\mathrm{V}_{s}}`
+
+
+.. list-table:: Tank reactions
+    :header-rows: 1
+    :widths: 3 3 16
+
+    * - Species
+      - Type
+      - Expression
+    * - AS3
+      - Rate
+      - :math:`-k_a \, {\mathsf{As}^\mathrm{III}} \, {\mathsf{NH_2Cl}}`
+    * - AS5
+      - Rate
+      - :math:`k_a \, {\mathsf{As}^\mathrm{III}} \, {\mathsf{NH_2Cl}}`
+    * - NH2CL
+      - Rate
+      - :math:`-k_b \, {\mathsf{NH_2Cl}}`
+    * - AStot
+      - Formula
+      - :math:`{\mathsf{As}^\mathrm{III}} + {\mathsf{As}^\mathrm{V}}`
+    * - AS5s
+      - Equil
+      - :math:`0` (`not present in tanks`)
+
+
+The model is created in WTNR as shown below.
+
+.. doctest::
+
+    >>> msx = wntr.msx.MsxModel()
+    >>> msx.name = "arsenic_chloramine"
+    >>> msx.title = "Arsenic Oxidation/Adsorption Example"
+    >>> msx.references.append(wntr.msx.library.cite_msx())
+
+    >>> AS3 = msx.add_species(name="AS3", species_type="BULK", units="UG", note="Dissolved arsenite")
+    >>> AS5 = msx.add_species(name="AS5", species_type="BULK", units="UG", note="Dissolved arsenate")
+    >>> AStot = msx.add_species(name="AStot", species_type="BULK", units="UG", 
+    ...     note="Total dissolved arsenic")
+    >>> AS5s = msx.add_species(name="AS5s", species_type="WALL", units="UG", note="Adsorbed arsenate")
+    >>> NH2CL = msx.add_species(name="NH2CL", species_type="BULK", units="MG", note="Monochloramine")
+
+    >>> Ka = msx.add_constant("Ka", 10.0, units="1 / (MG * HR)", note="Arsenite oxidation rate coeff")
+    >>> Kb = msx.add_constant("Kb", 0.1, units="1 / HR", note="Monochloramine decay rate coeff")
+    >>> K1 = msx.add_constant("K1", 5.0, units="M^3 / (UG * HR)", note="Arsenate adsorption coeff")
+    >>> K2 = msx.add_constant("K2", 1.0, units="1 / HR", note="Arsenate desorption coeff")
+    >>> Smax = msx.add_constant("Smax", 50.0, units="UG / M^2", note="Arsenate adsorption limit")
+    
+    >>> Ks = msx.add_term(name="Ks", expression="K1/K2", note="Equil. adsorption coeff")
+
+    >>> _ = msx.add_reaction(species_name="AS3", reaction_type="pipes", expression_type="rate", 
+    ...     expression="-Ka*AS3*NH2CL", note="Arsenite oxidation")
+    >>> _ = msx.add_reaction("AS5", "pipes", "rate", "Ka*AS3*NH2CL - Av*(K1*(Smax-AS5s)*AS5 - K2*AS5s)", 
+    ...     note="Arsenate production less adsorption")
+    >>> _ = msx.add_reaction(
+    ...     species_name="NH2CL", reaction_type="pipes", expression_type="rate", expression="-Kb*NH2CL", 
+    ...     note="Monochloramine decay")
+    >>> _ = msx.add_reaction("AS5s", "pipe", "equil", "Ks*Smax*AS5/(1+Ks*AS5) - AS5s", 
+    ...     note="Arsenate adsorption")
+    >>> _ = msx.add_reaction(species_name="AStot", reaction_type="pipes", expression_type="formula", 
+    ...     expression="AS3 + AS5", note="Total arsenic")
+    >>> _ = msx.add_reaction(species_name="AS3", reaction_type="tank", expression_type="rate", 
+    ...     expression="-Ka*AS3*NH2CL", note="Arsenite oxidation")
+    >>> _ = msx.add_reaction(species_name="AS5", reaction_type="tank", expression_type="rate", 
+    ...     expression="Ka*AS3*NH2CL", note="Arsenate production")
+    >>> _ = msx.add_reaction(species_name="NH2CL", reaction_type="tank", expression_type="rate", 
+    ...     expression="-Kb*NH2CL", note="Monochloramine decay")
+    >>> _ = msx.add_reaction(species_name="AStot", reaction_type="tanks", expression_type="formula", 
+    ...     expression="AS3 + AS5", note="Total arsenic")
+
+    >>> msx.options.area_units = "M2"
+    >>> msx.options.rate_units = "HR"
+    >>> msx.options.rtol = 0.001
+    >>> msx.options.atol = 0.0001

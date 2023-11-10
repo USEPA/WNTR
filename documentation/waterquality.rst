@@ -17,7 +17,12 @@ Water quality simulation
 ==================================
 
 Water quality simulations can only be run using the EpanetSimulator. 
- 
+This includes the ability to run 
+EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or
+EPANET 2.2.0 Programmer's Toolkit [RWTS20]_ for single species, water age, and tracer analysis.
+
+WNTR also includes the ability to run EPANET-MSX 2.0 [SRU23]_, see :ref:`msx_water_quality` for more information.
+
 After defining water quality options and sources (described in the :ref:`wq_options` and :ref:`sources` sections below), a hydraulic and water quality simulation 
 using the EpanetSimulator is run using the following code:
 
@@ -34,7 +39,7 @@ The results include a quality value for each node (see :ref:`simulation_results`
 .. _wq_options:
 
 Water quality options
-------------------------
+---------------------
 Three types of water quality analysis are supported.  These options include water age, tracer, and chemical concentration.
 
 * **Water age**: A water quality simulation can be used to compute water age at every node.
@@ -83,7 +88,7 @@ More information on water network options can be found in :ref:`options`.
 .. _sources:
 
 Sources
-------------
+-------
 Sources are required for CHEMICAL water quality analysis.  
 Sources can still be defined, but *will not* be used if AGE, TRACE, or NONE water quality analysis is selected.
 Sources are added to the water network model using the :class:`~wntr.network.model.WaterNetworkModel.add_source` method.
@@ -134,6 +139,7 @@ In the example below, the strength of the source is changed from 1000 to 1500.
 
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer representing the number of sources in the INP file.
+
 
 .. The following is not shown in the UM
     _wq_pdd:

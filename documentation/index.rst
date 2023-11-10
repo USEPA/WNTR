@@ -21,6 +21,7 @@ designed to simulate and analyze resilience of water distribution networks.
    options
    hydraulics
    waterquality
+   waterquality_msx
    resultsobject
    disaster_models
    criticality
@@ -30,7 +31,6 @@ designed to simulate and analyze resilience of water distribution networks.
    graphics
    gis
    advancedsim
-   advancedqual
    license
    whatsnew
    developers
