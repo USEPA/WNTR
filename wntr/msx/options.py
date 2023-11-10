@@ -1,5 +1,7 @@
 # coding: utf-8
-"""Options for multispecies reaction models.
+"""
+The wntr.msx.options module includes options for multi-species water quality
+models
 """
 
 import logging
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class MsxReportOptions(_OptionsBase):
     """
-    Options related to EPANET-MSX report outputs.
+    Report options
     """
 
     def __init__(
@@ -25,44 +27,39 @@ class MsxReportOptions(_OptionsBase):
         links: Union[Literal["ALL"], List[str]] = None,
     ):
         """
-        Options related to EPANET-MSX report outputs.
+        Report options
 
         Parameters
         ----------
         report_filename : str
-            Provides the filename to use for outputting an EPANET report file,
-            by default this will be the prefix plus ".rpt".
-
+            Filename for the EPANET-MSX report file, by default this will be
+            the prefix plus ".rpt".
         species : dict[str, bool]
             Output species concentrations
-
         species_precision : dict[str, float]
             Output species concentrations with the specified precision
-
         nodes : None, "ALL", or list
-            Output node information in report file. If a list of node names is provided,
-            EPANET only provides report information for those nodes.
-
+            Output node information. If a list of node names is provided,
+            EPANET-MSX only provides report information for those nodes.
         links : None, "ALL", or list
-            Output link information in report file. If a list of link names is provided,
-            EPANET only provides report information for those links.
-
+            Output link information. If a list of link names is provided,
+            EPANET-MSX only provides report information for those links.
         pagesize : str
-            Page size for EPANET report output
+            Page size for EPANET-MSX report output
 
         """
         self.pagesize = pagesize
-        """The pagesize for the report"""
+        """Pagesize for the report"""
         self.report_filename = report_filename
-        """The prefix of the report filename (will add .rpt)"""
+        """Prefix of the report filename (will add .rpt)"""
         self.species = species if species is not None else dict()
         """Turn individual species outputs on and off, by default no species are output"""
         self.species_precision = species_precision if species_precision is not None else dict()
-        """Set the output precision for the concentration of a specific species"""
+        """Output precision for the concentration of a specific species"""
         self.nodes = nodes
-        """A list of nodes to print output for, or 'ALL' for all nodes, by default None"""
+        """List of nodes to print output for, or 'ALL' for all nodes, by default None"""
         self.links = links
-        """A list of links to print output for, or 'ALL' for all links, by default None"""
+        """List of links to print output for, or 'ALL' for all links, by default None"""
 
     def __setattr__(self, name, value):
         if name not in ["pagesize", "report_filename", "species", "nodes", "links", "species_precision"]:
@@ -71,9 +68,7 @@ class MsxReportOptions(_OptionsBase):
 
 
 class MsxSolverOptions(_OptionsBase):
-    """
-    Multispecies quality model options.
-    """
+    """Solver options"""
 
     def __init__(
         self,
@@ -91,56 +86,73 @@ class MsxSolverOptions(_OptionsBase):
         report: MsxReportOptions = None,
     ):
         """
-        Multispecies quality model options.
+        Solver options
 
         Parameters
         ----------
         timestep : int >= 1
             Water quality timestep (seconds), by default 60 (one minute).
         area_units : str, optional
-            The units of area to use in surface concentration forms, by default ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
+            Units of area to use in surface concentration forms, by default
+            ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
         rate_units : str, optional
-            The time units to use in all rate reactions, by default ``MIN``. Valid values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
+            Time units to use in all rate reactions, by default ``MIN``. Valid
+            values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
         solver : str, optional
-            The solver to use, by default ``RK5``. Options are ``RK5`` (5th order Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or ``EUL`` (Euler method).
+            Solver to use, by default ``RK5``. Options are ``RK5`` (5th order
+            Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or
+            ``EUL`` (Euler method).
         coupling : str, optional
-            Use coupling method for solution, by default ``NONE``. Valid options are ``FULL`` or ``NONE``.
+            Use coupling method for solution, by default ``NONE``. Valid
+            options are ``FULL`` or ``NONE``.
         atol : float, optional
-            Absolute concentration tolerance, by default 0.01 (regardless of species concentration units).
+            Absolute concentration tolerance, by default 0.01 (regardless of
+            species concentration units).
         rtol : float, optional
             Relative concentration tolerance, by default 0.001 (±0.1%).
         compiler : str, optional
-            Whether to use a compiler, by default ``NONE``. Valid options are ``VC``, ``GC``, or ``NONE``
+            Whether to use a compiler, by default ``NONE``. Valid options are
+            ``VC``, ``GC``, or ``NONE``
         segments : int, optional
-            Maximum number of segments per pipe (MSX 2.0 or newer only), by default 5000.
+            Maximum number of segments per pipe (MSX 2.0 or newer only), by
+            default 5000.
         peclet : int, optional
-            Peclet threshold for applying dispersion (MSX 2.0 or newer only), by default 1000.
-            report : ReportOptions or dict
+            Peclet threshold for applying dispersion (MSX 2.0 or newer only),
+            by default 1000.
+        report : MsxReportOptions or dict
             Options on how to report out results.
 
         """
         self.timestep: int = timestep
-        """The timestep, in seconds, by default 360"""
+        """Timestep, in seconds, by default 360"""
         self.area_units: str = area_units
-        """The units used to express pipe wall surface area where, by default FT2. Valid values are FT2, M2, and CM2."""
+        """Units used to express pipe wall surface area where, by default FT2.
+        Valid values are FT2, M2, and CM2."""
         self.rate_units: str = rate_units
-        """The units in which all reaction rate terms are expressed, by default HR. Valid values are HR, MIN, SEC, and DAY."""
+        """Units in which all reaction rate terms are expressed, by default HR.
+        Valid values are HR, MIN, SEC, and DAY."""
         self.solver: str = solver
-        """The solver to use, by default EUL. Valid values are EUL, RK5, and ROS2."""
+        """Solver to use, by default EUL. Valid values are EUL, RK5, and
+        ROS2."""
         self.coupling: str = coupling
-        """Whether coupling should occur during solving, by default NONE. Valid values are NONE and FULL."""
+        """Whether coupling should occur during solving, by default NONE. Valid
+        values are NONE and FULL."""
         self.rtol: float = rtol
-        """The relative tolerance used during solvers ROS2 and RK5, by default 0.001 for all species. Can be overridden on a per-species basis."""
+        """Relative tolerance used during solvers ROS2 and RK5, by default
+        0.001 for all species. Can be overridden on a per-species basis."""
         self.atol: float = atol
-        """The absolute tolerance used by the solvers, by default 0.01 for all species regardless of concentration units. Can be overridden on a per-species basis."""
+        """Absolute tolerance used by the solvers, by default 0.01 for all
+        species regardless of concentration units. Can be overridden on a
+        per-species basis."""
         self.compiler: str = compiler
-        """A compier to use if the equations should be compiled by EPANET-MSX, by default NONE. Valid options are VC, GC and NONE."""
+        """Compiler to use if the equations should be compiled by EPANET-MSX,
+        by default NONE. Valid options are VC, GC and NONE."""
         self.segments: int = segments
-        """The number of segments per-pipe to use, by default 5000."""
+        """Number of segments per-pipe to use, by default 5000."""
         self.peclet: int = peclet
-        """The threshold for applying dispersion, by default 1000."""
+        """Threshold for applying dispersion, by default 1000."""
         self.report: MsxReportOptions = MsxReportOptions.factory(report)
-        """The reporting output options."""
+        """Reporting output options."""
 
     def __setattr__(self, name, value):
         if name == "report":
@@ -163,7 +175,7 @@ class MsxSolverOptions(_OptionsBase):
             except ValueError:
                 raise ValueError("%s must be a number", name)
         elif name not in ["area_units", "rate_units", "solver", "coupling", "compiler"]:
-            raise ValueError("%s is not a valid member of MultispeciesOptions")
+            raise ValueError("%s is not a valid member of MsxSolverOptions")
         self.__dict__[name] = value
 
     def to_dict(self):

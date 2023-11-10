@@ -1,15 +1,19 @@
-"""The wntr.epanet.msx package provides EPANET-MSX compatibility functions for WNTR.
+# coding: utf-8
+"""
+The wntr.epanet.msx package provides EPANET-MSX compatibility functions for 
+WNTR.
 
-The following environment variable must be set, or the command `set_msx_path` must
-be run prior to trying to instantiate the EPANET-MSX toolkit.
+The following environment variable must be set, or the command `set_msx_path` 
+must be run prior to trying to instantiate the EPANET-MSX toolkit.
 
 .. envvar:: WNTR_PATH_TO_EPANETMSX
 
-    The full path to the directory where EPANET-MSX has been installed. Specifically,
-    the directory should contain both toolkit files, epanet2.dll and epanetmsx.dll
-    (or the appropriate equivalent files for your system architecture).
-
+    The full path to the directory where EPANET-MSX has been installed. 
+    Specifically, the directory should contain both toolkit files, epanet2.dll 
+    and epanetmsx.dll (or the appropriate equivalent files for your system 
+    architecture).
 """
+
 import os as _os
 
 def set_msx_path(path):

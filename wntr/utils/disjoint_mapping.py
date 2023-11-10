@@ -1,7 +1,8 @@
 # coding: utf-8
-"""A set of utility classes that is similar to the 'registry' objects in the wntr.network
-class, but more general, and therefore usable for other extensions, such as multispecies
-reaction modeling.
+"""
+A set of utility classes that is similar to the 'registry' objects in the wntr.network
+class, but more general, and therefore usable for other extensions, such as multi-species
+water quality models.
 """
 
 from collections.abc import MutableMapping
@@ -10,13 +11,11 @@ from typing import Any, Dict, Hashable, ItemsView, Iterator, KeysView, Set, Valu
 
 class WrongGroupError(KeyError):
     """The key exists but is in a different disjoint group"""
-
     pass
 
 
 class KeyExistsError(KeyError):
-    """The name already exists in the reaction model"""
-
+    """The name already exists in the model"""
     pass
 
 

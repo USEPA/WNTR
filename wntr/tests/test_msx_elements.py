@@ -157,7 +157,7 @@ class Test(unittest.TestCase):
         self.assertEqual(formula1.expression, "-Ka + Kb * Cl + T0")
         self.assertEqual(formula1.expression_type, wntr.msx.ExpressionType.FORMULA)
 
-    def test_WaterQualityReactionsModel_creation_specific_everything(self):
+    def test_MsxModel_creation_specific_everything(self):
         rxn_model1 = wntr.msx.MsxModel()
         bulk1 = wntr.msx.Species("Cl", 'b', "mg")
         wall1 = wntr.msx.Species("ClOH", 'w', "mg", 0.01, 0.0001, note="Testing stuff")

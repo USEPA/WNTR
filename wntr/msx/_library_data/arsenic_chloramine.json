@@ -1,10 +1,10 @@
 {
-    "wntr-version": "1.0.0",
+    "wntr-version": "",
     "name": "arsenic_chloramine",
     "title": "Arsenic Oxidation/Adsorption Example",
     "description": "This example models monochloramine oxidation of arsenite/arsenate and wall adsoption/desorption, as given in section 3 of the EPANET-MSX user manual",
     "references": [
-        "Shang, F. and Rossman, L.A. and Uber, J.G. (2023) \"EPANET-MSX 2.0 User Manual\". (Cincinnati, OH: Water Infrastructure Division (CESER), U.S. Environmental Protection Agency). EPA/600/R-22/199."
+        "Shang, F., Rossman, L. A., and Uber, J.G. (2023). EPANET-MSX 2.0 User Manual. U.S. Environmental Protection Agency, Cincinnati, OH. EPA/600/R-22/199."
     ],
     "reaction_system": {
         "species": [

@@ -1,5 +1,8 @@
 # coding: utf-8
-"""I/O functions for EPANET-MSX toolkit compatibility"""
+"""
+The wntr.epanet.msx io module contains methods for reading/writing EPANET
+MSX input and output files.
+"""
 
 import datetime
 import logging
@@ -13,8 +16,7 @@ from wntr.msx.elements import Constant, Parameter, Species, Term
 import wntr.network
 from wntr.epanet.msx.exceptions import EpanetMsxException, MSXValueError
 from wntr.epanet.util import ENcomment
-from wntr.network.elements import Source
-from wntr.msx.base import ReactionType, VariableType, SpeciesType
+from wntr.msx.base import VariableType, SpeciesType
 from wntr.msx.model import MsxModel
 
 sys_default_enc = sys.getdefaultencoding()
@@ -79,20 +81,22 @@ class MsxFile(object):
     @classmethod
     def read(cls, msx_filename: str, rxn_model: MsxModel = None):
         """
-        Read an EPANET-MSX input file (.msx) and load data into a water quality
-        reactions model. Only MSX 2.0 files are recognized.
+        Read an EPANET-MSX input file (.msx) and load data into a MsxModel.
+        Only MSX 2.0 files are recognized.
 
         Parameters
         ----------
         msx_file : str
-            the filename of the .msx file to read in
-        rxn_model : WaterQualityReactionsModel, optional
-            the model to put data into, by default None (new model)
+            Filename of the .msx file to read in
+        rxn_model : MsxModel, optional
+            Multi-species water quality model to put data into,
+            by default None (new model)
 
         Returns
         -------
-        WaterQualityReactionsModel
-            the model with the new species, reactions and other options added
+        MsxModel
+            Multi-species water quality model with the new species, reactions
+            and other options added
         """
         if rxn_model is None:
             rxn_model = MsxModel()
@@ -180,9 +184,9 @@ class MsxFile(object):
         Parameters
         ----------
         filename : str
-            the filename to write
-        rxn : MultispeciesQualityModel
-            the multispecies reaction model
+            Filename to write
+        rxn : MsxModel
+            Multi-species water quality model
         """
         obj = cls()
         obj.rxn = msx

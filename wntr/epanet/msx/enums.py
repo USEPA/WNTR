@@ -1,18 +1,22 @@
-"""EPANET-MSX enum types, for use in toolkit API calls."""
+# coding: utf-8
+"""
+The wntr.epanet.msx.enums module contains EPANET-MSX enum types, for use in
+toolkit API calls.
+"""
 
 from enum import IntEnum
 from wntr.utils.enumtools import add_get
 
 @add_get(prefix='MSX_')
 class TkObjectType(IntEnum):
-    """The enumeration for object type used in EPANET-MSX.
-    
+    """Enumeration for object type used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         NODE
@@ -48,14 +52,14 @@ class TkObjectType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkSourceType(IntEnum):
-    """The enumeration for source type used in EPANET-MSX.
-    
+    """Enumeration for source type used in EPANET-MSX.
+
     .. warning:: These enum values start with -1.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         NOSOURCE
@@ -78,14 +82,14 @@ class TkSourceType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkUnitSystem(IntEnum):
-    """The enumeration for the units system used in EPANET-MSX.
-    
+    """Enumeration for the units system used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         US
@@ -99,14 +103,15 @@ class TkUnitSystem(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkFlowUnits(IntEnum):
-    """The enumeration for the flow units used in EPANET-MSX (determined from EPANET INP file read in with the toolkit).
-    
+    """Enumeration for the flow units used in EPANET-MSX (determined from
+    EPANET INP file read in with the toolkit).
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         CFS
@@ -144,14 +149,14 @@ class TkFlowUnits(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkMixType(IntEnum):
-    """The enumeration for the mixing model used in EPANET-MSX.
-    
+    """Enumeration for the mixing model used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         MIX1
@@ -171,14 +176,14 @@ class TkMixType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkSpeciesType(IntEnum):
-    """The enumeration for species type used in EPANET-MSX.
+    """Enumeration for species type used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         BULK
@@ -192,14 +197,14 @@ class TkSpeciesType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkExpressionType(IntEnum):
-    """The enumeration for the expression type used in EPANET-MSX.
-    
+    """Enumeration for the expression type used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         NO_EXPR
@@ -219,14 +224,14 @@ class TkExpressionType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkSolverType(IntEnum):
-    """The enumeration for the solver type used in EPANET-MSX.
-    
+    """Enumeration for the solver type used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         EUL
@@ -243,14 +248,14 @@ class TkSolverType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkCouplingType(IntEnum):
-    """The enumeration for the coupling type option used in EPANET-MSX.
-    
+    """Enumeration for the coupling type option used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         NO_COUPLING
@@ -264,14 +269,14 @@ class TkCouplingType(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkMassUnits(IntEnum):
-    """The enumeration for mass units used in EPANET-MSX.
+    """Enumeration for mass units used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         MG
@@ -291,14 +296,14 @@ class TkMassUnits(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkAreaUnits(IntEnum):
-    """The enumeration for area units used in EPANET-MSX.
-    
+    """Enumeration for area units used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         FT2
@@ -315,14 +320,14 @@ class TkAreaUnits(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkRateUnits(IntEnum):
-    """The enumeration for rate units used in EPANET-MSX.
-    
+    """Enumeration for rate units used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         SECONDS
@@ -342,14 +347,14 @@ class TkRateUnits(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkUnits(IntEnum):
-    """The position for units used in EPANET-MSX.
-    
+    """Position for units used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         LENGTH_UNITS
@@ -379,14 +384,14 @@ class TkUnits(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkHydVar(IntEnum):
-    """The enumeration for hydraulic variable used in EPANET-MSX.
+    """Enumeration for hydraulic variable used in EPANET-MSX.
     
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         DIAMETER
@@ -422,14 +427,14 @@ class TkHydVar(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkTstat(IntEnum):
-    """The enumeration used for time statistic in EPANET-MSX.
-    
+    """Enumeration used for time statistic in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         SERIES
@@ -452,14 +457,14 @@ class TkTstat(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkOption(IntEnum):
-    """The enumeration used for choosing an option in EPANET-MSX toolkit.
+    """Enumeration used for choosing an option in EPANET-MSX toolkit.
     
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         AREA_UNITS_OPTION
@@ -497,14 +502,14 @@ class TkOption(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkCompiler(IntEnum):
-    """The enumeration used for specifying compiler options in EPANET-MSX.
-    
+    """Enumeration used for specifying compiler options in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         NO_COMPILER
@@ -521,14 +526,14 @@ class TkCompiler(IntEnum):
 
 @add_get(prefix='MSX_')
 class TkFileMode(IntEnum):
-    """The enumeration for file model used in EPANET-MSX.
-    
+    """Enumeration for file model used in EPANET-MSX.
+
     .. warning:: These enum values start with 0.
 
     .. rubric:: Enum Members
 
-    The following enum names are defined, and, if using the :meth:`get` method, then
-    they are case insensitive and can be optionally prefixed with "MSX\_".
+    The following enum names are defined, and, if using the :meth:`get` method,
+    then they are case insensitive and can be optionally prefixed with "MSX\_".
 
     .. autosummary::
         SCRATCH_FILE

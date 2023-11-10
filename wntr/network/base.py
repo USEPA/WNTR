@@ -245,7 +245,8 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def initial_quality(self):
-        """float or dict: The initial quality (concentration) at the node, or a dict of species-->quality for multispecies quality"""
+        """float or dict: Initial quality (concentration) at the node, or
+        a dict of species-->quality for multi-species quality"""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
@@ -257,7 +258,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def coordinates(self):
-        """tuple: The node coordinates, (x,y)"""
+        """tuple: Node coordinates, (x,y)"""
         return self._coordinates
     @coordinates.setter
     def coordinates(self, coordinates):
