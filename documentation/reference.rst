@@ -18,9 +18,13 @@ References
 
 .. [Bieni19] Bieniek, T., van Andel, B., and Bø, T.I. (2019). Bidirectional UTM-WGS84 converter for python, Retrieved on February 5, 2019 from https://github.com/Turbo87/utm.
 
+.. [BWMS20] Burkhardt, J. B., Woo, J.,  Mason, J., Shang, F., Triantafyllidou, S., Schock, M.R., Lytle, D., and Murray, R. (2020). Framework for Modeling Lead in Premise Plumbing Systems Using EPANET. Journal of Water Resources Planning and Management, 146(12). https://doi.org/10.1061/(asce)wr.1943-5452.0001304 PMID:33627937.
+
 .. [CrLo02] Crowl, D.A., and Louvar, J.F. (2011). Chemical Process Safety: Fundamentals with Applications, 3 edition. Upper Saddle River, NJ: Prentice Hall, 720p.
 
 .. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p.
+
+.. [GSCL94] Gu, B., Schmitt, J., Chen, Z. Liang, L., and McCarthy, J.F. (1994) Adsorption and desorption of natural organic matter on iron oxide: mechanisms and models. Environmental Science and Technology, 28:38-46.
 
 .. [JVFM21] Jordahl, K., Van den Bossche, J., Fleischmann, M,  McBride, J. and others (2021) geopandas, 10.5281/zenodo.5573592.
 

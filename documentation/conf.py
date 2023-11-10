@@ -108,7 +108,7 @@ napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
-autodoc_type_aliases = {'DataFrame': 'pandas DataFrame', 'MsxVariable': ':class:`~wntr.msx.model.MsxVariable`', 'NoteType': ':class:`~wntr.epanet.util.NoteType`'}
+#autodoc_type_aliases = {'DataFrame': 'pandas DataFrame', 'MsxVariable': ':class:`~wntr.msx.model.MsxVariable`', 'NoteType': ':class:`~wntr.epanet.util.NoteType`'}
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
