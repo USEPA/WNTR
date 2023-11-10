@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
-
-"""The WNTR MSX model.
+# coding: utf-8
 """
+The wntr.msx.model module includes methods to build a multi-species water
+quality model.
+"""
+
 from __future__ import annotations
 
 import logging
 import warnings
-from typing import Any, Dict, Generator, List, NewType, Union
-from wntr.epanet.util import ENcomment, NoteType
+from typing import Dict, Generator, List, Union
+from wntr.epanet.util import NoteType
 
 from wntr.utils.disjoint_mapping import KeyExistsError
 
@@ -18,7 +20,6 @@ from .base import (
     ReactionBase,
     NetworkDataBase,
     ReactionSystemBase,
-    VariableBase,
     ExpressionType,
     ReactionType,
     SpeciesType,
@@ -34,7 +35,8 @@ MsxVariable = Union[Constant, HydraulicVariable, MathFunction, Parameter, Specie
 
 
 class MsxReactionSystem(ReactionSystemBase):
-    """A registry for all the variables registered in the multispecies reactions model.
+    """Registry for all the variables registered in the multi-species reactions
+    model.
 
     This object can be used like a mapping.
     """
@@ -53,32 +55,32 @@ class MsxReactionSystem(ReactionSystemBase):
 
     @property
     def species(self) -> Dict[str, Species]:
-        """The dictionary view onto only species"""
+        """Dictionary view onto only species"""
         return self._species
 
     @property
     def constants(self) -> Dict[str, Constant]:
-        """The dictionary view onto only constants"""
+        """Dictionary view onto only constants"""
         return self._const
 
     @property
     def parameters(self) -> Dict[str, Parameter]:
-        """The dictionary view onto only parameters"""
+        """Dictionary view onto only parameters"""
         return self._param
 
     @property
     def terms(self) -> Dict[str, Term]:
-        """The dictionary view onto only named terms"""
+        """Dictionary view onto only named terms"""
         return self._term
 
     @property
     def pipe_reactions(self) -> Dict[str, Reaction]:
-        """The dictionary view onto pipe reactions"""
+        """Dictionary view onto pipe reactions"""
         return self._pipes
 
     @property
     def tank_reactions(self) -> Dict[str, Reaction]:
-        """The dictionary view onto tank reactions"""
+        """Dictionary view onto tank reactions"""
         return self._tanks
 
     def add_variable(self, variable: MsxVariable) -> None:
@@ -90,14 +92,14 @@ class MsxReactionSystem(ReactionSystemBase):
         Parameters
         ----------
         variable
-            The variable to add.
+            Variable to add.
 
         Raises
         ------
         TypeError
-            if `variable` is not an MsxVariable
+            If `variable` is not an MsxVariable
         KeyExistsError
-            if `variable` has a name that is already used in the registry
+            If `variable` has a name that is already used in the registry
         """
         if not isinstance(variable, (Species, Constant, Parameter, Term, MathFunction, HydraulicVariable)):
             raise TypeError("Expected AVariable object")
@@ -112,14 +114,14 @@ class MsxReactionSystem(ReactionSystemBase):
         Parameters
         ----------
         reaction : Reaction
-            a water quality reaction definition
+            Water quality reaction definition
 
         Raises
         ------
         TypeError
-            if `reaction` is not a Reaction
+            If `reaction` is not a Reaction
         KeyError
-            if the `species_name` in the `reaction` does not exist in the model
+            If the `species_name` in the `reaction` does not exist in the model
         """
         if not isinstance(reaction, Reaction):
             raise TypeError("Expected a Reaction object")
@@ -129,17 +131,18 @@ class MsxReactionSystem(ReactionSystemBase):
 
     def variables(self) -> Generator[tuple, None, None]:
         # FIXME: rename without "all_" for this
-        """A generator looping through all variables"""
+        """Generator looping through all variables"""
         for k, v in self._vars.items():
             yield k, v.var_type.name.lower(), v
 
     def reactions(self) -> Generator[tuple, None, None]:
-        """A generator looping through all reactions"""
+        """Generator looping through all reactions"""
         for k2, v in self._rxns.items():
             for k1, v1 in v.items():
                 yield k1, k2, v1
 
     def to_dict(self) -> dict:
+        """Dictionary representation of the MsxModel."""
         return dict(
             species=[v.to_dict() for v in self._species.values()],
             constants=[v.to_dict() for v in self._const.values()],
@@ -151,38 +154,46 @@ class MsxReactionSystem(ReactionSystemBase):
 
 
 class MsxNetworkData(NetworkDataBase):
-    """A container for network-specific values associated with a multispecies water quality model."""
 
-    def __init__(self, patterns: Dict[str, List[float]] = None, sources: Dict[str, Dict[str, dict]] = None, initial_quality: Dict[str, Union[dict,InitialQuality]] = None, parameter_values: Dict[str, Union[dict, ParameterValues]] = None) -> None:
-        """A container for network-specific values associated with a multispecies water quality model.
+    def __init__(self, patterns: Dict[str, List[float]] = None,
+                 sources: Dict[str, Dict[str, dict]] = None,
+                 initial_quality: Dict[str, Union[dict, InitialQuality]] = None,
+                 parameter_values: Dict[str, Union[dict, ParameterValues]] = None) -> None:
+        """Network-specific values associated with a multi-species water 
+        quality model
 
-        Data is copied from dictionaries passed in, so once created, the dictionaries passed are not connected
-        to this object.
+        Data is copied from dictionaries passed in, so once created, the
+        dictionaries passed are not connected to this object.
 
         Parameters
         ----------
         patterns : dict, optional
-            patterns to use for sources
+            Patterns to use for sources
         sources : dict, optional
-            sources defined for the model
+            Sources defined for the model
         initial_quality : dict, optional
-            initial values for different species at different nodes, links, and the global value
+            Initial values for different species at different nodes, links, and
+            the global value
         parameter_values : dict, optional
-            parameter values for different pipes and tanks
+            Parameter values for different pipes and tanks
 
         Notes
         -----
         ``patterns``
-            A dictionary keyed by pattern name (str) with values being the multipliers (list of float)
+            Dictionary keyed by pattern name (str) with values being the
+            multipliers (list of float)
         ``sources``
-            A dictionary keyed by species name (str) with values being dictionaries keyed by junction name (str) with values being the 
+            Dictionary keyed by species name (str) with values being
+            dictionaries keyed by junction name (str) with values being the
             dictionary of settings for the source
         ``initial_quality``
-            A dictionary keyed by species name (str) with values being either an :class:`~wntr.msx.elements.InitialQuality` object or
-            the appropriate dictionary representation thereof.
+            Dictionary keyed by species name (str) with values being either an
+            :class:`~wntr.msx.elements.InitialQuality` object or the
+            appropriate dictionary representation thereof.
         ``parameter_values``
-            A dictionary keyed by parameter name (str) with values being either a :class:`~wntr.msx.elements.ParameterValues` object or
-            the appropriate dictionary representation thereof.
+            Dictionary keyed by parameter name (str) with values being either
+            a :class:`~wntr.msx.elements.ParameterValues` object or the
+            appropriate dictionary representation thereof.
         """
         if sources is None:
             sources = dict()
@@ -206,53 +217,55 @@ class MsxNetworkData(NetworkDataBase):
 
     @property
     def sources(self):
-        """A dictionary of sources, keyed by species name"""
+        """Dictionary of sources, keyed by species name"""
         return self._source_dict
 
     @property
     def initial_quality(self) -> Dict[str, InitialQuality]:
-        """A dictionary of initial quality values, keyed by species name"""
+        """Dictionary of initial quality values, keyed by species name"""
         return self._initial_quality_dict
 
     @property
     def patterns(self):
-        """A dictionary of patterns, specific for the water quality model, keyed by pattern name.
+        """Dictionary of patterns, specific for the water quality model, keyed
+        by pattern name.
 
-        .. note:: the WaterNetworkModel cannot see these patterns, so names can be reused, so be
-            careful. Likewise, this model cannot see the WaterNetworkModel patterns, so this could be
-            a source of some confusion.
+        .. note:: the WaterNetworkModel cannot see these patterns, so names can
+           be reused, so be careful. Likewise, this model cannot see the
+           WaterNetworkModel patterns, so this could be a source of some
+           confusion.
         """
         return self._pattern_dict
 
     @property
     def parameter_values(self) -> Dict[str, ParameterValues]:
-        """A dictionary of parameter values, keyed by parameter name"""
+        """Dictionary of parameter values, keyed by parameter name"""
         return self._parameter_value_dict
 
     def add_pattern(self, name: str, multipliers: List[float]):
-        """Add a water-quality-model-specific pattern.
+        """Add a water quality model specific pattern.
 
         Arguments
         ---------
         name : str
-            The pattern name
+            Pattern name
         multipliers : list of float
-            The pattern multipliers
+            Pattern multipliers
         """
         self._pattern_dict[name] = multipliers
 
     def init_new_species(self, species: Species):
-        """(Re)set the initial quality values for a species to a new container
+        """(Re)set the initial quality values for a species
 
         Arguments
         ---------
         species : Species
-            The species to (re)initialized.
+            Species to (re)initialized.
 
         Returns
         -------
         InitialQuality
-            the new initial quality values container
+            New initial quality values
         """
         self._initial_quality_dict[str(species)] = InitialQuality()
         if isinstance(species, Species):
@@ -260,12 +273,12 @@ class MsxNetworkData(NetworkDataBase):
         return self._initial_quality_dict[str(species)]
 
     def remove_species(self, species: Union[Species, str]):
-        """Remove a species from the network specific model.
+        """Remove a species from the network specific model
 
         Arguments
         ---------
         species : Species or str
-            a species to be removed from the network data
+            Species to be removed from the network data
         """
         if isinstance(species, Species):
             species._vals = None
@@ -275,17 +288,17 @@ class MsxNetworkData(NetworkDataBase):
             pass
 
     def init_new_parameter(self, param: Parameter):
-        """(Re)initialize parameter values for a parameter.
+        """(Re)initialize parameter values for a parameter
 
         Arguments
         ---------
         param : Parameter
-            a parameter to be (re)initialized with network data
+            Parameter to be (re)initialized with network data
 
         Returns
         -------
         ParameterValues
-            the new network data for the specific parameter
+            New network data for the specific parameter
         """
         self._parameter_value_dict[str(param)] = ParameterValues()
         if isinstance(param, Parameter):
@@ -293,14 +306,14 @@ class MsxNetworkData(NetworkDataBase):
         return self._parameter_value_dict[str(param)]
 
     def remove_parameter(self, param: Union[Parameter, str]):
-        """Remove values associated with a specific parameter.
+        """Remove values associated with a specific parameter
 
         Ignores non-parameters.
 
         Arguments
         ---------
         param : Parameter or str
-            the parameter or parameter name to be removed from the network data
+            Parameter or parameter name to be removed from the network data
         """
         if isinstance(param, Parameter):
             param._vals = None
@@ -321,15 +334,15 @@ class MsxNetworkData(NetworkDataBase):
 
 
 class MsxModel(QualityModelBase):
-    """A multispecies water quality model for use with WNTR EPANET-MSX simulator."""
+    """Multi-species water quality model"""
 
     def __init__(self, msx_file_name=None) -> None:
-        """A full, multi-species water quality model.
+        """Multi-species water quality model
 
         Arguments
         ---------
         msx_file_name : str, optional
-            an MSX file to read in, by default None
+            MSX file to to load into the MsxModel object, by default None
         """
         super().__init__(msx_file_name)
         self._references: List[Union[str, Dict[str, str]]] = list()
@@ -363,47 +376,48 @@ class MsxModel(QualityModelBase):
 
     @property
     def references(self) -> List[Union[str, Dict[str, str]]]:
-        """A list of strings or mappings that provide references for this model.
+        """List of strings or mappings that provide references for this model
 
         .. note::
-            This property is a list, and should be modified using append/insert/remove.
-            Members of the list should be json seriealizable (i.e., strings or dicts of strings).
+            This property is a list, and should be modified using
+            append/insert/remove. Members of the list should be json
+            serializable (i.e., strings or dicts of strings).
         """
         return self._references
 
     @property
     def reaction_system(self) -> MsxReactionSystem:
-        """The reaction variables defined for this model."""
+        """Reaction variables defined for this model"""
         return self._rxn_system
 
     @property
     def network_data(self) -> MsxNetworkData:
-        """The network-specific values added to this model."""
+        """Network-specific values added to this model"""
         return self._net_data
 
     @property
     def options(self) -> MsxSolverOptions:
-        """The MSX model options"""
+        """MSX model options"""
         return self._options
 
     @property
     def species_name_list(self) -> List[str]:
-        """all defined species names"""
+        """Get a list of species names"""
         return list(self.reaction_system.species.keys())
 
     @property
     def constant_name_list(self) -> List[str]:
-        """all defined coefficient names"""
+        """Get a list of coefficient names"""
         return list(self.reaction_system.constants.keys())
 
     @property
     def parameter_name_list(self) -> List[str]:
-        """all defined coefficient names"""
+        """Get a list of coefficient names"""
         return list(self.reaction_system.parameters.keys())
 
     @property
     def term_name_list(self) -> List[str]:
-        """all defined function (MSX 'terms') names"""
+        """Get a list of function (MSX 'terms') names"""
         return list(self.reaction_system.terms.keys())
 
     @options.setter
@@ -411,7 +425,7 @@ class MsxModel(QualityModelBase):
         if isinstance(value, dict):
             self._options = MsxSolverOptions.factory(value)
         elif not isinstance(value, MsxSolverOptions):
-            raise TypeError("Expected a MultispeciesOptions object, got {}".format(type(value)))
+            raise TypeError("Expected a MsxSolverOptions object, got {}".format(type(value)))
         else:
             self._options = value
 
@@ -430,32 +444,32 @@ class MsxModel(QualityModelBase):
         Arguments
         ---------
         name : str
-            the species name
+            Species name
         species_type : SpeciesType
-            the type of species, either BULK or WALL
+            Type of species, either BULK or WALL
         units : str
-            the mass units for  this species
+            Mass units for  this species
         atol : float, optional unless rtol is not None
-            the absolute solver tolerance for this species, by default None
+            Absolute solver tolerance for this species, by default None
         rtol : float, optional unless atol is not None
-            the relative solver tolerance for this species, by default None
+            Relative solver tolerance for this species, by default None
         note : NoteType, optional keyword
-            supplementary information regarding this variable, by default None
+            Supplementary information regarding this variable, by default None
             (see also :class:`~wntr.epanet.util.ENcomment`)
         diffusivity : float, optional
-            diffusivity of this species in water
+            Diffusivity of this species in water
 
         Raises
         ------
         KeyExistsError
-            if a variable with this name already exists
+            If a variable with this name already exists
         ValueError
-            if `atol` or `rtol` ≤ 0
+            If `atol` or `rtol` ≤ 0
 
         Returns
         -------
         Species
-            the new species
+            New species
         """
         if name in self._rxn_system:
             raise KeyExistsError("Variable named {} already exists in model as type {}".format(name, self._rxn_system._vars.get_groupname(name)))
@@ -476,19 +490,19 @@ class MsxModel(QualityModelBase):
         return new
 
     def remove_species(self, variable_or_name):
-        """Remove a species from the model.
+        """Remove a species from the model
 
         Removes from both the reaction_system and the network_data.
 
         Parameters
         ----------
         variable_or_name : Species or str
-            the species (or name of the species) to be removed
+            Species (or name of the species) to be removed
 
         Raises
         ------
         KeyError
-            if `variable_or_name` is not a species in the model
+            If `variable_or_name` is not a species in the model
         """
         name = str(variable_or_name)
         if name not in self.reaction_system.species:
@@ -498,28 +512,28 @@ class MsxModel(QualityModelBase):
         self.reaction_system.__delitem__(name)
 
     def add_constant(self, name: str, value: float, units: str = None, note: NoteType = None) -> Constant:
-        """Add a constant coefficient to the model.
+        """Add a constant coefficient to the model
 
         Arguments
         ---------
         name : str
-            the name of the coefficient
+            Name of the coefficient
         value : float
-            the constant value of the coefficient
+            Constant value of the coefficient
         units : str, optional
-            the units for this coefficient, by default None
+            Units for this coefficient, by default None
         note : NoteType, optional
-            supplementary information regarding this variable, by default None
+            Supplementary information regarding this variable, by default None
 
         Raises
         ------
         KeyExistsError
-            a variable with this name already exists
+            Variable with this name already exists
 
         Returns
         -------
         Constant
-            the new constant coefficient
+            New constant coefficient
         """
         if name in self._rxn_system:
             raise KeyExistsError("Variable named {} already exists in model as type {}".format(name, self._rxn_system._vars.get_groupname(name)))
@@ -528,17 +542,17 @@ class MsxModel(QualityModelBase):
         return new
 
     def remove_constant(self, variable_or_name):
-        """Remove a constant coefficient from the model.
+        """Remove a constant coefficient from the model
 
         Parameters
         ----------
         variable_or_name : Constant or str
-            the constant (or name of the constant) to be removed
+            Constant (or name of the constant) to be removed
 
         Raises
         ------
         KeyError
-            if `variable_or_name` is not a constant coefficient in the model
+            If `variable_or_name` is not a constant coefficient in the model
         """
         name = str(variable_or_name)
         if name not in self.reaction_system.constants:
@@ -547,16 +561,17 @@ class MsxModel(QualityModelBase):
         self.reaction_system.__delitem__(name)
 
     def add_parameter(self, name: str, global_value: float, units: str = None, note: NoteType = None) -> Parameter:
-        """Add a parameterized coefficient to the model.
+        """Add a parameterized coefficient to the model
 
         Arguments
         ---------
         name : str
-            the name of the parameter
+            Name of the parameter
         global_value : float
-            the global value of the coefficient (can be overridden for specific pipes/tanks)
+            Global value of the coefficient (can be overridden for specific
+            pipes/tanks)
         units : str, optional
-            the units for the coefficient, by default None
+            Units for the coefficient, by default None
         note : NoteType, optional keyword
             Supplementary information regarding this variable, by default None
             (see also :class:`~wntr.epanet.util.ENcomment`).
@@ -564,12 +579,12 @@ class MsxModel(QualityModelBase):
         Raises
         ------
         KeyExistsError
-            if a variable with this name already exists
+            If a variable with this name already exists
 
         Returns
         -------
         Parameter
-            the new parameterized coefficient
+            New parameterized coefficient
         """
         if name in self._rxn_system:
             raise KeyExistsError("Variable named {} already exists in model as type {}".format(name, self._rxn_system._vars.get_groupname(name)))
@@ -579,17 +594,17 @@ class MsxModel(QualityModelBase):
         return new
 
     def remove_parameter(self, variable_or_name):
-        """Remove a parameterized coefficient from the model.
+        """Remove a parameterized coefficient from the model
 
         Parameters
         ----------
         variable_or_name : Parameter or str
-            the parameter (or name of the parameter) to be removed
+            Parameter (or name of the parameter) to be removed
 
         Raises
         ------
         KeyError
-            if `variable_or_name` is not a parameter in the model
+            If `variable_or_name` is not a parameter in the model
         """
         name = str(variable_or_name)
         if name not in self.reaction_system.parameters:
@@ -599,14 +614,14 @@ class MsxModel(QualityModelBase):
         self.reaction_system.__delitem__(name)
 
     def add_term(self, name: str, expression: str, note: NoteType = None) -> Term:
-        """Add a named expression (term) to the model.
+        """Add a named expression (term) to the model
 
         Parameters
         ----------
         name : str
-            the name of the functional term to be added
+            Name of the functional term to be added
         expression : str
-            the expression that the term defines
+            Expression that the term defines
         note : NoteType, optional keyword
             Supplementary information regarding this variable, by default None
             (see also :class:`~wntr.epanet.util.ENcomment`)
@@ -619,7 +634,7 @@ class MsxModel(QualityModelBase):
         Returns
         -------
         Term
-            the new term
+            New term
         """
         if name in self._rxn_system:
             raise KeyError("Variable named {} already exists in model as type {}".format(name, self._rxn_system._vars.get_groupname(name)))
@@ -628,17 +643,17 @@ class MsxModel(QualityModelBase):
         return new
 
     def remove_term(self, variable_or_name):
-        """Remove a named expression (term) from the model.
+        """Remove a named expression (term) from the model
 
         Parameters
         ----------
         variable_or_name : Term or str
-            the term (or name of the term) to be deleted
+            Term (or name of the term) to be deleted
 
         Raises
         ------
         KeyError
-            if `variable_or_name` is not a term in the model
+            If `variable_or_name` is not a term in the model
         """
         name = str(variable_or_name)
         # FIXME: validate deletion
@@ -647,25 +662,26 @@ class MsxModel(QualityModelBase):
         self.reaction_system.__delitem__(name)
 
     def add_reaction(self, species_name: Union[Species, str], reaction_type: ReactionType, expression_type: ExpressionType, expression: str, note: NoteType = None) -> ReactionBase:
-        """Add a reaction to a species in the model.
+        """Add a reaction to a species in the model
 
-        Note that all species need to have both a pipe and tank reaction defined
-        unless all species are bulk species and
-        the tank reactions are identical to the pipe reactions. However, it is not
-        recommended that users take this approach.
+        Note that all species need to have both a pipe and tank reaction
+        defined unless all species are bulk species and the tank reactions are
+        identical to the pipe reactions. However, it is not recommended that
+        users take this approach.
 
         Once added, access the reactions from the species' object.
 
         Arguments
         ---------
         species_name : Species or str
-            the species (or name of species) the reaction is being defined for
+            Species (or name of species) the reaction is being defined for
         reaction_type: ReactionType
-            where this reaction takes place, from {PIPE, TANK}
+            Reaction type (location), from {PIPE, TANK}
         expression_type : ExpressionType
-            the type (LHS) of the equation the expression belongs to, from {RATE, EQUIL, FORMULA}
+            Expression type (left-hand-side) of the equation, from {RATE,
+            EQUIL, FORMULA}
         expression : str
-            the expression defining the reaction
+            Expression defining the reaction
         note : NoteType, optional keyword
             Supplementary information regarding this reaction, by default None
             (see also :class:`~wntr.epanet.util.ENcomment`)
@@ -673,12 +689,12 @@ class MsxModel(QualityModelBase):
         Raises
         ------
         TypeError
-            if a variable that is not species is passed
+            If a variable that is not species is passed
 
         Returns
         -------
-        MultispeciesReaction
-            the new reaction object
+        MsxReactionSystem
+            New reaction object
         """
         species_name = str(species_name)
         species = self.reaction_system.species[species_name]
@@ -697,20 +713,21 @@ class MsxModel(QualityModelBase):
         return new
 
     def remove_reaction(self, species_name: str, reaction_type: ReactionType) -> None:
-        """Remove a reaction at a specified location from a species.
+        """Remove a reaction at a specified location from a species
 
         Parameters
         ----------
         species : Species or str
-            the species (or name of the species) of the reaction to remove
+            Species (or name of the species) of the reaction to remove
         reaction_type : ReactionType
-            the reaction type (location) of the reaction to remove
+            Reaction type (location) of the reaction to remove
         """
         reaction_type = ReactionType.get(reaction_type, allow_none=False)
         species_name = str(species_name)
         del self.reaction_system.reactions[reaction_type.name.lower()][species_name]
 
     def to_dict(self) -> dict:
+        """Dictionary representation of the MsxModel"""
         from wntr import __version__
 
         return {
@@ -726,12 +743,12 @@ class MsxModel(QualityModelBase):
 
     @classmethod
     def from_dict(cls, data) -> "MsxModel":
-        """Create a new multispecies reaction model from a dictionary.
+        """Create a new multi-species water quality model from a dictionary
         
         Parameters
         ----------
         data : dict
-            The model data
+            Model data
         """
         from wntr import __version__
 

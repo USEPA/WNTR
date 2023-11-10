@@ -1,5 +1,8 @@
 # coding: utf-8
-"""Exceptions for EPANET toolkit and IO operations."""
+"""
+The wntr.epanet.expections module contains Exceptions for EPANET toolkit 
+and IO operations.
+"""
 
 from typing import List
 

@@ -1,18 +1,18 @@
+# coding: utf-8
 """
-The wntr.reaction.toolkit module is a Python extension for the EPANET MSX
+The wntr.epanet.msx.toolkit module is a Python extension for the EPANET-MSX
 Programmers Toolkit DLLs.
 
 .. note::
     
-    Code in this section based on code from "EPANET-MSX-Python-wrapper",
-    licensed under the BSD license. See LICENSE.txt for details.
+    Code in this section is based on code from "EPANET-MSX-Python-wrapper",
+    licensed under the BSD license. See LICENSE.md for details.
 """
 import ctypes
 import os
 import os.path
 import platform
 import sys
-from ctypes import byref
 from typing import Union
 
 from pkg_resources import resource_filename
@@ -20,7 +20,6 @@ from pkg_resources import resource_filename
 from wntr.epanet.msx.enums import TkObjectType, TkSourceType
 
 from ..toolkit import ENepanet
-from ..util import SizeLimits
 from .exceptions import MSX_ERROR_CODES, EpanetMsxException, MSXKeyError, MSXValueError
 
 epanet_toolkit = "wntr.epanet.toolkit"
@@ -119,14 +118,14 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(self.errcode)
         return
 
-    # ----------running the simulation-----------------------------------------------------
+    # ----------running the simulation-----------------------------------------
     def MSXopen(self, msxfile):
         """Opens the MSX Toolkit to analyze a particular distribution system.
 
         Parameters
         ----------
         msxfile : str
-            name of the MSX input file
+            Name of the MSX input file
         """
         if msxfile is not None:
             msxfile = ctypes.c_char_p(msxfile.encode())
@@ -141,7 +140,8 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXusehydfile(self, filename):
-        """Uses the contents of the specified file as the current binary hydraulics file
+        """Uses the contents of the specified file as the current binary
+        hydraulics file
 
         Parameters
         ----------
@@ -160,22 +160,25 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXinit(self, saveFlag=0):
-        """Initializes the MSX system before solving for water quality results in step-wise fashion
-        set saveFlag to 1 if water quality results should be saved to a scratch binary file, or to 0 is not saved to file"""
+        """Initializes the MSX system before solving for water quality results
+        in step-wise fashion set saveFlag to 1 if water quality results should
+        be saved to a scratch binary file, or to 0 is not saved to file"""
         saveFlag = int(saveFlag)
         ierr = self.ENlib.MSXinit(saveFlag)
         if ierr != 0:
             raise EpanetMsxException(ierr)
 
     def MSXsolveQ(self):
-        """solves for water quality over the entire simulation period and saves the results to an internal scratch file"""
+        """Solves for water quality over the entire simulation period and saves
+        the results to an internal scratch file"""
         ierr = self.ENlib.MSXsolveQ()
         if ierr != 0:
             raise EpanetMsxException(ierr)
 
     def MSXstep(self):
         """Advances the water quality simulation one water quality time step.
-        The time remaining in the overall simulation is returned as tleft, the current time as t."""
+        The time remaining in the overall simulation is returned as tleft, the
+        current time as t."""
         t = ctypes.c_long()
         tleft = ctypes.c_long()
         ierr = self.ENlib.MSXstep(ctypes.byref(t), ctypes.byref(tleft))
@@ -185,8 +188,9 @@ class MSXepanet(ENepanet):
         return out
 
     def MSXsaveoutfile(self, filename):
-        """saves water quality results computed for each node, link and reporting time period to a named binary file
-        
+        """Saves water quality results computed for each node, link and
+        reporting time period to a named binary file
+
         Parameters
         ----------
         filename : str
@@ -197,45 +201,47 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXsavemsxfile(self, filename):
-        """saves the data associated with the current MSX project into a new MSX input file
-        
+        """Saves the data associated with the current MSX project into a new
+        MSX input file
+
         Parameters
         ----------
         filename : str
-            the name of the MSX input file to create
+            Name of the MSX input file to create
         """
         ierr = self.ENlib.MSXsavemsxfile(ctypes.c_char_p(filename.encode()))
         if ierr != 0:
             raise EpanetMsxException(ierr, filename)
 
     def MSXreport(self):
-        """Writes water quality simulations results as instructed by the MSX input file to a text file"""
+        """Writes water quality simulations results as instructed by the MSX
+        input file to a text file"""
         ierr = self.ENlib.MSXreport()
         if ierr != 0:
             raise EpanetMsxException(ierr)
 
-    # ---------get parameters---------------------------------------------------------------
+    # ---------get parameters--------------------------------------------------
     def MSXgetindex(self, _type: Union[int, TkObjectType], name):
-        """Retrieves the internal index of an MSX object given its name.
+        """Gets the internal index of an MSX object given its name.
 
         Parameters
         ----------
         _type : int, str or ObjectType
-            The type of object to get an index for
+            Type of object to get an index for
         name : str 
-            The name of the object to get an index for
+            Name of the object to get an index for
 
         Returns
         -------
         int
-            The internal index
+            Internal index
         
         Raises
         ------
         MSXKeyError
-            if an invalid str is passed for _type
+            If an invalid str is passed for _type
         MSXValueError
-            if _type is not a valid MSX object type
+            If _type is not a valid MSX object type
         """
         try:
             _type = TkObjectType.get(_type)
@@ -249,19 +255,20 @@ class MSXepanet(ENepanet):
         return ind.value
 
     def MSXgetIDlen(self, _type, index):
-        """Retrieves the number of characters in the ID name of an MSX object given its internal index number.
+        """Get the number of characters in the ID name of an MSX object
+        given its internal index number.
 
         Parameters
         ----------
         _type : int, str or ObjectType
-            The type of object to get an index for
-        index : int 
-            The index of the object to get the ID length for
+            Type of object to get an index for
+        index : int
+            Index of the object to get the ID length for
 
         Returns
         -------
         int
-            the length of the object ID
+            Length of the object ID
         """
         try:
             _type = TkObjectType.get(_type)
@@ -275,19 +282,19 @@ class MSXepanet(ENepanet):
         return len.value
 
     def MSXgetID(self, _type, index):
-        """Retrieves the ID name of an object given its internal index number
+        """Get the ID name of an object given its internal index number
 
         Parameters
         ----------
         _type : int, str or ObjectType
-            The type of object to get an index for
-        index : int 
-            The index of the object to get the ID for
+            Type of object to get an index for
+        index : int
+            Index of the object to get the ID for
 
         Returns
         -------
         str
-            the object ID
+            Object ID
         """
         try:
             _type = TkObjectType.get(_type)
@@ -303,31 +310,31 @@ class MSXepanet(ENepanet):
         return id.value.decode()
 
     def MSXgetinitqual(self, _type, node_link_index, species_index):
-        """Retrieves the initial concentration of a particular chemical species assigned to a specific node
-        or link of the pipe network
+        """Get the initial concentration of a particular chemical species
+        assigned to a specific node or link of the pipe network
 
         Parameters
         ----------
         _type : str, int or ObjectType
-            the type of object
+            Type of object
         node_link_index : int
-            the object index
+            Object index
         species_index : int
-            the species index
+            Species index
 
         Returns
         -------
         float
-            the initial quality value for that node or link
+            Initial quality value for that node or link
 
         Raises
         ------
         MSXKeyError
-            the type passed in for ``_type`` is not valid
+            Type passed in for ``_type`` is not valid
         MSXValueError
-            the value for ``_type`` is not valid
+            Value for ``_type`` is not valid
         EpanetMsxException
-            any other error from the C-API
+            Any other error from the C-API
         """
         try:
             _type = TkObjectType.get(_type)
@@ -343,30 +350,31 @@ class MSXepanet(ENepanet):
         return iniqual.value
 
     def MSXgetqual(self, _type, node_link_index, species_index):
-        """Retrieves a chemical species concentration at a given node or the average concentration along a link at the current simulation time step
+        """Get a chemical species concentration at a given node or the
+        average concentration along a link at the current simulation time step
 
         Parameters
         ----------
         _type : str, int or ObjectType
-            the type of object
+            Type of object
         node_link_index : int
-            the object index
+            Object index
         species_index : int
-            the species index
+            Species index
 
         Returns
         -------
         float
-            the current quality value for that node or link
+            Current quality value for that node or link
 
         Raises
         ------
         MSXKeyError
-            the type passed in for ``_type`` is not valid
+            Type passed in for ``_type`` is not valid
         MSXValueError
-            the value for ``_type`` is not valid
+            Value for ``_type`` is not valid
         EpanetMsxException
-            any other error from the C-API
+            Any other error from the C-API
         """
         try:
             _type = TkObjectType.get(_type)
@@ -382,22 +390,22 @@ class MSXepanet(ENepanet):
         return qual.value
 
     def MSXgetconstant(self, constant_index):
-        """Retrieves the value of a particular reaction constant
+        """Get the value of a particular reaction constant
 
         Parameters
         ----------
         constant_index : int
-            index to the constant
+            Index to the constant
 
         Returns
         -------
         float
-            the value of the constant
+            Value of the constant
 
         Raises
         ------
         EpanetMsxException
-            a toolkit error occurred
+            Toolkit error occurred
         """
         const = ctypes.c_double()
         ierr = self.ENlib.MSXgetconstant(constant_index, ctypes.byref(const))
@@ -406,30 +414,31 @@ class MSXepanet(ENepanet):
         return const.value
 
     def MSXgetparameter(self, _type, node_link_index, param_index):
-        """Retrieves the value of a particular reaction parameter for a given TANK or PIPE.
+        """Get the value of a particular reaction parameter for a given
+        TANK or PIPE.
 
         Parameters
         ----------
         _type : int or str or Enum
-            get the type of the parameter
+            Get the type of the parameter
         node_link_index : int
-            the link index
+            Link index
         param_index : int
-            the parameter variable index
+            Parameter variable index
 
         Returns
         -------
         float
-            the parameter value
+            Parameter value
 
         Raises
         ------
         MSXKeyError
-            if there is no such _type
+            If there is no such _type
         MSXValueError
-            if the _type is improper
+            If the _type is improper
         EpanetMsxException
-            any other error
+            Any other error
         """
         try:
             _type = TkObjectType.get(_type)
@@ -445,10 +454,24 @@ class MSXepanet(ENepanet):
         return param.value
 
     def MSXgetsource(self, node_index, species_index):
-        """Retrieves information on any external source of a particular chemical species assigned to a specific node of the pipe network
+        """Get information on any external source of a particular
+        chemical species assigned to a specific node of the pipe network
+        
+        Parameters
+        ----------
+        node_index : int
+            Node index
+        species_index : int
+            Species index
+            
+        Returns
+        -------
+        list
+            [source type, level, and pattern] where level is the baseline 
+            concentration (or mass flow rate) of the source and pattern the 
+            index of the time pattern used to add variability to the source's 
+            baseline level (0 if no pattern defined for the source)
         """
-        #level is returned with the baseline concentration (or mass flow rate) of the source
-        #pat is returned with the index of the time pattern used to add variability to the source's baseline level (0 if no pattern defined for the source)"""
         level = ctypes.c_double()
         _type = ctypes.c_int()
         pat = ctypes.c_int()
@@ -459,17 +482,17 @@ class MSXepanet(ENepanet):
         return src_out
 
     def MSXgetpatternlen(self, pat):
-        """Retrieves the number of time periods within a SOURCE time pattern.
+        """Get the number of time periods within a SOURCE time pattern.
 
         Parameters
         ----------
         pat : int
-            pattern index
+            Pattern index
 
         Returns
         -------
         int
-            number of time periods in the pattern
+            Number of time periods in the pattern
         """
         len = ctypes.c_int()
         ierr = self.ENlib.MSXgetpatternlen(pat, ctypes.byref(len))
@@ -478,19 +501,19 @@ class MSXepanet(ENepanet):
         return len.value
 
     def MSXgetpatternvalue(self, pat, period):
-        """Retrieves the multiplier at a specific time period for a given SOURCE time pattern
+        """Get the multiplier at a specific time period for a given
+        SOURCE time pattern
 
         Parameters
         ----------
         pat : int
-            pattern index
+            Pattern index
         period : int
             1-indexed period of the pattern to retrieve
 
         Returns
         -------
-        float
-            the multiplier
+            Multiplier
         """
         val = ctypes.c_double()
         ierr = self.ENlib.MSXgetpatternvalue(pat, period, ctypes.byref(val))
@@ -499,22 +522,22 @@ class MSXepanet(ENepanet):
         return val.value
 
     def MSXgetcount(self, _type):
-        """Retrieves the number of objects of a specified type.
+        """Get the number of objects of a specified type.
 
         Parameters
         ----------
         _type : int or str or Enum
-            the type of object to count
+            Type of object to count
 
         Returns
         -------
         int
-            the number of objects of specified type
+            Number of objects of specified type
 
         Raises
         ------
         MSXKeyError
-            if the _type is invalid
+            If the _type is invalid
         """
         try:
             _type = TkObjectType.get(_type)
@@ -528,18 +551,19 @@ class MSXepanet(ENepanet):
         return count.value
 
     def MSXgetspecies(self, species_index):
-        """Retrieves the attributes of a chemical species given its internal index number.
-        species is the sequence number of the species (starting from 1 as listed in the MSX input file
+        """Get the attributes of a chemical species given its internal
+        index number.
 
         Parameters
         ----------
         species_index : int
-            the species to query
+            Species index to query (starting from 1 as listed in the MSX input
+            file)
 
         Returns
         -------
         int, str, float, float
-            the type, units, aTol, and rTol for the species
+            Type, units, aTol, and rTol for the species
         """
         type_ind = ctypes.c_int()
         units = ctypes.create_string_buffer(15)
@@ -552,25 +576,25 @@ class MSXepanet(ENepanet):
         return spe_out
 
     def MSXgeterror(self, errcode, len=100):
-        """returns the text for an error message given its error code
+        """Get the text for an error message given its error code
 
         Parameters
         ----------
         errcode : int
-            the error code
+            Error code
         len : int, optional
-            the length of the error message, by default 100 and minimum 80
+            Length of the error message, by default 100 and minimum 80
 
         Returns
         -------
         str
-            returns a string decoded from the DLL
+            String decoded from the DLL
 
         Warning
         -------
-        Getting string parameters in this way is not recommended, because it requires
-        setting up string arrays that may or may not be the correct size. Use the 
-        wntr.epanet.msx.enums package to get error information.
+        Getting string parameters in this way is not recommended, because it
+        requires setting up string arrays that may or may not be the correct
+        size. Use the wntr.epanet.msx.enums package to get error information.
         """
         errmsg = ctypes.create_string_buffer(len)
         self.ENlib.MSXgeterror(errcode, ctypes.byref(errmsg), len)
@@ -579,39 +603,40 @@ class MSXepanet(ENepanet):
     # --------------set parameters-----------------------------------
 
     def MSXsetconstant(self, ind, value):
-        """assigns a new value to a specific reaction constant
+        """Set a new value to a specific reaction constant
 
         Parameters
         ----------
         ind : int
-            the index to the variable
+            Index to the variable
         value : float
-            the value to give the constant
+            Value to give the constant
         """
         ierr = self.ENlib.MSXsetconstant(ctypes.c_int(ind), ctypes.c_double(value))
         if ierr != 0:
             raise EpanetMsxException(ierr)
 
     def MSXsetparameter(self, _type, ind, param, value):
-        """assigns a value to a particular reaction parameter for a given TANK or PIPE
+        """Set a value to a particular reaction parameter for a given TANK
+        or PIPE
 
         Parameters
         ----------
         _type : int or str or enum
-            the type of value to set
+            Type of value to set
         ind : int
-            the tank or pipe index
+            Tank or pipe index
         param : int
-            the parameter variable index
+            Parameter variable index
         value : float
-            the value to be set
+            Value to be set
 
         Raises
         ------
         MSXKeyError
-            if there is no such _type
+            If there is no such _type
         MSXValueError
-            if the _type is invalid
+            If the _type is invalid
         """
         try:
             _type = TkObjectType.get(_type)
@@ -625,19 +650,19 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXsetinitqual(self, _type, ind, spe, value):
-        """Retrieves the initial concentration of a particular chemical species assigned to a specific node
-        or link of the pipe network.
+        """Set the initial concentration of a particular chemical species
+        assigned to a specific node or link of the pipe network.
 
         Parameters
         ----------
         _type : int or str or enum
-            what type of network element is being set
+            Type of network element to set
         ind : int
-            the index of the network element
+            Index of the network element
         spe : int
-            the index of the species
+            Index of the species
         value : float
-            the initial quality value
+            Initial quality value
         """
         try:
             _type = TkObjectType.get(_type)
@@ -651,20 +676,21 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXsetsource(self, node, spe, _type, level, pat):
-        """sets the attributes of an external source of a particular chemical species in a specific node of the pipe network
+        """Set the attributes of an external source of a particular chemical
+        species in a specific node of the pipe network
 
         Parameters
         ----------
         node : int
-            the node index
+            Node index
         spe : int
-            the species index
+            Species index
         _type : int or str or enum
-            the type of source
+            Type of source
         level : float
-            the source quality value
+            Source quality value
         pat : int
-            the pattern index
+            Pattern index
         """
         try:
             _type = TkSourceType.get(_type)
@@ -676,14 +702,14 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXsetpattern(self, pat, mult):
-        """assigns a new set of multipliers to a given MSX SOURCE time pattern
+        """Set multipliers to a given MSX SOURCE time pattern
 
         Parameters
         ----------
         pat : int
-            the pattern index
+            Pattern index
         mult : list-like
-            the pattern multipliers
+            Pattern multipliers
         """
         length = len(mult)
         cfactors_type = ctypes.c_double * length
@@ -695,28 +721,29 @@ class MSXepanet(ENepanet):
             raise EpanetMsxException(ierr)
 
     def MSXsetpatternvalue(self, pat, period, value):
-        """Sets the multiplier factor for a specific period within a SOURCE time pattern.
+        """Set the multiplier factor for a specific period within a SOURCE time
+        pattern.
 
         Parameters
         ----------
         pat : int
-            the pattern index
+            Pattern index
         period : int
-            the 1-indexed pattern time period index
+            1-indexed pattern time period index
         value : float
-            the value to set at that time period
+            Value to set at that time period
         """
         ierr = self.ENlib.MSXsetpatternvalue(ctypes.c_int(pat), ctypes.c_int(period), ctypes.c_double(value))
         if ierr != 0:
             raise EpanetMsxException(ierr)
 
     def MSXaddpattern(self, patternid):
-        """Adds a new, empty MSX source time pattern to an MSX project.
+        """Add a new, empty MSX source time pattern to an MSX project.
 
         Parameters
         ----------
         patternid : str
-            the name of the new pattern
+            Name of the new pattern
         """
         ierr = self.ENlib.MSXaddpattern(ctypes.c_char_p(patternid.encode()))
         if ierr != 0:

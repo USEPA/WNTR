@@ -1,12 +1,12 @@
 # coding: utf-8
-"""EPANET-MSX error and exception classes."""
+"""
+The wntr.epanet.msx.exceptions module contains Exceptions for EPANET-MSX
+IO operations.
+"""
 
-from enum import IntEnum
 from typing import List
 
-from wntr.utils.enumtools import add_get
-
-from ..exceptions import EN_ERROR_CODES, EpanetException
+from ..exceptions import EpanetException
 
 MSX_ERROR_CODES = {
     # MSX syntax errors
@@ -52,21 +52,25 @@ See :class:`MsxErrorEnum` for the list of error codes and their meanings.
 :meta hide-value:
 """
 
+
 class EpanetMsxException(EpanetException):
-    def __init__(self, code: int, *args: List[object], line_num=None, line=None) -> None:
-        """An Exception class for EPANET-MSX Toolkit and IO exceptions.
+    def __init__(self, code: int, *args: List[object], line_num=None,
+                 line=None) -> None:
+        """Exception class for EPANET-MSX Toolkit and IO exceptions
 
         Parameters
         ----------
         code : int or str or MSXErrors
-            The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
+            EPANET-MSX error code (int) or a string mapping to the MSXErrors
+            enum members
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to
-            replace the format, otherwise they will be output at the end of the Exception message.
+            If there is a string-format within the error code's text, these
+            will be used to replace the format, otherwise they will be output
+            at the end of the Exception message.
         line_num : int, optional
-            The line number, if reading an INP file, by default None
+            Line number, if reading an INP file, by default None
         line : str, optional
-            The contents of the line, by default None
+            Contents of the line, by default None
         """
         if not code or int(code) < 400:
             return super().__init__(code, *args, line_num=line_num, line=line)
@@ -87,61 +91,68 @@ class EpanetMsxException(EpanetException):
 
 class MSXSyntaxError(EpanetMsxException, SyntaxError):
     def __init__(self, code, *args, line_num=None, line=None) -> None:
-        """An MSX-specific error that is due to a syntax error in an msx-file.
+        """MSX-specific error that is due to a syntax error in an msx-file.
 
         Parameters
         ----------
         code : int or str or MSXErrors
-            The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
+            EPANET-MSX error code (int) or a string mapping to the MSXErrors
+            enum members
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to
-            replace the format, otherwise they will be output at the end of the Exception message.
+            If there is a string-format within the error code's text, these
+            will be used to replace the format, otherwise they will be output
+            at the end of the Exception message.
         line_num : int, optional
-            The line number, if reading an INP file, by default None
+            Line number, if reading an INP file, by default None
         line : str, optional
-            The contents of the line, by default None
+            Contents of the line, by default None
         """
         super().__init__(code, *args, line_num=line_num, line=line)
 
 
 class MSXKeyError(EpanetMsxException, KeyError):
     def __init__(self, code, name, *args, line_num=None, line=None) -> None:
-        """An MSX-specific error that is due to a missing or unacceptably named variable/speces/etc.
+        """MSX-specific error that is due to a missing or unacceptably named
+        variable/speces/etc.
 
         Parameters
         ----------
         code : int or str or MSXErrors
-            The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
+            EPANET-MSX error code (int) or a string mapping to the MSXErrors
+            enum members
         name : str
-            The key/name/id that is missing
+            Key/name/id that is missing
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to
-            replace the format, otherwise they will be output at the end of the Exception message.
+            If there is a string-format within the error code's text, these
+            will be used to replace the format, otherwise they will be output
+            at the end of the Exception message.
         line_num : int, optional
-            The line number, if reading an INP file, by default None
+            Line number, if reading an INP file, by default None
         line : str, optional
-            The contents of the line, by default None
+            Contents of the line, by default None
         """
         super().__init__(code, name, *args, line_num=line_num, line=line)
 
 
 class MSXValueError(EpanetMsxException, ValueError):
     def __init__(self, code, value, *args, line_num=None, line=None) -> None:
-        """An MSX-specific error that is related to an invalid value.
+        """MSX-specific error that is related to an invalid value.
 
         Parameters
         ----------
         code : int or str or MSXErrors
-            The EPANET-MSX error code (int) or a string mapping to the MSXErrors enum members
+            EPANET-MSX error code (int) or a string mapping to the MSXErrors
+            enum members
         value : Any
-            The value that is invalid
+            Value that is invalid
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to
-            replace the format, otherwise they will be output at the end of the Exception message.
+            If there is a string-format within the error code's text, these
+            will be used to replace the format, otherwise they will be output
+            at the end of the Exception message.
         line_num : int, optional
-            The line number, if reading an INP file, by default None
+            Line number, if reading an INP file, by default None
         line : str, optional
-            The contents of the line, by default None
+            Contents of the line, by default None
         """
 
         super().__init__(code, value, *args, line_num=line_num, line=line)

@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
-"""Contains definitions for EPANET Multispecies Extension (MSX) water quality modeling.
+# coding: utf-8
+"""
+The wntr.msx package contains methods to define EPANET Multi-species Extension 
+(MSX) water quality models.
 """
 
 from .base import VariableType, SpeciesType, ReactionType, ExpressionType
 from .elements import Species, Constant, Parameter, Term, Reaction, HydraulicVariable, MathFunction
 from .model import MsxModel
 from .options import MsxSolverOptions
-from .library import ReactionLibrary, cite_msx
+from .library import ReactionLibrary
 
 from . import base, elements, library, model, options

@@ -10,7 +10,7 @@ References
    Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
    citations are cross referenced using a 6 digit notation [*]_. 
 
-.. [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
+.. [ALA01] American Lifelines Alliance. (2001). Seismic Fragility Formulations for Water Systems, Part 1 and 2. Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
 
 .. [AwGB90] Awumah, K., Goulter, I., and Bhatt, S.K. (1990). Assessment of reliability in water distribution networks using entropy based measures. Stochastic Hydrology and Hydraulics, 4(4), 309-320.
 
@@ -38,7 +38,7 @@ References
 
 .. [ICC12] International Code Council. (2011). 2012 International Fire Code, Appendix B - Fire-Flow Requirements for Buildings. Country Club Hills, IL: International Code Council, ISBN: 978-1-60983-046-5.
 
-.. [JaSr08] Jayaram, N. and Srinivasan, K. (2008). Performance-based optimal design and rehabilitation of water distribution networks using life cycle costing. Water resources research, 44(1).
+.. [JaSr08] Jayaram, N. and Srinivasan, K. (2008). Performance-based optimal design and rehabilitation of water distribution networks using life cycle costing. Water Resources Research, 44(1).
 
 .. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2012). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
@@ -62,7 +62,7 @@ References
 
 .. [SPHC16] Sievert, C., Parmer, C., Hocking, T., Chamberlain, S., Ram, K., Corvellec, M., and Despouy, P. (2016). plotly: Create interactive web graphics via Plotly’s JavaScript graphing library [Software].
 
-.. [SRU23] Shang, F., Rossman, L. A., Uber, J.G. (2023). EPANET-MSX 2.0 User Manual. U.S. Environmental Protection Agency, Cincinnati, OH. EPA/600/R-22/199.
+.. [SRU23] Shang, F., Rossman, L. A., and Uber, J.G. (2023). EPANET-MSX 2.0 User Manual. U.S. Environmental Protection Agency, Cincinnati, OH. EPA/600/R-22/199.
 
 .. [Todi00] Todini, E. (2000). Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
