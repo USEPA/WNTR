@@ -61,9 +61,14 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
         end_time = wn.options.time.duration
     if timestep is None:
         timestep = wn.options.time.report_timestep
-        
-    exp_demand = {}
+    
+    tsteps_index = np.arange(start_time, end_time+timestep, timestep)
+    
+    start_time = start_time + wn.options.time.pattern_start
+    end_time = end_time + wn.options.time.pattern_start
+    
     tsteps = np.arange(start_time, end_time+timestep, timestep)
+    exp_demand = {}
     for name, junc in wn.junctions():
         dem = []
         for ts in tsteps:
@@ -71,7 +76,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None, category=
                        multiplier=wn.options.hydraulic.demand_multiplier, category=category))
         exp_demand[name] = dem 
     
-    exp_demand = pd.DataFrame(index=tsteps, data=exp_demand)
+    exp_demand = pd.DataFrame(index=tsteps_index, data=exp_demand)
     
     return exp_demand
 

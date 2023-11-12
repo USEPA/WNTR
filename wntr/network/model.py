@@ -1563,6 +1563,186 @@ class WaterNetworkModel(AbstractModel):
 
         for name, control in self.controls():
             control._reset()
+  
+    def set_initial_conditions(self, results, ts=None, remove_controls=True, warn=False):
+        """
+        Set the initial conditions of the network based on prior simulation results.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Results from a prior simulation
+        ts : int, optional
+            The time value (in seconds) from the results to use to select initial conditions,
+            by default None (which will use the final values)
+        remove_controls : bool, optional
+            If a rule or control has a SimTimeCondition that now occurs prior to simulation start, remove
+            the control, by default True. 
+        warn : bool
+            Send a warning to the logger that the rule has been deleted, by default False.
+            When False, information is sent to the logger at the `info` level. 
+
+
+        Returns
+        -------
+        list 
+            Control names that have been, when `remove_controls is True`, 
+            or need to be, when `remove_controls is False`,
+            removed from the water network model
+
+
+        Raises
+        ------
+        NameError
+            If both `ts` and `idx` are passed in
+        IndexError
+            If `ts` is passed, but no such time exists in the results
+        ValueError
+            If the time selected is not a multiple of the pattern timestep
+
+
+        """
+        if ts is None:
+            end_time = results.node['demand'].index[-1]
+        else:
+            ts = int(ts)
+            if ts in results.node['demand'].index:
+                end_time = ts
+            else:
+                raise IndexError('There is no time "{}" in the results'.format(ts))
+                
+        # if end_time / self.options.time.pattern_timestep != end_time // self.options.time.pattern_timestep:
+        #     raise ValueError('You must give a time step that is a multiple of the pattern_timestep ({})'.format(self.options.time.pattern_timestep))
+
+        self.sim_time = 0.0
+        self._prev_sim_time = None
+
+        for name, node in self.nodes(Junction):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._leak_demand = None
+            node._leak_status = False
+            node._is_isolated = False
+
+        for name, node in self.nodes(Tank):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            node.init_level = float(results.node['head'].loc[end_time, name] - node.elevation)
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._prev_head = node.head
+            node._leak_demand = None
+            node._leak_status = False
+            node._is_isolated = False
+
+        for name, node in self.nodes(Reservoir):
+            node._head = None
+            node._demand = None
+            node._pressure = None
+            try: node.initial_quality = float(results.node['quality'].loc[end_time, name])
+            except KeyError: pass
+            node._leak_demand = None
+            node._is_isolated = False
+
+        for name, link in self.links(Pipe):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            link._user_status = link.initial_status
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            link._prev_setting = None
+
+        for name, link in self.links(Pump):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            if isinstance(link, PowerPump):
+                link.power = link._base_power
+            link._prev_setting = None
+
+        for name, link in self.links(Valve):
+            link.initial_status = results.link['status'].loc[end_time, name]
+            try: link.initial_setting = results.link['setting'].loc[end_time, name]
+            except KeyError: link.initial_setting = link.setting
+            # print(name, link.initial_status, link.initial_setting)
+            link._user_status = link.initial_status
+            link._setting = link.initial_setting
+            link._internal_status = LinkStatus.Active
+            link._is_isolated = False
+            link._flow = None
+            link._prev_setting = None
+
+        to_delete = []
+        for name, control in self.controls():
+            control._reset()
+            still_good = control._shift(end_time)
+            if not still_good:
+                to_delete.append(name)
+         
+        for name in to_delete:
+            msg = 'Rule {} {} removed from the network'.format(name, 'has been' if remove_controls else 'needs to be')
+            if warn: logger.warning(msg)
+            else: logger.info(msg)
+            if remove_controls:
+                self.remove_control(name)
+        return to_delete
+
+    def read_inpfile(self, filename):
+        """
+        Defines water network model components from an EPANET INP file
+
+        Parameters
+        ----------
+        filename : string
+            Name of the INP file.
+
+        """
+        return wntr.network.io.read_inpfile(filename, append=self)
+
+    def write_inpfile(self, filename, units=None, version=2.2, force_coordinates=False):
+        """
+        Writes the current water network model to an EPANET INP file
+
+        .. note::
+
+            By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
+            The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
+            Because the PDD analysis options will break EPANET 2.0, the ``version`` option will allow
+            the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
+            options being turned off.
+
+
+        Parameters
+        ----------
+        filename : string
+            Name of the inp file.
+
+        units : str, int or FlowUnits
+            Name of the units being written to the inp file.
+
+        version : float, {2.0, **2.2**}
+            Optionally specify forcing EPANET 2.0 compatibility.
+
+        force_coordinates : bool
+            This only applies if `self.options.graphics.map_filename` is not `None`,
+            and will force the COORDINATES section to be written even if a MAP file is
+            provided. False by default, but coordinates **are** written by default since
+            the MAP file is `None` by default.
+
+        """
+        wntr.network.io.write_inpfile(self, filename, units=units, version=version, force_coordinates=force_coordinates)
+
 
 
 class PatternRegistry(Registry):

@@ -539,7 +539,7 @@ class HydParam(enum.Enum):
         if self.name != str(self.name).lower():
             mmap[str(self.name).lower()] = self
 
-    def _to_si(self, flow_units, data, darcy_weisbach=False):
+    def _to_si(self, flow_units, data, darcy_weisbach=False, mass_units=None):
         """Convert from EPANET units groups to SI units.
 
         If converting roughness, specify if the Darcy-Weisbach equation is
@@ -555,6 +555,9 @@ class HydParam(enum.Enum):
         darcy_weisbach : bool, optional
             Set to ``True`` if converting roughness coefficients for use with Darcy-Weisbach
             formula.
+        mass_units : None
+            Ignored - for convenience when using both QualParam and HydParam
+            when handling input and output conversions.
 
         Returns
         -------

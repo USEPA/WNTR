@@ -14,6 +14,7 @@ Submodules
    wntr.sim.core
    wntr.sim.epanet
    wntr.sim.hydraulics
+   wntr.sim.realtime
    wntr.sim.results
    wntr.sim.solvers
    wntr.sim.aml

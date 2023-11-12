@@ -25,5 +25,6 @@ def start_logging():  # pragma: no cover
     """
     Start the wntr logger.
     """
+    logging.captureWarnings(True)
     if _LogWrapper.initialized is None:
         _LogWrapper.initialized = _LogWrapper()

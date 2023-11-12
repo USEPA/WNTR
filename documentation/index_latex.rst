@@ -24,6 +24,8 @@ WNTR documentation
    disaster_models
    criticality	  
    resilience
+   stochastic
+   realtime
    fragility
    morph
    graphics
