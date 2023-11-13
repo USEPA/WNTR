@@ -113,7 +113,8 @@ class TestGraphics(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
 
         wntr.graphics.plot_network(
-            wn, link_attribute="diameter", plot_vertices=True
+            wn, link_attribute="diameter", node_attribute="elevation",
+            plot_vertices=True
         )
         plt.savefig(filename, format="png")
         plt.close()
