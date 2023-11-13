@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def mass_contaminant_consumed(demand, quality, detection_limit=0):
-    """ Mass of contaminant consumed [USEPA15]_.
+    """ Mass of contaminant consumed :cite:p:`USEPA15`.
     
     Parameters
     ----------
@@ -46,7 +46,7 @@ def mass_contaminant_consumed(demand, quality, detection_limit=0):
     return MC
 
 def volume_contaminant_consumed(demand, quality, detection_limit=0):
-    """ Volume of contaminant consumed [USEPA15]_.
+    """ Volume of contaminant consumed :cite:p:`USEPA15`.
     
     Parameters
     ----------
@@ -75,7 +75,7 @@ def volume_contaminant_consumed(demand, quality, detection_limit=0):
 
 def extent_contaminant(quality, flowrate, wn, detection_limit=0):
     """ 
-    Extent of contaminant in the pipes [USEPA15]_.
+    Extent of contaminant in the pipes :cite:p:`USEPA15`.
     
     Parameters
     ----------

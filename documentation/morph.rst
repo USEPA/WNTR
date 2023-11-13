@@ -13,7 +13,7 @@ splitting or breaking pipes.
 Network skeletonization
 ----------------------------
 The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavior.
-Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
+Network skeletonization in WNTR follows the procedure outlined in :cite:p:`WCSG03`.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
 Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
@@ -241,7 +241,7 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
   the nodes could be in the upper right and lower left).
 
 .. note:: 
-   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** [Bieni19]_, which is an optional dependency of WNTR.
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** :cite:p:`Bieni19`, which is an optional dependency of WNTR.
 		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.

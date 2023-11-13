@@ -46,8 +46,8 @@ Open source GIS platforms include QGIS and GRASS GIS.
 The following section describes capabilities in WTNR that use GeoPandas GeoDataFrames.  
 
 .. note:: 
-   Functions that use GeoDataFrames require the Python package **geopandas** [JVFM21]_ 
-   and **rtree** [rtree]_. Both are optional dependencies of WNTR.
+   Functions that use GeoDataFrames require the Python package **geopandas** :cite:p:`JVFM21` 
+   and **rtree** :cite:p:`rtree`. Both are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.

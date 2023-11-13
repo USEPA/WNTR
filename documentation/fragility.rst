@@ -11,7 +11,7 @@ of exceeding a given damage state as a function of environmental change.
 Fragility curves are closely related to survival curves, which are used to define the probability of component failure due to age.  
 For example, to estimate earthquake damage, fragility curves are defined as a function of peak
 ground acceleration, peak ground velocity, or repair rate.  
-The American Lifelines Alliance report [ALA01]_
+The American Lifelines Alliance report :cite:p:`ALA01`
 includes seismic fragility curves for water network components.
 Fragility curves can also
 be defined as a function of flood stage, wind speed, and temperature for other

@@ -11,3 +11,4 @@ dependencies:
     - docutils<0.17
     - sphinx_design
     - pydata_sphinx_theme
+    - sphinxcontrib-bibtex

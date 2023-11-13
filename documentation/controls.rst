@@ -6,7 +6,7 @@ Water network controls
 ======================================
 
 One of the key features of water network models is the ability to control pipes, pumps, and valves using simple and complex conditions.  
-EPANET uses "controls" and "rules" to define conditions [Ross00]_. WNTR replicates EPANET functionality, and includes additional options, as described below. The EPANET user manual provides more information on simple controls and rule-based controls (controls and rules, respectively in WNTR) [Ross00]_.
+EPANET uses "controls" and "rules" to define conditions :cite:p:`Ross00`. WNTR replicates EPANET functionality, and includes additional options, as described below. The EPANET user manual provides more information on simple controls and rule-based controls (controls and rules, respectively in WNTR) :cite:p:`Ross00`.
 
 **Controls** are defined using an "IF condition; THEN action" format.  
 Controls use a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).

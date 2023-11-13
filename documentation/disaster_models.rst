@@ -30,14 +30,14 @@ and change demands for fire conditions, as described in the sections below.
 The :class:`~wntr.scenario.earthquake.Earthquake` class includes methods 
 to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  
-Alternatively, external earthquake models or databases (e.g., ShakeMap [WWQP06]_) can be used to compute earthquake properties and 
+Alternatively, external earthquake models or databases (e.g., ShakeMap :cite:p:`WWQP06`) can be used to compute earthquake properties and 
 those properties can be loaded into Python for analysis in WNTR.
 
 When simulating the effects of an earthquake, fragility curves are commonly used to define the probability that a component is 
 damaged with respect to 
 peak ground acceleration, peak ground velocity, 
 or repair rate.
-The American Lifelines Alliance report [ALA01]_ includes seismic fragility curves 
+The American Lifelines Alliance report :cite:p:`ALA01` includes seismic fragility curves 
 for water system components.
 See :ref:`fragility_curves` for more information.
 
@@ -131,7 +131,7 @@ Power outage
 -------------
 Power outages can be small and brief, or they can also span over several days and 
 affect whole regions as seen in the 2003 Northeast Blackout. 
-While the Northeast Blackout was an extreme case, a 2012 Lawrence Berkeley National Laboratory study [ELLT12]_ 
+While the Northeast Blackout was an extreme case, a 2012 Lawrence Berkeley National Laboratory study :cite:p:`ELLT12` 
 showed the frequency and duration of power outages are increasing domestically by a 
 rate of two percent annually. In water distribution systems, 
 a power outage can cause pump stations to shut down and result in 
@@ -163,7 +163,7 @@ Fires
 WNTR can be used to simulate damage caused to system components due to fire and/or to simulate water usage due to fighting fires. To fight fires, additional water is drawn from the system. Fire codes vary by 
 state. Minimum required fire flow and duration are generally based on the building's area and purpose.
 While small residential fires might require 1500 gallons/minute for 2 hours, large commercial
-spaces might require 8000 gallons/minute for 4 hours [ICC12]_. This additional demand can 
+spaces might require 8000 gallons/minute for 4 hours :cite:p:`ICC12`. This additional demand can 
 have a large impact on water pressure in the system.  
 
 WNTR can be used to simulate firefighting conditions in the system.  

@@ -237,15 +237,15 @@ Requirements
 Requirements for WNTR include 64-bit Python (tested on versions 3.7, 3.8, 3.9, and 3.10) along with several Python packages. 
 Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
 
-* NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
+* NumPy :cite:p:`VaCV11`: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* SciPy [VaCV11]_: used to support efficient routines for numerical integration, 
+* SciPy :cite:p:`VaCV11`: used to support efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX [HaSS08]_: used to create and analyze complex networks, 
+* NetworkX :cite:p:`HaSS08`: used to create and analyze complex networks, 
   https://networkx.github.io/
-* pandas [Mcki13]_: used to analyze and store time series data, 
+* pandas :cite:p:`Mcki13`: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* Matplotlib [Hunt07]_: used to produce graphics, 
+* Matplotlib :cite:p:`Hunt07`: used to produce graphics, 
   http://matplotlib.org/
   
 These packages are included in the Anaconda Python distribution.
@@ -257,17 +257,17 @@ Optional dependencies
 
 The following Python packages are optional:
 
-* plotly [SPHC16]_: used to produce interactive scalable graphics, 
+* plotly :cite:p:`SPHC16`: used to produce interactive scalable graphics, 
   https://plot.ly/
-* folium [Folium]_: used to produce Leaflet maps, 
+* folium :cite:p:`Folium`: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/
-* utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
+* utm :cite:p:`Bieni19`: used to translate node coordinates to utm and lat/long,
   https://pypi.org/project/utm/
-* geopandas [JVFM21]_: used to work with geospatial data,
+* geopandas :cite:p:`JVFM21`: used to work with geospatial data,
   https://geopandas.org/
-* rtree [rtree]_: used for overlay operations in geopandas,
+* rtree :cite:p:`rtree`: used for overlay operations in geopandas,
   https://rtree.readthedocs.io/
-* openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
+* openpyxl :cite:p:`GaCl18`: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.

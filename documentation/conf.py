@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx_design',
+    'sphinxcontrib.bibtex'
 ]    
 
 add_function_parentheses = True
@@ -111,6 +112,10 @@ master_doc = 'index'
 project = u'WNTR'
 copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
+
+bibtex_bibfiles = ['references.bib']
+bibtex_default_style = 'plain'
+bibtex_reference_style = 'author_year'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -229,7 +234,7 @@ html_theme_options = {
     "primary_sidebar_end": ["indices.html"],
     "show_toc_level": 2,
     # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
-    "navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html",],
+    "navbar_end": [ "theme-switcher.html", "navbar-icon-links.html",],
 }
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []

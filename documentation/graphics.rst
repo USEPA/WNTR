@@ -137,7 +137,7 @@ As with basic network graphics, a wide range of plotting options can be supplied
 However, link attributes currently cannot be displayed on the graphic.
 
 .. note:: 
-   This function requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
+   This function requires the Python package **plotly** :cite:p:`SPHC16`, which is an optional dependency of WNTR.
    
 The following example plots the network along with node population (:numref:`fig-plotly`).
 
@@ -164,10 +164,10 @@ See :ref:`modify_node_coords` for more information on converting node coordinate
 As with basic network graphics, a wide range of plotting options can be supplied. 
 
 .. note:: 
-   This function requires the Python package **folium** [Folium]_, which is an optional dependency of WNTR.
+   This function requires the Python package **folium** :cite:p:`Folium`, which is an optional dependency of WNTR.
    
 The following example using EPANET Example Network 3 (Net3) converts node coordinates to longitude/latitude and plots the network along 
-with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'. This example requires the Python package **utm** [Bieni19]_ to convert the node coordinates.
+with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'. This example requires the Python package **utm** :cite:p:`Bieni19` to convert the node coordinates.
 
 .. doctest::
 
@@ -246,7 +246,7 @@ Interactive time series graphics are useful when visualizing large datasets.
 Basic time series graphics can be converted to interactive time series graphics using the ``plotly.express`` module.
 
 .. note:: 
-   This functionality requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
+   This functionality requires the Python package **plotly** :cite:p:`SPHC16`, which is an optional dependency of WNTR.
    
 The following example uses simulation results from above, and converts the graphic to an interactive graphic  (:numref:`fig-interactive-timeseries`).
 

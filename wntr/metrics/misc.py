@@ -47,7 +47,7 @@ def query(arg1, operation, arg2):
 
 def population(wn, R=0.00000876157):
     r"""
-    Compute population per node, rounded to the nearest integer [USEPA15]_.
+    Compute population per node, rounded to the nearest integer :cite:p:`USEPA15`.
 
     .. math:: pop=\dfrac{Average\ expected\ demand}{R}
 
