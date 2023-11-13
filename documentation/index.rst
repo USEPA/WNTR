@@ -1,7 +1,7 @@
 .. figure:: figures/logo.jpg
    :scale: 10 %
    :alt: Logo
-
+   
 Water Network Tool for Resilience (WNTR)
 ========================================
 
@@ -11,11 +11,11 @@ designed to simulate and analyze resilience of water distribution networks.
 .. rubric:: Contents
 .. toctree::
    :maxdepth: 1
-   
+
    userguide
    wntr-api
    users
-
+   
 .. rubric:: Citing WNTR
 
 To cite WNTR, use one of the following references:

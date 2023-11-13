@@ -128,6 +128,13 @@ release = __version__
 # Usually you set "language" from the command line for these cases.
 language = 'en'
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", (None, "_local/python-objects.inv")),
+    "matplotlib": ("https://matplotlib.org/stable/", (None, "_local/matplotlib-objects.inv")),
+    "numpy": ("https://numpy.org/doc/stable/", (None, "_local/numpy-objects.inv")),
+    "pandas": ("https://pandas.pydata.org/docs/", (None, "_local/pandas-objects.inv")),
+}
+
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 #today = ''
@@ -355,7 +362,7 @@ title=\sphinxstrong{#1}]}
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index_latex', 'wntr.tex', u'WNTR Documentation',
+  ('userguide', 'wntr.tex', u'WNTR Documentation',
    u'', 'howto', 'True'), #u'', 'manual'),
 ]
 
