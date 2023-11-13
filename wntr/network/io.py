@@ -373,7 +373,7 @@ def from_gis(gis_data, append=None):
     
     return wn
 
-def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
+def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False, include_vertices=False):
     """
     Convert a WaterNetworkModel into a networkx MultiDiGraph
     
@@ -410,8 +410,31 @@ def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
     for name, link in wn.links():
         start_node = link.start_node_name
         end_node = link.end_node_name
-        G.add_edge(start_node, end_node, key=name)
-        nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
+        vertices = link.vertices
+        if include_vertices and vertices:
+            node_base_name = name + "_vertex_"
+            link_base_name = name + "_vertexlink_"
+            for vertex_ind in range(len(vertices)):
+                end_node = node_base_name+str(vertex_ind)
+                link_name = link_base_name+str(vertex_ind)
+                G.add_edge(start_node, end_node, link_name)
+                nx.set_edge_attributes(G, name="type", values={(start_node, end_node, link_name): link.link_type})
+                nx.set_edge_attributes(G, name="base_link", values={(start_node, end_node, link_name): link.name})
+                nx.set_node_attributes(G, name="pos", values={end_node: vertices[vertex_ind]})
+                nx.set_node_attributes(G, name="type", values={end_node: "Vertex"})
+                nx.set_node_attributes(G, name="base_link", values={end_node: link.name})
+                
+                start_node = end_node
+            end_node = link.end_node_name
+            link_name = link_base_name+str(vertex_ind+1)
+            G.add_edge(start_node, end_node, link_name)
+            nx.set_edge_attributes(G, name="type", values={(start_node, end_node, link_name): link.link_type})
+            nx.set_edge_attributes(G, name="base_link", values={(start_node, end_node, link_name): link.name})
+
+        else:
+            G.add_edge(start_node, end_node, key=name)
+            nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
+            nx.set_edge_attributes(G, name="base_link", values={(start_node, end_node, name): link.name})
 
         if link_weight is not None:
             try:  # weight links

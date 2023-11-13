@@ -143,7 +143,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None, plot_
         ax = plt.gca()
         
     # Graph
-    G = wn.to_graph()
+    if plot_vertices:
+        G = wn.to_graph(include_vertices=True)
+    else: 
+        G = wn.to_graph()
     if not directed:
         G = G.to_undirected()
 
@@ -172,9 +175,13 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None, plot_
         nodelist,nodecolor = zip(*node_attribute.items())
 
     else:
-        nodelist = None
+        nodelist = list(G.nodes())
         nodecolor = 'k'
-    
+        if plot_vertices:
+            node_types = nx.get_node_attributes(G, "type")
+            vertex_nodes = [key for key in node_types if node_types[key] == "Vertex"]
+            nodelist = list(set(nodelist) - set(vertex_nodes))
+
     add_link_colorbar = add_colorbar
     if link_attribute is not None:
         
@@ -197,10 +204,26 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None, plot_
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node_name, link.end_node_name, link_name)] = value
+            attr[(link.start_node_name, link.end_node_name, link.name)] = value
+        if plot_vertices:
+            vertex_attr = {}
+            edge_base_links = nx.get_edge_attributes(G, "base_link")
+            for vertex_edge in edge_base_links:
+                try:
+                    vertex_attr[vertex_edge] = link_attribute[edge_base_links[vertex_edge]]
+                except KeyError:
+                    pass
+            attr = vertex_attr
+            
         link_attribute = attr
-        
-        linklist,linkcolor = zip(*link_attribute.items())
+        linklist, linkcolor = zip(*link_attribute.items())
+        # if plot_vertices:
+        #     link_names = nx.get_edge_attributes(G, "name")
+            
+        #     for edge in G.edges:
+        #     node_types = nx.get_node_attributes(G, "type")
+                
+        #         u, v, _ = edge
     else:
         linklist = None
         linkcolor = 'k'
@@ -209,80 +232,80 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None, plot_
         ax.set_title(title)
     
     # create graph with new edges generated from vertices for vertex plotting
-    if plot_vertices:
-        if linklist:
-            vertex_linklist = []
-            vertex_linkcolor = []
-        else:
-            vertex_linklist = None
-            vertex_linkcolor = 'k'
-        G_vertices = nx.Graph()
+    # if plot_vertices:
+    #     if linklist:
+    #         vertex_linklist = []
+    #         vertex_linkcolor = []
+    #     else:
+    #         vertex_linklist = None
+    #         vertex_linkcolor = 'k'
+    #     G_vertices = nx.Graph()
         
-        for link_name in wn.link_name_list:
-            link = wn.get_link(link_name)
-            edge = (link.start_node_name, link.end_node_name, link_name)
-            edge_in_linklist = linklist and edge in linklist
-            num_vertices = len(link.vertices)
-            start_node = link.start_node.name
-            end_node = link.end_node.name
+    #     for link_name in wn.link_name_list:
+    #         link = wn.get_link(link_name)
+    #         edge = (link.start_node_name, link.end_node_name, link_name)
+    #         edge_in_linklist = linklist and edge in linklist
+    #         num_vertices = len(link.vertices)
+    #         start_node = link.start_node.name
+    #         end_node = link.end_node.name
             
-            if num_vertices > 0:
-                base_name = link_name+"_v"
+    #         if num_vertices > 0:
+    #             base_name = link_name+"_v"
                 
-                for vertex_ind in range(num_vertices):
-                    val = vertex_ind + 1
-                    name = base_name+str(val)
-                    # G_vertices.add_node(name, size=0)
-                    G_vertices.add_edge(start_node, name)
+    #             for vertex_ind in range(num_vertices):
+    #                 val = vertex_ind + 1
+    #                 name = base_name+str(val)
+    #                 # G_vertices.add_node(name, size=0)
+    #                 G_vertices.add_edge(start_node, name)
                     
-                    if edge_in_linklist:
-                        vertex_linklist.append((start_node, name))
-                        vertex_linkcolor.append(link_attribute[edge])
+    #                 if edge_in_linklist:
+    #                     vertex_linklist.append((start_node, name))
+    #                     vertex_linkcolor.append(link_attribute[edge])
                         
-                    if val == num_vertices:
-                        G_vertices.add_edge(name, end_node)
-                        if edge_in_linklist:
-                            vertex_linklist.append((name, end_node))
-                            vertex_linkcolor.append(link_attribute[edge])
+    #                 if val == num_vertices:
+    #                     G_vertices.add_edge(name, end_node)
+    #                     if edge_in_linklist:
+    #                         vertex_linklist.append((name, end_node))
+    #                         vertex_linkcolor.append(link_attribute[edge])
                             
-                    pos[name] = link.vertices[vertex_ind]
-                    start_node = name
-            else:
-                G_vertices.add_edge(start_node, end_node)
+    #                 pos[name] = link.vertices[vertex_ind]
+    #                 start_node = name
+    #         else:
+    #             G_vertices.add_edge(start_node, end_node)
                 
-                if edge_in_linklist:
-                    vertex_linklist.append((start_node, end_node))
-                    vertex_linkcolor.append(link_attribute[edge])
+    #             if edge_in_linklist:
+    #                 vertex_linklist.append((start_node, end_node))
+    #                 vertex_linkcolor.append(link_attribute[edge])
         
-        # Create vertex_nodelist
-        if nodelist is None:
-            vertex_nodelist = wn.node_name_list
-        else:
-            vertex_nodelist = nodelist
+    #     # Create vertex_nodelist
+    #     if nodelist is None:
+    #         vertex_nodelist = wn.node_name_list
+    #     else:
+    #         vertex_nodelist = nodelist
             
-        edge_background = nx.draw_networkx_edges(G_vertices, pos, edge_color='grey', 
-                                        width=0.5, ax=ax)
+    #     edge_background = nx.draw_networkx_edges(G_vertices, pos, edge_color='grey', 
+    #                                     width=0.5, ax=ax)
                 
-        nodes = nx.draw_networkx_nodes(G_vertices, pos, node_color=nodecolor, nodelist=vertex_nodelist, node_size=node_size,
-                                       alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], 
-                                       vmax=node_range[1], linewidths=0, ax=ax)
+    #     nodes = nx.draw_networkx_nodes(G_vertices, pos, node_color=nodecolor, nodelist=vertex_nodelist, node_size=node_size,
+    #                                    alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], 
+    #                                    vmax=node_range[1], linewidths=0, ax=ax)
         
-        edges = nx.draw_networkx_edges(G_vertices, pos, edgelist=vertex_linklist, 
-                edge_color=vertex_linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
-                edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
+    #     edges = nx.draw_networkx_edges(G_vertices, pos, edgelist=vertex_linklist, 
+    #             edge_color=vertex_linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
+    #             edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
 
+    
         
-    else:
-        edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
-                                                width=0.5, ax=ax)
-        
-        nodes = nx.draw_networkx_nodes(G, pos, 
-                nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
-                alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax=node_range[1], 
-                linewidths=0, ax=ax)
-        edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, 
-                edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
-                edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
+    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
+                                            width=0.5, ax=ax)
+    
+    nodes = nx.draw_networkx_nodes(G, pos, 
+            nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
+            alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax=node_range[1], 
+            linewidths=0, ax=ax)
+    edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, 
+            edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
+            edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
 
     if node_labels:
         labels = dict(zip(wn.node_name_list, wn.node_name_list))

@@ -1237,7 +1237,7 @@ class WaterNetworkModel(AbstractModel):
         return wntr.network.io.from_gis(gis_data, append=self)
     
     def to_graph(self, node_weight=None, link_weight=None, 
-                 modify_direction=False):
+                 modify_direction=False, include_vertices=False):
         """
         Convert a WaterNetworkModel into a networkx MultiDiGraph
         
@@ -1258,7 +1258,7 @@ class WaterNetworkModel(AbstractModel):
         networkx MultiDiGraph
         """
         return wntr.network.io.to_graph(self, node_weight, link_weight, 
-                                        modify_direction)
+                                        modify_direction, include_vertices)
                                         
                                
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
