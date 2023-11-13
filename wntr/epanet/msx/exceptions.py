@@ -46,8 +46,8 @@ MSX_ERROR_CODES = {
     523: "could not load functions from compiled chemistry file",
     524: "illegal math operation",
 }
-"""Dictionary of MSX error codes and meanings.
-See :class:`MsxErrorEnum` for the list of error codes and their meanings.
+"""A dictionary of the error codes and their meanings from the EPANET-MSX toolkit.
+Please see :doc:`/errors` for tables of these values.
 
 :meta hide-value:
 """
