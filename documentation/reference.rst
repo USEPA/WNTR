@@ -123,7 +123,6 @@ References
 
 
 .. bibliography::
-    :list: bullet
 
 
 References are available in BibTeX format in the repository at 
