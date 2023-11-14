@@ -213,11 +213,6 @@ html_theme_options = {
             "type": "fontawesome",
         },
         {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/wntr",
-            "icon": "fa-brands fa-pypi",
-        },
-        {
             "name": "Sandia National Laboratories",
             "url": "https://sandia.gov",  # required
             "icon": "_static/snl_logo.png",

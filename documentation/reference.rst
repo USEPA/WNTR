@@ -5,11 +5,7 @@
 References
 ====================
 
-.. 
-    only:: html
-
-   Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
-   citations are cross referenced using a 6 digit notation [*]_. 
+`These references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ are also available in BibTeX format.
 
 ..
      [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
@@ -107,27 +103,7 @@ References
 .. 
     [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 693p.
 
-.. 
-    [*] Cross reference labels begins with 4 letters:
-
-   * If the citation has one author, the first 4 letters of name are used
-   * If the citation has two authors, the first 2 letters of author 1 and first 2 letters of author 2 are used
-   * If the citation has three authors, the first 2 letters of author 1, first letter of author 2, and first letter of author 3 are used
-   * If the citation has four authors, the first letter of each author is used
-   * If the citation has more than four authors, the first letter of first four authors is used
-   * Exceptions are made for American Lifelines Alliance (ALA) and United States Environmental Protection Agency (USEPA)
-	
-   The next two digits are the year (century ignored).
-   If the 6 digits match another citation, a lower case letter (a, b, ...) is added.
-   Cross reference notation will be updated to a standard format when better options come available.
-
 
 .. bibliography::
     :cited:
-
-
-
-...................
-
-`These references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ are also available in BibTeX format.
 
