@@ -8,7 +8,6 @@ Water Network Tool for Resilience (WNTR)
 The Water Network Tool for Resilience (WNTR) is an EPANET compatible Python package 
 designed to simulate and analyze resilience of water distribution networks.
 
-.. rubric:: Contents
 .. toctree::
    :maxdepth: 1
 

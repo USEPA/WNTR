@@ -2,8 +2,16 @@
 
     \clearpage
 
+
 References
-====================
+==========
+
+.. raw:: latex
+
+    \begingroup
+    \def\section#1#2{}
+    \def\chapter#1#2{}
+    \begin{thebibliography}{1234}
 
 ..
      [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
@@ -103,11 +111,12 @@ References
 
 
 .. bibliography::
-    :cited:
+
+.. raw:: latex
+
+    \end{thebibliography}
+    \endgroup
 
 
-
-Data file
----------
 These `references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ 
 are also available in BibTeX format in the source code repository.
