@@ -116,3 +116,7 @@ References
 
     \end{thebibliography}
     \endgroup
+
+.. raw:: html
+
+    <div>

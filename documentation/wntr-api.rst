@@ -17,8 +17,8 @@ API documentation
         :template: autosummary/module.rst
     
         wntr.epanet
-        wntr.graphics
         wntr.gis
+        wntr.graphics
         wntr.metrics
         wntr.morph
         wntr.network
