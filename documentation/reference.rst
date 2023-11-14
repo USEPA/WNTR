@@ -109,6 +109,9 @@ References
 .. 
     [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 800.
 
+.. raw:: html
+
+    <div>
 
 .. bibliography::
 
@@ -116,7 +119,3 @@ References
 
     \end{thebibliography}
     \endgroup
-
-.. raw:: html
-
-    </div>
