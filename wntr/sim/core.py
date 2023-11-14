@@ -1,3 +1,6 @@
+"""The core abstract and base classes for WNTR simulations.
+"""
+
 import wntr.sim.hydraulics
 from wntr.sim.solvers import NewtonSolver, SolverStatus
 import wntr.sim.results

@@ -2,20 +2,6 @@
 The wntr.metrics.topographic module contains topographic metrics that are not
 available directly with NetworkX.  Functions in this module operate on a 
 NetworkX MultiDiGraph, which can be created by calling ``G = wn.to_graph()``
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    terminal_nodes
-    bridges
-    central_point_dominance
-    spectral_gap
-    algebraic_connectivity
-    critical_ratio_defrag
-    valve_segments
-    valve_segment_attributes
-
 """
 import networkx as nx
 import numpy as np

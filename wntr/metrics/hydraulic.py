@@ -1,18 +1,5 @@
 """
 The wntr.metrics.hydraulic module contains hydraulic metrics.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    expected_demand
-    average_expected_demand
-    water_service_availability
-    todini_index
-    modified_resilience_index
-    tank_capacity
-    entropy
-
 """
 import wntr.network
 import numpy as np

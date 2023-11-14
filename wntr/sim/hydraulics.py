@@ -1,3 +1,5 @@
+"""WNTR Simulator hydraulics model."""
+
 import pandas as pd
 import numpy as np
 import scipy.sparse as sparse

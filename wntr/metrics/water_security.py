@@ -1,14 +1,5 @@
 """
 The wntr.metrics.water_security module contains water security metrics.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    mass_contaminant_consumed
-    volume_contaminant_consumed
-    extent_contaminant
-
 """
 import numpy as np
 import wntr.network

@@ -1,17 +1,5 @@
 """
 The wntr.metrics.economic module contains economic metrics.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    annual_network_cost
-    annual_ghg_emissions
-    pump_power
-    pump_energy
-    pump_cost
-
-
 """
 from wntr.network import Tank, Pipe, Pump, Valve
 import numpy as np 
