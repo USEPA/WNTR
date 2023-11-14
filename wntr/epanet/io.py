@@ -1,13 +1,5 @@
 """
 The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    InpFile
-    BinFile
-
 """
 from __future__ import absolute_import
 
@@ -2458,10 +2450,10 @@ class BinFile(object):
     
     Parameters
     ----------
-    results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
+    results_type : list of ResultType, default=None
         This parameter is *only* active when using a subclass of the BinFile that implements
 	    a custom reader or writer.
-        If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
+        If None, then all results will be saved (node quality, demand, link flow, etc.).
         Otherwise, a list of result types can be passed to limit the memory used.
     network : bool, default=False
         Save a new WaterNetworkModel from the description in the output binary file. Certain
@@ -2476,9 +2468,10 @@ class BinFile(object):
         default, this is done, and the encoded-cause status values are converted simple state
         values, instead.
 
+    
     Returns
-    ----------
-    :class:`~wntr.sim.results.SimulationResults`
+    -------
+    SimulationResults
         A WNTR results object will be created and added to the instance after read.
 
     """
