@@ -2511,7 +2511,7 @@ class BinFile(object):
         self.chem_units = None
         self.inp_file = None
         self.report_file = None
-        self.results = wntr.sim.SimulationResults()
+        self.results = wntr.sim.HydraulicResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
         else:
@@ -2599,7 +2599,7 @@ class BinFile(object):
         object
             returns a WaterNetworkResults object    
         """
-        self.results = wntr.sim.SimulationResults()
+        self.results = wntr.sim.HydraulicResults()
         
         logger.debug('Read binary EPANET data from %s',filename)
         dt_str = 'u1'  #.format(self.idlen)

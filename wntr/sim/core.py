@@ -1228,7 +1228,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._register_controls_with_observers()
 
         node_res, link_res = wntr.sim.hydraulics.initialize_results_dict(self._wn)
-        results = wntr.sim.results.SimulationResults()
+        results = wntr.sim.results.HydraulicResults()
         results.error_code = None
         results.time = []
         results.network_name = self._wn.name
