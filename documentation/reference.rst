@@ -119,4 +119,4 @@ References
 
 .. raw:: html
 
-    <div>
+    </div>
