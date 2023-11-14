@@ -114,8 +114,8 @@ copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (N
 author = u'WNTR Developers'
 
 bibtex_bibfiles = ['references.bib']
-bibtex_default_style = 'plain'
-bibtex_reference_style = 'author_year'
+bibtex_default_style = 'unsrt'
+bibtex_reference_style = 'label'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
