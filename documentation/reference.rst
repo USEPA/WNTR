@@ -5,8 +5,6 @@
 References
 ====================
 
-`These references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ are also available in BibTeX format.
-
 ..
      [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
 
@@ -101,9 +99,15 @@ References
     [WWQP06] Wald, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). ShakeMap manual: Technical manual, user's guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/.
 
 .. 
-    [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 693p.
+    [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 800.
 
 
 .. bibliography::
     :cited:
 
+
+
+Data file
+---------
+These `references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ 
+are also available in BibTeX format in the source code repository.
