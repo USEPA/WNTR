@@ -116,7 +116,3 @@ References
 
     \end{thebibliography}
     \endgroup
-
-
-These `references <https://github.com/USEPA/WNTR/blob/main/documentation/references.bib>`_ 
-are also available in BibTeX format in the source code repository.
