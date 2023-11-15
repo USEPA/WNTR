@@ -251,7 +251,7 @@ class InpFile(object):
 
         Returns
         -------
-        :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel
             A water network model object
 
         """
@@ -2449,21 +2449,21 @@ class BinFile(object):
     
     Parameters
     ----------
-    results_type : list of ResultType, default=None
+    results_type : list of ResultType, optional
         This parameter is *only* active when using a subclass of the BinFile that implements
-        a custom reader or writer. If None, then all results will be saved (node quality, 
+        a custom reader or writer, by default None. If None, then all results will be saved (node quality, 
         demand, link flow, etc.). Otherwise, a list of result types can be passed to limit the memory used.
-    network : bool, default=False
-        Save a new WaterNetworkModel from the description in the output binary file. Certain
+    network : bool, optional
+        Save a new WaterNetworkModel from the description in the output binary file, by default None. Certain
         elements may be missing, such as patterns and curves, if this is done.
-    energy : bool, default=False
-        Save the pump energy results.
-    statistics : bool, default=False
+    energy : bool, optional
+        Save the pump energy results, by default False.
+    statistics : bool, optional
         Save the statistics lines (different from the stats flag in the inp file) that are
-        automatically calculated regarding hydraulic conditions.
-    convert_status : bool, default=True
-        Convert the EPANET link status (8 values) to simpler WNTR status (3 values). By 
-        default, this is done, and the encoded-cause status values are converted simple state
+        automatically calculated regarding hydraulic conditions, by default False.
+    convert_status : bool, optional
+        Convert the EPANET link status (8 values) to simpler WNTR status (3 values), by default True. 
+        When this is done, the encoded-cause status values are converted simple stat
         values, instead.
 
     
