@@ -31,7 +31,6 @@ sys.path.insert(0, os.path.abspath('../'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # 'numpydoc',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
@@ -70,7 +69,6 @@ napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 
 # viewcode_import = False
 
 autodoc_default_options = {
-    # 'members': True,
     'undoc-members': True,
     'private-members': False,
     'special-members': False,
@@ -113,7 +111,7 @@ project = u'WNTR'
 copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
 
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = ['references.bib', 'citations.bib']
 bibtex_default_style = 'plain'
 bibtex_reference_style = 'label'
 
