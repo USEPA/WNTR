@@ -27,6 +27,8 @@ API documentation
         wntr.utils
 
 .. toctree::
+    :caption: Appendices
+    :hidden:
 
     acronyms
     reference
