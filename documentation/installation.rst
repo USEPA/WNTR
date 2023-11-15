@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _installation:
+
 Installation
 ======================================
 .. include:: <isonum.txt>

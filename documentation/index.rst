@@ -2,11 +2,16 @@
    :scale: 10 %
    :alt: Logo
    
+========================================
 Water Network Tool for Resilience (WNTR)
 ========================================
 
 The Water Network Tool for Resilience (WNTR) is an EPANET compatible Python package 
 designed to simulate and analyze resilience of water distribution networks.
+The official WNTR software repository is in the U.S. EPA's GitHub repository
+(https://github.com/USEPA/WNTR); releases are also made available via PyPI and conda-forge
+(see :ref:`installation`).
+
 
 .. toctree::
    :maxdepth: 1
@@ -16,8 +21,8 @@ designed to simulate and analyze resilience of water distribution networks.
    wntr-api
    users
    
-.. rubric:: Citing WNTR
-
+Citing WNTR
+===========
 To cite WNTR, use one of the following references:
 
 * Klise, K.A., Hart, D.B., Bynum, M., Hogge, J., Haxton, T., Murray, R., Burkhardt, J. (2020). Water Network Tool for Resilience (WNTR) User Manual: Version 0.2.3. U.S. EPA Office of Research and Development, Washington, DC, EPA/600/R-20/185, 82p.
@@ -26,11 +31,9 @@ To cite WNTR, use one of the following references:
 
 * Klise, K.A., Bynum, M., Moriarty, D., Murray, R. (2017). A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study, Environmental Modelling and Software, 95, 420-431, doi: 10.1016/j.envsoft.2017.06.022
 
-Legal notices
-=============
 
 US EPA Disclaimer
------------------
+=================
 
 The U.S. Environmental Protection Agency through its Office of Research and Development funded and collaborated 
 in the research described here under an Interagency Agreement with the Department of Energy's Sandia National Laboratories.
@@ -39,18 +42,9 @@ the contents necessarily reflect the views of the Agency. Mention of trade names
 EPA approval, endorsement, or recommendation.  
 
 Sandia Funding Statement
-------------------------
+========================
 
 Sandia National Laboratories is a multimission laboratory managed and operated by National Technology and 
 Engineering Solutions of Sandia, LLC., a wholly owned subsidiary of Honeywell International, Inc., for the 
 U.S. Department of Energy's National Nuclear Security Administration under contract DE-NA-0003525.
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
 

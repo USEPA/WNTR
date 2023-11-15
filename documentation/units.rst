@@ -7,23 +7,23 @@ Units
 
 All data in WNTR is stored in the following SI (International System) units:
 
-* Acceleration = :math:`g` (1 :math:`g` = 9.81 :math:`m/s^2`)
-* Concentration = :math:`kg/m^3`
-* Demand = :math:`m^3/s`
-* Diameter = :math:`m`
-* Elevation = :math:`m`
-* Energy = :math:`J`
-* Flow rate = :math:`m^3/s`
-* Head = :math:`m` 
-* Headloss = :math:`m` 
-* Length = :math:`m`
-* Mass = :math:`kg`
-* Mass injection = :math:`kg/s`
-* Power = :math:`W`
-* Pressure head = :math:`m` (this assumes a fluid density of 1000 :math:`kg/m^3`)
-* Time = :math:`s`
-* Velocity = :math:`m/s`
-* Volume = :math:`m^3`
+* Acceleration = :math:`\rm g` (:math:`\rm g \equiv 9.80665 m/s^2`)
+* Concentration = :math:`\rm kg/m^3`
+* Demand = :math:`\rm m^3/s`
+* Diameter = :math:`\rm m`
+* Elevation = :math:`\rm m`
+* Energy = :math:`\rm J`
+* Flow rate = :math:`\rm m^3/s`
+* Head = :math:`\rm m` 
+* Headloss = :math:`\rm m` 
+* Length = :math:`\rm m`
+* Mass = :math:`\rm kg`
+* Mass injection = :math:`\rm kg/s`
+* Power = :math:`\rm W`
+* Pressure head = :math:`\rm m` (assumes a fluid density of 1000 :math:`\rm kg/m^3`)
+* Time = :math:`\rm s`
+* Velocity = :math:`\rm m/s`
+* Volume = :math:`\rm m^3`
 
 When setting up analysis in WNTR, all input values should be specified in SI units. 
 All simulation results are also stored in SI units and can be converted to other units if desired, 
@@ -90,7 +90,7 @@ For reference, :numref:`table-epanet-units` includes EPANET unit conventions :ci
    | Reaction             | - *mass* /ft/day (0-order)          | - *mass* /m/day (0-order)          |
    | coefficient (Wall)   | - ft/day (1st-order)                | - m/day (1st-order)                |
    +----------------------+-------------------------------------+------------------------------------+
-   | Roughness            | - 10 :sup:`-3` ft (Darcy-Weisbach)  | - mm (Darcy-Weisbach)              |
+   | Roughness            | - 0.001 ft (Darcy-Weisbach)         | - mm (Darcy-Weisbach)              |
    | coefficient          | - unitless (otherwise)              | - unitless (otherwise)             |
    +----------------------+-------------------------------------+------------------------------------+
    | Source mass          |   *mass* /min                       | *mass* /min                        |

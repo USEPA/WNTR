@@ -194,7 +194,7 @@ Network and time series graphics can be customized to add titles, legends, axis 
    
 Pandas includes methods to write DataFrames to the following file formats:
 
-* Excel
+* Microsoft Excel (xlsx)
 * Comma-separated values (CSV)
 * Hierarchical Data Format (HDF)
 * JavaScript Object Notation (JSON)

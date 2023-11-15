@@ -25,10 +25,3 @@ API documentation
         wntr.scenario
         wntr.sim
         wntr.utils
-
-.. toctree::
-    :caption: Appendices
-    :hidden:
-
-    acronyms
-    reference
