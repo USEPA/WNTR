@@ -2443,8 +2443,7 @@ class _EpanetRule(object):
 
 
 class BinFile(object):
-    """
-    EPANET binary output file reader.
+    """EPANET binary output file reader.
     
     This class provides read functionality for EPANET binary output files.
     
@@ -2452,9 +2451,8 @@ class BinFile(object):
     ----------
     results_type : list of ResultType, default=None
         This parameter is *only* active when using a subclass of the BinFile that implements
-	    a custom reader or writer.
-        If None, then all results will be saved (node quality, demand, link flow, etc.).
-        Otherwise, a list of result types can be passed to limit the memory used.
+        a custom reader or writer. If None, then all results will be saved (node quality, 
+        demand, link flow, etc.). Otherwise, a list of result types can be passed to limit the memory used.
     network : bool, default=False
         Save a new WaterNetworkModel from the description in the output binary file. Certain
         elements may be missing, such as patterns and curves, if this is done.

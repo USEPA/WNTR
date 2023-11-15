@@ -2,9 +2,11 @@
 
     \clearpage
 
+.. only:: html
 
-References
-==========
+    References
+    ==========
+
 
 .. raw:: latex
 
@@ -114,6 +116,7 @@ References
     <div>
 
 .. bibliography::
+
 
 .. raw:: latex
 
