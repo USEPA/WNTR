@@ -224,7 +224,7 @@ html_theme_options = {
         },
     ],
     "use_edit_page_button": False,
-    "primary_sidebar_end": ["wntr-indices"],
+    "primary_sidebar_end": ["indices.html"],
     "show_toc_level": 2,
     # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
     "navbar_end": [ "theme-switcher.html", "navbar-icon-links.html",],

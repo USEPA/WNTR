@@ -79,6 +79,8 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
     license
     whatsnew
     developers
+    acronyms
+    reference
 
 
 Citing WNTR

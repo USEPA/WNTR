@@ -26,3 +26,7 @@ API documentation
         wntr.sim
         wntr.utils
 
+.. toctree::
+
+    acronyms
+    reference
