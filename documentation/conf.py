@@ -224,7 +224,7 @@ html_theme_options = {
         },
     ],
     "use_edit_page_button": False,
-    "primary_sidebar_end": ["indices.html"],
+    "primary_sidebar_end": ["wntr-indices"],
     "show_toc_level": 2,
     # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
     "navbar_end": [ "theme-switcher.html", "navbar-icon-links.html",],
@@ -360,7 +360,7 @@ title=\sphinxstrong{#1}]}
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('userguide', 'wntr.tex', u'WNTR Documentation',
+  ('index_latex', 'wntr.tex', u'WNTR Documentation',
    u'', 'howto', 'True'), #u'', 'manual'),
 ]
 
