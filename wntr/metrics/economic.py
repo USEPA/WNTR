@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, 
                         pump_cost=None):
     """ 
-    Compute annual network cost :cite:p:`SOKZ12`.
+    Compute annual network cost :cite:p:`sokz12`.
     
     Use the closest value from the lookup tables to compute annual cost for each 
     component in the network.
@@ -25,7 +25,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
     
     tank_cost : pandas Series, optional
         Annual tank cost indexed by volume 
-        (default values below, from :cite:p:`SOKZ12`).
+        (default values below, from :cite:p:`sokz12`).
     
         =============  ================================
         Volume (m3)    Annual Cost ($/yr) 
@@ -40,7 +40,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
     
     pipe_cost : pandas Series, optional
         Annual pipe cost per pipe length indexed by diameter
-        (default values below, from :cite:p:`SOKZ12`).
+        (default values below, from :cite:p:`sokz12`).
     
         =============  =============  ================================
         Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
@@ -61,7 +61,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         
     prv_cost : pandas Series, optional
         Annual PRV valve cost indexed by diameter 
-        (default values below, from :cite:p:`SOKZ12`).
+        (default values below, from :cite:p:`sokz12`).
         
         =============  =============  ================================
         Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
@@ -82,7 +82,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
     
     pump_cost : pd.Series, optional
         Annual pump cost indexed by maximum power input to pump
-        (default values below, from :cite:p:`SOKZ12`).
+        (default values below, from :cite:p:`sokz12`).
         Maximum Power for a HeadPump is computed from the pump curve
         as follows:
         
@@ -193,7 +193,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
 
 def annual_ghg_emissions(wn, pipe_ghg=None):
     """ 
-    Compute annual greenhouse gas emissions :cite:p:`SOKZ12`.
+    Compute annual greenhouse gas emissions :cite:p:`sokz12`.
     
     Use the closest value in the lookup table to compute annual GHG emissions 
     for each pipe in the network.
@@ -206,7 +206,7 @@ def annual_ghg_emissions(wn, pipe_ghg=None):
     
     pipe_ghg : pandas Series, optional
         Annual GHG emissions indexed by pipe diameter
-        (default values below, from :cite:p:`SOKZ12`).
+        (default values below, from :cite:p:`sokz12`).
         
         =============  ================================
         Diameter (mm)  Annualized EE (kg-CO2-e/m/yr)

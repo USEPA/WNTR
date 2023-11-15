@@ -9,8 +9,8 @@ Resilience of water distribution systems refers to the
 design, maintenance, and operations of that system.  
 All these aspects must work together to limit the effects of disasters and 
 enable rapid return to normal delivery of safe water to customers.
-Numerous resilience metrics have been suggested :cite:p:`USEPA14`.  
-These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic :cite:p:`USEPA14`.
+Numerous resilience metrics have been suggested :cite:p:`usepa14`.  
+These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic :cite:p:`usepa14`.
 When quantifying resilience, 
 it is important to understand which metric best defines resilience for 
 a particular scenario.  WNTR includes many metrics to help 
@@ -30,7 +30,7 @@ The following sections outline metrics that can be computed using WNTR, includin
 
 While some metrics define resilience as a single system-wide quantity, other metrics define 
 quantities that are a function of time, space, or both. 
-For this reason, state transition plots :cite:p:`BaRR13`  and network graphics
+For this reason, state transition plots :cite:p:`barr13`  and network graphics
 are useful ways to visualize resilience and compare metrics, as shown in :numref:`fig-metrics`.
 In the state transition plot, the x-axis represents time (before, during, and after a disruptive incident).  
 The y-axis represents performance.  This can be any time varying resilience metric that responds to the disruptive state.  
@@ -279,19 +279,19 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    
    Demand                                 To determine the number of node-time pairs above or below a specified demand threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['demand']. 
-                                          This method can be used to compute the fraction of delivered demand, from :cite:p:`OsKS02`.
+                                          This method can be used to compute the fraction of delivered demand, from :cite:p:`osks02`.
 										  
    Water service availability             Water service availability is the ratio of delivered demand to the expected demand.  
                                           This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.water_service_availability` method.
-                                          This method can be used to compute the fraction of delivered volume, from :cite:p:`OsKS02`.
+                                          This method can be used to compute the fraction of delivered volume, from :cite:p:`osks02`.
 										  
-   Todini index                           The Todini index :cite:p:`Todi00` is related to the capability of a system to overcome 
+   Todini index                           The Todini index :cite:p:`todi00` is related to the capability of a system to overcome 
                                           failures while still meeting demands and pressures at nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
                                           power at each node. 
                                           The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini_index` method.
 
-   Modified resilience index              The modified resilience index :cite:p:`JaSr08` is similar to the Todini index, but is only computed at junctions.
+   Modified resilience index              The modified resilience index :cite:p:`jasr08` is similar to the Todini index, but is only computed at junctions.
                                           The metric defines resilience at a specific time as a measure of surplus 
                                           power at each junction or as a system average.
                                           The modified resilience index can be computed using the :class:`~wntr.metrics.hydraulic.modified_resilience_index` method.
@@ -301,7 +301,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           A value of 1 indicates that tank storage is maximized, while a value of 0 means there is no water stored in the tank. 
                                           Tank capacity can be computed using the :class:`~wntr.metrics.hydraulic.tank_capacity` method.
    
-   Entropy                                Entropy :cite:p:`AwGB90` is a measure of uncertainty in a random variable.  
+   Entropy                                Entropy :cite:p:`awgb90` is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
                                           flow in the pipes and entropy can be used to measure alternate flow paths
                                           when a network component fails.  A network that carries maximum entropy 
@@ -310,11 +310,11 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           The :class:`~wntr.network.model.WaterNetworkModel.to_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
-   Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier :cite:p:`USEPA15`.
+   Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier :cite:p:`usepa15`.
                                           The metric can be computed using the :class:`~wntr.metrics.hydraulic.expected_demand` method.  This method does not require running 
                                           a hydraulic simulation.
 										  
-   Average expected demand                Average expected demand per day is computed at each node based on node demand, demand pattern, and demand multiplier :cite:p:`USEPA15`.
+   Average expected demand                Average expected demand per day is computed at each node based on node demand, demand pattern, and demand multiplier :cite:p:`usepa15`.
                                           The metric can be computed using the :class:`~wntr.metrics.hydraulic.average_expected_demand` method.  This method does not require running 
                                           a hydraulic simulation.
     
@@ -385,7 +385,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
-                                          This method can be used to compute the fraction of delivered quality, from :cite:p:`OsKS02`.
+                                          This method can be used to compute the fraction of delivered quality, from :cite:p:`osks02`.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
@@ -443,13 +443,13 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Mass consumed                          Mass consumed is the mass of a contaminant that exits the network via node demand at each node-time pair :cite:p:`USEPA15`.  
+   Mass consumed                          Mass consumed is the mass of a contaminant that exits the network via node demand at each node-time pair :cite:p:`usepa15`.  
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
-   Volume consumed                        Volume consumed is the volume of a contaminant that exits the network via node demand at each node-time pair :cite:p:`USEPA15`.   
+   Volume consumed                        Volume consumed is the volume of a contaminant that exits the network via node demand at each node-time pair :cite:p:`usepa15`.   
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
-   Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair :cite:p:`USEPA15`.  
+   Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair :cite:p:`usepa15`.  
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.extent_contaminant` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
@@ -510,12 +510,12 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, valves, and pumps based on the equations from the Battle of 
-                                          Water Networks II :cite:p:`SOKZ12`.  
+                                          Water Networks II :cite:p:`sokz12`.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 
                                           using the :class:`~wntr.metrics.economic.annual_network_cost` method.
 
-   Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II :cite:p:`SOKZ12`.
+   Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II :cite:p:`sokz12`.
                                           Default values can be included in the calculation.
                                           Greenhouse gas emissions can be computed 
                                           using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.

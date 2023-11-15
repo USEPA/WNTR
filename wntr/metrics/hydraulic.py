@@ -168,7 +168,7 @@ def water_service_availability(expected_demand, demand):
 
 def todini_index(head, pressure, demand, flowrate, wn, Pstar):
     """
-    Compute Todini index, equations from :cite:p:`Todi00`.
+    Compute Todini index, equations from :cite:p:`todi00`.
 
     The Todini index is related to the capability of a system to overcome
     failures while still meeting demands and pressures at the nodes. The
@@ -228,7 +228,7 @@ def todini_index(head, pressure, demand, flowrate, wn, Pstar):
 
 def modified_resilience_index(pressure, elevation, Pstar, demand=None, per_junction=True):
     """
-    Compute the modified resilience index, equations from :cite:p:`JaSr08`.
+    Compute the modified resilience index, equations from :cite:p:`jasr08`.
 
     The modified resilience index is the total surplus power available at 
     demand junctions as a percentage of the total minimum required power at 
@@ -318,7 +318,7 @@ def tank_capacity(pressure, wn):
     
 def entropy(G, sources=None, sinks=None):
     """
-    Compute entropy, equations from :cite:p:`AwGB90`.
+    Compute entropy, equations from :cite:p:`awgb90`.
 
     Entropy is a measure of uncertainty in a random variable.
     In a water distribution network model, the random variable is

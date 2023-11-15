@@ -205,4 +205,4 @@ For example, DataFrames can be saved to Excel files using:
    >>> pressure.to_excel('pressure.xlsx')
 
 .. note:: 
-   The Pandas method ``to_excel`` requires the Python package **openpyxl** :cite:p:`GaCl18`, which is an optional dependency of WNTR.
+   The Pandas method ``to_excel`` requires the Python package **openpyxl** :cite:p:`gacl18`, which is an optional dependency of WNTR.
