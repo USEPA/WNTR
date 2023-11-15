@@ -434,7 +434,7 @@ The following examples compute water quality metrics, including:
 	
 Water security metrics
 -----------------------
-Water security metrics quantify potential consequences of contamination scenarios.  These metrics are documented in :cite:p:`USEPA15`.
+Water security metrics quantify potential consequences of contamination scenarios.  These metrics are documented in :cite:p:`usepa15`.
 Water security metrics included in WNTR are listed in  :numref:`table-water-security-metrics`.  
 
 .. _table-water-security-metrics:
