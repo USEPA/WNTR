@@ -1,12 +1,6 @@
 """
 The wntr.network.layer module includes methods to generate network layers
 (information that is not stored in the water network model or the graph).
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    generate_valve_layer
 """
 import numpy as np
 import pandas as pd

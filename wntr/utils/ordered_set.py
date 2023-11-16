@@ -1,3 +1,5 @@
+"""An ordered set implementation (like an ordered dict)."""
+
 import sys
 from collections.abc import MutableSet
 from collections import OrderedDict

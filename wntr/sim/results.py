@@ -1,3 +1,5 @@
+"""Simulation results."""
+
 import datetime
 import enum
 

@@ -1,27 +1,5 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    FlowUnits
-	MassUnits
-	QualParam
-	HydParam
-	to_si
-	from_si
-	StatisticsType
-	QualType
-	SourceType
-	PressureUnits
-	FormulaType
-	ControlType
-	LinkTankStatus
-	MixType
-	ResultType
-	EN
-
 """
 import enum
 import logging
@@ -331,11 +309,11 @@ class QualParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The EPANET flow units to use in the conversion
         data : array-like
             The data to be converted (scalar, array or dictionary)
-        mass_units : ~MassUnits
+        mass_units : MassUnits
             The EPANET mass units to use in the conversion (mg or ug)
         reaction_order : int
             The reaction order for use converting reaction coefficients
@@ -404,11 +382,11 @@ class QualParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The EPANET flow units to use in the conversion
         data : array-like
             The SI unit data to be converted (scalar, array or dictionary)
-        mass_units : ~MassUnits
+        mass_units : MassUnits
             The EPANET mass units to use in the conversion (mg or ug)
         reaction_order : int
             The reaction order for use converting reaction coefficients
@@ -481,21 +459,21 @@ class HydParam(enum.Enum):
     .. rubric:: Enum Members
 
     ==========================  ===================================================================
-    :attr:`~Elevation`          Nodal elevation
-    :attr:`~Demand`             Nodal demand
-    :attr:`~HydraulicHead`      Nodal head
-    :attr:`~Pressure`           Nodal pressure
-    :attr:`~EmitterCoeff`       Emitter coefficient
-    :attr:`~TankDiameter`       Tank diameter
-    :attr:`~Volume`             Tank volume
-    :attr:`~Length`             Link length
-    :attr:`~PipeDiameter`       Pipe diameter
-    :attr:`~Flow`               Link flow
-    :attr:`~Velocity`           Link velocity
-    :attr:`~HeadLoss`           Link headloss (from start node to end node)
-    :attr:`~RoughnessCoeff`     Link roughness (requires `darcy_weisbach` setting for conversion)
-    :attr:`~Energy`             Pump energy
-    :attr:`~Power`              Pump power
+    :attr:`Elevation`          Nodal elevation
+    :attr:`Demand`             Nodal demand
+    :attr:`HydraulicHead`      Nodal head
+    :attr:`Pressure`           Nodal pressure
+    :attr:`EmitterCoeff`       Emitter coefficient
+    :attr:`TankDiameter`       Tank diameter
+    :attr:`Volume`             Tank volume
+    :attr:`Length`             Link length
+    :attr:`PipeDiameter`       Pipe diameter
+    :attr:`Flow`               Link flow
+    :attr:`Velocity`           Link velocity
+    :attr:`HeadLoss`           Link headloss (from start node to end node)
+    :attr:`RoughnessCoeff`     Link roughness (requires `darcy_weisbach` setting for conversion)
+    :attr:`Energy`             Pump energy
+    :attr:`Power`              Pump power
     ==========================  ===================================================================
 
 
@@ -548,7 +526,7 @@ class HydParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The flow units to use in the conversion
         data : array-like
             The EPANET-units data to be converted (scalar, array or dictionary)
@@ -649,7 +627,7 @@ class HydParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : :class:`~FlowUnits`
+        flow_units : FlowUnits
             The flow units to use in the conversion
         data : array-like
             The SI unit data to be converted (scalar, array or dictionary)

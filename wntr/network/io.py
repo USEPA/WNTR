@@ -4,25 +4,6 @@
 The wntr.network.io module includes functions that convert the water network
 model to other data formats, create a water network model from file, and write 
 the water network model to a file.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    to_dict
-    from_dict
-    to_gis
-    from_gis
-    to_graph
-    write_json
-    read_json
-    write_inpfile
-    read_inpfile
-    write_geojson
-    read_geojson
-    write_shapefile
-    read_shapefile
-
 """
 import logging
 import json
