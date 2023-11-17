@@ -2,6 +2,7 @@
 
     \clearpage
 
+.. _epanet-errors:
 
 Errors and debugging
 ====================

@@ -82,7 +82,7 @@ EN_ERROR_CODES = {
     309: "cannot save results to report file %s",
 }
 """A dictionary of the error codes and their meanings from the EPANET toolkit.
-Please see :doc:`/errors` for a tables of these values.
+Please see :doc:`/errors` for descriptions of these values.
 
 :meta hide-value:
 """
