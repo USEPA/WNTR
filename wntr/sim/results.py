@@ -88,7 +88,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = abs(self_dict[key])
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = abs(self_dict[key])
         return new
 
     def __neg__(self):
@@ -98,7 +99,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = -self_dict[key]
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = -self_dict[key]
         return new
 
     def min(self):
@@ -106,11 +108,11 @@ class SimulationResults:
         The built-in ``min`` function will not work."""
         new = SimulationResults()
         new.network_name = "min({}[{}])".format(self.network_name, self.timestamp)
-
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = self_dict[key].min(axis=0)
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = self_dict[key].min(axis=0)
         return new
 
     def max(self):
@@ -122,7 +124,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = self_dict[key].max(axis=0)
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = self_dict[key].max(axis=0)
         return new
 
     def sum(self):
@@ -133,7 +136,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = self_dict[key].sum(axis=0)
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = self_dict[key].sum(axis=0)
         return new
 
     def __pos__(self):
@@ -142,7 +146,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = +self_dict[key]
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = +self_dict[key]
         return new
 
     def __truediv__(self, other):
@@ -239,25 +244,30 @@ class SimulationResults:
         if not isinstance(other, SimulationResults):
             raise ValueError(f"operating on a results object requires both be SimulationResults")
         #NOTE: Below two lines assume that results object has the node attribute and "head" key
-        start_time = other.node["head"].index.values[0]
-        keep = self.node["head"].index.values < start_time
+
         for attr in self._data_attributes:
             self_dict = getattr(self, attr)
             other_dict = getattr(other, attr)
+            
+            # query for any dataframe to get shape of df in each results object
+            self_attr_dataframe = list(self_dict.values())[0]
+            other_attr_dataframe = list(other_dict.values())[0]
+
+
             all_keys = list(self_dict.keys()) + list(other_dict.keys())
             for key in all_keys:
+                self_df = self_dict[key]
+                other_df = other_dict[key]
+                overlap = self_df.index.intersection(other_df.index)
                 if key in self_dict.keys() and key in other_dict.keys():
-                    t2 = pd.concat([self_dict[key].loc[keep], other_dict[key]])
-                    self_dict[key] = t2
+                    t2 = pd.concat([self_df[~self_df.index.isin(overlap)], other_df])
+                    self_df = t2
                 elif key not in other_dict.keys():
-                    # grab first key to get the shape of the DF
-                    first_key  = list(other_dict.keys())[0]
-                    temp = other_dict[first_key] * np.nan
-                    t2 = pd.concat([self_dict[key].loc[keep], temp])
-                    self_dict[key] = t2
+                    temp = other_attr_dataframe * np.nan
+                    t2 = pd.concat([self_df[~self_df.index.isin(overlap)], temp])
+                    self_df = t2
                 elif key not in self_dict.keys():
-                    first_key = list(self_dict.keys())[0]
-                    temp = self_dict[first_key] * np.nan
-                    t2 = pd.concat([temp.loc[keep], other_dict[key]])
-                    self_dict[key] = t2
+                    temp = self_attr_dataframe * np.nan
+                    t2 = pd.concat([temp[~temp.index.isin(overlap)], other_df])
+                    self_df = t2
         return self
