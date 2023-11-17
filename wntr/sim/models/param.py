@@ -1,3 +1,5 @@
+"""Model parameters for the WNTRSimulator."""
+
 import logging
 from wntr.sim import aml
 from wntr.utils.polynomial_interpolation import cubic_spline

@@ -1,3 +1,5 @@
+"""Contant values used by WNTRSimulator."""
+
 import logging
 from wntr.utils.polynomial_interpolation import cubic_spline
 

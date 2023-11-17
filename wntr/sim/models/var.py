@@ -1,3 +1,5 @@
+"""Functions to add variables to the WNTRSimulator model."""
+
 import logging
 from wntr.sim import aml
 
