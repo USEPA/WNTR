@@ -47,8 +47,7 @@ class SimulationResults:
         self.timestamp = str(datetime.datetime.now())
         self.network_name = None
         for attr in self._data_attributes:
-            self.__setattr__(attr, dict())
-
+            setattr(self, attr, dict())
 
     def __add__(self, other):
         if not isinstance(other, SimulationResults):
@@ -59,11 +58,11 @@ class SimulationResults:
         )
         
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                if key in other.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
-                    other_dict = other.__getattr__(attr)
-                    new.__getattr__(attr)[key] = self_dict[key] + other_dict[key]
+            for key in getattr(self, attr).keys():
+                if key in getattr(other, attr).keys():
+                    self_dict = getattr(self, attr)
+                    other_dict = getattr(other, attr)
+                    getattr(new, attr)[key] = self_dict[key] + other_dict[key]
         return new
     
     
@@ -75,11 +74,11 @@ class SimulationResults:
             self.network_name, self.timestamp, other.network_name, other.timestamp
         )
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                if key in other.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
-                    other_dict = other.__getattr__(attr)
-                    new.__getattr__(attr)[key] = self_dict[key] - other_dict[key]
+            for key in getattr(self, attr).keys():
+                if key in getattr(other, attr).keys():
+                    self_dict = getattr(self, attr)
+                    other_dict = getattr(other, attr)
+                    getattr(new, attr)[key] = self_dict[key] - other_dict[key]
         return new
 
     def __abs__(self):
@@ -87,8 +86,8 @@ class SimulationResults:
         new.network_name = "|{}[{}]|".format(self.network_name, self.timestamp)
             
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = abs(self_dict[key])
         return new
 
@@ -97,8 +96,8 @@ class SimulationResults:
         new.network_name = "-{}[{}]".format(self.network_name, self.timestamp)
             
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = -self_dict[key]
         return new
 
@@ -109,8 +108,8 @@ class SimulationResults:
         new.network_name = "min({}[{}])".format(self.network_name, self.timestamp)
 
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = self_dict[key].min(axis=0)
         return new
 
@@ -121,8 +120,8 @@ class SimulationResults:
         new.network_name = "max({}[{}])".format(self.network_name, self.timestamp)
         
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = self_dict[key].max(axis=0)
         return new
 
@@ -132,8 +131,8 @@ class SimulationResults:
         new.network_name = "sum({}[{}])".format(self.network_name, self.timestamp)
         
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = self_dict[key].sum(axis=0)
         return new
 
@@ -141,8 +140,8 @@ class SimulationResults:
         new = SimulationResults()
         new.network_name = "+{}[{}]".format(self.network_name, self.timestamp)
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = +self_dict[key]
         return new
 
@@ -154,11 +153,11 @@ class SimulationResults:
                 self.network_name, self.timestamp, other.network_name, other.timestamp
             )
             for attr in new._data_attributes:
-                for key in self.__getattr__(attr).keys():
-                    if key in other.__getattr__(attr).keys():
-                        self_dict = self.__getattr__(attr)
-                        other_dict = other.__getattr__(attr)
-                        new.__getattr__(attr)[key] = self_dict[key] / other_dict[key]
+                for key in getattr(self, attr).keys():
+                    if key in getattr(other, attr).keys():
+                        self_dict = getattr(self, attr)
+                        other_dict = getattr(other, attr)
+                        getattr(new, attr)[key] = self_dict[key] / other_dict[key]
             return new
                         
         
@@ -170,9 +169,9 @@ class SimulationResults:
                 new.node[key] = self.node[key] / other
                 
             for attr in new._data_attributes:
-                for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
-                    new.__getattr__(attr)[key] = self_dict[key] / other
+                for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
+                    getattr(new, attr)[key] = self_dict[key] / other
             return new
         
         else:
@@ -182,8 +181,8 @@ class SimulationResults:
         new = SimulationResults()
         new.network_name = "{}[{}] ** {}".format(self.network_name, self.timestamp, exp)
         for attr in new._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key] = pow(self_dict[key], exp, mod)
         return new
 
@@ -203,8 +202,8 @@ class SimulationResults:
         ts = int(ts)
             
         for attr in self._data_attributes:
-            for key in self.__getattr__(attr).keys():
-                    self_dict = self.__getattr__(attr)
+            for key in getattr(self, attr).keys():
+                    self_dict = getattr(self, attr)
                     self_dict[key].index += ts
         return self
 
@@ -243,9 +242,10 @@ class SimulationResults:
         start_time = other.node["head"].index.values[0]
         keep = self.node["head"].index.values < start_time
         for attr in self._data_attributes:
-            self_dict = self.__getattr__(attr)
-            other_dict = other.__getattr__(attr)
-            for key in self_dict.keys()+other_dict.keys():
+            self_dict = getattr(self, attr)
+            other_dict = getattr(other, attr)
+            all_keys = list(self_dict.keys()) + list(other_dict.keys())
+            for key in all_keys:
                 if key in self_dict.keys() and key in other_dict.keys():
                     t2 = pd.concat([self_dict[key].loc[keep], other_dict[key]])
                     self_dict[key] = t2
