@@ -1,3 +1,5 @@
+"""Fuctions to set up a default handler for WNTR that will output to the console and to wntr.log."""
+
 import logging
 logging.getLogger('wntr').addHandler(logging.NullHandler())
 

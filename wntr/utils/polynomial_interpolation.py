@@ -1,3 +1,5 @@
+"""Functions for a polynomial interpolation using cubic spline."""
+
 def cubic_spline(x1, x2, f1, f2, df1, df2):
     """
     Method to compute the coefficients of a smoothing polynomial.

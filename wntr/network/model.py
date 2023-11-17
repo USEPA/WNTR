@@ -1,18 +1,6 @@
 """
 The wntr.network.model module includes methods to build a water network
 model.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    WaterNetworkModel
-    PatternRegistry
-    CurveRegistry
-    SourceRegistry
-    NodeRegistry
-    LinkRegistry
-
 """
 import logging
 from collections import OrderedDict

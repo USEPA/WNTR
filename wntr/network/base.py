@@ -1,22 +1,6 @@
 """
 The wntr.network.base module includes base classes for network elements and 
 the network model.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    Node
-    Link
-    Registry
-    NodeType
-    LinkType
-    LinkStatus
-    AbstractModel
-    Subject
-    Observer
-
-
 """
 import logging
 import six
