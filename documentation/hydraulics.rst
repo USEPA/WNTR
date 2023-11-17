@@ -12,7 +12,7 @@ See :ref:`software_framework` for more information on features and limitations o
 
 EpanetSimulator
 -----------------
-The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [RWTS20]_.  
+The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit :cite:p:`ross00` or EPANET 2.2.0 Programmer's Toolkit :cite:p:`rwts20`.  
 EPANET 2.2.0 is used by default and runs demand-driven and pressure dependent hydraulic analysis.  
 EPANET 2.00.12 runs demand-driven hydraulic analysis only.
 Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
@@ -111,7 +111,7 @@ More information on water network options can be found in :ref:`options`.
 
 Mass balance at nodes
 -------------------------
-Both simulators use the mass balance equations from EPANET [Ross00]_:
+Both simulators use the mass balance equations from EPANET :cite:p:`ross00`:
 
 .. math::
 
@@ -127,7 +127,7 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 
 Headloss in pipes
 -------------------------
-Both simulators use conservation of energy formulas from EPANET [Ross00]_. 
+Both simulators use conservation of energy formulas from EPANET :cite:p:`ross00`. 
 While the EpanetSimulator can use the Hazen-Williams and Chezy-Manning pipe head loss formulas, 
 the WNTRSimulator uses only the Hazen-Williams head loss formula, shown below.
 
@@ -225,7 +225,7 @@ The mass balance and headloss equations described above are solved by
 simultaneously determining demand along with the network pressures and flow rates.  
 
 Both simulators can run hydraulics using a pressure dependent demand simulation
-according to the following pressure-demand relationship [WaSM88]_:
+according to the following pressure-demand relationship :cite:p:`wasm88`:
 
 .. math::
 
@@ -308,7 +308,7 @@ Users interested in using the EpanetSimulator to model leaks can still do so by 
 emitter coefficients. 
 
 When using the WNTRSimulator, leaks are modeled with a general form of the equation proposed by Crowl and Louvar
-[CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
+:cite:p:`crlo02` where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
 
@@ -328,9 +328,9 @@ where
 :math:`g` is the acceleration of gravity (m/s²), and 
 :math:`\rho` is the density of the fluid (kg/m³).
 
-The default discharge coefficient is 0.75 (assuming turbulent flow) [Lamb01]_, but 
+The default discharge coefficient is 0.75 (assuming turbulent flow) :cite:p:`lamb01`, but 
 the user can specify other values if needed.  
-The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) [Lamb01]_ and currently cannot be changed by the user.
+The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) :cite:p:`lamb01` and currently cannot be changed by the user.
 
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  
