@@ -40,16 +40,51 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-]
+    'sphinx_design',
+    'sphinxcontrib.bibtex'
+]    
 
-autosummary_generate = True
-napoleon_use_rtype = False
-viewcode_import = True
-numpydoc_show_class_members = True
-numpydoc_show_inherited_class_members = False
-numpydoc_class_members_toctree = False
-autodoc_member_order = 'bysource'
-autoclass_content = 'both'
+add_function_parentheses = True
+add_module_names = False
+python_display_short_literal_types = True
+
+toc_object_entries = True
+toc_object_entries_show_parents = 'hide'
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = True
+napoleon_preprocess_types = False
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = False
+napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members']
+
+# viewcode_import = False
+
+autodoc_default_options = {
+    'undoc-members': True,
+    'private-members': False,
+    'special-members': False,
+    'inherited-members': True,
+    'show-inheritance': True,
+    'member-order': 'groupwise',
+}
+
+autodoc_class_signature = 'separated'
+autodoc_typehints = 'description'
+autodoc_typehints_format = 'short'
+autodoc_typehints_description_target = 'documented'
+autodoc_type_aliases = {'DataFrame': 'pandas DataFrame',}
+
+autoclass_content = 'class'
+
 numfig=True
 numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
 
@@ -57,7 +92,8 @@ numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Lis
 templates_path = ['_templates']
 
 import glob
-autosummary_generate = glob.glob("apidoc/*.rst")
+autosummary_generate = ["wntr-api.rst",] + glob.glob("apidoc/*.rst")
+autosummary_generate_overwrite = True
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -75,6 +111,10 @@ project = u'WNTR'
 copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
 
+bibtex_bibfiles = ['references.bib', 'citations.bib']
+bibtex_default_style = 'plain'
+bibtex_reference_style = 'label'
+
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -91,6 +131,13 @@ release = __version__
 # Usually you set "language" from the command line for these cases.
 language = 'en'
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", (None, "_local/python-objects.inv")),
+    "matplotlib": ("https://matplotlib.org/stable/", (None, "_local/matplotlib-objects.inv")),
+    "numpy": ("https://numpy.org/doc/stable/", (None, "_local/numpy-objects.inv")),
+    "pandas": ("https://pandas.pydata.org/docs/", (None, "_local/pandas-objects.inv")),
+}
+
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 #today = ''
@@ -104,11 +151,9 @@ exclude_patterns = ['_build']
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 #default_role = None
-napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 'Enum Members', 'Model Description']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
-#autodoc_type_aliases = {'DataFrame': 'pandas DataFrame', 'MsxVariable': ':class:`~wntr.msx.model.MsxVariable`', 'NoteType': ':class:`~wntr.epanet.util.NoteType`'}
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -129,7 +174,7 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-html_extra_path = ['extra']
+
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -137,26 +182,53 @@ html_extra_path = ['extra']
 # a list of builtin themes.
 #html_theme = 'sphinx_rtd_theme'
 
-def setup(app):
-  app.add_css_file( "wntr.css")
   
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    html_style = 'wntr.css'
+    html_theme = 'pydata_sphinx_theme'
+    
 else:
+    def setup(app):
+        app.add_css_file( "wntr.css")
     html_theme = 'default'
 #    html_context = {
 #        'css_files': ['_static/wntr.css'],
 #    }  
-    
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
-
+html_theme_options = {
+    "icon_links": [
+        {
+            # Label for this link
+            "name": "GitHub",
+            # URL where the link will redirect
+            "url": "https://github.com/USEPA/WNTR",  # required
+            # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
+            "icon": "fa-brands fa-github",
+            # The type of image to be used (see below for details)
+            "type": "fontawesome",
+        },
+        {
+            "name": "Sandia National Laboratories",
+            "url": "https://sandia.gov",  # required
+            "icon": "_static/snl_logo.png",
+            "type": "local",
+        },
+        {
+            "name": "U.S. Environmental Protection Agency",
+            "url": "https://epa.gov",  # required
+            "icon": "_static/epa_logo.png",
+            "type": "local",
+        },
+    ],
+    "use_edit_page_button": False,
+    "primary_sidebar_end": ["indices.html"],
+    "show_toc_level": 2,
+    # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
+    "navbar_end": [ "theme-switcher.html", "navbar-icon-links.html",],
+}
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
@@ -169,12 +241,12 @@ else:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = 'figures/wntr.png'
+html_logo = '_static/logo.jpg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = "_static/wntr-favicon.svg"
 
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
@@ -189,7 +261,7 @@ html_static_path = ['_static']
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.
-#html_extra_path = []
+html_extra_path = ['_data']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

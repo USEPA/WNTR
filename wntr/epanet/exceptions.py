@@ -1,8 +1,5 @@
 # coding: utf-8
-"""
-The wntr.epanet.expections module contains Exceptions for EPANET toolkit 
-and IO operations.
-"""
+"""Exceptions for EPANET toolkit and IO operations."""
 
 from typing import List
 
@@ -85,7 +82,7 @@ EN_ERROR_CODES = {
     309: "cannot save results to report file %s",
 }
 """A dictionary of the error codes and their meanings from the EPANET toolkit.
-Please see :doc:`/errors` for tables of these values.
+Please see :doc:`/errors` for descriptions of these values.
 
 :meta hide-value:
 """
