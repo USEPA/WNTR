@@ -56,3 +56,6 @@ class TestResetInitialValues(unittest.TestCase):
         for key in link_keys:
             max_res_diff = self.res4.link[key].max()
             self.assertLess(max_res_diff, tolerances[key])
+
+if __name__ == "__main__":
+    unittest.main()
