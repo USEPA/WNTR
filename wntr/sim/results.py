@@ -4,6 +4,10 @@ import numpy as np
 import pandas as pd
 
 
+class ResultsStatus(enum.IntEnum):
+    converged = 1
+    error = 0
+
 class SimulationResults:
     """
     Water network simulation results class.
