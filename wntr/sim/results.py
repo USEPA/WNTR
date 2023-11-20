@@ -42,6 +42,7 @@ class SimulationResults:
 
     """
     _data_attributes = ["link", "node"]
+    
     def __init__(self):
         # Simulation time series
         self.timestamp = str(datetime.datetime.now())
@@ -188,7 +189,8 @@ class SimulationResults:
         for attr in new._data_attributes:
             for key in getattr(self, attr).keys():
                     self_dict = getattr(self, attr)
-                    self_dict[key] = pow(self_dict[key], exp, mod)
+                    new_dict = getattr(new, attr)
+                    new_dict[key] = pow(self_dict[key], exp, mod)
         return new
 
     def _adjust_time(self, ts: int):
@@ -260,14 +262,11 @@ class SimulationResults:
                 other_df = other_dict[key]
                 overlap = self_df.index.intersection(other_df.index)
                 if key in self_dict.keys() and key in other_dict.keys():
-                    t2 = pd.concat([self_df[~self_df.index.isin(overlap)], other_df])
-                    self_df = t2
+                    self_dict[key] = pd.concat([self_df[~self_df.index.isin(overlap)], other_df])
                 elif key not in other_dict.keys():
                     temp = other_attr_dataframe * np.nan
-                    t2 = pd.concat([self_df[~self_df.index.isin(overlap)], temp])
-                    self_df = t2
+                    self_dict[key] = pd.concat([self_df[~self_df.index.isin(overlap)], temp])
                 elif key not in self_dict.keys():
                     temp = self_attr_dataframe * np.nan
-                    t2 = pd.concat([temp[~temp.index.isin(overlap)], other_df])
-                    self_df = t2
+                    self_dict[key] = pd.concat([temp[~temp.index.isin(overlap)], other_df])
         return self
