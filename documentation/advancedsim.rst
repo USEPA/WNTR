@@ -281,7 +281,7 @@ reference.
     ... """J. B. Burkhardt, et al. (2020) https://doi.org/10.1061/(asce)wr.1943-5452.0001304"""
     ... )
     >>> msx
-    MultispeciesQualityModel(name='lead_ppm')
+    MsxModel(name='lead_ppm')
 
 Model options are added as follows:
 
