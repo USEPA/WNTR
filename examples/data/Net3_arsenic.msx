@@ -46,8 +46,8 @@ Arsenic Oxidation/Adsorption Example
 
 [QUALITY]
   ;Initial conditions (= 0 if not specified here)
-  NODE    Source AS3   10.0
-  NODE    Source NH2CL 2.5
+  NODE    River AS3   10.0
+  NODE    River NH2CL 2.5
 
 [REPORT]
   NODES   C   D                ;Report results for nodes C and D

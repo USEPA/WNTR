@@ -8,10 +8,10 @@
     >>> import wntr
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ...    msx_filename = '../examples/data/something.msx'
+    ...    wn.msx = wntr.msx.MsxModel('../examples/data/Net3_arsenic.msx')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-    ...    msx_filename = 'examples/data/something.msx'
+    ...    wn.msx = wntr.msx.MsxModel('examples/data/Net3_arsenic.msx')
 	
 .. _msx_water_quality:
 
@@ -28,11 +28,13 @@ In this example, the MsxModel is created from a MSX file (see [SRU23]_ for more 
 
 .. doctest::
 
-    >>> msx_filename = 'data/something.msx') # doctest: +SKIP
-    >>> wn.msx = wntr.msx.MsxModel(msx_filename)
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn.msx = wntr.msx.MsxModel('data/Net3_arsenic.msx') # doctest: +SKIP
+    
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-[TODO add an msx file that uses Net3 to the examples folder for documentation examples]
 
 The results include a quality value for each node, link, and species 
 (see :ref:`simulation_results` for more details).
@@ -74,20 +76,29 @@ Examples that illustrate how to build MSX models in WNTR are included in :ref:`a
 
 Reaction library
 -----------------
-WNTR also contains a library of MSX models that are accessed through the :class:`~wntr.msx.library.ReactionLibrary`.
+WNTR also contains a library of MSX models that are accessed through the 
+:class:`~wntr.msx.library.ReactionLibrary`.
 This includes the following models:
 
-* `Arsenic Chloramine model <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ [SRU23]_
-* `Lead Plumbosolvency model <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ [BWMS20]_
-[TODO change the 2 links to usepa, add other models if they are referenced]
+* `Arsenic oxidation/adsorption <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ [SRU23]_
+* `Batch chloramine decay <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
+* `Lead plumbosolvency <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ [BWMS20]_
+* `Nicotine/chlorine reaction <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
+* `Nicotine/chlorine reaction with reactive intermediate <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
 
 The models are stored in JSON format.
 Additional models can be loaded into the library by setting a user specified path.  
-Additional models could also be added to the WNTR Reactions library.
+Additional models could also be added directly to the WNTR Reactions library.
 
-The following example loads a MsxModel from the ReactionLibrary.
+The following example loads the Lead plumbosolvency model (lead_ppm) from the ReactionLibrary.
 
 .. doctest::
 
-    >>> msx_model = ...
-[TODO finish this example]
+    >>> reaction_library = wntr.msx.library.ReactionLibrary()
+    
+    >>> print(reaction_library.model_name_list())
+    ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']
+    
+    >>> lead_ppm = reaction_library.get_model("lead_ppm")
+    >>> print(lead_ppm)
+    MsxModel(name='lead_ppm')
