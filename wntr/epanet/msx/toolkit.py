@@ -25,10 +25,10 @@ from .exceptions import MSX_ERROR_CODES, EpanetMsxException, MSXKeyError, MSXVal
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "../Windows/epanet2.dll")
-    libmsx = resource_filename(__name__, "../Windows/epanetmsx.dll")
+    libepanet = resource_filename(__name__, "../Windows/epanet2.lib")
+    libmsx = resource_filename(__name__, "../Windows/epanetmsx.lib")
 elif sys.platform in ["darwin"]:
-    libepanet = resource_filename(__name__, "../Darwin/libepanet.dylib")
+    libepanet = resource_filename(__name__, "../Darwin/libepanet2.dylib")
     libmsx = resource_filename(__name__, "../Darwin/libepanetmsx.dylib")
 else:
     libepanet = resource_filename(__name__, "../Linux/libepanet2.so")
