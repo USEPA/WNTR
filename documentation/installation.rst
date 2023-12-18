@@ -249,6 +249,7 @@ Users should have experience using Python (https://www.python.org/), including t
   http://pandas.pydata.org/
 * Matplotlib :cite:p:`hunt07`: used to produce graphics, 
   http://matplotlib.org/
+* Setuptools: used to install the WNTR package, https://setuptools.pypa.io/
   
 These packages are included in the Anaconda Python distribution.
  
