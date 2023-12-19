@@ -34,6 +34,11 @@ else:
     libepanet = resource_filename(__name__, "../Linux/libepanet2.so")
     libmsx = resource_filename(__name__, "../Linux/libepanetmsx.so")
 
+dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
+if dylib_dir != '':
+    dylib_dir = dylib_dir + ':' + resource_filename(__name__, "../Darwin")
+    os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = dylib_dir
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,9 +66,9 @@ class MSXepanet(ENepanet):
         self.binfile = binfile
         self.msxfile = msxfile
 
-        libnames = ["epanetmsx", "epanetmsx_win32"]
+        libnames = ["epanetmsx"]
         if "64" in platform.machine():
-            libnames.insert(0, "epanetmsx_amd64")
+            libnames.insert(0, "epanetmsx")
         if msx_toolkit:
             for lib in libnames:
                 try:
