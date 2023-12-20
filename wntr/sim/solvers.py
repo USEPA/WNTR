@@ -1,3 +1,5 @@
+"""Generic mathematical solver classes.
+"""
 import numpy as np
 import scipy.sparse as sp
 import warnings

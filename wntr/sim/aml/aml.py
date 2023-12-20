@@ -1,3 +1,5 @@
+"""WNTR AML base classes."""
+
 import sys
 import scipy
 from .evaluator import Evaluator

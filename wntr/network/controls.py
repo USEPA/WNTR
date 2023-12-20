@@ -2,28 +2,6 @@
 The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    Subject
-    Observer
-    Comparison
-    ControlPriority
-    ControlCondition
-    TimeOfDayCondition
-    SimTimeCondition
-    ValueCondition
-    TankLevelCondition
-    RelativeCondition
-    OrCondition
-    AndCondition
-    BaseControlAction
-    ControlAction
-    ControlBase
-    Control
-	
 """
 import math
 import enum
