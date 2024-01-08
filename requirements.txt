@@ -4,6 +4,7 @@ scipy
 networkx
 pandas
 matplotlib
+setuptools
 
 # Optional
 plotly<=5.11.0
