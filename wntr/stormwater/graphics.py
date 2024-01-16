@@ -1,3 +1,7 @@
+"""
+The wntr.stormwater.graphics module contains methods to 
+generate graphics.
+"""
 import logging
 import networkx as nx
 import matplotlib.pylab as plt

@@ -1,0 +1,153 @@
+[TITLE]
+;;Project Title/Notes
+A culvert model with roadway overtopping.
+See Culvert_Model.txt for more details.
+
+[OPTIONS]
+;;Option            	Value
+FLOW_UNITS          	CFS
+INFILTRATION        	HORTON
+FLOW_ROUTING        	DYNWAVE
+LINK_OFFSETS        	DEPTH
+MIN_SLOPE           	0
+ALLOW_PONDING       	NO
+SKIP_STEADY_STATE   	NO
+
+START_DATE          	06/08/2015
+START_TIME          	00:00:00
+REPORT_START_DATE   	06/08/2015
+REPORT_START_TIME   	00:00:00
+END_DATE            	06/08/2015
+END_TIME            	05:00:00
+SWEEP_START         	01/01
+SWEEP_END           	12/31
+DRY_DAYS            	0
+REPORT_STEP         	00:07:30
+WET_STEP            	00:05:00
+DRY_STEP            	01:00:00
+ROUTING_STEP        	0:00:05 
+RULE_STEP           	00:00:00
+
+INERTIAL_DAMPING    	PARTIAL
+NORMAL_FLOW_LIMITED 	BOTH
+FORCE_MAIN_EQUATION 	H-W
+VARIABLE_STEP       	0.75
+LENGTHENING_STEP    	0
+MIN_SURFAREA        	12.557
+MAX_TRIALS          	8
+HEAD_TOLERANCE      	0.005
+SYS_FLOW_TOL        	5
+LAT_FLOW_TOL        	5
+MINIMUM_STEP        	0.5
+THREADS             	1
+
+[EVAPORATION]
+;;Data Source   	Parameters
+;;--------------	----------------
+CONSTANT        	0.0
+DRY_ONLY        	NO
+
+[JUNCTIONS]
+;;Name          	Elevation 	MaxDepth  	InitDepth 	SurDepth  	Aponded   
+;;--------------	----------	----------	----------	----------	----------
+Outlet          	868       	0         	0         	0         	0         
+
+[OUTFALLS]
+;;Name          	Elevation 	Type      	Stage Data      	Gated   	Route To        
+;;--------------	----------	----------	----------------	--------	----------------
+TailWater       	858       	FIXED     	859.5           	NO      	                
+
+[STORAGE]
+;;Name          	Elev.   	MaxDepth  	InitDepth 	Shape     	Curve Type/Params           	SurDepth 	Fevap   	Psi     	Ksat    	IMD     
+;;--------------	--------	----------	-----------	----------	----------------------------	---------	--------	        	--------	--------
+Inlet           	878     	9         	0         	TABULAR   	StorageCurve                	0        	0       
+
+[CONDUITS]
+;;Name          	From Node       	To Node         	Length    	Roughness 	InOffset  	OutOffset 	InitFlow  	MaxFlow   
+;;--------------	----------------	----------------	----------	----------	----------	----------	----------	----------
+Culvert         	Inlet           	Outlet          	200       	0.014     	0         	0         	0         	0         
+Channel         	Outlet          	TailWater       	200       	0.03      	0         	0         	0         	0         
+
+[WEIRS]
+;;Name          	From Node       	To Node         	Type        	CrestHt   	Qcoeff    	Gated   	EndCon  	EndCoeff  	Surcharge 	RoadWidth 	RoadSurf  	Coeff. Curve
+;;--------------	----------------	----------------	------------	----------	----------	--------	--------	----------	----------	----------	----------	----------------
+Roadway         	Inlet           	Outlet          	ROADWAY     	9         	3.33      	NO      	0       	0         	NO        	40        	GRAVEL    
+
+[XSECTIONS]
+;;Link          	Shape       	Geom1           	Geom2     	Geom3     	Geom4     	Barrels   	Culvert   
+;;--------------	------------	----------------	----------	----------	----------	----------	----------
+Culvert         	CIRCULAR    	3               	0         	0         	0         	2         	4         
+Channel         	TRAPEZOIDAL 	9               	10        	2         	2         	1         	          
+Roadway         	RECT_OPEN   	50              	200       	0         	0         
+
+[INFLOWS]
+;;Node          	Constituent     	Time Series     	Type    	Mfactor 	Sfactor 	Baseline	Pattern
+;;--------------	----------------	----------------	--------	--------	--------	--------	--------
+Inlet           	FLOW            	Inflow          	FLOW    	1.0     	1.0     	        
+
+[CURVES]
+;;Name          	Type      	X-Value   	Y-Value   
+;;--------------	----------	----------	----------
+StorageCurve    	Storage   	0         	0         
+StorageCurve    	          	2         	9583      
+StorageCurve    	          	4         	33977     
+StorageCurve    	          	6         	72310     
+StorageCurve    	          	8         	136778    
+
+[TIMESERIES]
+;;Name          	Date      	Time      	Value     
+;;--------------	----------	----------	----------
+Inflow          	          	0         	0         
+Inflow          	          	.125      	9         
+Inflow          	          	.25       	10        
+Inflow          	          	.375      	11        
+Inflow          	          	.5        	13        
+Inflow          	          	.625      	17        
+Inflow          	          	.75       	28        
+Inflow          	          	.875      	40        
+Inflow          	          	1         	80        
+Inflow          	          	1.125     	136       
+Inflow          	          	1.25      	190       
+Inflow          	          	1.375     	220       
+Inflow          	          	1.5       	220       
+Inflow          	          	1.625     	201       
+Inflow          	          	1.75      	170       
+Inflow          	          	1.875     	140       
+Inflow          	          	2         	120       
+Inflow          	          	2.125     	98        
+Inflow          	          	2.25      	82        
+Inflow          	          	2.375     	70        
+Inflow          	          	2.5       	60        
+Inflow          	          	2.625     	53        
+Inflow          	          	2.75      	47        
+Inflow          	          	2.875     	41        
+
+[REPORT]
+;;Reporting Options
+SUBCATCHMENTS	ALL
+NODES	ALL
+LINKS	ALL
+
+[TAGS]
+
+[MAP]
+DIMENSIONS	-59.264	5535.422	7089.237	6491.928
+Units     	None
+
+[COORDINATES]
+;;Node          	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+Outlet          	4206.542          	6357.994          
+TailWater       	6019.146          	6168.726          
+Inlet           	1628.472          	6476.537          
+
+[VERTICES]
+;;Link          	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+Roadway         	2311.068          	7166.633          
+Roadway         	3762.491          	7151.463          
+
+[LABELS]
+;;X-Coord         	Y-Coord           	Label           
+1651.426          	7755.664          	"Circular Culvert with Roadway Overtopping and Upstream Storage"	""	"Arial"	12	1	1
+

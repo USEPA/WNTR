@@ -7,6 +7,20 @@ User Guide
 
 The Water Network Tool for Resilience (WNTR) is an EPANET compatible Python package 
 designed to simulate and analyze resilience of water distribution networks.
+		
+.. grid:: 2
+
+    .. grid-item-card::
+
+        A majority of this user guide is dedicated to the user 
+        of WNTR for resilience analysis of **drinking water systems**.
+        See :ref:`overview` for more information.
+
+    .. grid-item-card::
+
+        A subset of WNTR's functionality has been developed for
+        **stormwater and wastewater systems**.  
+        See :ref:`stormwater` for more information.
 
 US EPA Disclaimer
 -----------------
@@ -16,7 +30,6 @@ in the research described here under an Interagency Agreement with the Departmen
 It has been subjected to the Agency's review and has been approved for publication. Note that approval does not signify that 
 the contents necessarily reflect the views of the Agency. Mention of trade names products, or services does not convey official 
 EPA approval, endorsement, or recommendation.  
-
 
 Sandia Funding Statement
 ------------------------
@@ -30,7 +43,7 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    :hidden:
    :caption: Introduction
 
-   overview
+   Overview <overview>
    installation
    framework
    units
@@ -72,23 +85,20 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    advancedsim
 
 .. toctree::
+   :maxdepth: 0
+   :hidden:
+   :caption: Stormwater/Wastewater resilience analysis
+
+   Overview <stormwater>
+   
+.. toctree::
     :maxdepth: 1
     :hidden:
     :caption: Backmatter
 
+    citing_wntr
     license
     whatsnew
     developers
     acronyms
     reference
-
-
-Citing WNTR
------------------
-To cite WNTR, use one of the following references:
-
-* Klise, K.A., Hart, D.B., Bynum, M., Hogge, J., Haxton, T., Murray, R., Burkhardt, J. (2020). Water Network Tool for Resilience (WNTR) User Manual: Version 0.2.3. U.S. EPA Office of Research and Development, Washington, DC, EPA/600/R-20/185, 82p.
-
-* Klise, K.A., Murray, R., Haxton, T. (2018). An overview of the Water Network Tool for Resilience (WNTR), In Proceedings of the 1st International WDSA/CCWI Joint Conference, Kingston, Ontario, Canada, July 23-25, 075, 8p.
-
-* Klise, K.A., Bynum, M., Moriarty, D., Murray, R. (2017). A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study, Environmental Modelling and Software, 95, 420-431, doi: 10.1016/j.envsoft.2017.06.022

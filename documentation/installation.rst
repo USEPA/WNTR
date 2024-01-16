@@ -272,8 +272,10 @@ The following Python packages are optional:
   https://rtree.readthedocs.io/
 * openpyxl :cite:p:`gacl18`: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
+* pyswmm :cite:p:`pyswmm`: used to run SWMM hydraulic simulations, https://github.com/pyswmm/pyswmm
+* swmmio :cite:p:`swmmio`: used to access and modify SWMM INP files, https://github.com/pyswmm/swmmio
 
-All of these packages **except geopandas** are included in the Anaconda Python distribution.
+All of these packages **except geopandas, pyswmm, and swmmio** are included in the Anaconda Python distribution.
 To install optional dependencies, run::
 
 	pip install -r requirements.txt

@@ -1,3 +1,7 @@
+"""
+The wntr.stormwater.metrics module includes methods to compute 
+topographic and hydraulic metrics.
+"""
 import networkx as nx
 import itertools
 

@@ -1,3 +1,7 @@
+"""
+The wntr.stormwater.io module contains methods to 
+read and write stormwater and wastewater network models.
+"""
 import logging
 import pandas as pd
 import networkx as nx
@@ -5,8 +9,10 @@ import pyswmm
 import swmmio
 from swmm.toolkit.shared_enum import NodeAttribute, LinkAttribute, \
                                      SubcatchAttribute, SystemAttribute
+from swmmio.utils.dataframes import dataframe_from_rpt
 
 from wntr.sim import SimulationResults
+
 from wntr.stormwater.gis import StormWaterNetworkGIS
 import wntr.stormwater
 
@@ -117,6 +123,36 @@ def read_inpfile(filename):
 
     return swn
 
+
+def read_rptfile(filename):
+    """
+    Read a SWMM summary report file
+    
+    Parameters
+    ----------
+    filename : string
+       Name of the SWMM summary report file
+    
+    Returns
+    -------
+    dict
+    """
+    summary = {}
+    
+    for section in ["Node Depth Summary", 
+                    "Node Inflow Summary", 
+                    "Node Flooding Summary",
+                    "Link Flow Summary",
+                    #"Link Pollutant Load Summary",
+                    "Subcatchment Runoff Summary",
+                    "Subcatchment Washoff Summary",
+                    "Subcatchment Results"
+                    ]:
+        data = dataframe_from_rpt(filename, section)
+        if data.shape[0] > 0:
+            summary[section] = data
+
+    return summary
 
 def read_outfile(filename):
     """

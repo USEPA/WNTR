@@ -1,0 +1,147 @@
+[TITLE]
+;;Project Title/Notes
+A simple groundwater model.
+See Groundwater_Model.txt for more details.
+
+[OPTIONS]
+;;Option            	Value
+FLOW_UNITS          	CFS
+INFILTRATION        	HORTON
+FLOW_ROUTING        	KINWAVE
+LINK_OFFSETS        	DEPTH
+MIN_SLOPE           	0
+ALLOW_PONDING       	NO
+SKIP_STEADY_STATE   	NO
+
+START_DATE          	09/13/2014
+START_TIME          	00:00:00
+REPORT_START_DATE   	09/13/2014
+REPORT_START_TIME   	00:00:00
+END_DATE            	09/15/2014
+END_TIME            	00:00:00
+SWEEP_START         	01/01
+SWEEP_END           	12/31
+DRY_DAYS            	0
+REPORT_STEP         	00:15:00
+WET_STEP            	00:05:00
+DRY_STEP            	00:05:00
+ROUTING_STEP        	0:00:30 
+RULE_STEP           	00:00:00
+
+INERTIAL_DAMPING    	PARTIAL
+NORMAL_FLOW_LIMITED 	BOTH
+FORCE_MAIN_EQUATION 	H-W
+VARIABLE_STEP       	0.75
+LENGTHENING_STEP    	0
+MIN_SURFAREA        	12.557
+MAX_TRIALS          	8
+HEAD_TOLERANCE      	0.005
+SYS_FLOW_TOL        	5
+LAT_FLOW_TOL        	5
+MINIMUM_STEP        	0.5
+THREADS             	1
+
+[EVAPORATION]
+;;Data Source   	Parameters
+;;--------------	----------------
+CONSTANT        	0.0
+DRY_ONLY        	NO
+
+[RAINGAGES]
+;;Name          	Format   	Interval	SCF     	Source    
+;;--------------	---------	------	------	----------
+1               	INTENSITY	0:15    	1.0     	TIMESERIES	Rainfall        
+
+[SUBCATCHMENTS]
+;;Name          	Rain Gage       	Outlet          	Area    	%Imperv 	Width   	%Slope  	CurbLen 	SnowPack        
+;;--------------	----------------	----------------	--------	--------	--------	--------	--------	----------------
+1               	1               	2               	5       	0       	140     	0.5     	0       	                
+
+[SUBAREAS]
+;;Subcatchment  	N-Imperv  	N-Perv    	S-Imperv  	S-Perv    	PctZero   	RouteTo   	PctRouted 
+;;--------------	----------	----------	----------	----------	----------	----------	----------
+1               	0.01      	0.1       	0.05      	0.05      	25        	OUTLET    
+
+[INFILTRATION]
+;;Subcatchment  	Param1    	Param2    	Param3    	Param4    	Param5    
+;;--------------	----------	----------	----------	----------	----------
+1               	1.2       	0.1       	2         	7         	0         
+
+[AQUIFERS]
+;;Name          	Por   	WP    	FC    	Ksat  	Kslope	Tslope	ETu   	ETs   	Seep  	Ebot  	Egw   	Umc   	ETupat 
+;;--------------	------	------	------	------	------	------	------	------	------	------	------	------	------
+1               	0.5   	0.15  	0.30  	0.1   	12    	15.0  	0.35  	14.0  	0.002 	0.0   	3.5   	0.40  	      
+
+[GROUNDWATER]
+;;Subcatchment  	Aquifer         	Node            	Esurf 	A1    	B1    	A2    	B2    	A3    	Dsw   	Egwt  	Ebot  	Wgr   	Umc   
+;;--------------	----------------	----------------	------	------	------	------	------	------	------	------	------	------	------
+1               	1               	2               	6     	0.1   	1     	0     	0     	0     	0     	4     
+
+[OUTFALLS]
+;;Name          	Elevation 	Type      	Stage Data      	Gated   	Route To        
+;;--------------	----------	----------	----------------	--------	----------------
+2               	0         	FREE      	                	NO      	                
+
+[TIMESERIES]
+;;Name          	Date      	Time      	Value     
+;;--------------	----------	----------	----------
+Rainfall        	          	0:00      	0.037     
+Rainfall        	          	0:15      	0.111     
+Rainfall        	          	0:30      	0.185     
+Rainfall        	          	0:45      	0.259     
+Rainfall        	          	1:00      	0.333     
+Rainfall        	          	1:15      	0.407     
+Rainfall        	          	1:30      	0.481     
+Rainfall        	          	1:45      	0.556     
+Rainfall        	          	2:00      	0.630     
+Rainfall        	          	2:15      	0.644     
+Rainfall        	          	2:30      	0.600     
+Rainfall        	          	2:45      	0.556     
+Rainfall        	          	3:00      	0.511     
+Rainfall        	          	3:15      	0.467     
+Rainfall        	          	3:30      	0.422     
+Rainfall        	          	3:45      	0.378     
+Rainfall        	          	4:00      	0.333     
+Rainfall        	          	4:15      	0.289     
+Rainfall        	          	4:30      	0.244     
+Rainfall        	          	4:45      	0.200     
+Rainfall        	          	5:00      	0.156     
+Rainfall        	          	5:15      	0.111     
+Rainfall        	          	5:30      	0.067     
+Rainfall        	          	5:45      	0.022     
+Rainfall        	          	6:00      	0         
+
+[REPORT]
+;;Reporting Options
+SUBCATCHMENTS	ALL
+NODES	ALL
+LINKS	ALL
+
+[TAGS]
+
+[MAP]
+DIMENSIONS	0.000	0.000	10000.000	10000.000
+Units     	None
+
+[COORDINATES]
+;;Node          	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+2               	4556.338          	3352.113          
+
+[VERTICES]
+;;Link          	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+
+[Polygons]
+;;Subcatchment  	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+1               	2964.789          	4971.831          
+1               	6134.511          	4986.413          
+1               	6134.511          	7445.652          
+1               	2964.789          	7450.704          
+
+[SYMBOLS]
+;;Gage          	X-Coord           	Y-Coord           
+;;--------------	------------------	------------------
+1               	4485.915          	8197.183          
+

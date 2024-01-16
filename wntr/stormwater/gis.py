@@ -1,3 +1,7 @@
+"""
+The wntr.stormwater.gis module contains methods to
+integrate geospatial data into stormwater models and analysis.
+"""
 from wntr.gis import snap, intersect
 
 import swmmio

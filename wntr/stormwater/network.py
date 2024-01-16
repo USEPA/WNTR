@@ -1,3 +1,7 @@
+"""
+The wntr.stormwater.network module includes methods to define
+stormwater/wastewater network models.
+"""
 import logging
 import random
 import numpy as np
@@ -32,37 +36,119 @@ class StormWaterNetworkModel(object):
             # in swmmio.Model.inp, which contains dataframes from an INP file.
             # The swmmio.Model.inp object also includes a .save method to 
             # write a new INP file.
- 
+
             # Nodes = Junctions, outfall, and storage nodes
+            # Links = Conduits, weirs, orifices, and pumps
+            
+            # A * by the section name indicates that we have an 
+            # INP file for tests that include that section
+            
+            # [JUNCTIONS] *
             self.junctions = self._swmmio_model.inp.junctions
+            # [OUTFALLS] *
             self.outfalls = self._swmmio_model.inp.outfalls
+            # [STORAGE] *
             self.storage = self._swmmio_model.inp.storage
 
-            # Links = Conduits, weirs, orifices, and pumps
+            # [CONDUITS] *
             self.conduits = self._swmmio_model.inp.conduits
+            # [WEIRS] *
             self.weirs = self._swmmio_model.inp.weirs
+            # [ORIFICES] *
             self.orifices = self._swmmio_model.inp.orifices
+            # [PUMPS] *
             self.pumps = self._swmmio_model.inp.pumps
             
+            # [SUBCATCHMENTS] *
             self.subcatchments = self._swmmio_model.inp.subcatchments
+            # [SUBAREAS] *
             self.subareas = self._swmmio_model.inp.subareas
-
-            self.raingages = self._swmmio_model.inp.raingages
+            # [INFILTRATION] *
             self.infiltration = self._swmmio_model.inp.infiltration
-            self.inflows = self._swmmio_model.inp.inflows
-            #self.dwf = self._swmmio_model.inp.dwf
-
-            self.curves = self._swmmio_model.inp.curves
-            self.timeseries = self._swmmio_model.inp.timeseries
-
+            # [LID_USAGE] *
+            self.lid_usage = self._swmmio_model.inp.lid_usage
+            
+            # [INLETS] *
+            self.inlets = self._swmmio_model.inp.inlets
+            # [INLET_USAGE] *
+            self.inlet_usage = self._swmmio_model.inp.inlet_usage
+            
+            # [RAINGAGES] *
+            self.raingages = self._swmmio_model.inp.raingages
+            # [EVAPORATION] *
+            self.evaporation = self._swmmio_model.inp.evaporation
+            
+            # [POLLUTANTS] *
+            self.pollutants = self._swmmio_model.inp.pollutants
+            # [LANDUSES] *
+            self.landuses = self._swmmio_model.inp.landuses
+            # [COVERAGES] *
+            self.coverages = self._swmmio_model.inp.coverages
+            # [BUILDUP] *
+            self.buildup = self._swmmio_model.inp.buildup
+            # [WASHOFF]
+            self.washoff = self._swmmio_model.inp.washoff
+            
+            # [OPTIONS] *
             self.options = self._swmmio_model.inp.options
-            self.files = self._swmmio_model.inp.files
-
+            # [REPORT] *
+            self.report = self._swmmio_model.inp.report
+            
+            # [COORDINATES] *
             self.coordinates = self._swmmio_model.inp.coordinates
+            # [VERTICES] *
             self.vertices = self._swmmio_model.inp.vertices
+            # [Polygons] *
             self.polygons = self._swmmio_model.inp.polygons
-            self.xsections = self._swmmio_model.inp.xsections
-
+            # [STREETS] *
+            self.streets = self._swmmio_model.inp.streets
+            
+            # [TAGS] *
+            self.tags = self._swmmio_model.inp.tags
+            
+            # The following sections do not read/write correctly in swmmio
+            # The use of create_dataframe_multi_index or the INP files have an unexpected format
+            # As a results these sections are not supported for user modification in swntr
+            # [CURVES] *
+            #self.curves = self._swmmio_model.inp.curves
+            # [TIMESERIES] *
+            #self.timeseries = self._swmmio_model.inp.timeseries
+            # [DWF] *
+            # self.dwf = self._swmmio_model.inp.dwf
+            # [XSECTIONS] *
+            #self.xsections = self._swmmio_model.inp.xsections
+            # [INFLOWS] *
+            #self.inflows = self._swmmio_model.inp.inflows
+            
+            # The following sections are included in groundwatrer_model.inp 
+            # but that model does not run based on sections above
+            # [AQUIFERS] *
+            #self.aquifers = self._swmmio_model.inp.aquifers
+            # [GROUNDWATER] *
+            #self.groundwater = self._swmmio_model.inp.groundwater
+            
+            # The following section is included in site_drainage_model.inp, 
+            # but data is empty
+            # [LOADINGS] *
+            #self.loadings = self._swmmio_model.inp.loadings
+            
+            # The following sections are NOT included in an INP file we have for testing
+            # [LOSSES]
+            # [DIVIDERS]
+            # [RDII]
+            # [HYDROGRAPHS]
+            # [FILES]
+            
+            # The following sections are NOT included in swmmio read/write
+            # [TITLE] *
+            # [LID_CONTROLS] *
+            # [CONTROLS] *
+            # [PATTERNS] *
+            # [MAP] *
+            # [SYMBOLS] *
+            # [LABLES] *
+            # [BACKDROP] *
+            
         else:
             self._swmmio_model = None
             

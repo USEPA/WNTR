@@ -14,6 +14,8 @@ docker/
 *.html
 *.pickle
 *.xlsx
+*.out
+*.rpt
 
 temp*
 

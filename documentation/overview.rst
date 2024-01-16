@@ -2,15 +2,20 @@
 
     \setcounter{secnumdepth}{1}
     \clearpage
-	
-Overview
+
+.. _overview:
+
+Drinking water resilience analysis
 ======================================
 
 .. raw:: latex
 
     \pagenumbering{arabic}
     \setcounter{page}{1}
-    
+   
+Overview 
+---------
+   
 Drinking water systems face multiple challenges, including aging infrastructure, 
 water quality concerns, uncertainty in supply and demand, natural disasters, 
 environmental emergencies, and cyber and terrorist attacks.  
@@ -47,7 +52,12 @@ and the associated analysis results. Information on EPANET can be found at https
 **WNTR is compatible with EPANET 2.00.12** :cite:p:`ross00` **and EPANET 2.2** :cite:p:`rwts20`. In addition, users should have 
 experience using Python, including the installation of additional Python packages. General information on Python can be found at https://www.python.org/. 
 
-
+.. note::
+   In addition to resilience analysis for drinking water systems, WNTR now includes 
+   functionality to simulate and analyze resilience of stormwater and wastewater systems.
+   This builds on **EPA's Storm Water Management Model (SWMM)** :cite:p:`ross22`.
+   See :ref:`stormwater` for more information.
+	
 WNTR can be installed through the United States Environmental Protection Agency (US EPA) 
 GitHub organization at https://github.com/USEPA/WNTR.  An integrated development environment 
 (IDE), like Spyder, is recommended for users and developers.

@@ -1,6 +1,6 @@
 """
-The wntr.stormwater package contains storm water resilience functionality 
-through integration of WNTR with SWMM, pyswmm, and swmmio
+The wntr.stormwater package contains stormwater and wastewater 
+resilience functionality
 """
 from wntr.stormwater.gis import *
 from wntr.stormwater.graphics import *
