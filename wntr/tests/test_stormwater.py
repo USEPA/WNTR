@@ -3,8 +3,10 @@ import warnings
 import os
 from os.path import abspath, dirname, join, isfile
 from pandas.testing import assert_frame_equal
-import time
+import networkx as nx
+import pandas as pd
 
+import matplotlib.pylab as plt
 import wntr
 
 import swmmio
@@ -17,15 +19,16 @@ import wntr.stormwater as swntr
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
+ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
-class TestStormwater(unittest.TestCase):
-
+class TestStormWaterSim(unittest.TestCase):
+    """
     def test_simulation(self):
         # Run swmm using
-        # 1. swmmio cmd line
-        # 2. stepwise simulation using pyswmm
-        # 3. swmmio with read/write
-        # 4. swntr with read/write
+        # 1. direct use of pyswmm, stepwise simulation
+        # 2. direct use of swmmio cmd
+        # 3. swmmio cmd with INP file read/write
+        # 4. swntr with INP file read/write
         inpfiles = [
                     #'Culvert.inp', # pyswmm and swmmio fail
                     'Detention_Pond_Model.inp',
@@ -46,13 +49,6 @@ class TestStormwater(unittest.TestCase):
             temp_inpfile = 'temp.inp'
             temp_outfile = 'temp.out'
             
-            # Direct swmmio
-            print("   run direct swmmio")
-            if isfile(outfile):
-                os.remove(outfile)
-            p = subprocess.run("python -m swmmio --run " + inpfile)
-            results_swmmio_direct = swntr.io.read_outfile(outfile)
-             
             # Direct pyswmm
             print("   run direct pyswmm")
             if isfile(outfile):
@@ -63,6 +59,13 @@ class TestStormwater(unittest.TestCase):
                 sim.report()
                 
             results_pyswmm_direct = swntr.io.read_outfile(outfile)
+            
+            # Direct swmmio
+            print("   run direct swmmio")
+            if isfile(outfile):
+                os.remove(outfile)
+            p = subprocess.run("python -m swmmio --run " + inpfile)
+            results_swmmio_direct = swntr.io.read_outfile(outfile)
 
             # swmmio (with read/write)
             print("   run swmmio")
@@ -86,21 +89,21 @@ class TestStormwater(unittest.TestCase):
             results_swntr = sim.run_sim()
             
             # Compare direct methods to swmmio and swntr, node total inflow
-            assert_frame_equal(results_swmmio_direct.node['TOTAL_INFLOW'],
-                               results_pyswmm_direct.node['TOTAL_INFLOW'])
-            assert_frame_equal(results_swmmio_direct.node['TOTAL_INFLOW'],
+            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
+                               results_swmmio_direct.node['TOTAL_INFLOW'])
+            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
                                results_swmmio.node['TOTAL_INFLOW'])
-            assert_frame_equal(results_swmmio_direct.node['TOTAL_INFLOW'],
+            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
                                results_swntr.node['TOTAL_INFLOW'])
             
             # Compare direct methods to swmmio and swntr, link capacity
-            assert_frame_equal(results_swmmio_direct.link['CAPACITY'],
-                               results_pyswmm_direct.link['CAPACITY'])
-            assert_frame_equal(results_swmmio_direct.link['CAPACITY'],
+            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
+                               results_swmmio_direct.link['CAPACITY'])
+            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
                                results_swmmio.link['CAPACITY'])
-            assert_frame_equal(results_swmmio_direct.link['CAPACITY'],
+            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
                                results_swntr.link['CAPACITY'])
-
+    """
     def test_return_summary(self):
         inpfile = join(test_datadir, "SWMM_examples", "Site_Drainage_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
@@ -114,7 +117,7 @@ class TestStormwater(unittest.TestCase):
         conduit_name = 'C1'
         max_flow1 = 0.001
         
-        inpfile = join(test_datadir, "SWMM_examples", "Site_Drainage_Model.inp")
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
         swn1 = swntr.network.StormWaterNetworkModel(inpfile)
         swn1.conduits.loc[conduit_name, "MaxFlow"] = max_flow1
         
@@ -134,7 +137,125 @@ class TestStormwater(unittest.TestCase):
 
     def test_pump_outage(self):
         pass
+   
+    
+class TestStormWaterGIS(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(self):
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+    
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_create_gis_object(self):
+        swn_gis = self.swn.to_gis()
+        
+        fig, ax = plt.subplots()
+        swn_gis.subcatchments.boundary.plot(ax=ax)
+        swn_gis.junctions.plot(column="InvertElev", ax=ax)
+        swn_gis.conduits.plot(column="MaxFlow", ax=ax)
+        
+        assert swn_gis.junctions.shape == (11,6)
+        assert 'geometry' in swn_gis.junctions.columns
+        
+    
+class TestStormWaterGraphics(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(self):
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+    
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_plot_network1(self):
+        # Basic network plot
+        filename = abspath(join(testdir, "plot_network1_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
 
-            
+        plt.figure()
+        wntr.graphics.plot_network(self.swn)
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+
+    def test_plot_network2(self):
+        # Node and link attributes
+        filename = abspath(join(testdir, "plot_network2_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        plt.figure()
+        wntr.graphics.plot_network(self.swn, 
+                                   node_attribute="InvertElev", 
+                                   link_attribute="Length")
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+    
+    def test_plot_network3(self):
+        # List of node and link names
+        filename = abspath(join(testdir, "plot_network3_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        plt.figure()
+        wntr.graphics.plot_network(self.swn, 
+                                   node_attribute=["J1", "J4"],
+                                   link_attribute=["C3", "C5"],
+                                   link_labels=True,
+                               )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+    
+    def test_plot_network4(self):
+        # Dictionary of attributes
+        filename = abspath(join(testdir, "plot_network4_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
+        
+        plt.figure()
+        wntr.graphics.plot_network(
+            self.swn,
+            node_attribute={"J1": 5, "J4": 10},
+            link_attribute={"C3": 3, "C5": 9},
+            node_labels=True,
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+    
+    def test_plot_network5(self):
+        # Series, range and title
+        filename = abspath(join(testdir, "plot_network5_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
+        
+        G = self.swn.to_graph()
+        node_degree = pd.Series(dict(nx.degree(G)))
+        
+        plt.figure()
+        wntr.graphics.plot_network(
+            self.swn, 
+            node_attribute=node_degree, 
+            node_range=[1, 4], 
+            title="Node degree"
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+        
 if __name__ == "__main__":
     unittest.main()

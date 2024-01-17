@@ -30,7 +30,7 @@ class StormWaterNetworkModel(object):
     def __init__(self, inp_file_name=None):
         
         if inp_file_name:
-            self._swmmio_model = swmmio.Model(inp_file_name)
+            self._swmmio_model = swmmio.Model(inp_file_name, include_rpt=False)
   
             # Attributes of StormWaterNetworkModel link to attributes 
             # in swmmio.Model.inp, which contains dataframes from an INP file.
@@ -370,6 +370,7 @@ class Link(object):
     def end_node_name(self):
         """str: The name of the end node (read only)"""
         return self._end_node_name
+
 
 def generate_valve_layer(swn, placement_type='strategic', n=1, seed=None):
     """

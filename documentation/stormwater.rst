@@ -62,11 +62,11 @@ The stormwater subpackage includes the following modules:
    =================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.stormwater.gis`	                  Contains methods to integrate geospatial data into the model and analysis.
    :class:`~wntr.stormwater.graphics`                 Contains methods to generate graphics.
-   :class:`~wntr.stormwater.io`	                      Contains methods to read and write stormwater network models different data formats.
+   :class:`~wntr.stormwater.io`	                      Contains methods to read and write stormwater network models.
    :class:`~wntr.stormwater.metrics`	              Contains methods to compute resilience, including topographic and hydraulic metrics.
    :class:`~wntr.stormwater.network`	              Contains methods to define stormwater network models.
    :class:`~wntr.stormwater.scenario`                 Contains methods to define fragility/survival curves.
-   :class:`~wntr.stormwater.sim`		              Contains methods to run hydraulic simulations.
+   :class:`~wntr.stormwater.sim`		              Contains methods to simulate hydraulics.
    =================================================  =============================================================================================================================================================================================================================================================================
 
 Installation
@@ -84,45 +84,18 @@ Therefore, any additional data used in analysis should match the units of the mo
 For reference, :numref:`table-swmm-units` includes SWMM unit conventions :cite:p:`ross22`.  
 
 .. _table-swmm-units:
-.. table:: SWMM INP File Unit Conventions
-
-   +----------------------+-------------------------------------+------------------------------------+
-   |   Parameter          |   US customary units                |   SI-based units                   |
-   +======================+=====================================+====================================+
-   |Area (Subcatchment)   |  acres                              |  hectares                          |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Area (Storage Unit)  |  square feet                        |  square meters                     |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Area (Ponding)       |  square feet                        |  square meters                     |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Capillary Suction    |  inches                             |  millimeters                       |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Concentration        | - mg/L (milligrams/liter)           | - mg/L                             |
-   |                      | - ug/L (micrograms/liter)           | - ug/L                             |
-   |                      | - #/L (counts/liter)                | - #/L                              |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Decay Constant       | 1/hours                             | 1/hours                            |
-   | (Infiltration)       |                                     |                                    |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Decay Constant       | 1/days                              | 1/days                             |
-   | (Pollutants)         |                                     |                                    |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Depression Storage   |  inches                             |  millimeters                       |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Depth                | feet                                | meters                             |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Diameter             | feet                                | meters                             |
-   +----------------------+-------------------------------------+------------------------------------+
-   | ...                  |                                     |                                    |
-   +----------------------+-------------------------------------+------------------------------------+
- 
+.. csv-table:: SWMM INP File Unit Conventions
+   :file: tables/swmm_units.csv
+   :widths: 30, 30, 30
+   :header-rows: 1
    
+
 Stormwater network model
 ------------------------
 
 A stormwater network model can be created directly from SWMM INP files. 
 The model is stored in a
-:class:`~wntr.stormwater.network.model.StormWaterNetworkModel` object.  
+:class:`~wntr.stormwater.network.StormWaterNetworkModel` object.  
 
 .. doctest::
 	
@@ -132,10 +105,18 @@ The model is stored in a
     The stormwater examples in this section all use Site_Drainage_Model.inp 
     to build the StormWaterNetworkModel, named ``swn``.
 
-DataFrames
+.. _fig-swmm-network:
+.. figure:: figures/plot_stormwater_network_model.png
+   :width: 640
+   :alt: Network
+   
+   Stormwater network model.
+   
+Attributes
 ^^^^^^^^^^^^^^
 
-The StormWaterNetworkModel includes the following DataFrames which store model attributes:
+The StormWaterNetworkModel includes the following DataFrames which store model attributes 
+(and correspond to sections of SWMM INP files):
 
 * ``swn.junctions``
 * ``swn.outfalls``
@@ -145,8 +126,25 @@ The StormWaterNetworkModel includes the following DataFrames which store model a
 * ``swn.orifices``
 * ``swn.pumps``
 * ``swn.subcatchments``
+* ``swn.subareas``
+* ``swn.infiltration``
+* ``swn.lid_usage``
+* ``swn.inlets``
+* ``swn.inlet_usage``
+* ``swn.raingages``
+* ``swn.evaporation``
+* ``swn.pollutants``
+* ``swn.landuses``
+* ``swn.coverages``
+* ``swn.buildup``
+* ``swn.washoff``
+* ``swn.coordinates``
+* ``swn.vertices``
+* ``swn.polygons``
+* ``swn.streets``
+* ``swn.tags``
 * ``swn.options``
-
+* ``swn.report``
 
 For example, ``swn.junctions`` contains the following attributes:
 
@@ -168,7 +166,7 @@ For example, ``swn.junctions`` contains the following attributes:
     J11       4963.0         0          0               0           0
 
 The attributes in these DataFrames can be modified by the user.  
-The udpated model is used in hydraulic simulation and analysis.
+The updated model is used in hydraulic simulation and analysis.
 
 The StormWaterNetworkModel object also includes methods to return a list of 
 junction names, conduits names, etc. 
@@ -182,7 +180,19 @@ junction names, conduits names, etc.
    :class:`~wntr.stormwater.network.model.StormWaterNetworkModel` uses ``swmmio.Model`` to 
    read and write the SWMM INP file. 
    swimmio stores this information in pandas and geopandas data formats.
-  
+
+Model I/O
+^^^^^^^^^^
+
+The stormwater subpackage includes the following functions to read/write files and transform 
+the StormWaterNetworkModel to other data formats.
+This functionality builds on methods in swmmio.
+
+* :class:`~wntr.stormwater.io.read_inpfile`: Create a StormWaterNetworkModel object from a SWMM INP file 
+* :class:`~wntr.stormwater.io.write_inpfile`: Write a SWMM INP file from a StormWaterNetworkModel
+* :class:`~wntr.stormwater.io.to_graph`: Convert a StormWaterNetworkModel object into a NetworkX graph object
+* :class:`~wntr.stormwater.io.to_gis`: Convert a StormWaterNetworkModel object into a WaterNetworkGIS object
+
 Hydraulic simulation
 ---------------------
 
@@ -195,30 +205,35 @@ pandas DataFrames, as described in the following section.
     >>> sim = swntr.sim.SWMMSimulator(swn) 
     >>> results = sim.run_sim()
 
+.. note:: 
+   :class:`~wntr.stormwater.sim.SWMMSimulator` uses ``swmmio`` and ``pyswmm`` to run the full
+   duration of the SWMM simulation. pyswmm can be used directly for stepwise simulation.
+
+
 Overland flow
 ^^^^^^^^^^^^^^
 Overland flow is an important aspect of resilience analysis for stormwater and wastewater systems. 
 While SWMM accounts for ponded volume and flooding loss, which account for flood impacts 
-at the discharge node, SWMM does not support 1D or 2D overland flow.  
-Open source and commercial software tools like GisToSWMM5 and PCSWMM are able to generate 2D overland 
+at the discharge node, SWMM does not support 2D overland flow.  
+Open source and commercial software tools like GisToSWMM5 :cite:p`niemi2019automated` 
+and PCSWMM :cite:p`pcswmm` are able to generate 2D overland 
 meshes that can be stored in SWMM INP files and run using SWMM.
 
 To include overland flow in stormwater subpackage of WNTR, 
-the user should first modify their INP file to include a 1D or 2D overland flow pipes.
-
-.. note:: 
-   :class:`~wntr.stormwater.sim.SWMMSimulator` uses ``pyswmm.Simulation`` to run the full
-   duration of the SWMM simulation. pyswmm can be used directly for stepwise simulation.
+the user should first modify their INP file to include a 2D overland conduits.
 
 Simulation results
 ^^^^^^^^^^^^^^^^^^^
 
 Simulation results are stored in a 
 :class:`~wntr.stormwater.sim.ResultsObject`. 
-Results include timeseries of attributes for 
+Results include a full timeseries of attributes for 
 nodes, links, and subcatchments. 
 Each attribute is stored in a pandas DataFrame.
 See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
+
+In addition to returning a solution summary from ``run_sim``, simulation results can 
+be extracted from a SWMM Binary output file using the function :class:`~wntr.stormwater.io.read_outfile`.
 
 Node results include the following attributes for junctions, outfall, and storage nodes:
 
@@ -263,24 +278,24 @@ The following example extracts the 'C0' conduit capacity from simulation results
 	
     >>> conduit_capacity = results.link['CAPACITY'].loc[:, 'C0'] # doctest: +SKIP
 
-Simulation summary
+Solution summary
 ^^^^^^^^^^^^^^^^^^^
 
+When calling ``run_sim``, the user has the option of returning full simulation results or a solution summary.  
+The solution summary contains information in the SWMM report file, stored as a dictionary of DataFrames.
 
-Model transformation  and file I/O
-----------------------------------
+In addition to returning a solution summary from ``run_sim``, the solution summary can 
+be extracted from a SWMM report file using the function :class:`~wntr.stormwater.io.read_rptfile`.
 
-The stormwater subpackage includes the following functions to read/write files and transform 
-the StormWaterNetworkModel to other data formats.
-This functionality builds on methods in swmmio.
+The solution summary includes the following information:
 
-* class:`~wntr.stormwater.io.read_inpfile`: Create a StormWaterNetworkModel object from a SWMM INP file 
-* class:`~wntr.stormwater.io.write_inpfile`: Write a SWMM INP file from a StormWaterNetworkModel
-* class:`~wntr.stormwater.io.to_graph`: Convert a StormWaterNetworkModel object into a NetworkX graph object
-* class:`~wntr.stormwater.io.to_gis`: Convert a StormWaterNetworkModel object into a WaterNetworkGIS object
-* class:`~wntr.stormwater.io.read_rptfile`: Create a summary dictionary from a SWMM report file
-* class:`~wntr.stormwater.io.read_outfile`: Create SimulationResults object from a SWMM binary output file
-* class:`~wntr.stormwater.io.write_geojson`: Create geojson files from a StormWaterNetworkModel object
+* Node depth summary
+* Node inflow summary
+* Node flooding summary
+* Link flow summary
+* Subcatchment runoff summary
+* Subcatchment washoff summary
+
 
 Disaster scenarios
 ------------------
@@ -316,7 +331,9 @@ The :class:`~wntr.stormwater.network.StormWaterNetworkModel` can be converted in
 
 .. doctest::
 	
-    >>> swn_gis = swn.to_gis(crs)
+    >>> swn_gis = swn.to_gis()
+
+The user can also write geojson files, using the function :class:`~wntr.stormwater.io.write_geojson`.
 
 See drinking water documentation on :ref:`geospatial` for more information.
 
@@ -394,16 +411,20 @@ The following example uses NetworkX to compute node degree:
 
 .. doctest::
 	
-    >>> import netowrkx as nx
+    >>> import networkx as nx
 	
     >>> G = swn.to_graph()
     >>> node_degree = nx.degree(G)
 
-Upstream, downstream, and travel time metrics
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Upstream/downstream metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Since stormwater and wastewater systems typically operate in a unidirectional mode (flow in one direction), 
 it is possible to identify assets that are upstream and downstream from other assets.  This calculation helps identify 
 travel time along flow paths and capacity limitations along those paths.
+
+Response time
+^^^^^^^^^^^^^
+
 
 Graphics
 ---------------
@@ -422,11 +443,10 @@ The following example creates a network plot with invert elevation.
 .. doctest::
     :hide:
     
+    >>> import matplotlib.pylab as plt
     >>> fig = plt.figure()
     
 .. doctest::
-
-    >>> import wntr # doctest: +SKIP
 	
     >>> ax = swntr.graphics.plot_network(swn, node_attribute='InvertElev', 
     ...    node_colorbar_label='Invert Elevation')
@@ -450,12 +470,17 @@ The following example creates a network plot with invert elevation.
 Examples
 ---------
 
-Travel time between assets
+Upstream/downstream assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Response time
+^^^^^^^^^^^^^
+
 Conduit criticality
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 Power outages
 ^^^^^^^^^^^^^
 
+Extreme rainfall
+^^^^^^^^^^^^^^^^^

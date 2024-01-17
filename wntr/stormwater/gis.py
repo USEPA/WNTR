@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 try:
-    from shapely.geometry import LineString, Point
+    from shapely.geometry import LineString, Point, Polygon
     has_shapely = True
 except ModuleNotFoundError:
     has_shapely = False
@@ -37,7 +37,7 @@ class StormWaterNetworkGIS:
         Dictionary of GeoDataFrames containing data to populate an instance 
         of StormWaterNetworkGIS.  Valid dictionary keys are 
         'junctions', 'outfalls','storage', 
-        'conduits', 'weirs', 'orifices', and 'pumps'
+        'conduits', 'weirs', 'orifices', 'pumps', and 'subcatchments'
     
     Raises
     ------
@@ -57,10 +57,14 @@ class StormWaterNetworkGIS:
         self.weirs = gpd.GeoDataFrame()
         self.orifices = gpd.GeoDataFrame()
         self.pumps = gpd.GeoDataFrame()
+        self.subcatchments = gpd.GeoDataFrame()
+        
+        self._gdf_name_list = ["junctions", "outfalls", "storage", 
+                               "conduits", "weirs", "orifices", "pumps",
+                               "subcatchments"]
         
         if isinstance(gis_data, dict):
-            for name in ["junctions", "outfalls", "storage", 
-                         "conduits", "weirs", "orifices", "pumps"]:
+            for name in self._gdf_name_list:
                 gdf = getattr(self, name)
                 if name in gis_data.keys():
                     assert isinstance(gis_data[name], gpd.GeoDataFrame)
@@ -82,8 +86,46 @@ class StormWaterNetworkGIS:
         crs : str, optional
             Coordinate reference system, by default None
         """
-  
-        # create an updated swmmio model from inp file
+        
+        # Nodes
+        geom = [(i, Point(coord['X'], coord['Y'])) for i, coord in swn.coordinates.iterrows()]
+        geom = pd.Series(dict(geom))
+        self.junctions = gpd.GeoDataFrame(swn.junctions, geometry=geom[swn.junction_name_list], crs=crs)
+        self.outfalls = gpd.GeoDataFrame(swn.outfalls, geometry=geom[swn.outfall_name_list], crs=crs)
+        self.storage = gpd.GeoDataFrame(swn.storage, geometry=geom[swn.storage_name_list], crs=crs)
+        
+        # Links
+        link_inlet_pt = swn.coordinates.loc[swn.links['InletNode'].values]
+        link_inlet_pt.index = swn.links.index
+        link_outlet_pt = swn.coordinates.loc[swn.links['OutletNode'].values]
+        link_outlet_pt.index = swn.links.index
+        geom = {}
+        for link_name in swn.links.index:
+            vertices = []
+            inlet_coord = link_inlet_pt.loc[link_name,:]
+            outlet_coord = link_outlet_pt.loc[link_name,:]
+            vertices.append((inlet_coord['X'], inlet_coord['Y']))
+            vertices.extend(swn.vertices.loc[swn.vertices.index == link_name,:].values)
+            vertices.append((outlet_coord['X'], outlet_coord['Y']))
+            geom[link_name] = LineString(vertices)
+        geom = pd.Series(geom) 
+        
+        self.conduits = gpd.GeoDataFrame(swn.conduits, geometry=geom[swn.conduit_name_list], crs=crs)
+        self.weirs = gpd.GeoDataFrame(swn.weirs, geometry=geom[swn.weir_name_list], crs=crs)
+        self.orifices = gpd.GeoDataFrame(swn.orifices, geometry=geom[swn.orifice_name_list], crs=crs)
+        self.pumps = gpd.GeoDataFrame(swn.pumps, geometry=geom[swn.pump_name_list], crs=crs)
+        
+        # Subcatchments
+        geom = {}
+        for subcatch_name in swn.subcatchments.index:
+            vertices = swn.polygons.loc[swn.polygons.index == subcatch_name,:].values
+            geom[subcatch_name] = Polygon(vertices)
+        geom = pd.Series(geom)    
+        self.subcatchments = gpd.GeoDataFrame(swn.subcatchments, geometry=geom, crs=crs)
+        """        
+        # create gis from an updated swmmio model
+        # This is very slow for large models
+        # Models without certain features (subcatchments) fail
         filename = 'temp.inp'
         swn._swmmio_model.inp.save(filename)
         m = swmmio.Model(filename)
@@ -97,9 +139,11 @@ class StormWaterNetworkGIS:
         self.orifices = m.links.geodataframe.loc[swn.orifice_name_list,:]
         self.pumps = m.links.geodataframe.loc[swn.pump_name_list,:]
         
+        self.subcatchments = m.subcatchments.geodataframe
+
         if crs is not None:
             self.set_crs(crs, allow_override=True)
-        
+        """
     def _create_swn(self, append=None):
         raise NotImplementedError
     
@@ -115,8 +159,7 @@ class StormWaterNetworkGIS:
         crs : str
             Coordinate reference system
         """
-        for name in ["junctions", "outfalls", "storage", 
-                     "conduits", "weirs", "orifices", "pumps"]:
+        for name in self._gdf_name_list:
             gdf = getattr(self, name)
             if 'geometry' in gdf.columns:
                 gdf = gdf.to_crs(crs, inplace=True)
@@ -136,8 +179,7 @@ class StormWaterNetworkGIS:
             Allow override of existing coordinate reference system
         """
         
-        for name in ["junctions", "outfalls", "storage", 
-                     "conduits", "weirs", "orifices", "pumps"]:
+        for name in self._gdf_name_list:
             gdf = getattr(self, name)
             if 'geometry' in gdf.columns:
                 gdf = gdf.set_crs(crs, inplace=True,
@@ -151,8 +193,7 @@ class StormWaterNetworkGIS:
     
     def _read(self, files, index_col='index'):
         
-        for name in ["junctions", "outfalls", "storage", 
-                     "conduits", "weirs", "orifices", "pumps"]:
+        for name in self._gdf_name_list:
             gdf = getattr(self, name)
             if name in files.keys():
                 data = gpd.read_file(files[name]).set_index(index_col)
@@ -199,8 +240,7 @@ class StormWaterNetworkGIS:
         else:
             extension = "." + driver.lower()
         
-        for name in ["junctions", "outfalls", "storage", 
-                     "conduits", "weirs", "orifices", "pumps"]:
+        for name in self._gdf_name_list:
             gdf = getattr(self, name)
             if len(gdf) > 0:
                 filename = prefix + "_" + name + extension

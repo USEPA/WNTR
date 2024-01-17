@@ -88,6 +88,7 @@ def to_gis(swn, crs=None):
     StormWaterNetworkGIS object that contains GeoDataFrames
         
     """
+    # Create geodataframes
     gis_data = StormWaterNetworkGIS()
     gis_data._create_gis(swn, crs)
     return gis_data
@@ -146,7 +147,7 @@ def read_rptfile(filename):
                     #"Link Pollutant Load Summary",
                     "Subcatchment Runoff Summary",
                     "Subcatchment Washoff Summary",
-                    "Subcatchment Results"
+                    # "Subcatchment Results"
                     ]:
         data = dataframe_from_rpt(filename, section)
         if data.shape[0] > 0:
