@@ -7,20 +7,26 @@
 
 .. doctest::
     :hide:
-    
+
+    >>> import matplotlib.pylab as plt
     >>> import wntr.stormwater as swntr
     >>> try:
     ...    swn = swntr.network.StormWaterNetworkModel('../examples/networks/Site_Drainage_Model.inp')
     ... except:
     ...    swn = swntr.network.StormWaterNetworkModel('examples/networks/Site_Drainage_Model.inp')
-	
+    >>> try:
+    ...    backdrop_img = plt.imread('../figures/Site-Post.jpg')
+    ... except:
+    ...    backdrop_img = plt.imread('documentation/figures/Site-Post.jpg')
+
 .. _stormwater:
 
 Stormwater/Wastewater resilience analysis
 =========================================
 .. note:: 
    Stormwater and wastewater resilience capabilities in WNTR are new
-   and should be considered beta software. Feedback is appreciated.
+   and should be considered beta software. 
+   Feedback can be posted at https://github.com/USEPA/WNTR/issues.
 
 Overview 
 ---------
@@ -105,8 +111,19 @@ The model is stored in a
     The stormwater examples in this section all use Site_Drainage_Model.inp 
     to build the StormWaterNetworkModel, named ``swn``.
 
+.. doctest::
+    :hide:
+
+    >>> fig, ax = plt.subplots()
+    >>> f = ax.imshow(backdrop_img[::-1], origin='lower', alpha=0.5)
+    >>> f = ax.set_xlim(0, 1423)
+    >>> f = ax.set_ylim(0, 1475)
+    >>> f = swntr.graphics.plot_network(swn, link_labels=True, ax=ax)
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_Site_Drainage_Model.png', dpi=300)
+	
 .. _fig-swmm-network:
-.. figure:: figures/plot_stormwater_network_model.png
+.. figure:: figures/plot_Site_Drainage_Model.png
    :width: 640
    :alt: Network
    
@@ -209,7 +226,6 @@ pandas DataFrames, as described in the following section.
    :class:`~wntr.stormwater.sim.SWMMSimulator` uses ``swmmio`` and ``pyswmm`` to run the full
    duration of the SWMM simulation. pyswmm can be used directly for stepwise simulation.
 
-
 Overland flow
 ^^^^^^^^^^^^^^
 Overland flow is an important aspect of resilience analysis for stormwater and wastewater systems. 
@@ -303,9 +319,26 @@ Disaster scenarios
 Several damage scenarios can be used to quantify resilience of the 
 stormwater/wastewater systems, this includes:
 
-* Long term power outages: Power outages impact pumps and lift stations
-* Extreme rainfall events: Increased runoff impacts combined stormwater/wastewater systems
-* Conduit blockage or collapse: Failure impacts flowrate at the conduit
+* **Long term power outages**: Power outages impact pumps and lift stations
+  
+  .. doctest::
+	
+	  >>> swn.add_pump_outage_control('PUMP1', 4.5, 12)
+
+* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems
+
+  .. doctest::
+	
+	  >>> add_code = 0
+
+* **Conduit blockage or collapse**: Failure impacts flowrate at the conduit.  
+  The flowrate in a conduit can be constrained by setting the MaxFlow as shown below.
+  Note that a value of 0 means that the flowrate is unconstrained (no upper bound).
+
+  .. doctest::
+	
+      >>> swn.conduits.loc['C1', "MaxFlow"] = 0.0001
+
 
 See :ref:`stormwater_examples` below.
 
@@ -373,6 +406,7 @@ In stormwater and wastewater systems, the analysis can include the following:
 * Pump criticality
 
 See drinking water documentation on :ref:`criticality` for more information.
+
 
 Resilience metrics
 -------------------
@@ -443,7 +477,6 @@ The following example creates a network plot with invert elevation.
 .. doctest::
     :hide:
     
-    >>> import matplotlib.pylab as plt
     >>> fig = plt.figure()
     
 .. doctest::

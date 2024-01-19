@@ -5,9 +5,7 @@ from os.path import abspath, dirname, join, isfile
 from pandas.testing import assert_frame_equal
 import networkx as nx
 import pandas as pd
-
 import matplotlib.pylab as plt
-import wntr
 
 import swmmio
 import pyswmm
@@ -22,7 +20,7 @@ test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 class TestStormWaterSim(unittest.TestCase):
-    """
+
     def test_simulation(self):
         # Run swmm using
         # 1. direct use of pyswmm, stepwise simulation
@@ -103,7 +101,7 @@ class TestStormWaterSim(unittest.TestCase):
                                results_swmmio.link['CAPACITY'])
             assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
                                results_swntr.link['CAPACITY'])
-    """
+
     def test_return_summary(self):
         inpfile = join(test_datadir, "SWMM_examples", "Site_Drainage_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
@@ -112,7 +110,9 @@ class TestStormWaterSim(unittest.TestCase):
         assert 'Node Depth Summary' in summary.keys()
         assert 'MaxNodeDepth' in summary['Node Depth Summary'].columns
         assert set(summary['Node Depth Summary'].index) == set(swn.node_name_list)
-        
+
+class TestStormWaterScenarios(unittest.TestCase):
+
     def test_conduit_reduced_flow(self):
         conduit_name = 'C1'
         max_flow1 = 0.001
@@ -136,8 +136,47 @@ class TestStormWaterSim(unittest.TestCase):
         self.assertAlmostEqual(average_flow_rate, max_flow1, 4)
 
     def test_pump_outage(self):
+        pump_name = 'PUMP1'
+        start_time = 4.5
+        end_time = 12
+
+        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        swn1 = swntr.network.StormWaterNetworkModel(inpfile)
+        swn1.add_pump_outage_control(pump_name, start_time, end_time) # Outage times in decimal hours
+
+        # Test ability to modify INP file
+        swntr.io.write_inpfile(swn1, "temp.inp")
+        inpfile = join(testdir, "temp.inp")
+        swn2 = swntr.network.StormWaterNetworkModel(inpfile)
+        control_name = pump_name + '_power_outage'
+        assert control_name in swn2.controls.keys()
+        assert len(swn2.controls[control_name]) == 5
+        
+        # Test simulation results
+        sim = swntr.sim.SWMMSimulator(swn1) 
+        results_swntr = sim.run_sim()
+        
+        # Pump flowrate over the entire simulation is not 0
+        flow_rate = results_swntr.link['FLOW_RATE'].loc[:, pump_name]
+        assert flow_rate.mean() != 0
+        
+        # Pump flowrate during the outage is 0
+        start_datetime = flow_rate.index[0] + + pd.Timedelta(str(start_time) + " hours")
+        end_datetime = flow_rate.index[0] + + pd.Timedelta(str(end_time-0.001) + " hours")
+        flow_rate_outage = results_swntr.link['FLOW_RATE'].loc[start_datetime:end_datetime, pump_name]
+        self.assertAlmostEqual(flow_rate_outage.mean(), 0, 4)
+
+class TestStormWaterMetrics(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+    
+    @classmethod
+    def tearDownClass(self):
         pass
-   
+    
     
 class TestStormWaterGIS(unittest.TestCase):
     
@@ -157,11 +196,28 @@ class TestStormWaterGIS(unittest.TestCase):
         swn_gis.subcatchments.boundary.plot(ax=ax)
         swn_gis.junctions.plot(column="InvertElev", ax=ax)
         swn_gis.conduits.plot(column="MaxFlow", ax=ax)
-        
+    
+        assert swn_gis.subcatchments.shape == (7,8)
+        assert 'geometry' in swn_gis.subcatchments.columns
         assert swn_gis.junctions.shape == (11,6)
         assert 'geometry' in swn_gis.junctions.columns
+        assert swn_gis.conduits.shape == (11,9)
+        assert 'geometry' in swn_gis.conduits.columns
         
-    
+    def test_write_geojson(self):
+        valid_components = ["junctions", "outfalls", "conduits", "subcatchments"]
+        for name in valid_components:
+            filename = abspath(join(testdir, "temp_"+name+".geojson"))
+            if isfile(filename):
+                os.remove(filename)
+            
+        swntr.io.write_geojson(self.swn, 'temp')
+            
+        for name in valid_components:
+            filename = abspath(join(testdir, "temp_"+name+".geojson"))
+            self.assertTrue(isfile(filename))
+
+
 class TestStormWaterGraphics(unittest.TestCase):
     
     @classmethod
@@ -180,7 +236,7 @@ class TestStormWaterGraphics(unittest.TestCase):
             os.remove(filename)
 
         plt.figure()
-        wntr.graphics.plot_network(self.swn)
+        swntr.graphics.plot_network(self.swn)
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -193,9 +249,10 @@ class TestStormWaterGraphics(unittest.TestCase):
             os.remove(filename)
 
         plt.figure()
-        wntr.graphics.plot_network(self.swn, 
-                                   node_attribute="InvertElev", 
-                                   link_attribute="Length")
+        swntr.graphics.plot_network(self.swn, 
+                                    node_attribute="InvertElev", 
+                                    link_attribute="Length",
+                                    subcatchment_attribute='PercImperv')
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -208,11 +265,10 @@ class TestStormWaterGraphics(unittest.TestCase):
             os.remove(filename)
 
         plt.figure()
-        wntr.graphics.plot_network(self.swn, 
-                                   node_attribute=["J1", "J4"],
-                                   link_attribute=["C3", "C5"],
-                                   link_labels=True,
-                               )
+        swntr.graphics.plot_network(self.swn, 
+                                    node_attribute=["J1", "J4"],
+                                    link_attribute=["C3", "C5"],
+                                    link_labels=True)
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -225,12 +281,10 @@ class TestStormWaterGraphics(unittest.TestCase):
             os.remove(filename)
         
         plt.figure()
-        wntr.graphics.plot_network(
-            self.swn,
-            node_attribute={"J1": 5, "J4": 10},
-            link_attribute={"C3": 3, "C5": 9},
-            node_labels=True,
-        )
+        swntr.graphics.plot_network(self.swn,
+                                    node_attribute={"J1": 5, "J4": 10},
+                                    link_attribute={"C3": 3, "C5": 9},
+                                    node_labels=True)
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -246,12 +300,10 @@ class TestStormWaterGraphics(unittest.TestCase):
         node_degree = pd.Series(dict(nx.degree(G)))
         
         plt.figure()
-        wntr.graphics.plot_network(
-            self.swn, 
-            node_attribute=node_degree, 
-            node_range=[1, 4], 
-            title="Node degree"
-        )
+        swntr.graphics.plot_network(self.swn, 
+                                    node_attribute=node_degree, 
+                                    node_range=[1, 4], 
+                                    title="Node degree")
         plt.savefig(filename, format="png")
         plt.close()
 

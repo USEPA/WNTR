@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import swmmio
 
-from wntr.stormwater.io import to_graph, to_gis
+from wntr.stormwater.io import to_graph, to_gis, _read_controls
 
 logger = logging.getLogger(__name__)
 
@@ -27,131 +27,165 @@ class StormWaterNetworkModel(object):
         StormWaterNetworkModel object.
     """
 
-    def __init__(self, inp_file_name=None):
+    def __init__(self, inp_file_name):
         
-        if inp_file_name:
-            self._swmmio_model = swmmio.Model(inp_file_name, include_rpt=False)
+        self._swmmio_model = swmmio.Model(inp_file_name, include_rpt=False)
   
-            # Attributes of StormWaterNetworkModel link to attributes 
-            # in swmmio.Model.inp, which contains dataframes from an INP file.
-            # The swmmio.Model.inp object also includes a .save method to 
-            # write a new INP file.
+        # See https://github.com/pyswmm/swmmio/issues/57 for a list of supported INP file sections
+        
+        # Attributes of StormWaterNetworkModel link to attributes 
+        # in swmmio.Model.inp, which contains dataframes from an INP file.
+        # The swmmio.Model.inp object also includes a .save method to 
+        # write a new INP file.
 
-            # Nodes = Junctions, outfall, and storage nodes
-            # Links = Conduits, weirs, orifices, and pumps
-            
-            # A * by the section name indicates that we have an 
-            # INP file for tests that include that section
-            
-            # [JUNCTIONS] *
-            self.junctions = self._swmmio_model.inp.junctions
-            # [OUTFALLS] *
-            self.outfalls = self._swmmio_model.inp.outfalls
-            # [STORAGE] *
-            self.storage = self._swmmio_model.inp.storage
+        # Nodes = Junctions, outfall, and storage nodes
+        # Links = Conduits, weirs, orifices, and pumps
+        
+        # A * by the section name indicates that we have an 
+        # INP file for tests that include that section
+        
+        # [JUNCTIONS] *
+        self.junctions = self._swmmio_model.inp.junctions
+        # [OUTFALLS] *
+        self.outfalls = self._swmmio_model.inp.outfalls
+        # [STORAGE] *
+        self.storage = self._swmmio_model.inp.storage
 
-            # [CONDUITS] *
-            self.conduits = self._swmmio_model.inp.conduits
-            # [WEIRS] *
-            self.weirs = self._swmmio_model.inp.weirs
-            # [ORIFICES] *
-            self.orifices = self._swmmio_model.inp.orifices
-            # [PUMPS] *
-            self.pumps = self._swmmio_model.inp.pumps
+        # [CONDUITS] *
+        self.conduits = self._swmmio_model.inp.conduits
+        # [WEIRS] *
+        self.weirs = self._swmmio_model.inp.weirs
+        # [ORIFICES] *
+        self.orifices = self._swmmio_model.inp.orifices
+        # [PUMPS] *
+        self.pumps = self._swmmio_model.inp.pumps
+        
+        # [SUBCATCHMENTS] *
+        self.subcatchments = self._swmmio_model.inp.subcatchments
+        # [SUBAREAS] *
+        self.subareas = self._swmmio_model.inp.subareas
+        # [INFILTRATION] *
+        self.infiltration = self._swmmio_model.inp.infiltration
+        # [LID_USAGE] *
+        self.lid_usage = self._swmmio_model.inp.lid_usage
+        
+        # [INLETS] *
+        self.inlets = self._swmmio_model.inp.inlets
+        # [INLET_USAGE] *
+        self.inlet_usage = self._swmmio_model.inp.inlet_usage
+        
+        # [RAINGAGES] *
+        self.raingages = self._swmmio_model.inp.raingages
+        # [EVAPORATION] *
+        self.evaporation = self._swmmio_model.inp.evaporation
+        
+        # [POLLUTANTS] *
+        self.pollutants = self._swmmio_model.inp.pollutants
+        # [LANDUSES] *
+        self.landuses = self._swmmio_model.inp.landuses
+        # [COVERAGES] *
+        self.coverages = self._swmmio_model.inp.coverages
+        # [BUILDUP] *
+        self.buildup = self._swmmio_model.inp.buildup
+        # [WASHOFF]
+        self.washoff = self._swmmio_model.inp.washoff
+        
+        # [OPTIONS] *
+        self.options = self._swmmio_model.inp.options
+        # [REPORT] *
+        self.report = self._swmmio_model.inp.report
+        
+        # [COORDINATES] *
+        self.coordinates = self._swmmio_model.inp.coordinates
+        # [VERTICES] *
+        self.vertices = self._swmmio_model.inp.vertices
+        # [Polygons] *
+        self.polygons = self._swmmio_model.inp.polygons
+        # [STREETS] *
+        self.streets = self._swmmio_model.inp.streets
+        
+        # [TAGS] *
+        self.tags = self._swmmio_model.inp.tags
+        
+        self.controls = _read_controls(inp_file_name)
+        
+        # The following sections do not read/write correctly in swmmio
+        # The use of create_dataframe_multi_index or the INP files have an unexpected format
+        # As a results these sections are not supported for user modification in swntr
+        # [CURVES] *
+        #self.curves = self._swmmio_model.inp.curves
+        # [TIMESERIES] *
+        #self.timeseries = self._swmmio_model.inp.timeseries
+        # [DWF] *
+        # self.dwf = self._swmmio_model.inp.dwf
+        # [XSECTIONS] *
+        #self.xsections = self._swmmio_model.inp.xsections
+        # [INFLOWS] *
+        #self.inflows = self._swmmio_model.inp.inflows
+        
+        # The following sections are included in groundwatrer_model.inp 
+        # but that model does not run based on sections above
+        # [AQUIFERS] *
+        #self.aquifers = self._swmmio_model.inp.aquifers
+        # [GROUNDWATER] *
+        #self.groundwater = self._swmmio_model.inp.groundwater
+        
+        # The following section is included in site_drainage_model.inp, 
+        # but data is empty
+        # [LOADINGS] *
+        #self.loadings = self._swmmio_model.inp.loadings
+        
+        # The following sections are NOT included in an INP file we have for testing
+        # [LOSSES]
+        # [DIVIDERS]
+        # [RDII]
+        # [HYDROGRAPHS]
+        # [FILES]
+        
+        # The following sections are NOT included in swmmio read/write
+        # [TITLE] *
+        # [LID_CONTROLS] *
+        # [CONTROLS] *
+        # [PATTERNS] *
+        # [MAP] *
+        # [SYMBOLS] *
+        # [LABLES] *
+        # [BACKDROP] *
+        
+    def describe(self, level=0):
+        """
+        Describe number of components in the network model
+        
+        Parameters
+        ----------
+        level : int (0, 1, or 2)
             
-            # [SUBCATCHMENTS] *
-            self.subcatchments = self._swmmio_model.inp.subcatchments
-            # [SUBAREAS] *
-            self.subareas = self._swmmio_model.inp.subareas
-            # [INFILTRATION] *
-            self.infiltration = self._swmmio_model.inp.infiltration
-            # [LID_USAGE] *
-            self.lid_usage = self._swmmio_model.inp.lid_usage
-            
-            # [INLETS] *
-            self.inlets = self._swmmio_model.inp.inlets
-            # [INLET_USAGE] *
-            self.inlet_usage = self._swmmio_model.inp.inlet_usage
-            
-            # [RAINGAGES] *
-            self.raingages = self._swmmio_model.inp.raingages
-            # [EVAPORATION] *
-            self.evaporation = self._swmmio_model.inp.evaporation
-            
-            # [POLLUTANTS] *
-            self.pollutants = self._swmmio_model.inp.pollutants
-            # [LANDUSES] *
-            self.landuses = self._swmmio_model.inp.landuses
-            # [COVERAGES] *
-            self.coverages = self._swmmio_model.inp.coverages
-            # [BUILDUP] *
-            self.buildup = self._swmmio_model.inp.buildup
-            # [WASHOFF]
-            self.washoff = self._swmmio_model.inp.washoff
-            
-            # [OPTIONS] *
-            self.options = self._swmmio_model.inp.options
-            # [REPORT] *
-            self.report = self._swmmio_model.inp.report
-            
-            # [COORDINATES] *
-            self.coordinates = self._swmmio_model.inp.coordinates
-            # [VERTICES] *
-            self.vertices = self._swmmio_model.inp.vertices
-            # [Polygons] *
-            self.polygons = self._swmmio_model.inp.polygons
-            # [STREETS] *
-            self.streets = self._swmmio_model.inp.streets
-            
-            # [TAGS] *
-            self.tags = self._swmmio_model.inp.tags
-            
-            # The following sections do not read/write correctly in swmmio
-            # The use of create_dataframe_multi_index or the INP files have an unexpected format
-            # As a results these sections are not supported for user modification in swntr
-            # [CURVES] *
-            #self.curves = self._swmmio_model.inp.curves
-            # [TIMESERIES] *
-            #self.timeseries = self._swmmio_model.inp.timeseries
-            # [DWF] *
-            # self.dwf = self._swmmio_model.inp.dwf
-            # [XSECTIONS] *
-            #self.xsections = self._swmmio_model.inp.xsections
-            # [INFLOWS] *
-            #self.inflows = self._swmmio_model.inp.inflows
-            
-            # The following sections are included in groundwatrer_model.inp 
-            # but that model does not run based on sections above
-            # [AQUIFERS] *
-            #self.aquifers = self._swmmio_model.inp.aquifers
-            # [GROUNDWATER] *
-            #self.groundwater = self._swmmio_model.inp.groundwater
-            
-            # The following section is included in site_drainage_model.inp, 
-            # but data is empty
-            # [LOADINGS] *
-            #self.loadings = self._swmmio_model.inp.loadings
-            
-            # The following sections are NOT included in an INP file we have for testing
-            # [LOSSES]
-            # [DIVIDERS]
-            # [RDII]
-            # [HYDROGRAPHS]
-            # [FILES]
-            
-            # The following sections are NOT included in swmmio read/write
-            # [TITLE] *
-            # [LID_CONTROLS] *
-            # [CONTROLS] *
-            # [PATTERNS] *
-            # [MAP] *
-            # [SYMBOLS] *
-            # [LABLES] *
-            # [BACKDROP] *
-            
-        else:
-            self._swmmio_model = None
-            
+           * Level 0 returns the number of Junctions, Outfalls, Storage, Conduits, Weirs, Orifices, Pumps, Subcatchments, and Raingages
+           * Level 1 includes information on additional network components
+           
+        Returns
+        -------
+        A pandas Series with component counts
+        """
+
+        d = {
+            "Junctions": self.num_junctions,
+            "Outfalls": self.num_outfalls,
+            "Storage": self.num_storages,
+            "Conduits": self.num_conduits,
+            "Weirs": self.num_weirs,
+            "Orifices": self.num_orifices,
+            "Pumps": self.num_pumps,
+            "Subcatchments": self.num_subcatchments,
+            "Raingages": self.num_raingages,
+            #"Controls": self.num_controls,
+        }
+        
+        if level == 1:
+            raise NotImplementedError
+
+        return pd.Series(d)
+    
     @property
     def nodes(self):
         """Nodes database (read only)"""
@@ -328,6 +362,27 @@ class StormWaterNetworkModel(object):
         """
         return to_graph(self, node_weight, link_weight, modify_direction)
 
+    def add_pump_outage_control(self, pump_name, start_time, end_time=None, priority=4):
+        """
+        Add a pump outage rule to the stormwater network model.
+    
+        Parameters
+        ----------
+        start_time : int
+           The time at which the outage starts in decimal hours
+        end_time : int
+           The time at which the outage stops in decimal hours
+        priority : int
+            The outage rule priority, default = 4 (highest priority)
+        """
+        rule_name = pump_name + '_power_outage'
+        rule = ["IF SIMULATION TIME > "+str(start_time)]
+        if end_time is not None:
+            rule.append("AND SIMULATION TIME < "+str(end_time))
+        rule.extend(["THEN PUMP "+pump_name+" status = OFF",
+                     "ELSE PUMP "+pump_name+" status = ON",
+                     "PRIORITY "+str(priority)])
+        self.controls[rule_name] = rule
 
 class Node(object):
     """

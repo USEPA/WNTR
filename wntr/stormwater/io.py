@@ -93,7 +93,6 @@ def to_gis(swn, crs=None):
     gis_data._create_gis(swn, crs)
     return gis_data
 
-
 def write_inpfile(swn, filename):
     """
     Write the StormWaterNetworkModel to an EPANET INP file
@@ -106,6 +105,7 @@ def write_inpfile(swn, filename):
        Name of the inp file
     """
     swn._swmmio_model.inp.save(filename)
+    _write_controls(filename, swn.controls)
 
 def read_inpfile(filename):
     """
@@ -124,6 +124,60 @@ def read_inpfile(filename):
 
     return swn
 
+def _read_controls(filename):
+    # Controls are not supported by swmmio, currently swntr includes an 
+    # additional INP file read to extract control
+    controls = {}
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            if "[CONTROLS]" in line:
+                break
+        name = None
+        control = []
+        for line in f:
+            line = line.strip("\n")
+            if len(line) == 0:
+                continue
+            if "[" in line:
+                if (name is not None) and (len(control) > 0):
+                    controls[name] = control
+                return controls
+            if line.split(' ')[0] == "RULE":
+                if (name is not None) and (len(control) > 0):
+                    controls[name] = control
+                    # new rule
+                name = line.split(' ')[1]
+                control = []
+            else:
+                control.append(line)
+    return controls
+    
+def _write_controls(filename, controls):
+    # Controls are not supported by swmmio, currently swntr includes an 
+    # additional INP file read/write to update control
+    txt = ""
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            txt = txt + line
+            if "[CONTROLS]" in line:
+                break
+        for name, control in controls.items():
+            txt = txt + 'RULE ' + name + '\n'
+            for control_line in control:
+                if control_line[-1::] != '\n':
+                    control_line = control_line + '\n'
+                txt = txt + control_line
+        txt = txt + '\n'
+        for line in f:
+            if "[" in line:
+                break
+        txt = txt + line
+        for line in f:
+            txt = txt + line
+    
+    f = open(filename, "w")
+    f.write(txt)
+    f.close()
 
 def read_rptfile(filename):
     """
