@@ -1,8 +1,0 @@
-wntr.stormwater.sim module
-=====================================
-
-.. automodule:: wntr.stormwater.sim
-    :members:
-    :inherited-members:
-    :no-undoc-members:
-    :show-inheritance:
