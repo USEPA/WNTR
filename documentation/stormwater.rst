@@ -19,10 +19,12 @@
     ... except:
     ...    backdrop_img = plt.imread('documentation/figures/Site-Post.jpg')
 
+.. role:: red
+
 .. _stormwater:
 
-Stormwater/Wastewater resilience analysis
-=========================================
+Stormwater/Wastewater resilience analysis (S-WNTR)
+==================================================
 .. note:: 
    Stormwater and wastewater resilience capabilities in WNTR are new
    and should be considered beta software. 
@@ -32,15 +34,16 @@ Overview
 ---------
 The following section describes capabilities in WNTR to 
 quantify the resilience of stormwater and wastewater systems.  
-This capability resides in the :class:`~wntr.stormwater` subpackage.
-This subpackage is intended to 
-leverage existing stormwater and wastewater analysis packages within a framework that 
-facilitates the use of WNTR resilience capabilities.
-For that reason, **familiarity with WNTR is recommended before using the stormwater subpackage**.
+This capability resides in the :class:`~wntr.stormwater` subpackage and 
+is referred to as S-WNTR (pronounced "S-winter").
+**S-WNTR is intended to 
+leverage existing stormwater and wastewater software within a framework that 
+facilitates the use of WNTR capabilities for resilience analysis.**
+For that reason, some familiarity with WNTR is recommended before using S-WNTR.
 Drinking water functionality in WNTR is cross referenced in 
 this section to provide additional background.
 
-WNTR's stormwater subpackage uses EPA's `Storm Water Management Model (SWMM) <https://www.epa.gov/water-research/storm-water-management-model-swmm>`_ :cite:p:`ross22`
+S-WNTR uses EPA's `Storm Water Management Model (SWMM) <https://www.epa.gov/water-research/storm-water-management-model-swmm>`_ :cite:p:`ross22`
 through the use of two Python packages managed by the `pyswmm organization <https://www.pyswmm.org>`_.
 This includes: 
 
@@ -51,14 +54,14 @@ Select WNTR classes/methods/functions that were developed for drinking water
 resilience analysis are imported into the stormwater subpackage to provide capabilities for 
 stormwater and wastewater resilience analysis.
 
-The subpackage is intended to be used a standalone package.
-In the examples below, the stormwater subpackage is imported as "swntr" (pronounced "S-winter").
+S-WNTR is intended to be used a standalone package.
+In the examples below, the stormwater subpackage is imported as "swntr".
 
 .. doctest::
 
     >>> import wntr.stormwater as swntr
 
-The stormwater subpackage includes the following modules:
+S-WNTR includes the following modules:
 
 .. _table-wntr-stormwater-modules:
 .. table:: WNTR Stormwater Modules
@@ -78,13 +81,13 @@ The stormwater subpackage includes the following modules:
 Installation
 -------------
 
-Follow WNTR's :ref:`installation` instructions to install the stormwater subpackage.
+Follow WNTR's :ref:`installation` instructions to install S-WNTR.
 
 Units
 ------
 
 While WNTR uses SI units for all drinking water models and analysis (see :ref:`units`), 
-**stormwater and wastewater models are not converted to SI units** when loaded into the stormwater subpackage.
+**stormwater and wastewater models are not converted to SI units** when loaded into S-WNTR.
 Therefore, any additional data used in analysis should match the units of the model.
 
 For reference, :numref:`table-swmm-units` includes SWMM unit conventions :cite:p:`ross22`.  
@@ -133,7 +136,7 @@ Attributes
 ^^^^^^^^^^^^^^
 
 The StormWaterNetworkModel includes the following DataFrames which store model attributes 
-(and correspond to sections of SWMM INP files):
+(and correspond to sections of SWMM INP files).
 
 * ``swn.junctions``
 * ``swn.outfalls``
@@ -142,28 +145,16 @@ The StormWaterNetworkModel includes the following DataFrames which store model a
 * ``swn.weirs``
 * ``swn.orifices``
 * ``swn.pumps``
+* ``swn.controls``
 * ``swn.subcatchments``
-* ``swn.subareas``
-* ``swn.infiltration``
-* ``swn.lid_usage``
-* ``swn.inlets``
-* ``swn.inlet_usage``
 * ``swn.raingages``
-* ``swn.evaporation``
-* ``swn.pollutants``
-* ``swn.landuses``
-* ``swn.coverages``
-* ``swn.buildup``
-* ``swn.washoff``
-* ``swn.coordinates``
-* ``swn.vertices``
-* ``swn.polygons``
-* ``swn.streets``
-* ``swn.tags``
 * ``swn.options``
 * ``swn.report``
 
-For example, ``swn.junctions`` contains the following attributes:
+A full list of SWMM INP file sections that are supported by S-WNTR are stored in ``swn.section_names``.
+    
+Model attributes are stored in Pandas DataFrames or Series.
+For example, ``swn.junctions`` contains the following information:
 
 .. doctest::
 	
@@ -182,8 +173,9 @@ For example, ``swn.junctions`` contains the following attributes:
     J10       4963.8         0          0               0           0
     J11       4963.0         0          0               0           0
 
-The attributes in these DataFrames can be modified by the user.  
-The updated model is used in hydraulic simulation and analysis.
+
+The DataFrames and Series can be modified by the use and the   
+updated model is used in hydraulic simulation and analysis.
 
 The StormWaterNetworkModel object also includes methods to return a list of 
 junction names, conduits names, etc. 
@@ -194,14 +186,14 @@ junction names, conduits names, etc.
     ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
 	
 .. note:: 
-   :class:`~wntr.stormwater.network.model.StormWaterNetworkModel` uses ``swmmio.Model`` to 
+   :class:`~wntr.stormwater.network.StormWaterNetworkModel` uses ``swmmio.Model`` to 
    read and write the SWMM INP file. 
-   swimmio stores this information in pandas and geopandas data formats.
+   swimmio stores this information in Pandas and GeoPandas data formats.
 
 Model I/O
 ^^^^^^^^^^
 
-The stormwater subpackage includes the following functions to read/write files and transform 
+S-WNTR includes the following functions to read/write files and transform 
 the StormWaterNetworkModel to other data formats.
 This functionality builds on methods in swmmio.
 
@@ -209,13 +201,22 @@ This functionality builds on methods in swmmio.
 * :class:`~wntr.stormwater.io.write_inpfile`: Write a SWMM INP file from a StormWaterNetworkModel
 * :class:`~wntr.stormwater.io.to_graph`: Convert a StormWaterNetworkModel object into a NetworkX graph object
 * :class:`~wntr.stormwater.io.to_gis`: Convert a StormWaterNetworkModel object into a WaterNetworkGIS object
+* :class:`~wntr.stormwater.io.write_geojson`: Write GeoJSON files from a StormWaterNetworkModel
+
+Additional methods are available for reading hydraulic simulation results files.  
+See :ref:`stormwater_simulation` for more information.
+
+* :class:`~wntr.stormwater.io.read_outfile`: Read the SWMM binary output file into Pandas DataFrames
+* :class:`~wntr.stormwater.io.read_rptfile`: Read the SWMM summary report file into Pandas DataFrames
+
+.. _stormwater_simulation:
 
 Hydraulic simulation
 ---------------------
 
 Hydraulic simulations are run using the 
 :class:`~wntr.stormwater.sim.SWMMSimulator` class. Simulation results are stored in a series of 
-pandas DataFrames, as described in the following section.
+Pandas DataFrames, as described in the following section.
 
 .. doctest::
 	
@@ -235,7 +236,7 @@ Open source and commercial software tools like GisToSWMM5 :cite:p`niemi2019autom
 and PCSWMM :cite:p`pcswmm` are able to generate 2D overland 
 meshes that can be stored in SWMM INP files and run using SWMM.
 
-To include overland flow in stormwater subpackage of WNTR, 
+To include overland flow in S-WNTR, 
 the user should first modify their INP file to include a 2D overland conduits.
 
 Simulation results
@@ -245,11 +246,11 @@ Simulation results are stored in a
 :class:`~wntr.stormwater.sim.ResultsObject`. 
 Results include a full timeseries of attributes for 
 nodes, links, and subcatchments. 
-Each attribute is stored in a pandas DataFrame.
+Each attribute is stored in a Pandas DataFrame.
 See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
 
 In addition to returning a solution summary from ``run_sim``, simulation results can 
-be extracted from a SWMM Binary output file using the function :class:`~wntr.stormwater.io.read_outfile`.
+be extracted from a SWMM binary output file using the function :class:`~wntr.stormwater.io.read_outfile`.
 
 Node results include the following attributes for junctions, outfall, and storage nodes:
 
@@ -315,30 +316,49 @@ The solution summary includes the following information:
 
 Disaster scenarios
 ------------------
+Disaster scenarios can be defined based on a **specific threat**
+or **threat agnostic** analysis.
+For example, a specific landslide threat can be quantified using 
+GIS data to define landslide potential and fragility curves
+to define the probability a conduit is damaged as a function of displacement.
+Threat agnostic impacts can be quantified using criticality analysis, 
+where the impact of individual component failures is evaluated.
 
+To model disaster scenarios, attributes and controls in the 
+:class:`~wntr.stormwater.network.StormWaterNetworkModel` are modified to 
+reflect the damage state. 
 Several damage scenarios can be used to quantify resilience of the 
 stormwater/wastewater systems, this includes:
 
-* **Long term power outages**: Power outages impact pumps and lift stations
+* **Long term power outages**: Power outages impact pumps and lift stations. 
+  The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control` 
+  adds a control to the model which turns a pump off and on at user specified start and end times, respectively.
+  By default, the control priority is set to 4 (highest) to override other controls.  
   
   .. doctest::
 	
-	  >>> swn.add_pump_outage_control('PUMP1', 4.5, 12)
-
-* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems
+	  >>> start_time = 4.5 # hours
+	  >>> end_time = 12 # hours
+	  >>> swn.add_pump_outage_control('PUMP1', start_time, end_time)
+	  
+  Note that controls can be viewed and modified using ``swn.controls`` which stores controls as 
+  a Pandas Series of lists (one entry per control line).  
 
   .. doctest::
-	
-	  >>> add_code = 0
+  
+	  >>> print(swn.controls['PUMP1_power_outage'])
+	  ['IF SIMULATION TIME > 4.5', 'AND SIMULATION TIME < 12', 'THEN PUMP PUMP1 status = OFF', 'ELSE PUMP PUMP1 status = ON', 'PRIORITY 4']
 
-* **Conduit blockage or collapse**: Failure impacts flowrate at the conduit.  
-  The flowrate in a conduit can be constrained by setting the MaxFlow as shown below.
+* **Conduit blockage or collapse**: Conduit blockage or collapse impacts the flowrate at the conduit.  
+  The flowrate in a conduit can be constrained by reducing the ``MaxFlow``, as shown below.
   Note that a value of 0 means that the flowrate is unconstrained (no upper bound).
 
   .. doctest::
 	
       >>> swn.conduits.loc['C1', "MaxFlow"] = 0.0001
 
+* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
+  ``[TODO: Add additional discription and example code]``
 
 See :ref:`stormwater_examples` below.
 
@@ -350,12 +370,19 @@ Geospatial capabilities
 
 Site and hazard specific GIS data can be used to define disaster scenarios by 
 through the use of geospatial capabilities which allow the user to identify 
-components which intersect areas impacted by a disruptive events.
-For example, GIS data that defines landslide potential can be used to identify 
-conduits that are likely to experience damage from a landslide and fragility curves
-define the probability the conduit is damaged as a function of displacement.
+components which intersect areas impacted by a disruptive events. 
+Furthermore, GIS data can be used to characterize community impact based on the 
+location of critical facilities and vulnerable populations.
 
-The stormwater subpackage includes a :class:`~wntr.stormwater.gis` module which 
+Example GIS data that can help inform disaster scenarios includes:
+
+* Hazard maps
+* Elevation data
+* Census data
+* Social vulnerability data
+* Location of critical facilities and emergency services
+
+S-WNTR includes a :class:`~wntr.stormwater.gis` module which 
 facilitates the use of GIS data in geospatial operations, like 
 :class:`~wntr.stormwater.gis.snap` and :class:`~wntr.stormwater.gis.intersect`.
 
@@ -456,8 +483,14 @@ Since stormwater and wastewater systems typically operate in a unidirectional mo
 it is possible to identify assets that are upstream and downstream from other assets.  This calculation helps identify 
 travel time along flow paths and capacity limitations along those paths.
 
+``[TODO: Add example]``
+  
 Response time
 ^^^^^^^^^^^^^
+Response time quantifies the amount of time before a backup impacts an upstream node.
+Response time is a function of the travel path, available capacity, and upstream loads.
+
+``[TODO: Add example]``
 
 
 Graphics
@@ -467,7 +500,7 @@ Network attributes, simulation results, and resilience metrics can be plotted in
 ways to better understand system characteristics.  
 
 * Basic network graphics can be generated using the function :class:`~wntr.stormwater.graphics.plot_network`.  
-* Time series graphics can be generated using options available in Matplotlib and pandas.
+* Time series graphics can be generated using options available in Matplotlib and Pandas.
 * Fragility curves can be plotted using the function :class:`~wntr.stormwater.graphics.plot_fragility_curve`.  
 
 See drinking water documentation on :ref:`graphics` for more information on graphics capabilities in WNTR.
@@ -502,6 +535,8 @@ The following example creates a network plot with invert elevation.
 
 Examples
 ---------
+
+``[TODO: Add examples, or link to Jupyter notebooks]``
 
 Upstream/downstream assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
