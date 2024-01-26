@@ -41,116 +41,71 @@ class StormWaterNetworkModel(object):
         # Nodes = Junctions, outfall, and storage nodes
         # Links = Conduits, weirs, orifices, and pumps
         
-        # A * by the section name indicates that we have an 
-        # INP file for tests that include that section
+        # Sections that are commented out are not currently supported by swntr
         
-        # [JUNCTIONS] *
-        self.junctions = self._swmmio_model.inp.junctions
-        # [OUTFALLS] *
-        self.outfalls = self._swmmio_model.inp.outfalls
-        # [STORAGE] *
-        self.storage = self._swmmio_model.inp.storage
-
-        # [CONDUITS] *
-        self.conduits = self._swmmio_model.inp.conduits
-        # [WEIRS] *
-        self.weirs = self._swmmio_model.inp.weirs
-        # [ORIFICES] *
-        self.orifices = self._swmmio_model.inp.orifices
-        # [PUMPS] *
-        self.pumps = self._swmmio_model.inp.pumps
-        
-        # [SUBCATCHMENTS] *
-        self.subcatchments = self._swmmio_model.inp.subcatchments
-        # [SUBAREAS] *
-        self.subareas = self._swmmio_model.inp.subareas
-        # [INFILTRATION] *
-        self.infiltration = self._swmmio_model.inp.infiltration
-        # [LID_USAGE] *
-        self.lid_usage = self._swmmio_model.inp.lid_usage
-        
-        # [INLETS] *
-        self.inlets = self._swmmio_model.inp.inlets
-        # [INLET_USAGE] *
-        self.inlet_usage = self._swmmio_model.inp.inlet_usage
-        
-        # [RAINGAGES] *
-        self.raingages = self._swmmio_model.inp.raingages
-        # [EVAPORATION] *
-        self.evaporation = self._swmmio_model.inp.evaporation
-        
-        # [POLLUTANTS] *
-        self.pollutants = self._swmmio_model.inp.pollutants
-        # [LANDUSES] *
-        self.landuses = self._swmmio_model.inp.landuses
-        # [COVERAGES] *
-        self.coverages = self._swmmio_model.inp.coverages
-        # [BUILDUP] *
-        self.buildup = self._swmmio_model.inp.buildup
-        # [WASHOFF]
-        self.washoff = self._swmmio_model.inp.washoff
-        
-        # [OPTIONS] *
-        self.options = self._swmmio_model.inp.options
-        # [REPORT] *
-        self.report = self._swmmio_model.inp.report
-        
-        # [COORDINATES] *
-        self.coordinates = self._swmmio_model.inp.coordinates
-        # [VERTICES] *
-        self.vertices = self._swmmio_model.inp.vertices
-        # [Polygons] *
-        self.polygons = self._swmmio_model.inp.polygons
-        # [STREETS] *
-        self.streets = self._swmmio_model.inp.streets
-        
-        # [TAGS] *
-        self.tags = self._swmmio_model.inp.tags
-        
-        self.controls = _read_controls(inp_file_name)
-        
-        # The following sections do not read/write correctly in swmmio
-        # The use of create_dataframe_multi_index or the INP files have an unexpected format
-        # As a results these sections are not supported for user modification in swntr
-        # [CURVES] *
-        #self.curves = self._swmmio_model.inp.curves
-        # [TIMESERIES] *
-        #self.timeseries = self._swmmio_model.inp.timeseries
-        # [DWF] *
-        # self.dwf = self._swmmio_model.inp.dwf
-        # [XSECTIONS] *
-        #self.xsections = self._swmmio_model.inp.xsections
-        # [INFLOWS] *
-        #self.inflows = self._swmmio_model.inp.inflows
-        
-        # The following sections are included in groundwatrer_model.inp 
-        # but that model does not run based on sections above
-        # [AQUIFERS] *
-        #self.aquifers = self._swmmio_model.inp.aquifers
-        # [GROUNDWATER] *
-        #self.groundwater = self._swmmio_model.inp.groundwater
-        
-        # The following section is included in site_drainage_model.inp, 
-        # but data is empty
-        # [LOADINGS] *
-        #self.loadings = self._swmmio_model.inp.loadings
-        
-        # The following sections are NOT included in an INP file we have for testing
-        # [LOSSES]
-        # [DIVIDERS]
-        # [RDII]
-        # [HYDROGRAPHS]
-        # [FILES]
-        
-        # The following sections are NOT included in swmmio read/write
-        # [TITLE] *
-        # [LID_CONTROLS] *
-        # [CONTROLS] *
-        # [PATTERNS] *
-        # [MAP] *
-        # [SYMBOLS] *
-        # [LABLES] *
-        # [BACKDROP] *
+        self.section_names = [
+            'junctions',
+            'outfalls',
+            'storage',
+            'conduits',
+            'weirs',
+            'orifices',
+            'pumps',
+            'subcatchments', 
+            'subareas',
+            'infiltration',
+            'lid_usage', 
+            'inlets', 
+            'inlet_usage', 
+            'raingages',
+            'evaporation',
+            'pollutants',
+            'landuses',
+            'coverages',
+            'buildup',
+            'options',
+            'report',
+            'coordinates',
+            'vertices',
+            'polygons',
+            'streets',
+            'tags',
+            
+            # Insufficient test (not included or empty in INP test files)
+            #'loading',
+            #'washoff',
+            #'losses',
+            #'dividers',
+            #'drii',
+            #'hydrographs',
+            #'files',
+            
+            # I/O failure in swmmio
+            #'curves',
+            #'timeseries',
+            #'dwf',
+            #'xsections',
+            #'inflows',
+            #'aquifers',
+            #'groundwater', 
+            
+            # Not supported by swmmio
+            'controls', # requires an additional read of the INP file
+            #'title',
+            #'lid_controls',
+            #'patterns',
+            #'map',
+            #'symbols',
+            #'labels',
+            #'backdrop',
+            ]
+        for sec in self.section_names:
+            if sec == 'controls':
+                controls = _read_controls(inp_file_name)
+                setattr(self, sec, controls)
+            else:
+                df = getattr(self._swmmio_model.inp, sec)
+                setattr(self, sec, df)
         
     def describe(self, level=0):
         """
