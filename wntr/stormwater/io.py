@@ -150,7 +150,7 @@ def _read_controls(filename):
                 control = []
             else:
                 control.append(line)
-    return controls
+    return pd.Series(controls)
     
 def _write_controls(filename, controls):
     # Controls are not supported by swmmio, currently swntr includes an 
