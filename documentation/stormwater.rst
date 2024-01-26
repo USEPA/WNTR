@@ -230,14 +230,14 @@ Pandas DataFrames, as described in the following section.
 Overland flow
 ^^^^^^^^^^^^^^
 Overland flow is an important aspect of resilience analysis for stormwater and wastewater systems. 
-While SWMM accounts for ponded volume and flooding loss, which account for flood impacts 
+While SWMM quantifies ponded volume and flooding loss, which account for flood impacts 
 at the discharge node, SWMM does not support 2D overland flow.  
-Open source and commercial software tools like GisToSWMM5 :cite:p`niemi2019automated` 
-and PCSWMM :cite:p`pcswmm` are able to generate 2D overland 
+Open source and commercial software tools like GisToSWMM5 :cite:p:`niemi2019automated` 
+and PCSWMM :cite:p:`pcswmm` are able to generate 2D overland 
 meshes that can be stored in SWMM INP files and run using SWMM.
 
 To include overland flow in S-WNTR, 
-the user should first modify their INP file to include a 2D overland conduits.
+the user should first modify their INP file to include 2D overland conduits.
 
 Simulation results
 ^^^^^^^^^^^^^^^^^^^
