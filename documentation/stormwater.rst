@@ -21,10 +21,9 @@
 
 .. _stormwater:
 
-Stormwater and wastewater analysis in WNTR
+Stormwater and wastewater analysis in WNTR (**S-WNTR**)
 =======================================================
-(**S-WNTR**)
-============
+
 
 .. note:: 
    Stormwater and wastewater resilience analysis capabilities in WNTR are new
