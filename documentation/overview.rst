@@ -5,16 +5,13 @@
 
 .. _overview:
 
-Drinking water resilience analysis
-======================================
-
 .. raw:: latex
 
     \pagenumbering{arabic}
     \setcounter{page}{1}
    
 Overview 
----------
+========
    
 Drinking water systems face multiple challenges, including aging infrastructure, 
 water quality concerns, uncertainty in supply and demand, natural disasters, 

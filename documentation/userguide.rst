@@ -43,7 +43,7 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    :hidden:
    :caption: Introduction
 
-   Overview <overview>
+   overview
    installation
    framework
    units
@@ -83,13 +83,6 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    graphics
    gis
    advancedsim
-
-.. toctree::
-   :maxdepth: 0
-   :hidden:
-   :caption: Stormwater/Wastewater resilience analysis
-
-   Overview <stormwater>
    
 .. toctree::
     :maxdepth: 1
