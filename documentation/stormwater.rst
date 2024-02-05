@@ -21,8 +21,8 @@
 
 .. _stormwater:
 
-Stormwater and wastewater analysis in WNTR (**S-WNTR**)
-=======================================================
+Stormwater/wastewater analysis using S-WNTR
+===========================================
 
 
 .. note:: 
