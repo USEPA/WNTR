@@ -228,6 +228,7 @@ html_theme_options = {
     "show_toc_level": 2,
     # "secondary_sidebar_items": ["page-toc"], #["page-toc", "edit-this-page", "sourcelink"],
     "navbar_end": [ "theme-switcher.html", "navbar-icon-links.html",],
+    "analytics": {"google_analytics_id": "G-C9ZK84QBTG"},
 }
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
