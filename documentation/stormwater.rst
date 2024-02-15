@@ -35,23 +35,23 @@ Overview
 
 The following section describes capabilities in WNTR to 
 quantify the resilience of stormwater and wastewater systems.  
-This capability resides in the :class:`~wntr.stormwater` subpackage and 
+This capability resides in the :class:`~wntr.stormwater` subpackage of WNTR and 
 is referred to as S-WNTR (pronounced "S-winter").
 **S-WNTR is intended to 
 leverage existing stormwater and wastewater software within a framework that 
 facilitates the use of WNTR capabilities for resilience analysis.**
 For that reason, some familiarity with WNTR is recommended before using S-WNTR.
 Drinking water functionality in WNTR is cross referenced in 
-this section to provide additional background.
+the documentation below to provide additional background.
 
 S-WNTR uses EPA's `Storm Water Management Model (SWMM) <https://www.epa.gov/water-research/storm-water-management-model-swmm>`_ :cite:p:`ross22`
-through the use of two Python packages managed by the `pyswmm organization <https://www.pyswmm.org>`_.
+through the use of two open-source Python packages managed by the `pyswmm organization <https://www.pyswmm.org>`_.
 This includes: 
 
 * **pyswmm** :cite:p:`pyswmm`: used to run SWMM hydraulic simulations, https://github.com/pyswmm/pyswmm
 * **swmmio** :cite:p:`swmmio`: used to access and modify SWMM INP files, https://github.com/pyswmm/swmmio
 
-Select WNTR classes/methods/functions that were developed for drinking water 
+A subset of WNTR classes/methods/functions that were developed for drinking water 
 resilience analysis are imported into the stormwater subpackage to provide capabilities for 
 stormwater and wastewater resilience analysis.
 
@@ -71,8 +71,8 @@ S-WNTR includes the following modules:
    Module                                             Description
    =================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.stormwater.gis`	                  Contains methods to integrate geospatial data into the model and analysis.
-   :class:`~wntr.stormwater.graphics`                 Contains methods to generate graphics.
-   :class:`~wntr.stormwater.io`	                      Contains methods to read and write stormwater network models.
+   :class:`~wntr.stormwater.graphics`                 Contains methods to generate network and fragility curve graphics.
+   :class:`~wntr.stormwater.io`	                      Contains methods to read and write stormwater network models and translate models to other formats.
    :class:`~wntr.stormwater.metrics`	              Contains methods to compute resilience, including topographic and hydraulic metrics.
    :class:`~wntr.stormwater.network`	              Contains methods to define stormwater network models.
    :class:`~wntr.stormwater.scenario`                 Contains methods to define fragility/survival curves.
@@ -249,8 +249,19 @@ Pandas DataFrames, as described in the following section.
 	Each attribute is stored in a Pandas DataFrame.
 	See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
 
-	In addition to returning a solution summary from ``run_sim``, simulation results can 
+	In addition to returning simulation results from :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, simulation results can 
 	be extracted from a SWMM binary output file using the function :class:`~wntr.stormwater.io.read_outfile`.
+	
+	The following example illustrates the use of :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`
+	and :class:`~wntr.stormwater.io.read_outfile` to return simulation results. 
+	The ``file_prefix`` is used to name the SWMM binary output and report file.
+	
+	.. doctest::
+		
+		>>> sim = swntr.sim.SWMMSimulator(swn) 
+		>>> results = sim.run_sim(file_prefix='base')
+		
+		>>> results = swntr.io.read_outfile('base.bin')
 
 	Node results include the following attributes for junctions, outfall, and storage nodes:
 
@@ -297,11 +308,23 @@ Pandas DataFrames, as described in the following section.
 
 .. dropdown:: **Solution summary**
 	
-	When calling ``run_sim``, the user has the option of returning full simulation results or a solution summary.  
+	When calling :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, the user has the option of returning full simulation results or a solution summary.  
 	The solution summary contains information in the SWMM report file, stored as a dictionary of DataFrames.
 
-	In addition to returning a solution summary from ``run_sim``, the solution summary can 
+	In addition to returning a solution summary from :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, the solution summary can 
 	be extracted from a SWMM report file using the function :class:`~wntr.stormwater.io.read_rptfile`.
+
+	The following example illustrates the use of :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim` and 
+	:class:`~wntr.stormwater.io.read_rptfile` to return a solution summary.
+	The ``file_prefix`` is used to name the SWMM binary output and report file.  
+	By default, ``run_sim`` returns full simulation results instead of a solution summary (``return_summary=False``).
+	
+	.. doctest::
+		
+		>>> sim = swntr.sim.SWMMSimulator(swn) 
+		>>> summary = sim.run_sim(file_prefix='base', return_summary=True)
+		
+		>>> summary = swntr.io.read_outfile('base.rpt')
 
 	The solution summary includes the following information:
 
@@ -323,7 +346,7 @@ to define the probability a conduit is damaged as a function of displacement.
 Threat agnostic impacts can be quantified using criticality analysis, 
 where the impact of individual component failures is evaluated.
 
-.. dropdown:: **Model updates**
+.. dropdown:: **Modeling damage**
 		
 	To model disaster scenarios, attributes and controls in the 
 	:class:`~wntr.stormwater.network.StormWaterNetworkModel` are modified to 
@@ -359,15 +382,15 @@ where the impact of individual component failures is evaluated.
 		  >>> swn.conduits.loc['C1', "MaxFlow"] = 0.0001
 
 	* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
-	  ``[TODO: Add additional discription and example code]``
+	  ``[TODO: Add additional description and example code]``
 
 	See :ref:`stormwater_examples` below.
 
 .. dropdown:: **Geospatial capabilities**
 	
-	Site and hazard specific GIS data can be used to define disaster scenarios by 
+	Site and hazard specific GIS data can be used to define disaster scenarios 
 	through the use of geospatial capabilities which allow the user to identify 
-	components which intersect areas impacted by a disruptive events. 
+	components which intersect areas impacted by disruptive events. 
 	Furthermore, GIS data can be used to characterize community impact based on the 
 	location of critical facilities and vulnerable populations.
 

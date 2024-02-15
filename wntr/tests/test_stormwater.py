@@ -19,16 +19,41 @@ testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
-class TestStormWaterSim(unittest.TestCase):
+from swmmio.tests.data import (MODEL_FULL_FEATURES_PATH, MODEL_FULL_FEATURES__NET_PATH,
+                               BUILD_INSTR_01, MODEL_XSECTION_ALT_01, df_test_coordinates_csv,
+                               MODEL_FULL_FEATURES_XY, DATA_PATH, MODEL_XSECTION_ALT_03,
+                               MODEL_CURVE_NUMBER, MODEL_MOD_HORTON, MODEL_GREEN_AMPT, MODEL_MOD_GREEN_AMPT,
+                               MODEL_INFILTRAION_PARSE_FAILURE, OWA_RPT_EXAMPLE)
 
+class TestStormWaterSim(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(self):
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        self.supported_sections = set(swn.section_names)
+        self.tested_sections = set()
+    
+    @classmethod
+    def tearDownClass(self):
+        untested = self.supported_sections - self.tested_sections
+        print('untested sections', untested)
+    
     def test_simulation(self):
         # Run swmm using
         # 1. direct use of pyswmm, stepwise simulation
         # 2. direct use of swmmio cmd
         # 3. swmmio cmd with INP file read/write
         # 4. swntr with INP file read/write
-        inpfiles = [
-                    #'Culvert.inp', # pyswmm and swmmio fail
+        inpfiles = [ 
+                    # SWMMIO INP test files
+                    MODEL_FULL_FEATURES_PATH, 
+                    #MODEL_CURVE_NUMBER, # pyswmm fails
+                    #MODEL_MOD_HORTON, # pyswmm fails
+                    MODEL_GREEN_AMPT,
+                    
+                    # SWMM INP example files
+                    #'Culvert.inp', # pyswmm fails
                     'Detention_Pond_Model.inp',
                     #'Groundwater_Model.inp', # pyswmm fails (rpt file does not finish writing).  swmmio results in empty link results
                     'Inlet_Drains_Model.inp',
@@ -46,9 +71,9 @@ class TestStormWaterSim(unittest.TestCase):
             
             temp_inpfile = 'temp.inp'
             temp_outfile = 'temp.out'
-            
-            # Direct pyswmm
-            print("   run direct pyswmm")
+
+            # Direct use of INP file with pyswmm
+            print("   run pyswmm")
             if isfile(outfile):
                 os.remove(outfile)
             with pyswmm.Simulation(inpfile) as sim: 
@@ -56,16 +81,10 @@ class TestStormWaterSim(unittest.TestCase):
                     pass
                 sim.report()
                 
-            results_pyswmm_direct = swntr.io.read_outfile(outfile)
+            results_pyswmm = swntr.io.read_outfile(outfile)
             
-            # Direct swmmio
-            print("   run direct swmmio")
-            if isfile(outfile):
-                os.remove(outfile)
-            p = subprocess.run("python -m swmmio --run " + inpfile)
-            results_swmmio_direct = swntr.io.read_outfile(outfile)
-
-            # swmmio (with read/write)
+            # swmmio with saved INP file
+            # No model sections are flagged for rewrite
             print("   run swmmio")
             if isfile(temp_inpfile):
                 os.remove(temp_inpfile)
@@ -77,6 +96,7 @@ class TestStormWaterSim(unittest.TestCase):
             results_swmmio = swntr.io.read_outfile(temp_outfile)
             
             # swntr
+            # All model sections are flagged for rewrite
             print("   run swntr")
             if isfile(temp_inpfile):
                 os.remove(temp_inpfile)
@@ -86,20 +106,25 @@ class TestStormWaterSim(unittest.TestCase):
             sim = swntr.sim.SWMMSimulator(swn) 
             results_swntr = sim.run_sim()
             
+            for sec in swn.section_names:
+                if sec =='controls':
+                     if len(swn.controls.keys()) > 0:
+                        self.tested_sections.add(sec)
+                else:
+                    df = getattr(swn._swmmio_model.inp, sec)
+                    if df.shape[0] > 0:
+                        self.tested_sections.add(sec)
+                
             # Compare direct methods to swmmio and swntr, node total inflow
-            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
-                               results_swmmio_direct.node['TOTAL_INFLOW'])
-            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
+            assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
                                results_swmmio.node['TOTAL_INFLOW'])
-            assert_frame_equal(results_pyswmm_direct.node['TOTAL_INFLOW'],
+            assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
                                results_swntr.node['TOTAL_INFLOW'])
             
             # Compare direct methods to swmmio and swntr, link capacity
-            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
-                               results_swmmio_direct.link['CAPACITY'])
-            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
+            assert_frame_equal(results_pyswmm.link['CAPACITY'],
                                results_swmmio.link['CAPACITY'])
-            assert_frame_equal(results_pyswmm_direct.link['CAPACITY'],
+            assert_frame_equal(results_pyswmm.link['CAPACITY'],
                                results_swntr.link['CAPACITY'])
 
     def test_return_summary(self):

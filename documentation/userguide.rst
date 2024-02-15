@@ -14,7 +14,7 @@ designed to simulate and analyze resilience of water distribution networks.
 
         A majority of this user guide is dedicated to the user 
         of WNTR for resilience analysis of **drinking water systems**.
-        See :ref:`overview` for more information.
+        See :ref:`wntr_overview` for more information.
 
     .. grid-item-card::
 
