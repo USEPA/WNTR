@@ -44,59 +44,75 @@ class StormWaterNetworkModel(object):
         # Sections that are commented out are not currently supported by swntr
         
         self.section_names = [
+            # Options
+            'options',
+            'report',
+            'files', 
+            
+            # Climate
+            'raingages',
+            'evaporation',
+            'subcatchments', 
+            'subareas',
+            'infiltration',
+            
+            # Hydraulics
             'junctions',
             'outfalls',
             'storage',
             'conduits',
-            'weirs',
-            'orifices',
             'pumps',
-            'subcatchments', 
-            'subareas',
-            'infiltration',
-            'lid_usage', 
-            'inlets', 
-            'inlet_usage', 
-            'raingages',
-            'evaporation',
+            'orifices',
+            'weirs',
+            #'xsections', # requires udpate to swmmio
+            'streets',
+            'inlets',
+            'inlet_usage',
+            
+            # Quality
             'pollutants',
             'landuses',
             'coverages',
             'buildup',
-            'options',
-            'report',
+            'washoff',
+            'inflows',
+            'dwf',
+            
+            # Curves, timeseries, patterns
+            #'curves', # requires udpate to swmmio
+            'timeseries',
+            
+            # Map
+            'polygons',
             'coordinates',
             'vertices',
-            'polygons',
-            'streets',
             'tags',
             
-            # Insufficient test (not included or empty in INP test files)
-            #'loading',
-            #'washoff',
-            #'losses',
-            #'dividers',
-            #'drii',
-            #'hydrographs',
-            #'files',
-            
-            # I/O failure in swmmio
-            #'curves',
-            #'timeseries',
-            #'dwf',
-            #'xsections',
-            #'inflows',
-            #'aquifers',
-            #'groundwater', 
-            
+            # Not included or empty in INP test files (see "untested" in tests)
+            'hydrographs', 
+            'loadings', 
+            'groundwater', 
+            'aquifers', 
+            'losses', 
+            'dividers', 
+            'lid_usage', 
+            'rdii',
+
             # Not supported by swmmio
-            'controls', # requires an additional read of the INP file
+            'controls', # uses function in swntr, requires an additional read of the INP file
             #'title',
+            #'temperature',
+            #'adjustments',
             #'lid_controls',
+            #'gwf', 
+            #'snowpacks',
+            #'outlets',
+            #'transects',
+            #'treatment', 
             #'patterns',
             #'map',
-            #'symbols',
             #'labels',
+            #'symbols',
             #'backdrop',
             ]
         for sec in self.section_names:
