@@ -250,16 +250,14 @@ Pandas DataFrames, as described in the following section.
 	See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
 
 	In addition to returning simulation results from :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, simulation results can 
-	be extracted from a SWMM binary output file using the function :class:`~wntr.stormwater.io.read_outfile`.
-	
-	The following example illustrates the use of :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`
-	and :class:`~wntr.stormwater.io.read_outfile` to return simulation results. 
-	The ``file_prefix`` is used to name the SWMM binary output and report file.
+	be extracted from a SWMM binary output file using the function :class:`~wntr.stormwater.io.read_outfile` as shown in the example below.
+	The ``file_prefix`` is used to name the SWMM binary output file and report file.
+	The default file prefix is "temp".
 	
 	.. doctest::
 		
 		>>> sim = swntr.sim.SWMMSimulator(swn) 
-		>>> results = sim.run_sim(file_prefix='base')
+		>>> results = sim.run_sim(file_prefix='base') # creates base.bin and base.rpt
 		
 		>>> results = swntr.io.read_outfile('base.bin')
 
@@ -310,19 +308,17 @@ Pandas DataFrames, as described in the following section.
 	
 	When calling :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, the user has the option of returning full simulation results or a solution summary.  
 	The solution summary contains information in the SWMM report file, stored as a dictionary of DataFrames.
-
-	In addition to returning a solution summary from :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, the solution summary can 
-	be extracted from a SWMM report file using the function :class:`~wntr.stormwater.io.read_rptfile`.
+	S-WNTR also includes the function :class:`~wntr.stormwater.io.read_rptfile` to read a SWMM report file.
 
 	The following example illustrates the use of :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim` and 
 	:class:`~wntr.stormwater.io.read_rptfile` to return a solution summary.
-	The ``file_prefix`` is used to name the SWMM binary output and report file.  
-	By default, ``run_sim`` returns full simulation results instead of a solution summary (``return_summary=False``).
+	The ``file_prefix`` is used to name the SWMM binary output file and report file.  
+	By default, the simulator returns full simulation results (instead of a summary) and the file prefix is "temp".
 	
 	.. doctest::
 		
 		>>> sim = swntr.sim.SWMMSimulator(swn) 
-		>>> summary = sim.run_sim(file_prefix='base', return_summary=True)
+		>>> summary = sim.run_sim(file_prefix='base', return_summary=True) # creates base.bin and base.rpt
 		
 		>>> summary = swntr.io.read_outfile('base.rpt')
 
