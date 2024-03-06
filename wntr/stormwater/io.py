@@ -42,7 +42,11 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     NetworkX MultiDiGraph
     
     """
-    G = swn._swmmio_model.network
+    # Reload the model, to capture updates on swn
+    write_inpfile(swn, 'temp.inp')
+    swn2 = read_inpfile('temp.inp')
+    
+    G = swn2._swmmio_model.network
     
     # Add a node attribute 'pos' to store the node position as a tuple
     geom = nx.get_node_attributes(G, 'geometry')
@@ -53,8 +57,8 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
         nx.set_node_attributes(G, node_weight, 'weight')
     
     if link_weight is not None:
-        for name in swn.link_name_list:
-            link = swn.get_link(name)
+        for name in swn2.link_name_list:
+            link = swn2.get_link(name)
             start_node = link.start_node_name
             end_node = link.end_node_name
             try:
@@ -104,8 +108,11 @@ def write_inpfile(swn, filename):
     filename : string
        Name of the inp file
     """
+    for sec in swn.section_names:
+        df = getattr(swn, sec)
+        setattr(swn._swmmio_model.inp, sec, df)
+            
     swn._swmmio_model.inp.save(filename)
-    _write_controls(filename, swn.controls)
 
 def read_inpfile(filename):
     """
@@ -124,61 +131,6 @@ def read_inpfile(filename):
 
     return swn
 
-def _read_controls(filename):
-    # Controls are not supported by swmmio, currently swntr includes an 
-    # additional INP file read to extract control
-    controls = {}
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            if "[CONTROLS]" in line:
-                break
-        name = None
-        control = []
-        for line in f:
-            line = line.strip("\n")
-            if len(line) == 0:
-                continue
-            if "[" in line:
-                if (name is not None) and (len(control) > 0):
-                    controls[name] = control
-                return controls
-            if line.split(' ')[0] == "RULE":
-                if (name is not None) and (len(control) > 0):
-                    controls[name] = control
-                    # new rule
-                name = line.split(' ')[1]
-                control = []
-            else:
-                control.append(line)
-    return pd.Series(controls)
-    
-def _write_controls(filename, controls):
-    # Controls are not supported by swmmio, currently swntr includes an 
-    # additional INP file read/write to update control
-    txt = ""
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            txt = txt + line
-            if "[CONTROLS]" in line:
-                break
-        for name, control in controls.items():
-            txt = txt + 'RULE ' + name + '\n'
-            for control_line in control:
-                if control_line[-1::] != '\n':
-                    control_line = control_line + '\n'
-                txt = txt + control_line
-        txt = txt + '\n'
-        for line in f:
-            if "[" in line:
-                break
-        txt = txt + line
-        for line in f:
-            txt = txt + line
-    
-    f = open(filename, "w")
-    f.write(txt)
-    f.close()
-
 def read_rptfile(filename):
     """
     Read a SWMM summary report file
@@ -194,18 +146,15 @@ def read_rptfile(filename):
     """
     summary = {}
     
-    for section in ["Node Depth Summary", 
-                    "Node Inflow Summary", 
-                    "Node Flooding Summary",
-                    "Link Flow Summary",
-                    #"Link Pollutant Load Summary",
-                    "Subcatchment Runoff Summary",
-                    "Subcatchment Washoff Summary",
-                    # "Subcatchment Results"
-                    ]:
-        data = dataframe_from_rpt(filename, section)
-        if data.shape[0] > 0:
-            summary[section] = data
+    rpt_sections = swmmio.utils.text.get_rpt_sections_details(filename)
+    
+    for section in rpt_sections: 
+        try:
+            data = dataframe_from_rpt(filename, section)
+            if data.shape[0] > 0:
+                summary[section] = data
+        except:
+            pass
 
     return summary
 

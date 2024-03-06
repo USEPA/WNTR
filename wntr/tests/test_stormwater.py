@@ -25,6 +25,7 @@ from swmmio.tests.data import (MODEL_FULL_FEATURES_PATH, MODEL_FULL_FEATURES__NE
                                MODEL_CURVE_NUMBER, MODEL_MOD_HORTON, MODEL_GREEN_AMPT, MODEL_MOD_GREEN_AMPT,
                                MODEL_INFILTRAION_PARSE_FAILURE, OWA_RPT_EXAMPLE)
 
+
 class TestStormWaterSim(unittest.TestCase):
     
     @classmethod
@@ -107,13 +108,9 @@ class TestStormWaterSim(unittest.TestCase):
             results_swntr = sim.run_sim()
             
             for sec in swn.section_names:
-                if sec =='controls':
-                     if len(swn.controls.keys()) > 0:
-                        self.tested_sections.add(sec)
-                else:
-                    df = getattr(swn._swmmio_model.inp, sec)
-                    if df.shape[0] > 0:
-                        self.tested_sections.add(sec)
+                df = getattr(swn, sec)
+                if df.shape[0] > 0:
+                    self.tested_sections.add(sec)
                 
             # Compare direct methods to swmmio and swntr, node total inflow
             assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
@@ -135,6 +132,7 @@ class TestStormWaterSim(unittest.TestCase):
         assert 'Node Depth Summary' in summary.keys()
         assert 'MaxNodeDepth' in summary['Node Depth Summary'].columns
         assert set(summary['Node Depth Summary'].index) == set(swn.node_name_list)
+
 
 class TestStormWaterScenarios(unittest.TestCase):
 
@@ -167,15 +165,17 @@ class TestStormWaterScenarios(unittest.TestCase):
 
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
         swn1 = swntr.network.StormWaterNetworkModel(inpfile)
+        assert swn1.controls.shape[0] == 2
         swn1.add_pump_outage_control(pump_name, start_time, end_time) # Outage times in decimal hours
-
+        assert swn1.controls.shape[0] == 3
+        
         # Test ability to modify INP file
         swntr.io.write_inpfile(swn1, "temp.inp")
         inpfile = join(testdir, "temp.inp")
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
-        control_name = pump_name + '_power_outage'
-        assert control_name in swn2.controls.keys()
-        assert len(swn2.controls[control_name]) == 5
+        assert swn2.controls.shape[0] == 3
+        control_name = 'RULE ' + pump_name + '_power_outage'
+        assert control_name in swn2.controls.index
         
         # Test simulation results
         sim = swntr.sim.SWMMSimulator(swn1) 
@@ -191,18 +191,38 @@ class TestStormWaterScenarios(unittest.TestCase):
         flow_rate_outage = results_swntr.link['FLOW_RATE'].loc[start_datetime:end_datetime, pump_name]
         self.assertAlmostEqual(flow_rate_outage.mean(), 0, 4)
 
+
 class TestStormWaterMetrics(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
-        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+        pass
     
     @classmethod
     def tearDownClass(self):
         pass
     
-    
+    def test_pump_power(self):
+        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        
+        sim = swntr.sim.SWMMSimulator(swn) 
+        results = sim.run_sim()
+        summary = swntr.io.read_rptfile('temp.rpt')
+        
+        pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
+        head = results.node['HYDRAULIC_HEAD']
+
+        pump_headloss = swntr.metrics.headloss(head, swn.pump_name_list, swn)
+        pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, swn)
+        pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, swn)
+        
+        pump_name = swn.pump_name_list[0]
+        from_metrics = pump_energy[pump_name].sum()
+        from_rpt = summary['Pumping Summary'].loc[pump_name,'PowerUsage(kW-hr)']
+        
+        self.assertAlmostEqual(from_metrics, from_rpt, 1)
+
 class TestStormWaterGIS(unittest.TestCase):
     
     @classmethod
@@ -333,6 +353,7 @@ class TestStormWaterGraphics(unittest.TestCase):
         plt.close()
 
         self.assertTrue(isfile(filename))
-        
+
+
 if __name__ == "__main__":
     unittest.main()

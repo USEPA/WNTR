@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import swmmio
 
-from wntr.stormwater.io import to_graph, to_gis, _read_controls
+from wntr.stormwater.io import to_graph, to_gis
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +64,11 @@ class StormWaterNetworkModel(object):
             'pumps',
             'orifices',
             'weirs',
-            #'xsections', # requires udpate to swmmio
+            'xsections', # requires udpate to swmmio
             'streets',
             'inlets',
             'inlet_usage',
+            'controls', # requires udpate to swmmio
             
             # Quality
             'pollutants',
@@ -75,12 +76,13 @@ class StormWaterNetworkModel(object):
             'coverages',
             'buildup',
             'washoff',
-            'inflows',
+            'inflows', # requires udpate to swmmio
             'dwf',
             
             # Curves, timeseries, patterns
-            #'curves', # requires udpate to swmmio
+            'curves', # requires udpate to swmmio
             'timeseries',
+            'patterns', # requires udpate to swmmio
             
             # Map
             'polygons',
@@ -98,8 +100,7 @@ class StormWaterNetworkModel(object):
             'lid_usage', 
             'rdii',
 
-            # Not supported by swmmio
-            'controls', # uses function in swntr, requires an additional read of the INP file
+            # Not supported by swmmio model.inp
             #'title',
             #'temperature',
             #'adjustments',
@@ -109,51 +110,27 @@ class StormWaterNetworkModel(object):
             #'outlets',
             #'transects',
             #'treatment', 
-            #'patterns',
             #'map',
             #'labels',
             #'symbols',
             #'backdrop',
             ]
         for sec in self.section_names:
-            if sec == 'controls':
-                controls = _read_controls(inp_file_name)
-                setattr(self, sec, controls)
-            else:
-                df = getattr(self._swmmio_model.inp, sec)
-                setattr(self, sec, df)
+            df = getattr(self._swmmio_model.inp, sec)
+            setattr(self, sec, df)
         
-    def describe(self, level=0):
+    def describe(self):
         """
         Describe number of components in the network model
         
-        Parameters
-        ----------
-        level : int (0, 1, or 2)
-            
-           * Level 0 returns the number of Junctions, Outfalls, Storage, Conduits, Weirs, Orifices, Pumps, Subcatchments, and Raingages
-           * Level 1 includes information on additional network components
-           
         Returns
         -------
         A pandas Series with component counts
         """
-
-        d = {
-            "Junctions": self.num_junctions,
-            "Outfalls": self.num_outfalls,
-            "Storage": self.num_storages,
-            "Conduits": self.num_conduits,
-            "Weirs": self.num_weirs,
-            "Orifices": self.num_orifices,
-            "Pumps": self.num_pumps,
-            "Subcatchments": self.num_subcatchments,
-            "Raingages": self.num_raingages,
-            #"Controls": self.num_controls,
-        }
-        
-        if level == 1:
-            raise NotImplementedError
+        d = {}
+        for sec in self.section_names:
+            df = getattr(self, sec)
+            d[sec] = df.shape[0]
 
         return pd.Series(d)
     
@@ -346,14 +323,101 @@ class StormWaterNetworkModel(object):
         priority : int
             The outage rule priority, default = 4 (highest priority)
         """
-        rule_name = pump_name + '_power_outage'
-        rule = ["IF SIMULATION TIME > "+str(start_time)]
+        rule_name = 'RULE ' + pump_name + '_power_outage'
+        
+        rule = "IF SIMULATION TIME > " + str(start_time) + " "
         if end_time is not None:
-            rule.append("AND SIMULATION TIME < "+str(end_time))
-        rule.extend(["THEN PUMP "+pump_name+" status = OFF",
-                     "ELSE PUMP "+pump_name+" status = ON",
-                     "PRIORITY "+str(priority)])
-        self.controls[rule_name] = rule
+            rule = rule + "AND SIMULATION TIME < "+str(end_time) + " "
+        rule = rule + "THEN PUMP "+pump_name+" status = OFF " 
+        rule = rule + "ELSE PUMP "+pump_name+" status = ON "
+        rule = rule + "PRIORITY "+str(priority)
+        
+        self.controls.loc[rule_name, 'Control'] = rule
+        
+    def add_composite_patterns(self, data, pattern_suffix="_Composite", update_model=True):
+        """
+        Add composite dry weather flow (DWF) and composite patterns to the 
+        model, computed from data that contains multiple base values and 
+        pattern names per node.  
+
+        Composite DWFs override existing DWF (see `swn.dwf`).  
+
+        Composite pattern values (Factor1, Factor2, ...)
+        have a mean value of 1 and are appended to existing patterns.  Patterns
+        are named <node name> + pattern_suffix (see `swn.patterns`). 
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Data containing multiple base and pattern names per node.
+            DataFrame columns = ['Node', 'Base', 'Pattern'] where 
+            the Node column contains node names, 
+            the Base column contains base values for mean flow, and 
+            the Pattern column contains pattern names that already exist in the 
+            model (swn).
+
+        pattern_suffix : string (optional, default = "_Composite")
+            Pattern name suffix, appended to the node name
+
+        add_to_model : Bool (optional, default = True)
+            Flag indicating if the composite DWF and Patterns are added to the
+            model. If False, the composite base and patterns are returned, but 
+            not used to update the model (swn).
+
+        Returns
+        -------
+        pd.DataFrame with one base and pattern value per node.
+        """
+
+        mask = self.patterns.columns.str.contains('Factor')
+        factor_cols = self.patterns.columns[mask]
+
+        assert self.patterns.loc[:,factor_cols].isna().sum() == 0, \
+            "Composite patterns is not implemented for variable pattern length"
+
+        nodes = data.index.unique()
+        cols = ['Base']
+        cols.extend(list(factor_cols))
+        composite = pd.DataFrame(index=nodes, columns=cols)
+
+        for name, group in data.groupby('Node'):
+            patterns = group['Pattern']
+
+            factors = self.patterns.loc[patterns, factor_cols].values
+            base = group['Base'].values
+            scaled = np.multiply(factors, np.expand_dims(base, axis=1))
+            composite_vals = scaled.sum(axis=0)
+
+            composite_base = np.round(composite_vals.mean(), 6)
+            composite_factors = composite_vals
+            if composite_base > 0:
+                composite_factors = composite_factors/composite_base
+            composite_factors = np.around(composite_factors, 6)
+
+            composite.loc[name, 'Base'] = composite_base
+            composite.loc[name, factor_cols] = composite_factors
+
+        data = composite.copy()
+        data['TimePatterns'] = data.index + pattern_suffix
+
+        composite_dwf = data[['Base', 'TimePatterns']]
+        composite_dwf.loc[:,'Parameter'] = 'FLOW'
+        composite_dwf.rename(columns={'Base':'AverageValue'}, inplace=True)
+        composite_dwf = composite_dwf[['Parameter', 'AverageValue', 'TimePatterns']]
+
+        composite_patterns = data[factor_cols]
+        composite_patterns.index = data['TimePatterns']
+        composite_patterns.loc[:, 'Type'] = 'HOURLY'
+
+        if update_model:
+            # Override DWF with new composite values
+            self.dwf.loc[composite_dwf.index, :] = composite_dwf
+
+            # Concat Patterns with new composite values
+            concat_patterns = pd.concat([self.patterns, composite_patterns])
+            self.patterns = concat_patterns
+
+        return composite
 
 class Node(object):
     """
