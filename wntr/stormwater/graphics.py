@@ -19,7 +19,6 @@ try:
 except ModuleNotFoundError:
     has_geopandas = False
 
-
 from wntr.graphics.network import plot_network as _plot_network
 from wntr.graphics.curve import plot_fragility_curve
 from wntr.graphics.color import custom_colormap, random_colormap

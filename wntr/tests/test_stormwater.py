@@ -6,26 +6,30 @@ from pandas.testing import assert_frame_equal
 import networkx as nx
 import pandas as pd
 import matplotlib.pylab as plt
-
-import swmmio
-import pyswmm
 import subprocess
 
-warnings.filterwarnings('ignore', module='swmmio')
+try:
+    import swmmio
+    warnings.filterwarnings('ignore', module='swmmio')
+    has_swmmio = True
+except ModuleNotFoundError:
+    swmmio = None
+    has_swmmio = False
+try:
+    import pyswmm
+except ModuleNotFoundError:
+    pyswmm = None
 
 import wntr.stormwater as swntr
+
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
-from swmmio.tests.data import (MODEL_FULL_FEATURES_PATH, MODEL_FULL_FEATURES__NET_PATH,
-                               BUILD_INSTR_01, MODEL_XSECTION_ALT_01, df_test_coordinates_csv,
-                               MODEL_FULL_FEATURES_XY, DATA_PATH, MODEL_XSECTION_ALT_03,
-                               MODEL_CURVE_NUMBER, MODEL_MOD_HORTON, MODEL_GREEN_AMPT, MODEL_MOD_GREEN_AMPT,
-                               MODEL_INFILTRAION_PARSE_FAILURE, OWA_RPT_EXAMPLE)
 
-
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterSim(unittest.TestCase):
     
     @classmethod
@@ -48,10 +52,10 @@ class TestStormWaterSim(unittest.TestCase):
         # 4. swntr with INP file read/write
         inpfiles = [ 
                     # SWMMIO INP test files
-                    MODEL_FULL_FEATURES_PATH, 
-                    #MODEL_CURVE_NUMBER, # pyswmm fails
-                    #MODEL_MOD_HORTON, # pyswmm fails
-                    MODEL_GREEN_AMPT,
+                    swmmio.tests.data.MODEL_FULL_FEATURES_PATH, 
+                    #swmmio.tests.data.MODEL_CURVE_NUMBER, # pyswmm fails
+                    #swmmio.tests.data.MODEL_MOD_HORTON, # pyswmm fails
+                    swmmio.tests.data.MODEL_GREEN_AMPT,
                     
                     # SWMM INP example files
                     #'Culvert.inp', # pyswmm fails
@@ -133,7 +137,8 @@ class TestStormWaterSim(unittest.TestCase):
         assert 'MaxNodeDepth' in summary['Node Depth Summary'].columns
         assert set(summary['Node Depth Summary'].index) == set(swn.node_name_list)
 
-
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestStormWaterScenarios(unittest.TestCase):
 
     def test_conduit_reduced_flow(self):
@@ -192,6 +197,8 @@ class TestStormWaterScenarios(unittest.TestCase):
         self.assertAlmostEqual(flow_rate_outage.mean(), 0, 4)
 
 
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestStormWaterMetrics(unittest.TestCase):
 
     @classmethod
@@ -223,6 +230,9 @@ class TestStormWaterMetrics(unittest.TestCase):
         
         self.assertAlmostEqual(from_metrics, from_rpt, 1)
 
+
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestStormWaterGIS(unittest.TestCase):
     
     @classmethod
@@ -263,6 +273,8 @@ class TestStormWaterGIS(unittest.TestCase):
             self.assertTrue(isfile(filename))
 
 
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test GIS capabilities: geopandas is missing")
 class TestStormWaterGraphics(unittest.TestCase):
     
     @classmethod

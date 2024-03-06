@@ -2,12 +2,7 @@
 The wntr.stormwater.gis module contains methods to
 integrate geospatial data into stormwater models and analysis.
 """
-from wntr.gis import snap, intersect
-
-import swmmio
-
 import pandas as pd
-import numpy as np
 
 try:
     from shapely.geometry import LineString, Point, Polygon
@@ -21,7 +16,8 @@ try:
 except ModuleNotFoundError:
     has_geopandas = False
 
-import wntr.network.elements
+from wntr.gis import snap, intersect
+
 
 class StormWaterNetworkGIS:
     """
@@ -122,7 +118,8 @@ class StormWaterNetworkGIS:
             geom[subcatch_name] = Polygon(vertices)
         geom = pd.Series(geom)    
         self.subcatchments = gpd.GeoDataFrame(swn.subcatchments, geometry=geom, crs=crs)
-        """        
+        """ 
+        import swmmio
         # create gis from an updated swmmio model
         # This is very slow for large models
         # Models without certain features (subcatchments) fail

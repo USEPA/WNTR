@@ -5,14 +5,23 @@ read and write stormwater and wastewater network models.
 import logging
 import pandas as pd
 import networkx as nx
-import pyswmm
-import swmmio
-from swmm.toolkit.shared_enum import NodeAttribute, LinkAttribute, \
-                                     SubcatchAttribute, SystemAttribute
-from swmmio.utils.dataframes import dataframe_from_rpt
+
+try:
+    import swmmio
+    has_swmmio = True
+except ModuleNotFoundError:
+    swmmio = None
+    has_swmmio = False
+
+try:
+    import pyswmm
+    import swmm.toolkit
+    has_pyswmm = True
+except ModuleNotFoundError:
+    pyswmm = None
+    has_pyswmm = False
 
 from wntr.sim import SimulationResults
-
 from wntr.stormwater.gis import StormWaterNetworkGIS
 import wntr.stormwater
 
@@ -150,7 +159,7 @@ def read_rptfile(filename):
     
     for section in rpt_sections: 
         try:
-            data = dataframe_from_rpt(filename, section)
+            data = swmmio.utils.dataframes.dataframe_from_rpt(filename, section)
             if data.shape[0] > 0:
                 summary[section] = data
         except:
@@ -195,28 +204,28 @@ def read_outfile(filename):
     with pyswmm.Output(filename) as out:
         times = out.times
         
-        for attribute in NodeAttribute:
+        for attribute in swmm.toolkit.shared_enum.NodeAttribute:
             temp = {}
             for node_name in out.nodes.keys():
                 ts = out.node_series(node_name, attribute)
                 temp[node_name] = ts.values()
             results.node[attribute.name] = pd.DataFrame(data=temp, index=times)
         
-        for attribute in LinkAttribute:
+        for attribute in swmm.toolkit.shared_enum.LinkAttribute:
             temp = {}
             for link_name in out.links.keys():
                 ts = out.link_series(link_name, attribute)
                 temp[link_name] = ts.values()
             results.link[attribute.name] = pd.DataFrame(data=temp, index=times)
             
-        for attribute in SubcatchAttribute:
+        for attribute in swmm.toolkit.shared_enum.SubcatchAttribute:
             temp = {}
             for subcatch_name in out.subcatchments.keys():
                 ts = out.subcatch_series(subcatch_name, attribute)
                 temp[subcatch_name] = ts.values()
             results.subcatch[attribute.name] = pd.DataFrame(data=temp, index=times)
         
-        for attribute in SystemAttribute:
+        for attribute in swmm.toolkit.shared_enum.SystemAttribute:
             ts = out.system_series(attribute)
             temp[attribute] = ts.values()
         results.system = pd.DataFrame(data=temp, index=times)

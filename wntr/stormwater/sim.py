@@ -4,7 +4,13 @@ hydraulics.
 """
 import os
 import subprocess
-import pyswmm
+
+try:
+    import swmmio
+    has_swmmio = True
+except ModuleNotFoundError:
+    swmmio = None
+    has_swmmio = False
 
 from wntr.stormwater.io import write_inpfile, read_outfile, read_rptfile
 
@@ -36,7 +42,9 @@ class SWMMSimulator(object):
         -------
         Simulation results from the binary .out file (default) or summary .rpt file
         """
-        
+        if not has_swmmio:
+            raise ModuleNotFoundError('swmmio is required')
+
         temp_inpfile = file_prefix + '.inp'
         if os.path.isfile(temp_inpfile):
             os.remove(temp_inpfile)

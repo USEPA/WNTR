@@ -6,7 +6,13 @@ import logging
 import random
 import numpy as np
 import pandas as pd
-import swmmio
+
+try:
+    import swmmio
+    has_swmmio = True
+except ModuleNotFoundError:
+    swmmio = None
+    has_swmmio = False
 
 from wntr.stormwater.io import to_graph, to_gis
 
@@ -29,6 +35,9 @@ class StormWaterNetworkModel(object):
 
     def __init__(self, inp_file_name):
         
+        if not has_swmmio:
+            raise ModuleNotFoundError('swmmio is required')
+            
         self._swmmio_model = swmmio.Model(inp_file_name, include_rpt=False)
   
         # See https://github.com/pyswmm/swmmio/issues/57 for a list of supported INP file sections
