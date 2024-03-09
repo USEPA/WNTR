@@ -82,7 +82,19 @@ S-WNTR includes the following modules:
 Installation
 ------------
 
-Follow WNTR's :ref:`installation` instructions to install S-WNTR.
+Follow WNTR's :ref:`installation` instructions to install S-WNTR.  
+
+S-WNTR requires the following dependencies (included in the `requirements file <https://github.com/kaklise/WNTR/blob/swmm/requirements.txt>`_):
+
+* numpy
+* scipy
+* networkx
+* pandas
+* matplotlib
+* setuptools
+* geopandas
+* pyswmm
+* swmmio
 
 Units
 -----
@@ -244,24 +256,14 @@ Pandas DataFrames, as described in the following section.
 
 	Simulation results are stored in a 
 	:class:`~wntr.stormwater.sim.ResultsObject`. 
-	Results include a full timeseries of attributes for 
-	nodes, links, and subcatchments. 
-	Each attribute is stored in a Pandas DataFrame.
+	Each results section (node, link, subcatchment, and report) contains a 
+	dictionary of DataFrames storing
+	simulation results and summary information.
 	See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
 
-	In addition to returning simulation results from :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, simulation results can 
-	be extracted from a SWMM binary output file using the function :class:`~wntr.stormwater.io.read_outfile` as shown in the example below.
-	The ``file_prefix`` is used to name the SWMM binary output file and report file.
-	The default file prefix is "temp".
+	The S-WNTR :class:`~wntr.stormwater.sim.ResultsObject` includes the following sections:
 	
-	.. doctest::
-		
-		>>> sim = swntr.sim.SWMMSimulator(swn) 
-		>>> results = sim.run_sim(file_prefix='base') # creates base.bin and base.rpt
-		
-		>>> results = swntr.io.read_outfile('base.bin')
-
-	Node results include the following attributes for junctions, outfall, and storage nodes:
+	**results.node** includes the following timeseries for junctions, outfall, and storage nodes:
 
 	* Invert depth
 	* Hydraulic head
@@ -271,7 +273,7 @@ Pandas DataFrames, as described in the following section.
 	* Flooding loss
 	* Pollution concentration
 
-	Link results include the following attributes for conduits, weirs, orifices, and pumps:
+	**results.link** results include the following timeseries for conduits, weirs, orifices, and pumps:
 
 	* Flow rate
 	* Flow depth
@@ -279,7 +281,7 @@ Pandas DataFrames, as described in the following section.
 	* Capacity
 	* Pollution concentration
 
-	Subcatchment results include the following attributes:
+	**results.subcatchment** results include the following timeseries:
 
 	* Rainfall
 	* Snow depth
@@ -290,6 +292,25 @@ Pandas DataFrames, as described in the following section.
 	* Groundwater table elevation
 	* Soil moisture
 	* Pollution concentration
+
+	**results.report** results include the following summary information:
+	
+	* Node summary
+	* Node depth summary
+	* Node inflow summary
+	* Node surcharge summary
+	* Node flooding summary
+	* Storage volume summary
+	
+	* Link summary
+	* Link flow summary
+	* Link pollutant load summary
+	* Conduit surcharge summary
+	* Pumping summary
+	
+	* Subcatchment summary
+	* Subcatchment runoff summary
+	* Subcatchment washoff summary
 
 	The following example lists node attributes (Note that attribute names use all caps with an underscore between words)
 
@@ -304,33 +325,21 @@ Pandas DataFrames, as described in the following section.
 		
 		>>> conduit_capacity = results.link['CAPACITY'].loc[:, 'C0'] # doctest: +SKIP
 
-.. dropdown:: **Solution summary**
-	
-	When calling :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim`, the user has the option of returning full simulation results or a solution summary.  
-	The solution summary contains information in the SWMM report file, stored as a dictionary of DataFrames.
-	S-WNTR also includes the function :class:`~wntr.stormwater.io.read_rptfile` to read a SWMM report file.
 
-	The following example illustrates the use of :class:`~wntr.stormwater.sim.SWMMSimulator.run_sim` and 
-	:class:`~wntr.stormwater.io.read_rptfile` to return a solution summary.
-	The ``file_prefix`` is used to name the SWMM binary output file and report file.  
-	By default, the simulator returns full simulation results (instead of a summary) and the file prefix is "temp".
+	Simulation timeseries can also be extracted directly from a SWMM binary output file 
+	using the function :class:`~wntr.stormwater.io.read_outfile` and 
+	a report summary can be extracted directly from a SWMM report file 
+	using the function :class:`~wntr.stormwater.io.read_rptfile`, as shown in the example below.
+	The ``file_prefix`` is used to name the output files.
+	The default file prefix is "temp".
 	
 	.. doctest::
 		
 		>>> sim = swntr.sim.SWMMSimulator(swn) 
-		>>> summary = sim.run_sim(file_prefix='base', return_summary=True) # creates base.bin and base.rpt
+		>>> results = sim.run_sim(file_prefix='base') # creates base.bin and base.rpt
 		
-		>>> summary = swntr.io.read_outfile('base.rpt')
-
-	The solution summary includes the following information:
-
-	* Node depth summary
-	* Node inflow summary
-	* Node flooding summary
-	* Link flow summary
-	* Subcatchment runoff summary
-	* Subcatchment washoff summary
-
+		>>> timeseries_results = swntr.io.read_outfile('base.bin')
+		>>> summary_report = swntr.io.read_report('base.rpt')
 
 Disaster scenarios
 ------------------
@@ -367,7 +376,7 @@ where the impact of individual component failures is evaluated.
 	  .. doctest::
 	  
 		  >>> print(swn.controls['PUMP1_power_outage'])
-		  ['IF SIMULATION TIME > 4.5', 'AND SIMULATION TIME < 12', 'THEN PUMP PUMP1 status = OFF', 'ELSE PUMP PUMP1 status = ON', 'PRIORITY 4']
+		  IF SIMULATION TIME > 4.5  AND SIMULATION TIME < 12  THEN PUMP PUMP1 status = OFF  ELSE PUMP PUMP1 status = ON  PRIORITY 4 
 
 	* **Conduit blockage or collapse**: Conduit blockage or collapse impacts the flowrate at the conduit.  
 	  The flowrate in a conduit can be constrained by reducing the ``MaxFlow``, as shown below.

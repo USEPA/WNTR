@@ -25,7 +25,7 @@ class SWMMSimulator(object):
     def __init__(self, swn):
         self._swn = swn
 
-    def run_sim(self, file_prefix='temp', return_summary=False):
+    def run_sim(self, file_prefix='temp', full_results=True):
         """
         Run a SWMM simulation
         
@@ -33,10 +33,10 @@ class SWMMSimulator(object):
         ----------
         file_prefix : str
             Default prefix is "temp". Output files (.out and .rpt) use this prefix
-        return_summary: bool (optional)
-            If return_summary is True, the report file is used to 
-            extract summary results. If False, the binary output file is used to 
-            extract timeseries results. Default = False.
+        full_results: bool (optional)
+            If full_results is True, the binary output file and report summary
+            file are used to extract results.  If False, results are only 
+            extracted from report summary file. Default = True.
         
         Returns
         -------
@@ -67,9 +67,12 @@ class SWMMSimulator(object):
         #         pass
         #     sim.report()
         
-        if return_summary:
-            results = read_rptfile(temp_rptfile)
-        else:
+        if full_results:
             results = read_outfile(temp_outfile)
-            
+            report_summary = read_rptfile(temp_rptfile)
+            results.report = report_summary
+        else:
+            results = SimulationResults()
+            results.report = report_summary
+
         return results

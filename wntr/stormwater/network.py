@@ -6,6 +6,7 @@ import logging
 import random
 import numpy as np
 import pandas as pd
+import networkx as nx
 
 try:
     import swmmio
@@ -126,7 +127,8 @@ class StormWaterNetworkModel(object):
             ]
         for sec in self.section_names:
             df = getattr(self._swmmio_model.inp, sec)
-            setattr(self, sec, df)
+            setattr(self, sec, df.copy())
+            
         
     def describe(self):
         """
@@ -213,60 +215,60 @@ class StormWaterNetworkModel(object):
         """List of raingage names"""
         return list(self.raingages.index)
 
-    @property
-    def num_nodes(self):
-        """Number of nodes"""
-        return len(self.node_name_list)
+    # @property
+    # def num_nodes(self):
+    #     """Number of nodes"""
+    #     return len(self.node_name_list)
 
-    @property
-    def num_junctions(self):
-        """Number of junctions"""
-        return len(self.junction_name_list)
+    # @property
+    # def num_junctions(self):
+    #     """Number of junctions"""
+    #     return len(self.junction_name_list)
 
-    @property
-    def num_outfalls(self):
-        """Number of outfalls"""
-        return len(self.outfall_name_list)
+    # @property
+    # def num_outfalls(self):
+    #     """Number of outfalls"""
+    #     return len(self.outfall_name_list)
 
-    @property
-    def num_storages(self):
-        """Number of storages"""
-        return len(self.storage_name_list)
+    # @property
+    # def num_storages(self):
+    #     """Number of storages"""
+    #     return len(self.storage_name_list)
 
-    @property
-    def num_links(self):
-        """Number of links"""
-        return len(self.link_name_list)
+    # @property
+    # def num_links(self):
+    #     """Number of links"""
+    #     return len(self.link_name_list)
 
-    @property
-    def num_conduits(self):
-        """Number of conduits"""
-        return len(self.conduit_name_list)
+    # @property
+    # def num_conduits(self):
+    #     """Number of conduits"""
+    #     return len(self.conduit_name_list)
 
-    @property
-    def num_weirs(self):
-        """Number of weirs"""
-        return len(self.weir_name_list)
+    # @property
+    # def num_weirs(self):
+    #     """Number of weirs"""
+    #     return len(self.weir_name_list)
 
-    @property
-    def num_orifices(self):
-        """Number of orifices"""
-        return len(self.orifice_name_list)
+    # @property
+    # def num_orifices(self):
+    #     """Number of orifices"""
+    #     return len(self.orifice_name_list)
 
-    @property
-    def num_pumps(self):
-        """Number of pumps"""
-        return len(self.pump_name_list)
+    # @property
+    # def num_pumps(self):
+    #     """Number of pumps"""
+    #     return len(self.pump_name_list)
 
-    @property
-    def num_subcatchments(self):
-        """Number of subcatchments"""
-        return len(self.subcatchment_name_list)
+    # @property
+    # def num_subcatchments(self):
+    #     """Number of subcatchments"""
+    #     return len(self.subcatchment_name_list)
 
-    @property
-    def num_raingages(self):
-        """Number of raingages"""
-        return len(self.raingage_name_list)
+    # @property
+    # def num_raingages(self):
+    #     """Number of raingages"""
+    #     return len(self.raingage_name_list)
 
     def get_node(self, name):
         """Get a specific node
@@ -297,7 +299,66 @@ class StormWaterNetworkModel(object):
 
         """
         return Link(name, self.links.loc[name,:])
+    
+    def anonymize_coordinates(self, seed=None, update_model=True):
+        
+        G = self.to_graph()
 
+        pos = nx.spring_layout(G, seed=seed)
+        coordinates = pd.DataFrame(pos).T
+        coordinates.rename(columns={0: 'X', 1: 'Y'}, inplace=True)
+        
+        if update_model:
+            self.coordinates = coordinates
+            self.vertices.drop(self.vertices.index, inplace=True)
+            self.polygons.drop(self.polygons.index, inplace=True)
+            
+        return coordinates
+        
+    def patterns_to_datetime_format(self):
+        pass
+    
+    def patterns_from_datetime_format(self):
+        pass
+    
+    def timeseries_to_datetime_format(self):
+        """
+        Reformat "Date, Time, Value" timeseries to a datetime indexed DataFrame
+
+        Returns
+        -------
+        pandas DataFrame, with one column per named timeseries
+
+        """
+        assert set(self.timeseries.columns) == set(['Date', 'Time', 'Value'])
+        
+        start_date = self.options.loc['START_DATE','Value']
+        self.timeseries.loc[self.timeseries['Date'].isna(), 'Date'] = start_date
+            
+        ts = {}
+        for name, timeseries in self.timeseries.groupby('Name'):
+            datestr = timeseries['Date'] + ' ' + timeseries['Time']
+            datetime = pd.DatetimeIndex(datestr)
+            value = timeseries['Value'].astype(float).values
+            ts[name] = pd.Series(data=value, index=datetime)
+
+        ts = pd.DataFrame(ts)
+        
+        return ts
+    
+    def timeseries_from_datetime_format(self, ts):
+        
+        timeseries = ts.unstack().reset_index()
+        timeseries = timeseries.set_index('level_1')
+        timeseries['Date'] = timeseries.index.strftime('%m/%d/%Y')
+        timeseries['Time'] = timeseries.index.strftime('%H:%M')
+        timeseries = timeseries.set_index('level_0')
+        timeseries.index.name = 'Name'
+        timeseries.rename(columns={0: 'Value'}, inplace=True)
+        timeseries = timeseries[['Date', 'Time', 'Value']]
+        
+        return timeseries
+        
     def to_gis(self, crs=None):
         """
         Convert a StormWaterNetworkModel into GeoDataFrames
@@ -319,7 +380,8 @@ class StormWaterNetworkModel(object):
         """
         return to_graph(self, node_weight, link_weight, modify_direction)
 
-    def add_pump_outage_control(self, pump_name, start_time, end_time=None, priority=4):
+    def add_pump_outage_control(self, pump_name, start_time, end_time=None, 
+                                priority=4, control_prefix="_outage"):
         """
         Add a pump outage rule to the stormwater network model.
     
@@ -332,7 +394,9 @@ class StormWaterNetworkModel(object):
         priority : int
             The outage rule priority, default = 4 (highest priority)
         """
-        rule_name = 'RULE ' + pump_name + '_power_outage'
+        assert pump_name in self.pump_name_list
+        
+        rule_name = 'RULE ' + pump_name + control_prefix
         
         rule = "IF SIMULATION TIME > " + str(start_time) + " "
         if end_time is not None:

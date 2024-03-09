@@ -51,7 +51,7 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     NetworkX MultiDiGraph
     
     """
-    # Reload the model, to capture updates on swn
+    # TODO For now, reload the model to capture updates on swn
     write_inpfile(swn, 'temp.inp')
     swn2 = read_inpfile('temp.inp')
     
@@ -153,7 +153,7 @@ def read_rptfile(filename):
     -------
     dict
     """
-    summary = {}
+    report = {}
     
     rpt_sections = swmmio.utils.text.get_rpt_sections_details(filename)
     
@@ -161,11 +161,11 @@ def read_rptfile(filename):
         try:
             data = swmmio.utils.dataframes.dataframe_from_rpt(filename, section)
             if data.shape[0] > 0:
-                summary[section] = data
+                report[section] = data
         except:
             pass
 
-    return summary
+    return report
 
 def read_outfile(filename):
     """

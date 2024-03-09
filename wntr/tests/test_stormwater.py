@@ -38,11 +38,13 @@ class TestStormWaterSim(unittest.TestCase):
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         self.supported_sections = set(swn.section_names)
         self.tested_sections = set()
+        self.tested_rpt_sections = set()
     
     @classmethod
     def tearDownClass(self):
-        untested = self.supported_sections - self.tested_sections
-        print('untested sections', untested)
+        untested_sections = self.supported_sections - self.tested_sections
+        print('untested sections', untested_sections)
+        #print('rpt sections', self.tested_rpt_sections)
     
     def test_simulation(self):
         # Run swmm using
@@ -115,7 +117,10 @@ class TestStormWaterSim(unittest.TestCase):
                 df = getattr(swn, sec)
                 if df.shape[0] > 0:
                     self.tested_sections.add(sec)
-                
+            
+            for sec in results_swntr.report.keys():
+                self.tested_rpt_sections.add(sec)
+            
             # Compare direct methods to swmmio and swntr, node total inflow
             assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
                                results_swmmio.node['TOTAL_INFLOW'])
@@ -128,17 +133,18 @@ class TestStormWaterSim(unittest.TestCase):
             assert_frame_equal(results_pyswmm.link['CAPACITY'],
                                results_swntr.link['CAPACITY'])
 
-    def test_return_summary(self):
+    def test_report_summary(self):
         inpfile = join(test_datadir, "SWMM_examples", "Site_Drainage_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         sim = swntr.sim.SWMMSimulator(swn) 
-        summary = sim.run_sim(return_summary=True)
-        assert 'Node Depth Summary' in summary.keys()
-        assert 'MaxNodeDepth' in summary['Node Depth Summary'].columns
-        assert set(summary['Node Depth Summary'].index) == set(swn.node_name_list)
+        results = sim.run_sim()
+        report = results.report
+        assert 'Node Depth Summary' in report.keys()
+        assert 'MaxNodeDepth' in report['Node Depth Summary'].columns
+        assert set(report['Node Depth Summary'].index) == set(swn.node_name_list)
 
 @unittest.skipIf(not has_swmmio,
-                 "Cannot test GIS capabilities: geopandas is missing")
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterScenarios(unittest.TestCase):
 
     def test_conduit_reduced_flow(self):
@@ -179,9 +185,9 @@ class TestStormWaterScenarios(unittest.TestCase):
         inpfile = join(testdir, "temp.inp")
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn2.controls.shape[0] == 3
-        control_name = 'RULE ' + pump_name + '_power_outage'
+        control_name = 'RULE ' + pump_name + '_outage'
         assert control_name in swn2.controls.index
-        
+
         # Test simulation results
         sim = swntr.sim.SWMMSimulator(swn1) 
         results_swntr = sim.run_sim()
@@ -198,7 +204,7 @@ class TestStormWaterScenarios(unittest.TestCase):
 
 
 @unittest.skipIf(not has_swmmio,
-                 "Cannot test GIS capabilities: geopandas is missing")
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterMetrics(unittest.TestCase):
 
     @classmethod
@@ -215,7 +221,6 @@ class TestStormWaterMetrics(unittest.TestCase):
         
         sim = swntr.sim.SWMMSimulator(swn) 
         results = sim.run_sim()
-        summary = swntr.io.read_rptfile('temp.rpt')
         
         pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
         head = results.node['HYDRAULIC_HEAD']
@@ -226,13 +231,13 @@ class TestStormWaterMetrics(unittest.TestCase):
         
         pump_name = swn.pump_name_list[0]
         from_metrics = pump_energy[pump_name].sum()
-        from_rpt = summary['Pumping Summary'].loc[pump_name,'PowerUsage(kW-hr)']
+        from_rpt = results.report['Pumping Summary'].loc[pump_name,'PowerUsage(kW-hr)']
         
         self.assertAlmostEqual(from_metrics, from_rpt, 1)
 
 
 @unittest.skipIf(not has_swmmio,
-                 "Cannot test GIS capabilities: geopandas is missing")
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterGIS(unittest.TestCase):
     
     @classmethod
@@ -274,7 +279,7 @@ class TestStormWaterGIS(unittest.TestCase):
 
 
 @unittest.skipIf(not has_swmmio,
-                 "Cannot test GIS capabilities: geopandas is missing")
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterGraphics(unittest.TestCase):
     
     @classmethod

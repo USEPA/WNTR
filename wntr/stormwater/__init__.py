@@ -9,3 +9,5 @@ from wntr.stormwater.metrics import *
 from wntr.stormwater.network import *
 from wntr.stormwater.sim import *
 from wntr.stormwater.scenario import *
+
+warnings.filterwarnings('ignore', module='swmmio')

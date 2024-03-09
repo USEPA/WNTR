@@ -69,3 +69,4 @@ def plot_network(swn, node_attribute=None, link_attribute=None, subcatchment_att
                    link_width, link_range, link_alpha, link_cmap, link_labels,
                    add_colorbar, node_colorbar_label, link_colorbar_label, 
                    directed, ax=ax, filename=filename)
+
