@@ -693,8 +693,8 @@ class InpFile(object):
                 minor_loss = 0.
                 link_status = LinkStatus.Open
                 check_valve = False
-
-            self.wn.add_pipe(current[0],
+            try:
+                self.wn.add_pipe(current[0],
                         current[1],
                         current[2],
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
@@ -703,6 +703,10 @@ class InpFile(object):
                         minor_loss,
                         link_status,
                         check_valve)
+            except KeyError as e:
+                raise ENKeyError(203, str(e.args[0]), line_num=lnum) from e
+            except ValueError as e:
+                raise ENValueError(211, str(e.args[0]), line_num=lnum) from e
 
     def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode(sys_default_enc))
