@@ -82,7 +82,6 @@ EN_ERROR_CODES = {
     309: "cannot save results to report file %s",
 }
 """A dictionary of the error codes and their meanings from the EPANET toolkit.
-Please see :doc:`/errors` for descriptions of these values.
 
 :meta hide-value:
 """
@@ -98,26 +97,27 @@ class EpanetException(Exception):
         code : int
             The EPANET error code
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
         line : str, optional
             The contents of the line, by default None
         """
-        msg = EN_ERROR_CODES.get(code, 'unknown error')
+        msg = EN_ERROR_CODES.get(code, "unknown error")
         if args is not None:
             args = [*args]
-        if r'%' in msg and len(args) > 0:
+        if r"%" in msg and len(args) > 0:
             msg = msg % repr(args.pop(0))
         if len(args) > 0:
-            msg = msg + ' ' + repr(args)
+            msg = msg + " " + repr(args)
         if line_num:
             msg = msg + ", at line {}".format(line_num)
         if line:
-            msg = msg + ':\n   ' + str(line)
-        msg = '(Error {}) '.format(code) + msg
+            msg = msg + ":\n   " + str(line)
+        msg = "(Error {}) ".format(code) + msg
         super().__init__(msg)
+
 
 class ENSyntaxError(EpanetException, SyntaxError):
     def __init__(self, code, *args, line_num=None, line=None) -> None:
@@ -128,7 +128,7 @@ class ENSyntaxError(EpanetException, SyntaxError):
         code : int
             The EPANET error code
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
@@ -136,6 +136,7 @@ class ENSyntaxError(EpanetException, SyntaxError):
             The contents of the line, by default None
         """
         super().__init__(code, *args, line_num=line_num, line=line)
+
 
 class ENKeyError(EpanetException, KeyError):
     def __init__(self, code, name, *args, line_num=None, line=None) -> None:
@@ -148,7 +149,7 @@ class ENKeyError(EpanetException, KeyError):
         name : str
             The key/name/id that is missing
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
@@ -157,6 +158,7 @@ class ENKeyError(EpanetException, KeyError):
         """
 
         super().__init__(code, name, *args, line_num=line_num, line=line)
+
 
 class ENValueError(EpanetException, ValueError):
     def __init__(self, code, value, *args, line_num=None, line=None) -> None:
@@ -169,7 +171,7 @@ class ENValueError(EpanetException, ValueError):
         value : Any
             The value that is invalid
         args : additional non-keyword arguments, optional
-            If there is a string-format within the error code's text, these will be used to 
+            If there is a string-format within the error code's text, these will be used to
             replace the format, otherwise they will be output at the end of the Exception message.
         line_num : int, optional
             The line number, if reading an INP file, by default None
