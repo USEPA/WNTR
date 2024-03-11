@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join, exists
 import wntr.epanet.exceptions
 
 testdir = dirname(abspath(__file__))
-datadir = join(testdir, "..", "..", "examples", "networks")
+datadir = join(testdir, "networks_for_testing")
 
 
 class TestEpanetExceptions(unittest.TestCase):
@@ -41,7 +41,35 @@ class TestEpanetExceptions(unittest.TestCase):
         except ValueError as e:
             self.assertTupleEqual(e.args, ('(Error 213) invalid option value 4.23e+30',))
 
+    def test_broken_time_string(self):
+        f = wntr.epanet.io.InpFile()
+        inp_file = join(datadir, "bad_times.inp")
+        try:
+            f.read(inp_file)
+        except Exception as e:
+            self.assertIsInstance(e.__cause__, wntr.epanet.exceptions.ENValueError)
+        else:
+            self.fail('Failed to catch expected errors in bad_times.inp')
 
+    def test_broken_syntax(self):
+        f = wntr.epanet.io.InpFile()
+        inp_file = join(datadir, "bad_syntax.inp")
+        try:
+            f.read(inp_file)
+        except Exception as e:
+            self.assertIsInstance(e, wntr.epanet.exceptions.ENSyntaxError)
+        else:
+            self.fail('Failed to catch expected errors in bad_syntax.inp')
+
+    def test_bad_values(self):
+        f = wntr.epanet.io.InpFile()
+        inp_file = join(datadir, "bad_values.inp")
+        try:
+            f.read(inp_file)
+        except Exception as e:
+            self.assertIsInstance(e.__cause__, wntr.epanet.exceptions.ENKeyError)
+        else:
+            self.fail('Failed to catch expected errors in bad_values.inp')
 
 if __name__ == "__main__":
     unittest.main()
