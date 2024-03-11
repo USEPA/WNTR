@@ -70,7 +70,16 @@ For example, to run the pipe criticality example, run the following command::
 
 Additionally, the examples folder contains demonstrations using Jupyter Notebooks. 
 A Jupyter Notebook, an open-sourced web-based application, can be accessed through Anaconda or by installing the 
-associated software available at https://jupyter.org. These demonstrations include the following: 
+associated software available at https://jupyter.org. 
+
+.. note:: 
+   When running Jupyter Notebooks outside of an Anaconda environment:
+   
+   * Install Jupyter Notebook within the virtual environment that also contains WNTR before launching any notebooks.
+   * Ensure all example files are in the same directory as the virtual environment.
+   * Run the notebook from this specific directory to maintain correct file path references.
+
+WNTR Jupyter Notebook demonstrations include the following: 
 
 * `Pipe break demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/pipe_break_demo.ipynb>`_: 
   This demonstration runs multiple hydraulic simulations to compute the impact that different individual pipe breaks/closures have on network pressure. 
@@ -95,6 +104,5 @@ The Jupyter Notebook will open in a browser (e.g., Chrome, Firefox) and the exam
 Additional information on Jupyter Notebooks is available at https://jupyter.org.
 
 For more details about the steps in the demonstrations, review Chapter 12: Water network tool for resilience in 
-`Embracing Analytics in the Drinking Water Industry <https://iwaponline.com/ebooks/book/849/Embracing-Analytics-in-the-Drinking-Water-Industry>`_. 
-  
-  
+`Embracing Analytics in the Drinking Water Industry <https://iwaponline.com/ebooks/book/849/Embracing-Analytics-in-the-Drinking-Water-Industry>`_.
+ 
