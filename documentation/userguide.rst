@@ -70,7 +70,6 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    graphics
    gis
    advancedsim
-   errors
 
 .. toctree::
     :maxdepth: 1
