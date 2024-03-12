@@ -204,6 +204,24 @@ The model is stored in a
 	   read and write the SWMM INP file. 
 	   swimmio stores this information in Pandas and GeoPandas data formats.
 
+.. dropdown:: **Class methods**
+
+
+	In addition to modifying StormWaterNetworkModel DataFrames directly, the following class
+	methods are also available to help modify models.
+
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_composite_patterns`: 
+	  Combine multiple dry weather flows into a single composite base value and pattern 
+	  and update the model (updates `swn.dwf` and `swn.patterns`)
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control`: 
+	  Add a pump outage control to the model
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.anonymize_coordinates`: 
+	  Anonymize model coordinates (using a spring layout) and remove vertices and polygons 
+	  to annoymize the model
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` and 
+	  :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_from_datetime_format`: 
+	  Convert between SWMM formatted timeseries DataFrames and datetime indexed DataFrames
+
 .. dropdown:: **Model I/O**
 
 	S-WNTR includes the following functions to read/write files and transform 
@@ -489,8 +507,9 @@ Additional metrics could also be added at a later date.
 	* Betweenness centrality
 	* Shortest path length
 	* Segmentation groups 
+	* and many more
 
-	The following example uses NetworkX to compute node degree:
+	The following example uses NetworkX to compute node degree.
 
 	.. doctest::
 		
@@ -504,16 +523,41 @@ Additional metrics could also be added at a later date.
 	Since stormwater and wastewater systems typically operate in a unidirectional mode (flow in one direction), 
 	it is possible to identify assets that are upstream and downstream from other assets.  This calculation helps identify 
 	travel time along flow paths and capacity limitations along those paths.
-
-	``[TODO: Add example]``
+	
+	Travel path metrics include:
+	
+	* Upstream edges or nodes from a starting node
+	* Downstream edges or nodes from a starting node
+	* Shortest path edges or nodes between two nodes
+	
+	The following example identifies upstream edges from a single node.
+	
+	.. doctest::
+		
+		>>> flowrate = results.link['FLOW_RATE']
+		>>> G_flow = swn.to_graph(link_weight=flowrate, modify_direction=True)
+		>>> upstream_edges = swntr.metrics.upstream_edges(G_flow, 'J8')
 
 .. dropdown:: **Response time**
 	
 	Response time quantifies the amount of time before a backup impacts an upstream node.
-	Response time is a function of the travel path, available capacity, and upstream loads.
+	Response time is a function of the the travel path, available capacity, and upstream loads.
 
 	``[TODO: Add example]``
 
+.. dropdown:: **Pump power and energy use**
+	
+	Pump flowrate and headloss can be used to compute power and energy use as a function of time.
+	
+	The following example uses pump flowrate and headloss to compute pump power and energy.
+	
+	.. doctest::
+		
+		>>> pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
+		>>> node_head = results.node['HYDRAULIC_HEAD']
+		>>> pump_headloss = swntr.metrics.headloss(node_head, swn.pump_name_list, swn)
+		>>> pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, swn)
+		>>> pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, swn)
 
 Graphics
 --------
