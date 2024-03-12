@@ -434,6 +434,8 @@ class InpFile(object):
             raise ValueError('Must pass a WaterNetworkModel object')
         if units is not None and isinstance(units, str):
             units=units.upper()
+            if units=="SI":
+                raise Exception("unit cannot be 'SI'")
             self.flow_units = FlowUnits[units]
         elif units is not None and isinstance(units, FlowUnits):
             self.flow_units = units
