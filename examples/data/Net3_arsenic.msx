@@ -50,8 +50,8 @@ Arsenic Oxidation/Adsorption Example
   NODE    River NH2CL 2.5
 
 [REPORT]
-  NODES   C   D                ;Report results for nodes C and D
-  LINKS   5                    ;Report results for pipe 5
+  NODES   All                ;Report results for nodes C and D
+  LINKS   All                    ;Report results for pipe 5
   SPECIES  AStot YES            ;Report results for each specie
   SPECIES  AS5   YES
   SPECIES  AS5s  YES

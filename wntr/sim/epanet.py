@@ -3,7 +3,7 @@
 
 from wntr.sim.core import WaterNetworkSimulator
 from wntr.network.io import write_inpfile
-import wntr.epanet.io
+import wntr.epanet
 import warnings
 import logging
 

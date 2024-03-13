@@ -25,8 +25,8 @@ from .exceptions import MSX_ERROR_CODES, EpanetMsxException, MSXKeyError, MSXVal
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "../Windows/epanet2.lib")
-    libmsx = resource_filename(__name__, "../Windows/epanetmsx.lib")
+    libepanet = resource_filename(__name__, "../Windows/epanet2.dll")
+    libmsx = resource_filename(__name__, "../Windows/epanetmsx.dll")
 elif sys.platform in ["darwin"]:
     libepanet = resource_filename(__name__, "../Darwin/libepanet2.dylib")
     libmsx = resource_filename(__name__, "../Darwin/libepanetmsx.dylib")
@@ -93,7 +93,7 @@ class MSXepanet(ENepanet):
                 try:
                     if os.name in ["nt", "dos"]:
                         libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
-                        self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                     elif sys.platform in ["darwin"]:
                         libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
                         self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
@@ -121,6 +121,47 @@ class MSXepanet(ENepanet):
             self.Errflag = True
             logger.error("EPANET error {} - {}".format(self.errcode, errtext))
             raise EpanetMsxException(self.errcode)
+        return
+
+
+    def ENopen(self, inpfile=None, rptfile=None, binfile=None):
+        """
+        Opens an EPANET input file and reads in network data
+
+        Parameters
+        ----------
+        inpfile : str
+            EPANET INP file (default to constructor value)
+        rptfile : str
+            Output file to create (default to constructor value)
+        binfile : str
+            Binary output file to create (default to constructor value)
+        """
+        if self.fileLoaded:
+            self.ENclose()
+        if self.fileLoaded:
+            raise RuntimeError("File is loaded and cannot be closed")
+        if inpfile is None:
+            inpfile = self.inpfile
+        if rptfile is None:
+            rptfile = self.rptfile
+        if binfile is None:
+            binfile = self.binfile
+        inpfile = inpfile.encode("latin-1")
+        rptfile = rptfile.encode("latin-1")
+        binfile = binfile.encode("latin-1")
+        self.errcode = self.ENlib.MSXENopen(inpfile, rptfile, binfile)
+        self._error()
+        if self.errcode < 100:
+            self.fileLoaded = True
+        return
+
+    def ENclose(self):
+        """Frees all memory and files used by EPANET"""
+        self.errcode = self.ENlib.MSXENclose()
+        self._error()
+        if self.errcode < 100:
+            self.fileLoaded = False
         return
 
     # ----------running the simulation-----------------------------------------
