@@ -135,7 +135,7 @@ def shortest_path_nodes(G, source_node, target_node):
         
     Returns
     --------
-    List of node names in the path
+    List of node names in the path (including the source and target node)
     
     """
     assert nx.has_path(G, source_node, target_node), "No path between " + source_node + " and " + target_node
@@ -178,7 +178,7 @@ def upstream_nodes(G, source_node):
     
     Returns
     --------
-    List of upstream node names
+    List of upstream node names (including the source node)
     
     """
     nodes = list(nx.traversal.bfs_tree(G, source_node, reverse=True))
@@ -226,7 +226,7 @@ def downstream_nodes(G, source_node):
     
     Returns
     --------
-    List of downstream node names
+    List of downstream node names (including the source node)
     
     """
     nodes = list(nx.traversal.bfs_tree(G, source_node, reverse=False))

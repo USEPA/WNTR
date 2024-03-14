@@ -30,8 +30,31 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
+class TestStormWaterModel(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def test_to_graph(self):
+        pass
+
+    def test_to_gis(self):
+        pass
+
+    def test_composite_pattern(self):
+        pass
+
+
+@unittest.skipIf(not has_swmmio,
+                 "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterSim(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(self):
         inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
@@ -39,20 +62,20 @@ class TestStormWaterSim(unittest.TestCase):
         self.supported_sections = set(swn.section_names)
         self.tested_sections = set()
         self.tested_rpt_sections = set()
-    
+
     @classmethod
     def tearDownClass(self):
         untested_sections = self.supported_sections - self.tested_sections
         print('untested sections', untested_sections)
         #print('rpt sections', self.tested_rpt_sections)
-    
+
     def test_simulation(self):
         # Run swmm using
         # 1. direct use of pyswmm, stepwise simulation
         # 2. direct use of swmmio cmd
         # 3. swmmio cmd with INP file read/write
         # 4. swntr with INP file read/write
-        inpfiles = [ 
+        inpfiles = [
                     # SWMMIO INP test files
                     swmmio.tests.data.MODEL_FULL_FEATURES_PATH, 
                     #swmmio.tests.data.MODEL_CURVE_NUMBER, # pyswmm fails
@@ -68,14 +91,14 @@ class TestStormWaterSim(unittest.TestCase):
                     'Pump_Control_Model.inp',
                     'Site_Drainage_Model.inp', 
                     ]
-        
+
         for inpfile_name in inpfiles:
             print(inpfile_name)
-            
+
             inpfile = join(test_datadir, "SWMM_examples", inpfile_name)
             rootname = inpfile.split('.inp')[0]
             outfile = join(test_datadir, rootname+'.out')
-            
+
             temp_inpfile = 'temp.inp'
             temp_outfile = 'temp.out'
 
@@ -87,7 +110,7 @@ class TestStormWaterSim(unittest.TestCase):
                 for step in sim:
                     pass
                 sim.report()
-                
+
             results_pyswmm = swntr.io.read_outfile(outfile)
             
             # swmmio with saved INP file
@@ -209,13 +232,54 @@ class TestStormWaterMetrics(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        pass
-    
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
+        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+        sim = swntr.sim.SWMMSimulator(self.swn) 
+        self.results = sim.run_sim()
+        flowrate = self.results.link['FLOW_RATE']
+        self.G = self.swn.to_graph(link_weight=flowrate, modify_direction=True)
+        
     @classmethod
     def tearDownClass(self):
         pass
     
-    def test_pump_power(self):
+    def test_upstream_nodes(self):
+        nodes = swntr.metrics.upstream_nodes(self.G, 'J8')
+        solution = ['J1', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8']
+        assert len(nodes) == len(solution)
+        assert set(nodes) == set(solution)
+
+    def test_upstream_edges(self):
+        edges = swntr.metrics.upstream_edges(self.G, 'J8')
+        solution = ['C1', 'C3', 'C4', 'C5', 'C6', 'C7']
+        assert len(edges) == len(solution)
+        assert set(edges) == set(solution)
+
+    def test_downstream_nodes(self):
+        nodes = swntr.metrics.downstream_nodes(self.G, 'J5')
+        solution = ['J5', 'J6', 'J8', 'J9', 'J10', 'J11', 'O1']
+        assert len(nodes) == len(solution)
+        assert set(nodes) == set(solution)
+
+    def test_downstream_edges(self):
+        edges = swntr.metrics.downstream_edges(self.G, 'J5')
+        solution = ['C5', 'C7', 'C8', 'C9', 'C10', 'C11']
+        assert len(edges) == len(solution)
+        assert set(edges) == set(solution)
+
+    def test_shortest_path_nodes(self):
+        nodes = swntr.metrics.shortest_path_nodes(self.G, 'J4', 'J8')
+        solution = ['J4', 'J5', 'J6', 'J8']
+        assert len(nodes) == len(solution)
+        assert set(nodes) == set(solution)
+    
+    def test_shortest_path_edges(self):
+        edges = swntr.metrics.shortest_path_edges(self.G, 'J4', 'J8')
+        solution = ['C4', 'C5', 'C7']
+        assert len(edges) == len(solution)
+        assert set(edges) == set(solution)
+        
+    def test_pump_headloss_power_energy(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
@@ -235,7 +299,12 @@ class TestStormWaterMetrics(unittest.TestCase):
         
         self.assertAlmostEqual(from_metrics, from_rpt, 1)
 
-
+    def test_cross_section(self):
+        pass
+    
+    def test_response_time(self):
+        pass
+        
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterGIS(unittest.TestCase):
