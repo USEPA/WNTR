@@ -41,6 +41,9 @@ class TestStormWaterModel(unittest.TestCase):
     def tearDownClass(self):
         pass
 
+    def test_cross_section(self):
+        pass
+        
     def test_to_graph(self):
         pass
 
@@ -299,9 +302,6 @@ class TestStormWaterMetrics(unittest.TestCase):
         
         self.assertAlmostEqual(from_metrics, from_rpt, 1)
 
-    def test_cross_section(self):
-        pass
-    
     def test_response_time(self):
         pass
         
