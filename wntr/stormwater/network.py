@@ -7,6 +7,7 @@ import random
 import numpy as np
 import pandas as pd
 import networkx as nx
+import warnings
 
 try:
     import swmmio
@@ -38,8 +39,22 @@ class StormWaterNetworkModel(object):
         
         if not has_swmmio:
             raise ModuleNotFoundError('swmmio is required')
+        
+        from swmmio.defs import INP_OBJECTS
+        from swmmio.utils.text import get_inp_sections_details
+        import shutil
+        
+        headers = get_inp_sections_details(inp_file_name, include_brackets=False)
+        missing_headers = set(INP_OBJECTS.keys()) - set(headers.keys())
+        appended_text = ""
+        for missing_header in missing_headers:
+            appended_text = appended_text + "[" + missing_header + "]\n\n"
             
-        self._swmmio_model = swmmio.Model(inp_file_name, include_rpt=False)
+        shutil.copyfile(inp_file_name, 'temp_headers.inp')
+        with open("temp_headers.inp", "a") as f:
+            f.write(appended_text)
+
+        self._swmmio_model = swmmio.Model("temp_headers.inp", include_rpt=False)
   
         # See https://github.com/pyswmm/swmmio/issues/57 for a list of supported INP file sections
         
@@ -300,6 +315,80 @@ class StormWaterNetworkModel(object):
         """
         return Link(name, self.links.loc[name,:])
     
+    def cross_section(self):
+        """
+        Cross section area of each conduit, according to the geometric 
+        parameters stored in xsections
+        """
+
+        cross_section = {}
+
+        for link_name in self.conduit_name_list:
+
+            geom1 = self.xsections.loc[link_name, 'Geom1']
+            geom2 = self.xsections.loc[link_name, 'Geom2']
+            geom3 = self.xsections.loc[link_name, 'Geom3']
+            geom4 = self.xsections.loc[link_name, 'Geom4']
+            shape = self.xsections.loc[link_name, 'Shape']
+
+            if shape == "CIRCULAR":
+                d = geom1 # diameter
+                r = d/2 # radius
+
+                area = np.pi*(r**2)
+
+            elif shape == "FILLED_CIRCULAR":
+                d = geom1 # diameter
+                r = d/2 # radius
+                h = geom2 # height
+                
+                circular_area = np.pi*(r**2)
+                filled_area = 0.5*(r**2)*(2*np.arccos((r-h)/r))-np.sin((2*np.arccos((r-h)/r)))
+                area = circular_area - filled_area
+
+            elif shape == "RECT_CLOSED":
+                h = geom1 # height
+                b = geom2 # base (width)
+                
+                area = h*b
+
+            elif shape == "RECT_OPEN":
+                h = geom1 # height
+                b = geom2 # base (width)
+                
+                area = h*b
+
+            elif shape == "TRAPEZOIDAL":
+                h = geom1 # height
+                b = geom2 # width
+                p1 = geom3 # pitch, side 1
+                p2 = geom4 # pitch, side 2
+                
+                area = 0.5*h*(h + (b + np.sqrt((p1**2) - h**2) + np.sqrt((p2**2) - h**2))) 
+
+            elif shape == "TRIANGULAR":
+                area = (0.5*geom1*geom2)
+
+            elif shape == "HORIZ_ELLIPSE":
+                area = np.pi*(geom1*0.5)*(geom2*0.5)
+
+            elif shape == "VERT_ELLIPSE":
+                area = np.pi*(geom1*0.5)*(geom2*0.5)
+
+            elif shape == "PARABOLIC":
+                area = (2/3)*geom1*geom2
+
+            elif shape == "RECT_TRIANGULAR":
+                area = (geom1*geom2)+(0.5*geom3*geom2)
+                                  
+            else: # ARCH, POWER, CUSTOM
+                area = None
+                warnings.warn(shape + ' not yet implemented')
+
+            cross_section[link_name] = area
+            
+        return pd.Series(cross_section)
+
     def anonymize_coordinates(self, seed=None, update_model=True):
         
         G = self.to_graph()
