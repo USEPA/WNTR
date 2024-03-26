@@ -47,7 +47,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
                add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
-               directed=False, ax=None, filename=None):
+               directed=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
 	
@@ -126,6 +126,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     ax: matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
+    
+    show_plot: bool, optional
+        If True, show plot with plt.show()
     
     filename : str, optional
         Filename used to save the figure
@@ -243,7 +246,8 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     if filename:
         plt.savefig(filename)
     
-    plt.show(block=False)
+    if show_plot is True:
+        plt.show(block=False)
     
     return ax
 
@@ -769,7 +773,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     ax = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
-               add_colorbar=add_colorbar, directed=directed, ax=ax)
+               add_colorbar=add_colorbar, directed=directed, ax=ax, show_plot=False)
         
     def update(n):
         if node_attribute is not None:
@@ -793,7 +797,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         ax = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
-               add_colorbar=add_colorbar, directed=directed, ax=ax)
+               add_colorbar=add_colorbar, directed=directed, ax=ax, show_plot=False)
         
         return ax
     
