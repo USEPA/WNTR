@@ -47,7 +47,6 @@ MSX_ERROR_CODES = {
     524: "illegal math operation",
 }
 """A dictionary of the error codes and their meanings from the EPANET-MSX toolkit.
-Please see :doc:`/errors` for tables of these values.
 
 :meta hide-value:
 """

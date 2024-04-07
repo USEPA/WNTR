@@ -73,6 +73,7 @@ For reference, the valid values are provided in :numref:`table-msx-hyd-vars`.
     ``D``          pipe diameter
     ``Kc``         pipe roughness coefficient
     ``Q``          pipe flow rate
+    ``U``          pipe flow velocity
     ``Re``         flow Reynolds number
     ``Us``         pipe shear velocity
     ``Ff``         Darcy-Weisbach friction factor

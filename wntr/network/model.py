@@ -321,12 +321,14 @@ class WaterNetworkModel(AbstractModel):
         return self._msx
     
     @msx.setter
-    def msx(self, msx):
-        if msx is None:
+    def msx(self, model):
+        if model is None:
             self._msx = None
+            return
         from wntr.msx.base import QualityModelBase
-        if not isinstance(msx, QualityModelBase):
-            raise TypeError('Expected QualityModelBase (or derived), got {}'.format(type(msx)))
+        if not isinstance(model, QualityModelBase):
+            raise TypeError('Expected QualityModelBase (or derived), got {}'.format(type(model)))
+        self._msx = model
 
     def add_msx_model(self, msx_filename=None):
         """Add an msx model from a MSX input file (.msx extension)"""
