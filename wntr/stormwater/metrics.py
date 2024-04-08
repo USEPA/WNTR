@@ -113,13 +113,11 @@ def pump_energy(flowrate, headloss, swn, efficiency=100):
     energy_kW_hr = power_kW * time_hrs # kW*hr
     return energy_kW_hr
 
-def shortest_path_length(G, source_node, target_node):
+def path_length(G, node_list):
     """
-    Length along the shorest path from source to target node.
+    Length along the path defined by a list of nodes.
     
     """
-    node_list = shortest_path_nodes(G, source_node, target_node)
-
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
 
@@ -131,13 +129,11 @@ def shortest_path_length(G, source_node, target_node):
 
     return sum_length
 
-def shortest_path_volume(G, source_node, target_node, cross_section):
+def path_volume(G, node_list, cross_section):
     """
-    Volume along the shorest path from source to target node.
+    Volume along the path defined by a list of nodes.
 
     """
-    node_list = shortest_path_nodes(G, source_node, target_node)
-
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
 
@@ -151,14 +147,11 @@ def shortest_path_volume(G, source_node, target_node, cross_section):
 
     return sum_volume
 
-def shortest_path_available_volume(G, source_node, target_node, cross_section,
-                                   capacity):
+def path_available_volume(G, node_list, cross_section, capacity):
     """
-    Available volume along the shorest path from source to target node.
+    Available volume along the path defined by a list of nodes.
     
     """
-    node_list = shortest_path_nodes(G, source_node, target_node)
-    
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
 
@@ -173,19 +166,15 @@ def shortest_path_available_volume(G, source_node, target_node, cross_section,
 
     return sum_available_volume
 
-def shortest_path_time_to_capacity(G, source_node, target_node, 
-                                   cross_section, capacity, flow_rate):
+def path_time_to_capacity(G, node_list, cross_section, capacity, 
+                          flow_rate):
     """
-    Time to exceed capacity along the shorest path from source to target node.
+    Time to exceed capacity along the path defined by a list of nodes.
     
     Time is based on steady state (or average) capacity.
     Flowrate is extracted from the graph weight.
+    
     """
-    node_list = shortest_path_nodes(G, source_node, target_node)
-    
-    #flow_rate = nx.get_edge_attributes(G, 'weight')
-    #flow_rate = {key[2]:val for key, val in flow_rate.items()}
-    
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
     
