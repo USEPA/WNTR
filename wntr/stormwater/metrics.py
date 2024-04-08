@@ -113,49 +113,94 @@ def pump_energy(flowrate, headloss, swn, efficiency=100):
     energy_kW_hr = power_kW * time_hrs # kW*hr
     return energy_kW_hr
 
-def shortest_path_metrics(G, source_node, target_node, cross_section, capacity):
+def shortest_path_length(G, source_node, target_node):
     """
-    Shortest path metrics including total length, volume, available volume, 
-    and response time, from a source to target node.
+    Length along the shorest path from source to target node.
     
-    Response time uses steady state (or average) capacity.
-    Flowrate is extracted from the graph weight.
     """
     node_list = shortest_path_nodes(G, source_node, target_node)
-    
-    flow_rate = nx.get_edge_attributes(G, 'weight')
-    flow_rate = {key[2]:val for key, val in flow_rate.items()}
-    
+
+    SG = G.subgraph(node_list)
+    df = nx.to_pandas_edgelist(SG)
+
+    sum_length = 0
+
+    for i in range(df.shape[0]):
+        link_length = df.loc[i, "Length"]
+        sum_length = sum_length + link_length
+
+    return sum_length
+
+def shortest_path_volume(G, source_node, target_node, cross_section):
+    """
+    Volume along the shorest path from source to target node.
+
+    """
+    node_list = shortest_path_nodes(G, source_node, target_node)
+
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
 
     sum_volume = 0
-    sum_length = 0
-    sum_available_volume = 0
-    sum_response_time = 0
-    
+
     for i in range(df.shape[0]):
         link_name = df.loc[i, "facilityid"]
         link_length = df.loc[i, "Length"]
         link_volume = cross_section[link_name]*link_length
-        
-        sum_length = sum_length + link_length
-        
         sum_volume = sum_volume + link_volume
-        
+
+    return sum_volume
+
+def shortest_path_available_volume(G, source_node, target_node, cross_section,
+                                   capacity):
+    """
+    Available volume along the shorest path from source to target node.
+    
+    """
+    node_list = shortest_path_nodes(G, source_node, target_node)
+    
+    SG = G.subgraph(node_list)
+    df = nx.to_pandas_edgelist(SG)
+
+    sum_available_volume = 0
+
+    for i in range(df.shape[0]):
+        link_name = df.loc[i, "facilityid"]
+        link_length = df.loc[i, "Length"]
+        link_volume = cross_section[link_name]*link_length
         available_volume = link_volume * (1-(capacity[link_name]))
         sum_available_volume = sum_available_volume + available_volume
-        
-        response_time = sum_available_volume/flow_rate[link_name]
-        sum_response_time = sum_response_time + response_time
-        
-    attributes = {'Length': sum_length,
-                  'Volume': sum_volume,
-                  'Available Volume': sum_available_volume,
-                  'Response Time': sum_response_time}
-        
-    return pd.Series(attributes)
+
+    return sum_available_volume
+
+def shortest_path_time_to_capacity(G, source_node, target_node, 
+                                   cross_section, capacity, flow_rate):
+    """
+    Time to exceed capacity along the shorest path from source to target node.
     
+    Time is based on steady state (or average) capacity.
+    Flowrate is extracted from the graph weight.
+    """
+    node_list = shortest_path_nodes(G, source_node, target_node)
+    
+    #flow_rate = nx.get_edge_attributes(G, 'weight')
+    #flow_rate = {key[2]:val for key, val in flow_rate.items()}
+    
+    SG = G.subgraph(node_list)
+    df = nx.to_pandas_edgelist(SG)
+    
+    sum_time = 0
+
+    for i in range(df.shape[0]):
+        link_name = df.loc[i, "facilityid"]
+        link_length = df.loc[i, "Length"]
+        link_volume = cross_section[link_name]*link_length
+        available_volume = link_volume * (1-(capacity[link_name]))
+        time = available_volume/flow_rate[link_name]
+        sum_time = sum_time + time
+
+    return sum_time
+
 def shortest_path_nodes(G, source_node, target_node):
     """
     Nodes along the shortest path from a source to target node
