@@ -10,7 +10,7 @@ from wntr.metrics.topographic import *
 
 def headloss(head, link_names, swn):
     """
-    Headloss across links
+    Headloss across links [ft or m]
 
     Parameters
     ------------
@@ -43,9 +43,9 @@ def headloss(head, link_names, swn):
     return headloss
 
 
-def pump_power(flowrate, headloss, swn, efficiency=100):
+def pump_power(flowrate, headloss, flow_units, efficiency=100):
     """
-    Pump power
+    Pump power [kW]
 
     Parameters
     ------------
@@ -53,8 +53,8 @@ def pump_power(flowrate, headloss, swn, efficiency=100):
         Pump flowrate, from simulation results
     headloss : pandas DataFrame
         Pump headloss, from simulation results (see `headloss` function)
-    swn : wntr StormWaterNetworkModel
-        Stormwater network model, used to extract flow units
+    flow_units : str
+        Stormwater network model flow units
     efficiency : float (optional, default = 100)
         Pump efficiency
 
@@ -63,22 +63,22 @@ def pump_power(flowrate, headloss, swn, efficiency=100):
     pandas DataFrame with pump power in kW (index = times, columns = pump names)
 
     """
-    units = swn.options.loc['FLOW_UNITS', 'Value']
-
+    assert flow_units in ['CFS', 'GPM ', 'MGD', 'CMS', 'LPS', 'MLD']
+    
     # Convert headloss to meters
-    if units in ['CFS', 'GPM ', 'MGD']:
+    if flow_units in ['CFS', 'GPM ', 'MGD']:
         headloss = headloss*0.3048
 
     # Convert all flow units to CMS
-    if units == 'CFS':
+    if flow_units == 'CFS':
         flowrate = flowrate*(0.3048**3)
-    elif units == 'GPM':
+    elif flow_units == 'GPM':
         flowrate = flowrate*15850.3
-    elif units == 'MGD':
+    elif flow_units == 'MGD':
         flowrate = flowrate*(15850.3/(24*60*1e6))
-    elif units == 'LPS':
+    elif flow_units == 'LPS':
         flowrate = flowrate*0.001
-    elif units == 'MLD':
+    elif flow_units == 'MLD':
         flowrate = flowrate*(0.001/(24*3600*1e6))
 
     power_W = 1000.0 * 9.81 * headloss * flowrate / (efficiency/100) # Watts = J/s
@@ -86,7 +86,7 @@ def pump_power(flowrate, headloss, swn, efficiency=100):
 
     return power_kW
 
-def pump_energy(flowrate, headloss, swn, efficiency=100):
+def pump_energy(flowrate, headloss, flow_units, efficiency=100):
     """
     Pump energy use [kW-hr]
     
@@ -96,8 +96,8 @@ def pump_energy(flowrate, headloss, swn, efficiency=100):
         Pump flowrate, from simulation results
     headloss : pandas DataFrame
         Pump headloss, from simulation results (see `headloss` function)
-    swn : wntr StormWaterNetworkModel
-        Stormwater network model, used to extract flow units
+    flow_units : str
+        Stormwater network model flow units
     efficiency : float (optional, default = 100)
         Pump efficiency
         
@@ -106,7 +106,9 @@ def pump_energy(flowrate, headloss, swn, efficiency=100):
     pandas DataFrame with pump energy in kW-hr (index = times, columns = pump names)
     
     """
-    power_kW = pump_power(flowrate, headloss, swn, efficiency) 
+    assert flow_units in ['CFS', 'GPM ', 'MGD', 'CMS', 'LPS', 'MLD']
+    
+    power_kW = pump_power(flowrate, headloss, flow_units, efficiency) 
     time_delta = flowrate.index[1] - flowrate.index[0]
     time_hrs = time_delta.seconds/3600
     
@@ -119,7 +121,7 @@ def conduit_available_volume(volume, capacity, capacity_threshold=1):
     
     """
     available_volume = volume*(capacity_threshold-capacity)
-    available_volume[available_volume<0] = None
+    available_volume[available_volume < 0] = None
     
     return available_volume
 
@@ -138,7 +140,20 @@ def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=
     Conduit time to capacity [s], if cumulative = True the system is considered
     a connected component and time_to_capacity = sum(available_volume)/sum(flowrate)
     
+    Parameters
+    ------------
+    available_volume : [ft^3 or m^3]
+        
+    flowrate :  [flow_units]
+        
+    flow_units : str
+        Stormwater network model flow units
+    
+    cumulative : bool
+    
     """
+    assert flow_units in ['CFS', 'GPM ', 'MGD', 'CMS', 'LPS', 'MLD']
+    
     # Convert flowrate
     if flow_units == 'GPM': # convert to CFS
         cflowrate = flowrate*(1/7.48052)*(1/60)
@@ -152,7 +167,7 @@ def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=
         cflowrate = flowrate # CFS or CMS
     
     if cumulative:
-        time_to_capacity = available_volume.sum()/cflowrate.sum()
+        time_to_capacity = available_volume.sum()/cflowrate.max()
     else:
         time_to_capacity = available_volume/cflowrate
 
@@ -220,6 +235,7 @@ def shortest_path_nodes(G, source_node, target_node):
     
     """
     assert nx.has_path(G, source_node, target_node), "No path between " + source_node + " and " + target_node
+    
     node_list = nx.shortest_path(G, source_node, target_node)
     return node_list
 

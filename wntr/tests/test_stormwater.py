@@ -285,6 +285,7 @@ class TestStormWaterMetrics(unittest.TestCase):
     def test_pump_headloss_power_energy(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
+        flow_units = swn.options.loc['FLOW_UNITS', 'Value']
         
         sim = swntr.sim.SWMMSimulator(swn) 
         results = sim.run_sim()
@@ -293,8 +294,8 @@ class TestStormWaterMetrics(unittest.TestCase):
         head = results.node['HYDRAULIC_HEAD']
 
         pump_headloss = swntr.metrics.headloss(head, swn.pump_name_list, swn)
-        pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, swn)
-        pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, swn)
+        pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, flow_units)
+        pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, flow_units)
         
         pump_name = swn.pump_name_list[0]
         from_metrics = pump_energy[pump_name].sum()
@@ -339,9 +340,9 @@ class TestStormWaterGIS(unittest.TestCase):
             filename = abspath(join(testdir, "temp_"+name+".geojson"))
             if isfile(filename):
                 os.remove(filename)
-            
+
         swntr.io.write_geojson(self.swn, 'temp')
-            
+
         for name in valid_components:
             filename = abspath(join(testdir, "temp_"+name+".geojson"))
             self.assertTrue(isfile(filename))
