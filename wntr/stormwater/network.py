@@ -315,15 +315,18 @@ class StormWaterNetworkModel(object):
         """
         return Link(name, self.links.loc[name,:])
     
-    def cross_section(self):
+    def conduit_cross_section(self, conduit_name_list=None):
         """
         Cross section area of each conduit, according to the geometric 
         parameters stored in xsections
         """
 
         cross_section = {}
+        
+        if conduit_name_list is None:
+            conduit_name_list = self.conduit_name_list
 
-        for link_name in self.conduit_name_list:
+        for link_name in conduit_name_list:
 
             geom1 = self.xsections.loc[link_name, 'Geom1']
             geom2 = self.xsections.loc[link_name, 'Geom2']
@@ -389,6 +392,20 @@ class StormWaterNetworkModel(object):
             
         return pd.Series(cross_section)
 
+    def conduit_volume(self, conduit_name_list=None):
+        """
+        Volume of each conduit, according to the geometric 
+        parameters stored in xsections and length
+        """
+        if conduit_name_list is None:
+            conduit_name_list = self.conduit_name_list
+        
+        cross_section = self.conduit_cross_section(conduit_name_list)
+        length =self.conduits['Length'].loc[conduit_name_list]
+        volume = cross_section*length
+        
+        return volume
+        
     def anonymize_coordinates(self, seed=None, update_model=True):
         
         G = self.to_graph()
@@ -534,7 +551,7 @@ class StormWaterNetworkModel(object):
         mask = self.patterns.columns.str.contains('Factor')
         factor_cols = self.patterns.columns[mask]
 
-        assert self.patterns.loc[:,factor_cols].isna().sum() == 0, \
+        assert self.patterns.loc[:,factor_cols].isna().sum().sum() == 0, \
             "Composite patterns is not implemented for variable pattern length"
 
         nodes = data.index.unique()

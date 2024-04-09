@@ -88,7 +88,7 @@ def pump_power(flowrate, headloss, swn, efficiency=100):
 
 def pump_energy(flowrate, headloss, swn, efficiency=100):
     """
-    Pump energy use
+    Pump energy use [kW-hr]
     
     Parameters
     ------------
@@ -113,82 +113,93 @@ def pump_energy(flowrate, headloss, swn, efficiency=100):
     energy_kW_hr = power_kW * time_hrs # kW*hr
     return energy_kW_hr
 
-def path_length(G, node_list):
+def conduit_available_volume(volume, capacity, capacity_threshold=1):
     """
-    Length along the path defined by a list of nodes.
+    Conduit available volume, up to a capacity threshold [ft^3 or m^3]
     
     """
-    SG = G.subgraph(node_list)
-    df = nx.to_pandas_edgelist(SG)
+    available_volume = volume*(capacity_threshold-capacity)
+    available_volume[available_volume<0] = None
+    
+    return available_volume
 
-    sum_length = 0
-
-    for i in range(df.shape[0]):
-        link_length = df.loc[i, "Length"]
-        sum_length = sum_length + link_length
-
-    return sum_length
-
-def path_volume(G, node_list, cross_section):
+def conduit_travel_time(length, velocity):
     """
-    Volume along the path defined by a list of nodes.
-
+    Conduit travel time [s]
+    
     """
+    travel_time = length/velocity
+
+    return travel_time
+
+
+def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=False):
+    """
+    Conduit time to capacity [s], if cumulative = True the system is considered
+    a connected component and time_to_capacity = sum(available_volume)/sum(flowrate)
+    
+    """
+    # Convert flowrate
+    if flow_units == 'GPM': # convert to CFS
+        cflowrate = flowrate*(1/7.48052)*(1/60)
+    elif flow_units == 'MGD': # convert to CFS
+        cflowrate = (flowrate*1E6)*(1/7.48052)*(1/86400)
+    elif flow_units == 'LPS': # convert to CMS
+        cflowrate = flowrate*(1/1000)
+    elif flow_units == 'MLD': # convert to CMS
+        cflowrate = (flowrate*1E6)*(1/1000)*(1/86400)
+    else:
+        cflowrate = flowrate # CFS or CMS
+    
+    if cumulative:
+        time_to_capacity = available_volume.sum()/cflowrate.sum()
+    else:
+        time_to_capacity = available_volume/cflowrate
+
+    return time_to_capacity
+
+def shortest_path_metrics(G, source_node, target_node, cross_section, capacity):
+    """
+    Shortest path metrics including total length, volume, available volume, 
+    and response time, from a source to target node.
+    
+    Response time uses steady state (or average) capacity.
+    Flowrate is extracted from the graph weight.
+    """
+    node_list = shortest_path_nodes(G, source_node, target_node)
+
+    flow_rate = nx.get_edge_attributes(G, 'weight')
+    flow_rate = {key[2]:val for key, val in flow_rate.items()}
+
     SG = G.subgraph(node_list)
     df = nx.to_pandas_edgelist(SG)
 
     sum_volume = 0
+    sum_length = 0
+    sum_available_volume = 0
+    sum_response_time = 0
 
     for i in range(df.shape[0]):
         link_name = df.loc[i, "facilityid"]
         link_length = df.loc[i, "Length"]
         link_volume = cross_section[link_name]*link_length
+
+        sum_length = sum_length + link_length
+
         sum_volume = sum_volume + link_volume
 
-    return sum_volume
-
-def path_available_volume(G, node_list, cross_section, capacity):
-    """
-    Available volume along the path defined by a list of nodes.
-    
-    """
-    SG = G.subgraph(node_list)
-    df = nx.to_pandas_edgelist(SG)
-
-    sum_available_volume = 0
-
-    for i in range(df.shape[0]):
-        link_name = df.loc[i, "facilityid"]
-        link_length = df.loc[i, "Length"]
-        link_volume = cross_section[link_name]*link_length
         available_volume = link_volume * (1-(capacity[link_name]))
         sum_available_volume = sum_available_volume + available_volume
 
-    return sum_available_volume
+        response_time = sum_available_volume/flow_rate[link_name]
+        sum_response_time = sum_response_time + response_time
 
-def path_time_to_capacity(G, node_list, cross_section, capacity, 
-                          flow_rate):
-    """
-    Time to exceed capacity along the path defined by a list of nodes.
-    
-    Time is based on steady state (or average) capacity.
-    Flowrate is extracted from the graph weight.
-    
-    """
-    SG = G.subgraph(node_list)
-    df = nx.to_pandas_edgelist(SG)
-    
-    sum_time = 0
+    attributes = {'Length': sum_length,
+                  'Volume': sum_volume,
+                  'Available Volume': sum_available_volume,
+                  'Response Time': sum_response_time}
 
-    for i in range(df.shape[0]):
-        link_name = df.loc[i, "facilityid"]
-        link_length = df.loc[i, "Length"]
-        link_volume = cross_section[link_name]*link_length
-        available_volume = link_volume * (1-(capacity[link_name]))
-        time = available_volume/flow_rate[link_name]
-        sum_time = sum_time + time
-
-    return sum_time
+    return pd.Series(attributes)
 
 def shortest_path_nodes(G, source_node, target_node):
     """
