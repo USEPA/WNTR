@@ -217,7 +217,7 @@ def from_dict(d: dict, append=None):
                     link["start_node_name"],
                     link["end_node_name"],
                     pump_type=pump_type,
-                    pump_parameter=link.setdefault("power")
+                    pump_parameter=link.setdefault("power",50.0)
                     if pump_type.lower() == "power"
                     else link.setdefault("pump_curve_name"),
                     speed=link.setdefault("base_speed", 1.0),
@@ -350,7 +350,7 @@ def from_gis(gis_data, append=None):
     if isinstance(gis_data, dict):
         gis_data = WaterNetworkGIS(gis_data)
 
-    wn = gis_data._create_wn(append=append)
+    wn = gis_data._create_wn(append=append,index_col=index_col)
     
     return wn
 
@@ -635,7 +635,7 @@ def read_shapefile(files, index_col='index', append=None):
 
     """
     gis_data = WaterNetworkGIS()
-    gis_data.read_shapefile(files, index_col='index')
+    gis_data.read_shapefile(files, index_col=index_col)
     wn = gis_data._create_wn(append=append)
 
     return wn

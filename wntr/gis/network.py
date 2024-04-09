@@ -171,7 +171,7 @@ class WaterNetworkGIS:
         df = df_links[df_links['link_type'] == 'Valve']
         self.valves = _extract_geodataframe(df, crs, valves_as_points) 
         
-    def _create_wn(self, append=None):
+    def _create_wn(self, append=None, index_col='index'):
         """
         Create or append a WaterNetworkModel from GeoDataFrames
         
@@ -192,7 +192,7 @@ class WaterNetworkGIS:
             if element.shape[0] > 0:
                 assert (element['geometry'].geom_type).isin(['Point']).all()
                 df = element.reset_index()
-                df.rename(columns={'index':'name', 'geometry':'coordinates'}, inplace=True)
+                df.rename(columns={index_col:'name', 'geometry':'coordinates'}, inplace=True)
                 df['coordinates'] = [[x,y] for x,y in zip(df['coordinates'].x, 
                                                           df['coordinates'].y)]
                 wn_dict['nodes'].extend(df.to_dict('records'))
@@ -202,7 +202,7 @@ class WaterNetworkGIS:
                 assert 'start_node_name' in element.columns
                 assert 'end_node_name' in element.columns
                 df = element.reset_index()
-                df.rename(columns={'index':'name'}, inplace=True)
+                df.rename(columns={index_col:'name'}, inplace=True)
                 df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
                 wn_dict['links'].extend(df.to_dict('records'))
