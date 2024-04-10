@@ -51,38 +51,46 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     NetworkX MultiDiGraph
     
     """
-    # TODO For now, reload the model to capture updates on swn
-    write_inpfile(swn, 'temp.inp')
-    swn2 = read_inpfile('temp.inp')
+
+    # Note, this function could use "G = swn._swmmio_model.network" but that would 
+    # require an additional write/read of the inp file to capture model 
+    # updates
     
-    G = swn2._swmmio_model.network
-    
-    # Add a node attribute 'pos' to store the node position as a tuple
-    geom = nx.get_node_attributes(G, 'geometry')
-    pos = dict([(k,v['coordinates']) for k,v in geom.items()])
-    nx.set_node_attributes(G, pos, 'pos')
-    
-    if node_weight is not None:
-        nx.set_node_attributes(G, node_weight, 'weight')
-    
-    if link_weight is not None:
-        for name in swn2.link_name_list:
-            link = swn2.get_link(name)
-            start_node = link.start_node_name
-            end_node = link.end_node_name
-            try:
+    G = nx.MultiDiGraph()
+
+    for name in swn.node_name_list:
+        G.add_node(name)
+        coords = (swn.coordinates.loc[name, 'X'], swn.coordinates.loc[name, 'Y'])
+        nx.set_node_attributes(G, name="pos", values={name: coords})
+        #nx.set_node_attributes(G, name="type", values={name: node.node_type})
+
+        if node_weight is not None:
+            try:  # weight nodes
+                value = node_weight[name]
+                nx.set_node_attributes(G, name="weight", values={name: value})
+            except:
+                pass
+
+    for name in swn.link_name_list:
+        link = swn.get_link(name)
+        start_node = link.start_node_name
+        end_node = link.end_node_name
+        G.add_edge(start_node, end_node, key=name)
+        #nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
+
+        if link_weight is not None:
+            try:  # weight links
                 value = link_weight[name]
-                if modify_direction and value <= 0:  # change the direction of the link and value
+                if modify_direction and value < 0:  # change the direction of the link and value
                     G.remove_edge(start_node, end_node, name)
-                    if value == 0:
-                        continue
                     G.add_edge(end_node, start_node, name)
+                    nx.set_edge_attributes(G, name="type", values={(end_node, start_node, name): link.link_type})
                     nx.set_edge_attributes(G, name="weight", values={(end_node, start_node, name): -value})
                 else:
                     nx.set_edge_attributes(G, name="weight", values={(start_node, end_node, name): value})
             except:
                 pass
-            
+    
     return G
 
 def to_gis(swn, crs=None):
