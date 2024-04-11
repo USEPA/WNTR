@@ -135,10 +135,9 @@ def conduit_travel_time(length, velocity):
     return travel_time
 
 
-def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=False):
+def conduit_time_to_capacity(available_volume, flowrate, flow_units, connected=False):
     """
-    Conduit time to capacity [s], if cumulative = True the system is considered
-    a connected component and time_to_capacity = sum(available_volume)/sum(flowrate)
+    Conduit time to capacity [s]
     
     Parameters
     ------------
@@ -149,7 +148,12 @@ def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=
     flow_units : str
         Stormwater network model flow units
     
-    cumulative : bool
+    connected : bool (default = False)
+        If connected = False, each conduit is treated individually and 
+        time_to_capacity = available_volume/flowrate
+        If connected = True, the collection of conduits is considered an 
+        isolated connected system and 
+        time_to_capacity = sum(available_volume)/max(flowrate)
     
     """
     assert flow_units in ['CFS', 'GPM ', 'MGD', 'CMS', 'LPS', 'MLD']
@@ -166,7 +170,7 @@ def conduit_time_to_capacity(available_volume, flowrate, flow_units, cumulative=
     else:
         cflowrate = flowrate # CFS or CMS
     
-    if cumulative:
+    if connected:
         time_to_capacity = available_volume.sum()/cflowrate.max()
     else:
         time_to_capacity = available_volume/cflowrate
