@@ -7,13 +7,17 @@
 
 .. doctest::
     :hide:
-
+    
     >>> import matplotlib.pylab as plt
     >>> import wntr.stormwater as swntr
     >>> try:
     ...    swn = swntr.network.StormWaterNetworkModel('../examples/networks/Site_Drainage_Model.inp')
     ... except:
     ...    swn = swntr.network.StormWaterNetworkModel('examples/networks/Site_Drainage_Model.inp')
+    >>> try:
+    ...    swnP = swntr.network.StormWaterNetworkModel('../examples/networks/Pump_Control_Model.inp')
+    ... except:
+    ...    swnP = swntr.network.StormWaterNetworkModel('examples/networks/Pump_Control_Model.inp')
     >>> try:
     ...    backdrop_img = plt.imread('../figures/Site-Post.jpg')
     ... except:
@@ -101,7 +105,7 @@ Units
 
 While WNTR uses SI units for all drinking water models and analysis (see :ref:`units`), 
 **stormwater and wastewater models are not converted to SI units** when loaded into S-WNTR.
-Therefore, any additional data used in analysis should match the units of the model.
+Therefore, any additional data used in analysis or computation should adhere the units of the model.
 
 .. dropdown:: **SWMM unit conventions**
 	
@@ -124,10 +128,12 @@ The model is stored in a
 .. doctest::
 	
     >>> swn = swntr.network.StormWaterNetworkModel('networks/Site_Drainage_Model.inp') # doctest: +SKIP
+	>>> swnP = swntr.network.StormWaterNetworkModel('networks/Pump_Control_Model.inp') # doctest: +SKIP
 
 .. note::
-    The stormwater examples in this section all use **Site_Drainage_Model.inp**
-    to build the StormWaterNetworkModel, named ``swn``.
+   The stormwater examples in this documentation all use **Site_Drainage_Model.inp** to build the StormWaterNetworkModel, named ``swn``.  
+   Examples that involve pumps use **Pump_Control_Model.inp** to build the StormWaterNetworkModel, named ``swnP``.  
+   Both model files are distributed with SWMM :cite:p:`ross22`.
 
 .. doctest::
     :hide:
@@ -145,7 +151,7 @@ The model is stored in a
    :width: 640
    :alt: Network
    
-   Stormwater network model.
+   Stormwater network model from Site_Drainage_Model.inp.
 
 .. dropdown:: **Model attributes**
 	
@@ -188,7 +194,7 @@ The model is stored in a
 		J11       4963.0         0          0               0           0
 
 
-	The DataFrames and Series can be modified by the use and the   
+	The DataFrames and Series can be modified by the user and the   
 	updated model is used in hydraulic simulation and analysis.
 
 	The StormWaterNetworkModel object also includes methods to return a list of 
@@ -198,7 +204,12 @@ The model is stored in a
 		
 		>>> swn.conduit_name_list
 		['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11']
-		
+	
+	Additional properties on the StormWaterNetworkModel include:
+	
+	* ``swn.conduit_cross_section``
+	* ``swn.conduit_volume``
+	
 	.. note:: 
 	   :class:`~wntr.stormwater.network.StormWaterNetworkModel` uses ``swmmio.Model`` to 
 	   read and write the SWMM INP file. 
@@ -212,12 +223,12 @@ The model is stored in a
 
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_composite_patterns`: 
 	  Combine multiple dry weather flows into a single composite base value and pattern 
-	  and update the model (updates `swn.dwf` and `swn.patterns`)
+	  and update the model (updates ``swn.dwf`` and ``swn.patterns``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control`: 
-	  Add a pump outage control to the model
+	  Add a pump outage control to the model (updates ``swn.controls``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.anonymize_coordinates`: 
 	  Anonymize model coordinates (using a spring layout) and remove vertices and polygons 
-	  to annoymize the model
+	  to anonymize the model (updates ``swn.coordinates``, ``swn.vertices``, and ``swn.polygons``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` and 
 	  :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_from_datetime_format`: 
 	  Convert between SWMM formatted timeseries DataFrames and datetime indexed DataFrames
@@ -226,7 +237,6 @@ The model is stored in a
 
 	S-WNTR includes the following functions to read/write files and transform 
 	the StormWaterNetworkModel to other data formats.
-	This functionality builds on methods in swmmio.
 
 	* :class:`~wntr.stormwater.io.read_inpfile`: Create a StormWaterNetworkModel object from a SWMM INP file 
 	* :class:`~wntr.stormwater.io.write_inpfile`: Write a SWMM INP file from a StormWaterNetworkModel
@@ -273,10 +283,10 @@ Pandas DataFrames, as described in the following section.
 .. dropdown:: **Simulation results**
 
 	Simulation results are stored in a 
-	:class:`~wntr.stormwater.sim.ResultsObject`. 
-	Each results section (node, link, subcatchment, and report) contains a 
-	dictionary of DataFrames storing
-	simulation results and summary information.
+	:class:`~wntr.stormwater.sim.ResultsObject` organized in **node**, **link**, **subcatchment**, and **report** sections.
+	Each section contains a
+	DataFrames storing a timeseries of 
+	simulation results or summary information.
 	See drinking water documentation on :ref:`simulation_results` for more information on the format of simulation results in WNTR.
 
 	The S-WNTR :class:`~wntr.stormwater.sim.ResultsObject` includes the following sections:
@@ -341,8 +351,7 @@ Pandas DataFrames, as described in the following section.
 
 	.. doctest::
 		
-		>>> conduit_capacity = results.link['CAPACITY'].loc[:, 'C0'] # doctest: +SKIP
-
+		>>> conduit_capacity = results.link['CAPACITY'].loc[:, 'C1']
 
 	Simulation timeseries can also be extracted directly from a SWMM binary output file 
 	using the function :class:`~wntr.stormwater.io.read_outfile` and 
@@ -356,8 +365,8 @@ Pandas DataFrames, as described in the following section.
 		>>> sim = swntr.sim.SWMMSimulator(swn) 
 		>>> results = sim.run_sim(file_prefix='base') # creates base.bin and base.rpt
 		
-		>>> timeseries_results = swntr.io.read_outfile('base.bin')
-		>>> summary_report = swntr.io.read_report('base.rpt')
+		>>> timeseries_results = swntr.io.read_outfile('base.out')
+		>>> summary_report = swntr.io.read_rptfile('base.rpt')
 
 Disaster scenarios
 ------------------
@@ -380,33 +389,69 @@ where the impact of individual component failures is evaluated.
 	* **Long term power outages**: Power outages impact pumps and lift stations. 
 	  The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control` 
 	  adds a control to the model which turns a pump off and on at user specified start and end times, respectively.
-	  By default, the control priority is set to 4 (highest) to override other controls.  
+	  By default, the control priority is set to 4 (highest) to override other controls.
 	  
 	  .. doctest::
-		
+		  >>> # The following example uses swnP
 		  >>> start_time = 4.5 # hours
 		  >>> end_time = 12 # hours
-		  >>> swn.add_pump_outage_control('PUMP1', start_time, end_time)
+		  >>> control = swnP.add_pump_outage_control('PUMP1', start_time, end_time, control_suffix="_outage") 
 		  
 	  Note that controls can be viewed and modified using ``swn.controls`` which stores controls as 
-	  a Pandas Series of lists (one entry per control line).  
+	  a Pandas DataFrame (one row per control).  
 
 	  .. doctest::
 	  
-		  >>> print(swn.controls['PUMP1_power_outage'])
-		  IF SIMULATION TIME > 4.5  AND SIMULATION TIME < 12  THEN PUMP PUMP1 status = OFF  ELSE PUMP PUMP1 status = ON  PRIORITY 4 
+		  >>> print(swnP.controls.loc['RULE PUMP1_outage', 'Control']) 
+		  IF SIMULATION TIME > 4.5 AND SIMULATION TIME < 12 THEN PUMP PUMP1 status = OFF ELSE PUMP PUMP1 status = ON PRIORITY 4
 
 	* **Conduit blockage or collapse**: Conduit blockage or collapse impacts the flowrate at the conduit.  
-	  The flowrate in a conduit can be constrained by reducing the ``MaxFlow``, as shown below.
-	  Note that a value of 0 means that the flowrate is unconstrained (no upper bound).
+	  The flowrate in a conduit can be constrained by modifying conduit properties as follows:
+	  
+	  * Decrease max flow. Note that a max flow value of 0 means that the flowrate is unconstrained (no upper bound).
+	  * Increate roughness
+	  * Decrease cross sectional area
 
 	  .. doctest::
 		
-		  >>> swn.conduits.loc['C1', "MaxFlow"] = 0.0001
+		  >>> swn.conduits.loc['C1', "MaxFlow"] = 1e-6
+		  >>> swn.conduits.loc['C1', "Roughness"] = 0.999
+		  >>> swn.xsections.loc['C1', "Geom1"] = 0.00125
 
 	* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
-	  ``[TODO: Add additional description and example code]``
+      The methods :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` can be used to 
+      convert ``swn.timeseries`` into a datetime Pandas DataFrame.  This format is easy to modify or import from other data sources.
+      The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_timeseries_from_datetime_format` can then be used to 
+      add timeseries formatted as datetime Pandas DataFrames to the model.  This facilitates greater flexibility in the way timeseries are modified.
+      
+	  The following example creates a new timeseries that is a combination of a 100 and 10 year rainfall event, 
+	  adds the new timeseries to the model, and then updates the data source of the raingage.
+	  
+	  .. doctest::
+		
+		  >>> swn.timeseries_name_list
+		  ['2-yr', '10-yr', '100-yr']
+		  >>> ts = swn.timeseries_to_datetime_format()
+		  >>> ts['New'] = ts['100-yr'] + ts['10-yr'].shift(periods=12, fill_value=0)
+		  >>> ax = ts.plot()
+		  >>> timeseries = swn.add_timeseries_from_datetime_format(ts['New'])
+		  >>> swn.timeseries_name_list
+		  ['2-yr', '10-yr', '100-yr', 'New']
+		  >>> swn.raingages['DataSourceName'] = 'New'
 
+      .. doctest::
+          :hide:
+    
+          >>> plt.tight_layout()
+          >>> plt.savefig('timeseries_plot.png', dpi=300)
+	
+      .. _fig-fragility:
+      .. figure:: figures/timeseries_plot.png
+         :width: 640
+         :alt: Timeseries plot
+
+         Timeseries plot
+   
 	See :ref:`stormwater_examples` below.
 
 .. dropdown:: **Geospatial capabilities**
@@ -534,17 +579,50 @@ Additional metrics could also be added at a later date.
 	
 	.. doctest::
 		
-		>>> flowrate = results.link['FLOW_RATE']
-		>>> G_flow = swn.to_graph(link_weight=flowrate, modify_direction=True)
+		>>> average_flowrate = results.link['FLOW_RATE'].mean()
+		>>> G_flow = swn.to_graph(link_weight=average_flowrate, modify_direction=True)
 		>>> upstream_edges = swntr.metrics.upstream_edges(G_flow, 'J8')
 
-.. dropdown:: **Response time**
+.. dropdown:: **Travel time**
 	
-	Response time quantifies the amount of time before a backup impacts an upstream node.
-	Response time is a function of the the travel path, available capacity, and upstream loads.
+	Travel time along an individual conduit is simply computed as the conduit length divided by the conduit velocity.  
+	
+	.. doctest::
+		
+		>>> length = length = swn.links['Length']
+		>>> average_velocity = results.link['FLOW_VELOCITY'].mean()
+		>>> travel_time = swntr.metrics.conduit_travel_time(length, average_velocity) # in seconds
 
-	``[TODO: Add example]``
+    If velocites are stable, the travel time along a path can be computed as the sum of travel times along that path.
+	
+	.. doctest::
+		
+		>>> path_edges = swntr.metrics.shortest_path_edges(G_flow, 'J1', 'J9')
+		>>> path_travel_time = travel_time[path_edges].sum() # in seconds
 
+.. dropdown:: **Time to reach capacity**
+	
+	The time for an individual conduit to reach a specified capacity can be approximated by knowing the conduit available volume and average flowrate.  
+	This assumes that the flowrate is blocked at the outflow of each conduit. 
+	This rough approximation overly simplifies dynamics from blocked flow, but can be useful to identify areas with marginal reserve.
+
+	.. doctest::
+
+		>>> flow_units = swnP.options.loc['FLOW_UNITS', 'Value']
+		>>> volume = swn.conduit_volume
+		>>> average_capacity = results.link['CAPACITY'].mean()
+		>>> available_volume = swntr.metrics.conduit_available_volume(volume, average_capacity, threshold=1)
+		>>> time_to_capacity = swntr.metrics.conduit_time_to_capacity(available_volume, average_flowrate, flow_units=flow_units)
+
+	To compute the time to reach capacity along a path, the total available volume and max flowrate are used in the calculation.  
+	Again, this overly simplifies dynamics from blocked flow, but can be useful to identify response time for upstream assets.
+	
+	.. doctest::
+
+		>>> path_average_capacity = average_capacity[path_edges]
+		>>> path_average_flowrate = average_flowrate[path_edges]
+		>>> path_time_to_capacity = swntr.metrics.conduit_time_to_capacity(path_average_capacity, path_average_flowrate, flow_units=flow_units, connected=True)
+		
 .. dropdown:: **Pump power and energy use**
 	
 	Pump flowrate and headloss can be used to compute power and energy use as a function of time.
@@ -552,12 +630,17 @@ Additional metrics could also be added at a later date.
 	The following example uses pump flowrate and headloss to compute pump power and energy.
 	
 	.. doctest::
+
+		>>> # The following example uses swnP
+		>>> flow_units = swnP.options.loc['FLOW_UNITS', 'Value']
+		>>> sim = swntr.sim.SWMMSimulator(swnP)
+		>>> results = sim.run_sim()
 		
 		>>> pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
 		>>> node_head = results.node['HYDRAULIC_HEAD']
 		>>> pump_headloss = swntr.metrics.headloss(node_head, swn.pump_name_list, swn)
-		>>> pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, swn)
-		>>> pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, swn)
+		>>> pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, flow_units)
+		>>> pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, flow_units)
 
 Graphics
 --------

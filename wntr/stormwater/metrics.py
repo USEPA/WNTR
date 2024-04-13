@@ -115,12 +115,12 @@ def pump_energy(flowrate, headloss, flow_units, efficiency=100):
     energy_kW_hr = power_kW * time_hrs # kW*hr
     return energy_kW_hr
 
-def conduit_available_volume(volume, capacity, capacity_threshold=1):
+def conduit_available_volume(volume, capacity, threshold=1):
     """
     Conduit available volume, up to a capacity threshold [ft^3 or m^3]
     
     """
-    available_volume = volume*(capacity_threshold-capacity)
+    available_volume = volume*(threshold - capacity)
     available_volume[available_volume < 0] = None
     
     return available_volume

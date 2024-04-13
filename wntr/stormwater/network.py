@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import warnings
+import os
 
 try:
     import swmmio
@@ -50,12 +51,12 @@ class StormWaterNetworkModel(object):
         for missing_header in missing_headers:
             appended_text = appended_text + "[" + missing_header + "]\n\n"
             
-        shutil.copyfile(inp_file_name, 'temp_headers.inp')
-        with open("temp_headers.inp", "a") as f:
+        shutil.copyfile(inp_file_name, 'temp.inp')
+        with open("temp.inp", "a") as f:
             f.write(appended_text)
 
-        self._swmmio_model = swmmio.Model("temp_headers.inp", include_rpt=False)
-  
+        self._swmmio_model = swmmio.Model("temp.inp", include_rpt=False)
+
         # See https://github.com/pyswmm/swmmio/issues/57 for a list of supported INP file sections
         
         # Attributes of StormWaterNetworkModel link to attributes 
@@ -144,6 +145,9 @@ class StormWaterNetworkModel(object):
             df = getattr(self._swmmio_model.inp, sec)
             setattr(self, sec, df.copy())
             
+        # Reset inp file path and remove temp file
+        self._swmmio_model.inp.path = inp_file_name
+        os.remove("temp.inp")
         
     def describe(self):
         """
@@ -229,6 +233,16 @@ class StormWaterNetworkModel(object):
     def raingage_name_list(self):
         """List of raingage names"""
         return list(self.raingages.index)
+    
+    @property
+    def timeseries_name_list(self):
+        """List of timeseries names"""
+        return list(self.timeseries.index.unique())
+    
+    @property
+    def controls_name_list(self):
+        """List of control names"""
+        return list(self.controls.index)
 
     # @property
     # def num_nodes(self):
@@ -315,18 +329,16 @@ class StormWaterNetworkModel(object):
         """
         return Link(name, self.links.loc[name,:])
     
-    def conduit_cross_section(self, conduit_name_list=None):
+    @property
+    def conduit_cross_section(self):
         """
         Cross section area of each conduit, according to the geometric 
         parameters stored in xsections
         """
 
         cross_section = {}
-        
-        if conduit_name_list is None:
-            conduit_name_list = self.conduit_name_list
 
-        for link_name in conduit_name_list:
+        for link_name in self.conduit_name_list:
 
             geom1 = self.xsections.loc[link_name, 'Geom1']
             geom2 = self.xsections.loc[link_name, 'Geom2']
@@ -391,17 +403,16 @@ class StormWaterNetworkModel(object):
             cross_section[link_name] = area
             
         return pd.Series(cross_section)
-
-    def conduit_volume(self, conduit_name_list=None):
+    
+    @property
+    def conduit_volume(self):
         """
         Volume of each conduit, according to the geometric 
         parameters stored in xsections and length
         """
-        if conduit_name_list is None:
-            conduit_name_list = self.conduit_name_list
         
-        cross_section = self.conduit_cross_section(conduit_name_list)
-        length =self.conduits['Length'].loc[conduit_name_list]
+        cross_section = self.conduit_cross_section
+        length =self.conduits['Length']
         volume = cross_section*length
         
         return volume
@@ -438,11 +449,11 @@ class StormWaterNetworkModel(object):
         """
         assert set(self.timeseries.columns) == set(['Date', 'Time', 'Value'])
         
-        start_date = self.options.loc['START_DATE','Value']
-        self.timeseries.loc[self.timeseries['Date'].isna(), 'Date'] = start_date
+        start_date_value = self.options.loc['START_DATE','Value']
             
         ts = {}
         for name, timeseries in self.timeseries.groupby('Name'):
+            timeseries.loc[timeseries['Date'].isna(), 'Date'] = start_date_value
             datestr = timeseries['Date'] + ' ' + timeseries['Time']
             datetime = pd.DatetimeIndex(datestr)
             value = timeseries['Value'].astype(float).values
@@ -452,8 +463,11 @@ class StormWaterNetworkModel(object):
         
         return ts
     
-    def timeseries_from_datetime_format(self, ts):
+    def add_timeseries_from_datetime_format(self, ts, name=None, update_model=True):
         
+        if name is None:
+            name = ts.name
+        ts = ts.to_frame(name)
         timeseries = ts.unstack().reset_index()
         timeseries = timeseries.set_index('level_1')
         timeseries['Date'] = timeseries.index.strftime('%m/%d/%Y')
@@ -463,6 +477,9 @@ class StormWaterNetworkModel(object):
         timeseries.rename(columns={0: 'Value'}, inplace=True)
         timeseries = timeseries[['Date', 'Time', 'Value']]
         
+        if update_model:
+            self.timeseries = pd.concat([self.timeseries, timeseries], axis=0)
+            
         return timeseries
         
     def to_gis(self, crs=None):
@@ -487,7 +504,8 @@ class StormWaterNetworkModel(object):
         return to_graph(self, node_weight, link_weight, modify_direction)
 
     def add_pump_outage_control(self, pump_name, start_time, end_time=None, 
-                                priority=4, control_prefix="_outage"):
+                                priority=4, control_suffix="_outage", 
+                                update_model=True):
         """
         Add a pump outage rule to the stormwater network model.
     
@@ -502,7 +520,7 @@ class StormWaterNetworkModel(object):
         """
         assert pump_name in self.pump_name_list
         
-        rule_name = 'RULE ' + pump_name + control_prefix
+        rule_name = 'RULE ' + pump_name + control_suffix
         
         rule = "IF SIMULATION TIME > " + str(start_time) + " "
         if end_time is not None:
@@ -511,9 +529,13 @@ class StormWaterNetworkModel(object):
         rule = rule + "ELSE PUMP "+pump_name+" status = ON "
         rule = rule + "PRIORITY "+str(priority)
         
-        self.controls.loc[rule_name, 'Control'] = rule
+        if update_model:
+            self.controls.loc[rule_name, 'Control'] = rule
         
-    def add_composite_patterns(self, data, pattern_suffix="_Composite", update_model=True):
+        return rule
+        
+    def add_composite_patterns(self, data, pattern_suffix="_Composite", 
+                               update_model=True):
         """
         Add composite dry weather flow (DWF) and composite patterns to the 
         model, computed from data that contains multiple base values and 
