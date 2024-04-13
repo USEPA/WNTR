@@ -380,79 +380,79 @@ where the impact of individual component failures is evaluated.
 
 .. dropdown:: **Modeling damage**
 		
-	To model disaster scenarios, attributes and controls in the 
-	:class:`~wntr.stormwater.network.StormWaterNetworkModel` are modified to 
-	reflect the damage state. 
-	Several damage scenarios can be used to quantify resilience of the 
-	stormwater/wastewater systems, this includes:
-
-	* **Long term power outages**: Power outages impact pumps and lift stations. 
-	  The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control` 
-	  adds a control to the model which turns a pump off and on at user specified start and end times, respectively.
-	  By default, the control priority is set to 4 (highest) to override other controls.
+    To model disaster scenarios, attributes and controls in the 
+    :class:`~wntr.stormwater.network.StormWaterNetworkModel` are modified to 
+    reflect the damage state. 
+    Several damage scenarios can be used to quantify resilience of the 
+    stormwater/wastewater systems, this includes:
+    
+    * **Long term power outages**: Power outages impact pumps and lift stations. 
+      The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control` 
+      adds a control to the model which turns a pump off and on at user specified start and end times, respectively.
+      By default, the control priority is set to 4 (highest) to override other controls.
+      
+      .. doctest::
 	  
-	  .. doctest::
-		  >>> # The following example uses swnP
-		  >>> start_time = 4.5 # hours
-		  >>> end_time = 12 # hours
-		  >>> control = swnP.add_pump_outage_control('PUMP1', start_time, end_time, control_suffix="_outage") 
+          >>> # The following example uses swnP
+          >>> start_time = 4.5 # hours
+          >>> end_time = 12 # hours
+          >>> control = swnP.add_pump_outage_control('PUMP1', start_time, end_time) 
 		  
-	  Note that controls can be viewed and modified using ``swn.controls`` which stores controls as 
-	  a Pandas DataFrame (one row per control).  
-
-	  .. doctest::
-	  
-		  >>> print(swnP.controls.loc['RULE PUMP1_outage', 'Control']) 
-		  IF SIMULATION TIME > 4.5 AND SIMULATION TIME < 12 THEN PUMP PUMP1 status = OFF ELSE PUMP PUMP1 status = ON PRIORITY 4
-
-	* **Conduit blockage or collapse**: Conduit blockage or collapse impacts the flowrate at the conduit.  
-	  The flowrate in a conduit can be constrained by modifying conduit properties as follows:
-	  
-	  * Decrease max flow. Note that a max flow value of 0 means that the flowrate is unconstrained (no upper bound).
-	  * Increate roughness
-	  * Decrease cross sectional area
-
-	  .. doctest::
-		
-		  >>> swn.conduits.loc['C1', "MaxFlow"] = 1e-6
-		  >>> swn.conduits.loc['C1', "Roughness"] = 0.999
-		  >>> swn.xsections.loc['C1', "Geom1"] = 0.00125
-
-	* **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
+      Note that controls can be viewed and modified using ``swn.controls`` which stores controls as 
+      a Pandas DataFrame (one row per control).  
+      
+      .. doctest::
+      
+          >>> print(swnP.controls.loc['RULE PUMP1_outage', 'Control']) 
+          IF SIMULATION TIME > 4.5 AND SIMULATION TIME < 12 THEN PUMP PUMP1 status = OFF ELSE PUMP PUMP1 status = ON PRIORITY 4
+      
+    * **Conduit blockage or collapse**: Conduit blockage or collapse impacts the flowrate at the conduit.  
+      The flowrate in a conduit can be constrained by modifying conduit properties as follows:
+      
+      * Decrease max flow. Note that a max flow value of 0 means that the flowrate is unconstrained (no upper bound).
+      * Increate roughness
+      * Decrease cross sectional area
+      
+      .. doctest::
+      
+          >>> swn.conduits.loc['C1', "MaxFlow"] = 1e-6
+          >>> swn.conduits.loc['C1', "Roughness"] = 0.999
+          >>> swn.xsections.loc['C1', "Geom1"] = 0.00125
+      
+    * **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
       The methods :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` can be used to 
       convert ``swn.timeseries`` into a datetime Pandas DataFrame.  This format is easy to modify or import from other data sources.
       The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_timeseries_from_datetime_format` can then be used to 
       add timeseries formatted as datetime Pandas DataFrames to the model.  This facilitates greater flexibility in the way timeseries are modified.
       
-	  The following example creates a new timeseries that is a combination of a 100 and 10 year rainfall event, 
-	  adds the new timeseries to the model, and then updates the data source of the raingage.
-	  
-	  .. doctest::
-		
-		  >>> swn.timeseries_name_list
-		  ['2-yr', '10-yr', '100-yr']
-		  >>> ts = swn.timeseries_to_datetime_format()
-		  >>> ts['New'] = ts['100-yr'] + ts['10-yr'].shift(periods=12, fill_value=0)
-		  >>> ax = ts.plot()
-		  >>> timeseries = swn.add_timeseries_from_datetime_format(ts['New'])
-		  >>> swn.timeseries_name_list
-		  ['2-yr', '10-yr', '100-yr', 'New']
-		  >>> swn.raingages['DataSourceName'] = 'New'
-
+      The following example creates a new timeseries that is a combination of a 100 and 10 year rainfall event, 
+      adds the new timeseries to the model, and then updates the data source of the raingage.
+      
+      .. doctest::
+      
+          >>> swn.timeseries_name_list
+          ['2-yr', '10-yr', '100-yr']
+          >>> ts = swn.timeseries_to_datetime_format()
+          >>> ts['New'] = ts['100-yr'] + ts['10-yr'].shift(periods=12, fill_value=0)
+          >>> ax = ts.plot()
+          
+          >>> timeseries = swn.add_timeseries_from_datetime_format(ts['New'])
+          >>> swn.timeseries_name_list
+          ['2-yr', '10-yr', '100-yr', 'New']
+          >>> swn.raingages['DataSourceName'] = 'New'
+      
       .. doctest::
           :hide:
-    
+          
           >>> plt.tight_layout()
           >>> plt.savefig('timeseries_plot.png', dpi=300)
-	
+      
       .. _fig-fragility:
       .. figure:: figures/timeseries_plot.png
-         :width: 640
-         :alt: Timeseries plot
-
-         Timeseries plot
-   
-	See :ref:`stormwater_examples` below.
+          :width: 640
+          :alt: Timeseries plot
+          
+          Timeseries plot
 
 .. dropdown:: **Geospatial capabilities**
 	
@@ -584,7 +584,7 @@ Additional metrics could also be added at a later date.
 		>>> upstream_edges = swntr.metrics.upstream_edges(G_flow, 'J8')
 
 .. dropdown:: **Travel time**
-	
+
 	Travel time along an individual conduit is simply computed as the conduit length divided by the conduit velocity.  
 	
 	.. doctest::
@@ -593,7 +593,7 @@ Additional metrics could also be added at a later date.
 		>>> average_velocity = results.link['FLOW_VELOCITY'].mean()
 		>>> travel_time = swntr.metrics.conduit_travel_time(length, average_velocity) # in seconds
 
-    If velocites are stable, the travel time along a path can be computed as the sum of travel times along that path.
+	If velocites are stable, the travel time along a path can be computed as the sum of travel times along that path.
 	
 	.. doctest::
 		
@@ -605,7 +605,7 @@ Additional metrics could also be added at a later date.
 	The time for an individual conduit to reach a specified capacity can be approximated by knowing the conduit available volume and average flowrate.  
 	This assumes that the flowrate is blocked at the outflow of each conduit. 
 	This rough approximation overly simplifies dynamics from blocked flow, but can be useful to identify areas with marginal reserve.
-
+		
 	.. doctest::
 
 		>>> flow_units = swnP.options.loc['FLOW_UNITS', 'Value']
