@@ -182,8 +182,8 @@ class TestStormWaterScenarios(unittest.TestCase):
         swn1.conduits.loc[conduit_name, "MaxFlow"] = max_flow1
         
         # Test ability to modify INP file
-        swntr.io.write_inpfile(swn1, "temp.inp")
-        inpfile = join(testdir, "temp.inp")
+        swntr.io.write_inpfile(swn1, "temp_Site_Drainage_Model.inp")
+        inpfile = join(testdir, "temp_Site_Drainage_Model.inp")
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         max_flow2 = swn2.conduits.loc[conduit_name, "MaxFlow"]
         assert max_flow1 == max_flow2
@@ -207,8 +207,8 @@ class TestStormWaterScenarios(unittest.TestCase):
         assert swn1.controls.shape[0] == 3
         
         # Test ability to modify INP file
-        swntr.io.write_inpfile(swn1, "temp.inp")
-        inpfile = join(testdir, "temp.inp")
+        swntr.io.write_inpfile(swn1, "temp_Pump_Control_Model.inp")
+        inpfile = join(testdir, "temp_Pump_Control_Model.inp")
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn2.controls.shape[0] == 3
         control_name = 'RULE ' + pump_name + '_outage'
