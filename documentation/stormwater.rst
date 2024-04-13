@@ -686,8 +686,8 @@ Examples
 
 ``[TODO: Add examples, or link to Jupyter notebooks]``
 
-* Upstream/downstream assets
-* Response time
+* Upstream and downstream assets
+* Time to reach capacity
 * Conduit criticality
 * Power outages
 * Extreme rainfall
