@@ -7,12 +7,9 @@ import sys
 use_swig = False
 build = True
 
-# BUILD_WNTR_EXTENSIONS is defined as an environment variable for the project at readthedocs.org
 if '--no-build' in sys.argv:
     build = False
     sys.argv.remove('--no-build')
-elif 'BUILD_WNTR_EXTENSIONS' in os.environ and os.environ['BUILD_WNTR_EXTENSIONS'].lower() == 'false':
-    build = False
 
 extension_modules = list()
 if build:
@@ -75,7 +72,7 @@ AUTHOR = 'WNTR Developers'
 MAINTAINER_EMAIL = 'kaklise@sandia.gov'
 LICENSE = 'Revised BSD'
 URL = 'https://github.com/USEPA/WNTR'
-DEPENDENCIES = ['numpy>=1.21', 'scipy', 'networkx', 'pandas', 'matplotlib']
+DEPENDENCIES = ['numpy>=1.21', 'scipy', 'networkx', 'pandas', 'matplotlib', 'setuptools']
 
 # use README file as the long description
 file_dir = os.path.abspath(os.path.dirname(__file__))

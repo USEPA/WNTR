@@ -22,7 +22,7 @@ run simulations are described in more detail below, followed by a list of softwa
 
 .. only:: latex
 
-   See the online API documentation at https://wntr.readthedocs.io for more information on the code structure.
+   See the online API documentation at https://usepa.github.io/WNTR/ for more information on the code structure.
    
 .. _table-wntr-subpackage:
 .. table:: WNTR Subpackages
@@ -82,7 +82,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator can run both the EPANET 2.00.12 Programmer's Toolkit [Ross00]_ and EPANET 2.2.0 Programmer's Toolkit [RWTS20]_ to run hydraulic and water quality simulations.  
+   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator can run both the EPANET 2.00.12 Programmer's Toolkit :cite:p:`ross00` and EPANET 2.2.0 Programmer's Toolkit :cite:p:`rwts20` to run hydraulic and water quality simulations.  
                                                       EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure dependent analysis, while EPANET 2.00.12 includes only demand-driven analysis. 
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation. This allows the user to run 
                                                       EPANET simulations, while taking advantage of additional analysis options in WNTR. 

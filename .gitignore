@@ -20,3 +20,5 @@ temp*
 examples/*.inp
 wntr/tests/*.png
 
+documentation/_local
+documentation/apidoc

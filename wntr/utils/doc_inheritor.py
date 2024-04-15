@@ -1,3 +1,5 @@
+"""Utilitiy for inheriting docstrings."""
+
 import inspect
 
 
