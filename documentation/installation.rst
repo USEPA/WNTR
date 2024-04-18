@@ -112,9 +112,9 @@ Step 2: Install WNTR
 	Information for developers can be found in the :ref:`developer_instructions` section.
 	
 	.. note:: 
-	   If WNTR is installed using PyPI or Anaconda (Options 1 or 2 below), the examples folder will not be downloaded.  
+	   If WNTR is installed using PyPI or Anaconda (Options 1 or 2 below), the examples folder is not included with the Python package.   
 	   The examples can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
-	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
+	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store the example files in a folder. 
 	   
 	* **Option 1**: Users can install WNTR from PyPI using pip, which is a command line software tool used to install and manage Python 
 	  packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
