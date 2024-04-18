@@ -328,6 +328,42 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
         self.assertEqual(skel_wn.num_links, wn.num_links - 22)
 
+    def test_skeletonize_with_excluding_nodes_and_pipes(self):
+
+        inp_file = join(datadir, "skeletonize.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        
+        # Run skeletonization without excluding junctions or pipes
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
+        # Junction 13 and Pipe 60 are not in the skeletonized model
+        assert "13" not in skel_wn.junction_name_list
+        assert "60" not in skel_wn.pipe_name_list
+        
+        # Run skeletonization excluding Junction 13 and Pipe 60
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False, 
+                                         junctions_to_exclude=["13"], 
+                                         pipes_to_exclude=["60"])
+        # Junction 13 and Pipe 60 are in the skeletonized model
+        assert "13" in skel_wn.junction_name_list
+        assert "60" in skel_wn.pipe_name_list
+        self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
+        self.assertEqual(skel_wn.num_links, wn.num_links - 22)
+
+        # Change diameter of link 60 one link connected to Junction 13 to be 
+        # greater than 12, should get some results as above
+        # Note, link 11 is connected to Junction 13
+        link = wn.get_link("60")
+        link.diameter = 16 * 0.0254
+        link_connected_to_13 = wn.get_links_for_node('13')[0]
+        link = wn.get_link(link_connected_to_13)
+        link.diameter = 16 * 0.0254
+
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
+        assert "13" in skel_wn.junction_name_list
+        assert "60" in skel_wn.pipe_name_list
+        self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
+        self.assertEqual(skel_wn.num_links, wn.num_links - 22)
+
     def test_series_merge_properties(self):
 
         wn = wntr.network.WaterNetworkModel()
