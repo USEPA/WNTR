@@ -236,39 +236,30 @@ class InpFile(object):
         self.top_comments = []
         self.curves = OrderedDict()
 
-    def read(self, inp_files, wn=None):
+    @staticmethod
+    def read_sections(inp_files:list) -> tuple:
         """
-        Read an EPANET INP file and load data into a water network model object.
-        Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
+        Read an EPANET INP file and return a dictionary of sections.
 
         Parameters
         ----------
         inp_files : str or list
             An EPANET INP input file or list of INP files to be combined
-        wn : WaterNetworkModel, optional
-            An optional network model to append onto; by default a new model is created.
 
         Returns
         -------
-        WaterNetworkModel
-            A water network model object
+        tuple
+            A tuple of two elements: a dictionary (OrderedDict) of sections, and a list of top comments
 
         """
-        if wn is None:
-            wn = WaterNetworkModel()
-        self.wn = wn
         if not isinstance(inp_files, list):
             inp_files = [inp_files]
-        wn.name = inp_files[0]
 
-        self.curves = OrderedDict()
-        self.top_comments = []
-        self.sections = OrderedDict()
+        sections = OrderedDict()
         for sec in _INP_SECTIONS:
-            self.sections[sec] = []
-        self.mass_units = None
-        self.flow_units = None
+            sections[sec] = []
 
+        top_comments = []
         for filename in inp_files:
           section = None
           lnum = 0
@@ -306,13 +297,55 @@ class InpFile(object):
                     else:
                         raise ENSyntaxError(201, line_num=lnum, line = line)
                 elif section is None and line.startswith(';'):
-                    self.top_comments.append(line[1:])
+                    top_comments.append(line[1:])
                     continue
                 elif section is None:
                     logger.debug('Found confusing line: %s', repr(line))
                     raise ENSyntaxError(201, line_num=lnum, line=line)
                 # We have text, and we are in a section
-                self.sections[section].append((lnum, line))
+                sections[section].append((lnum, line))
+        return sections, top_comments
+
+    def read(self, inp_files, wn=None, sections=None, top_comments=None):
+        """
+        Read an EPANET INP file and load data into a water network model object.
+        Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
+
+        Parameters
+        ----------
+        inp_files : str or list
+            An EPANET INP input file or list of INP files to be combined
+        wn : WaterNetworkModel, optional
+            An optional network model to append onto; by default a new model is created.
+
+        Returns
+        -------
+        :class:`~wntr.network.model.WaterNetworkModel`
+            A water network model object
+
+        """
+        if wn is None:
+            wn = WaterNetworkModel()
+        self.wn = wn
+        if not isinstance(inp_files, list):
+            inp_files = [inp_files]
+        wn.name = inp_files[0]
+
+        self.curves = OrderedDict()
+
+        self.mass_units = None
+        self.flow_units = None
+
+        if sections is None:
+            self.sections, self.top_comments = self.read_sections(inp_files)
+        else:
+            self.sections = sections
+            self.top_comments = top_comments
+            if top_comments is None:
+                self.top_comments = []
+            
+
+        assert len([key for key in self.sections.keys()]) == len(_INP_SECTIONS), 'Missing sections in INP file'
 
         # Parse each of the sections
         # The order of operations is important as certain things require prior knowledge
