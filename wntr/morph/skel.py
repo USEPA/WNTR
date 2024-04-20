@@ -26,8 +26,8 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     wn: wntr WaterNetworkModel
         Water network model
     pipe_diameter_threshold: float 
-        Pipe diameter threshold used to determine candidate pipes for 
-        skeletonization
+        Pipe diameter threshold. Pipes with diameter <= threshold are 
+        candidates for removal
     branch_trim: bool, optional
         If True, include branch trimming in skeletonization
     series_pipe_merge: bool, optional

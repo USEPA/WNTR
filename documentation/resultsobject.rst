@@ -87,7 +87,7 @@ Link results include DataFrames for each of the following attributes:
 * Velocity
 * Flowrate
 * Setting
-* Status (0 indicates closed, 1 indicates open)
+* Status (0 indicates closed pipe/pump/valve, 1 indicates open pipe/pump/valve, 2 indicates active valve)
 * Headloss (only when the EpanetSimulator is used)
 * Friction factor (only when the EpanetSimulator is used)
 * Reaction rate (only when the EpanetSimulator is used)
@@ -194,7 +194,7 @@ Network and time series graphics can be customized to add titles, legends, axis 
    
 Pandas includes methods to write DataFrames to the following file formats:
 
-* Excel
+* Microsoft Excel (xlsx)
 * Comma-separated values (CSV)
 * Hierarchical Data Format (HDF)
 * JavaScript Object Notation (JSON)
@@ -205,4 +205,4 @@ For example, DataFrames can be saved to Excel files using:
    >>> pressure.to_excel('pressure.xlsx')
 
 .. note:: 
-   The Pandas method ``to_excel`` requires the Python package **openpyxl** [GaCl18]_, which is an optional dependency of WNTR.
+   The Pandas method ``to_excel`` requires the Python package **openpyxl** :cite:p:`gacl18`, which is an optional dependency of WNTR.

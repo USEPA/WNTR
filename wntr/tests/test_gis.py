@@ -43,6 +43,10 @@ class TestGIS(unittest.TestCase):
         self.results = sim.run_sim()
         self.gis_data = self.wn.to_gis()
         
+        vertex_inp_file = join(datadir, "io.inp")
+        self.vertex_wn = self.wntr.network.WaterNetworkModel(vertex_inp_file)
+        self.vertex_gis_data = self.vertex_wn.to_gis()
+        
         polygon_pts = [[(25,80), (65,80), (65,60), (25,60)],
                        [(25,60), (80,60), (80,30), (25,30)],
                        [(40,50), (60,65), (60,15), (40,15)]]
@@ -102,6 +106,11 @@ class TestGIS(unittest.TestCase):
         G2 = wn2.to_graph()
         
         assert nx.is_isomorphic(G1, G2)
+        
+        # test vertices
+        vertex_wn2 = wntr.network.io.from_gis(self.vertex_gis_data)
+        for name, link in vertex_wn2.links():
+            assert link.vertices == self.vertex_wn.get_link(name).vertices
                          
     def test_intersect_points_with_polygons(self):
         
@@ -259,7 +268,7 @@ class TestGIS(unittest.TestCase):
         
         # distance = 1,5,3
         expected = pd.DataFrame([{'link': '12', 'node': '12', 'snap_distance': 1, 'line_position': 0.1, 'geometry': Point([52.0,70.0])},
-                                 {'link':  '22', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
+                                 {'link': '113', 'node': '23', 'snap_distance': 5.0, 'line_position': 1.0, 'geometry': Point([70.0,40.0])},
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)

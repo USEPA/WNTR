@@ -1,3 +1,5 @@
+"""WNTR AML base classes."""
+
 import sys
 import scipy
 from .evaluator import Evaluator
@@ -153,6 +155,7 @@ class Model(object):
         if self._refcounts[var] == 0:
             cvar = self._var_cvar_map[var]
             var._c_obj = None
+            var._value = cvar.value
             del self._refcounts[var]
             del self._var_cvar_map[var]
             self._evaluator.remove_var(cvar)
@@ -162,6 +165,7 @@ class Model(object):
         if self._refcounts[p] == 0:
             cparam = self._param_cparam_map[p]
             p._c_obj = None
+            p._value = cparam.value
             del self._refcounts[p]
             del self._param_cparam_map[p]
             self._evaluator.remove_param(cparam)
@@ -320,7 +324,7 @@ class Model(object):
         del self._params_referenced_by_con[con]
         del self._floats_referenced_by_con[con]
 
-    def evaluate_residuals(self, x=None, num_threads=4):
+    def evaluate_residuals(self, x=None):
         if x is not None:
             self._evaluator.load_var_values_from_x(x)
         r = self._evaluator.evaluate(len(self._con_ccon_map))

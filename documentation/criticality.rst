@@ -13,7 +13,7 @@ In threat agnostic analysis, the cause of the disruption is not modeled directly
 Rather, a series of simulations can be used to perform N-k contingency analysis, where N is the number 
 of elements and k elements fail.
 
-In water distribution systems analysis, N-1 contingency analysis is commonly called criticality analysis [WaWC06]_.
+In water distribution systems analysis, N-1 contingency analysis is commonly called criticality analysis :cite:p:`wawc06`.
 WNTR is commonly used to run criticality analysis, where a series of simulations are run to determine the impact of 
 individual failures on the system.  
 This framework can be expanded to include analysis where two or more elements fail at one time or in succession.

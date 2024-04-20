@@ -50,7 +50,7 @@ Documentation
 ---------------------
 WNTR includes a user manual that is built using the Read the Docs service.
 The user manual is automatically rebuilt each time changes are made to the code.
-The documentation is publicly available at http://wntr.readthedocs.io/.
+The documentation is publicly available at https://usepa.github.io/WNTR/.
 The user manual includes an overview, installation instructions, simple examples, 
 and information on the code structure and functions.  
 WNTR includes documentation on the API for all 

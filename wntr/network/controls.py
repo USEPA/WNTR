@@ -2,29 +2,6 @@
 The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    Subject
-    Observer
-    Comparison
-    ControlPriority
-    ControlCondition
-    TimeOfDayCondition
-    SimTimeCondition
-    ValueCondition
-    TankLevelCondition
-    RelativeCondition
-    OrCondition
-    AndCondition
-    BaseControlAction
-    ControlAction
-    ControlBase
-    Control
-    ControlManager
-	
 """
 import math
 import enum
@@ -275,6 +252,25 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
 
     def _reset(self):
         pass
+
+    def _shift(self, value):
+        """
+        Shift any SimTimeConditions within larger condition rules by value seconds (backward).
+
+        I.e., if a control is scheduled at simulation time 7200 and you shift by 3600, the new
+        control threshold with be sim time 3600.
+
+        Parameters
+        ----------
+        value : float
+            seconds to subtract from threshold
+
+        Returns
+        -------
+        bool
+            is this still a valid control?
+        """
+        return True
 
     @abc.abstractmethod
     def requires(self):
@@ -607,6 +603,13 @@ class SimTimeCondition(ControlCondition):
         if self._relation != other._relation:
             return False
         return True
+
+    def _shift(self, value):
+        self._threshold -= value
+        if self._threshold >= 0:
+            return True
+        self._threshold = 0
+        return False
 
     @property
     def name(self):
@@ -1019,6 +1022,11 @@ class OrCondition(ControlCondition):
         self._condition_1._reset()
         self._condition_2._reset()
 
+    def _shift(self, value):
+        success1 = self._condition_1._shift(value)
+        success2 = self._condition_2._shift(value)
+        return success1 or success2
+
     def _compare(self, other):
         """
         Parameters
@@ -1084,6 +1092,11 @@ class AndCondition(ControlCondition):
     def _reset(self):
         self._condition_1._reset()
         self._condition_2._reset()
+
+    def _shift(self, value):
+        success1 = self._condition_1._shift(value)
+        success2 = self._condition_2._shift(value)
+        return success1 or success2
 
     def _compare(self, other):
         """
@@ -2054,6 +2067,9 @@ class Rule(ControlBase):
         control_type: _ControlType
         """
         return self._control_type
+
+    def _shift(self, step):
+        return self._condition._shift(step)
     
     def requires(self):
         req = self._condition.requires()
@@ -2249,6 +2265,9 @@ class Control(Rule):
     def assign_cps(self, cps_node):
         self._cps_node = cps_node
         
+    def _shift(self, step):
+        return self._condition._shift(step)
+
     @classmethod
     def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """
@@ -2366,7 +2385,7 @@ class ControlChangeTracker(Observer):
 
     def register_control(self, control):
         """
-        Register a control with the ControlManager
+        Register a control
 
         Parameters
         ----------
@@ -2404,7 +2423,7 @@ class ControlChangeTracker(Observer):
 
     def deregister(self, control):
         """
-        Deregister a control with the ControlManager
+        Deregister a control
 
         Parameters
         ----------
@@ -2432,7 +2451,7 @@ class ControlChecker(object):
 
     def register_control(self, control):
         """
-        Register a control with the ControlManager
+        Register a control
 
         Parameters
         ----------
@@ -2442,7 +2461,7 @@ class ControlChecker(object):
 
     def deregister(self, control):
         """
-        Deregister a control with the ControlManager
+        Deregister a control
 
         Parameters
         ----------

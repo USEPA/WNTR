@@ -1,3 +1,5 @@
+"""Utilities for the WNTRSimulator model."""
+
 from wntr.utils.ordered_set import OrderedDict, OrderedSet
 from six import with_metaclass
 import abc

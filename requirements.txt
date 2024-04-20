@@ -4,6 +4,7 @@ scipy
 networkx
 pandas
 matplotlib
+setuptools
 
 # Optional
 plotly<=5.11.0
@@ -15,7 +16,10 @@ rtree; sys_platform == "darwin" or sys_platform == "linux"
 
 # Documentation
 sphinx
+sphinx_design
 sphinx_rtd_theme
+pydata_sphinx_theme
+sphinxcontrib-bibtex
 
 # Testing
 pytest
