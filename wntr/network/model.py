@@ -28,6 +28,7 @@ from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
 from .controls import Control, Rule
+from .CPS_node import SCADA, PLC, RTU, CPSNodeRegistry, MODBUS, EIP, SER, CPSEdgeRegistry
 from .elements import (
     Curve,
     Demands,
@@ -79,12 +80,16 @@ class WaterNetworkModel(AbstractModel):
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
         self._sources = SourceRegistry(self)
-
+        self._cps_reg = CPSNodeRegistry(self)
+        self._cps_edges = CPSEdgeRegistry(self)
+        
         self._node_reg._finalize_(self)
         self._link_reg._finalize_(self)
         self._pattern_reg._finalize_(self)
         self._curve_reg._finalize_(self)
         self._sources._finalize_(self)
+        self._cps_reg._finalize_(self)
+        self._cps_edges._finalize_(self)
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
 
@@ -250,7 +255,30 @@ class WaterNetworkModel(AbstractModel):
         """
         for control_name, control in self._controls.items():
             yield control_name, control
-
+    
+    @property           
+    def cps_nodes(self):
+        """The node registry (as property) or a generator for iteration (as function call)
+        
+        Returns
+        -------
+        CPSNodeRegistry
+        
+        """
+        return self._cps_reg
+    
+    @property   
+    def cps_edges(self):
+        """The edges registry (as property) or a generator for iteration (as function call)
+        
+        Returns
+        -------
+        CPSEdgeRegistry
+        
+        """
+        return self._cps_edges
+     
+     
     ### #
     ### Element iterators
     @property
@@ -323,6 +351,14 @@ class WaterNetworkModel(AbstractModel):
         """Iterator over all general purpose valves (GPVs)"""
         return self._link_reg.gpvs
 
+    @property
+    def cps_nodes_it(self):
+        """Iterator over all cyber-physical system (CPS) controllers"""
+        return self._cps_reg.cps
+    @property
+    def cps_edges_it(self):
+        """Iterator over all cyber-physical system (CPS) controllers"""
+        return self._cps_edges.edges
     """
     ### # 
     ### Create blank, unregistered objects (for direct assignment)
@@ -629,7 +665,9 @@ class WaterNetworkModel(AbstractModel):
         self._pattern_reg.add_usage(source.strength_timeseries.pattern_name, (source.name, "Source"))
         self._node_reg.add_usage(source.node_name, (source.name, "Source"))
 
-    def add_control(self, name, control_object):
+    #adding cps options: if controls contain property designating cps ownership, iterate as here, consider adding overloaded function with additional cps param. 
+    #else if cps devices own/encapsulate controls, assign to a default cps unit (likely SCADA)
+    def add_control(self, name, control_object): 
         """
         Adds a control or rule to the water network model
 
@@ -1260,6 +1298,29 @@ class WaterNetworkModel(AbstractModel):
         return wntr.network.io.to_graph(self, node_weight, link_weight, 
                                         modify_direction)
                                         
+    def cps_to_graph(self, node_weight=None, link_weight=None, 
+                 modify_direction=False):
+        """
+        Convert the CPS nodes and edges into a networkx MultiDiGraph
+        
+        Parameters
+        ----------
+        node_weight :  dict or pandas Series (optional)
+            Node weights
+        link_weight : dict or pandas Series (optional)
+            Link weights.  
+        modify_direction : bool (optional)
+            If True, than if the link weight is negative, the link start and 
+            end node are switched and the abs(weight) is assigned to the link
+            (this is useful when weighting graphs by flowrate). If False, link 
+            direction and weight are not changed.
+            
+        Returns
+        --------
+        networkx MultiDiGraph
+        """
+        return wntr.network.io.cps_to_graph(self, node_weight, link_weight, 
+                                        modify_direction)
                                
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
@@ -1372,6 +1433,53 @@ class WaterNetworkModel(AbstractModel):
                     link_name
                     for link_name, link_type in link_data
                     if link_type in link_types and node_name == self.get_link(link_name).start_node_name
+                ]
+            else:
+                logger.error("Unrecognized flag: {0}".format(flag))
+                raise ValueError("Unrecognized flag: {0}".format(flag))
+
+    def get_edges_for_cps_node(self, cps_node_name, flag="ALL"):
+        """
+        Returns a list of edges connected to a cps_node
+
+        Parameters
+        ----------
+        cps_node_name : string
+            Name of the node.
+
+        flag : string
+            Options are 'ALL', 'INPUT', 'OUTPUT', 'LOCAL', 'REMOTE'. #TODO: LOCAL AND REMOTE SHOULD BE BASED ON COMPLEX TOPOLOGY SIMULATION SETTINGS
+            'ALL' returns all edges connected to the node.
+            'INPUT' returns edges that have the specified node as an end node.
+            'OUTPUT' returns links that have the specified node as a start node.
+
+        Returns
+        -------
+        A list of edge names connected to the cps_node
+        """
+        edge_types = {"MODBUS", "EIP", "SER"}
+        edge_data = self._cps_reg.get_usage(cps_node_name)
+        if edge_data is None:
+            return []
+        else:
+            if flag.upper() == "ALL":
+                return [
+                    edge_name
+                    for edge_name, edge_type in edge_data
+                    if edge_type in edge_types
+                    and cps_node_name in {self.get_edge(edge_name).start_node_name, self.get_edge(edge_name).end_node_name}
+                ]
+            elif flag.upper() == "INLET":
+                return [
+                    edge_name
+                    for edge_name, edge_type in edge_data
+                    if edge_type in edge_types and cps_node_name == self.get_edge(edge_name).end_node_name
+                ]
+            elif flag.upper() == "OUTLET":
+                return [
+                    edge_name
+                    for edge_name, edge_type in edge_data
+                    if edge_type in edge_types and cps_node_name == self.get_edge(edge_name).start_node_name
                 ]
             else:
                 logger.error("Unrecognized flag: {0}".format(flag))
@@ -1501,9 +1609,12 @@ class WaterNetworkModel(AbstractModel):
             if isinstance(control, Control):
                 act = control.actions()[0]
                 cond = control.condition
-                rule = Rule(cond, act, priority=priority)
+                cps_node = control._cps_node
+                rule = Rule(cond, act, cps_node, priority=priority)
                 self.add_control(name.replace(" ", "_") + "_Rule", rule)
                 self.remove_control(name)
+                
+    
 
     def reset_initial_values(self):
         """

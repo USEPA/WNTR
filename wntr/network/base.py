@@ -605,6 +605,8 @@ class Registry(MutableMapping):
         self._link_reg = wn._link_reg
         self._controls = wn._controls
         self._sources = wn._sources
+        self._cps_reg = wn._cps_reg
+        self._cps_edges = wn._cps_edges
     
     def __getitem__(self, key):
         if not key:

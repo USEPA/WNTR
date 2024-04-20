@@ -426,6 +426,61 @@ def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
                 pass
     
     return G
+    
+def cps_to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
+    """
+    Convert a WaterNetworkModel into a networkx MultiDiGraph
+    
+    Parameters
+    ----------
+    node_weight :  dict or pandas Series (optional)
+        Node weights
+    link_weight : dict or pandas Series (optional)
+        Link weights.  
+    modify_direction : bool (optional)
+        If True, than if the link weight is negative, the link start and 
+        end node are switched and the abs(weight) is assigned to the link
+        (this is useful when weighting graphs by flowrate). If False, link 
+        direction and weight are not changed.
+        
+    Returns
+    --------
+    networkx MultiDiGraph
+    """
+    G = nx.MultiDiGraph()
+
+    for name, node in wn.cps_nodes():
+        G.add_node(name)
+        nx.set_node_attributes(G, name="name", values={name: node.name})
+        nx.set_node_attributes(G, name="type", values={name: node.node_type})
+
+        if node_weight is not None:
+            try:  # weight nodes
+                value = node_weight[name]
+                nx.set_node_attributes(G, name="weight", values={name: value})
+            except:
+                pass
+
+    for name, link in wn.cps_edges():
+        start_node = link._start_node_name
+        end_node = link._end_node_name
+        G.add_edge(start_node, end_node, key=name)
+        nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.edge_type})
+
+        if link_weight is not None:
+            try:  # weight links
+                value = link_weight[name]
+                if modify_direction and value < 0:  # change the direction of the link and value
+                    G.remove_edge(start_node, end_node, name)
+                    G.add_edge(end_node, start_node, name)
+                    nx.set_edge_attributes(G, name="type", values={(end_node, start_node, name): link.edge_type})
+                    nx.set_edge_attributes(G, name="weight", values={(end_node, start_node, name): -value})
+                else:
+                    nx.set_edge_attributes(G, name="weight", values={(start_node, end_node, name): value})
+            except:
+                pass
+    
+    return G    
 
 def write_json(wn, path_or_buf, **kw_json,):
     """

@@ -1880,6 +1880,7 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
         self._control_type = None
         self._condition = None
         self._priority = None
+        self._cps_node = None
 
     @abc.abstractmethod
     def is_control_action_required(self):
@@ -1941,6 +1942,21 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     @property
     def priority(self):
         return self._priority
+        
+    @property
+    def cps_node(self):
+        """
+        Assigned cps_node object (if any).
+        
+        Returns
+        -------
+        cps_node: string
+        """
+        return self._cps_node
+        
+    
+    def assign_cps(self, cps_node):
+        self._cps_node = cps_node
 
     def _compare(self, other):
         """
@@ -1978,7 +1994,7 @@ class Rule(ControlBase):
     """
     A very general and flexible class for defining both controls rules.
     """
-    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
+    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None, cps_node=None):
         """
         Parameters
         ----------
@@ -1994,6 +2010,8 @@ class Rule(ControlBase):
             The priority of the control. Default is ControlPriority.medium
         name: str
             The name of the control
+        cps_node: str
+            The name of the assigned CPS node object
         """
         self.update_condition(condition)
         self.update_then_actions(then_actions)
@@ -2003,6 +2021,7 @@ class Rule(ControlBase):
         self._name = name
         if self._name is None:
             self._name = ''
+        self._cps_node = cps_node
         self._control_type = _ControlType.rule
 
         if isinstance(condition, TankLevelCondition):
@@ -2056,7 +2075,21 @@ class Rule(ControlBase):
             return self._name
         else:
             return '/'.join(str(self).split())
-
+        
+    @property
+    def cps_node(self):
+        """
+        Assigned cps_node object (if any).
+        
+        Returns
+        -------
+        cps_node: string
+        """
+        return self._cps_node
+        
+    def assign_cps(cps_node):
+        self._cps_node = cps_node
+        
     def __repr__(self):
         fmt = "<Control: '{}', {}, {}, {}, priority={}>"
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
@@ -2177,7 +2210,7 @@ class Control(Rule):
     """
     A class for controls.
     """
-    def __init__(self, condition, then_action: BaseControlAction, priority=ControlPriority.medium, name=None):
+    def __init__(self, condition, then_action: BaseControlAction, priority=ControlPriority.medium, name=None, cps_node=None):
         """
         Parameters
         ----------
@@ -2191,6 +2224,8 @@ class Control(Rule):
             The priority of the control. Default is ControlPriority.medium
         name: str
             The name of the control
+        cps_node: str
+            The name of the assigned CPS node object
         """
         super().__init__(condition=condition, then_actions=then_action, priority=priority, name=name)
         if isinstance(condition, TankLevelCondition):
@@ -2199,6 +2234,20 @@ class Control(Rule):
             self._control_type = _ControlType.presolve
         else:
             self._control_type = _ControlType.postsolve
+            
+    @property
+    def cps_node(self):
+        """
+        Assigned cps_node object (if any).
+        
+        Returns
+        -------
+        _cps_node: string
+        """
+        return self._cps_node
+        
+    def assign_cps(self, cps_node):
+        self._cps_node = cps_node
         
     @classmethod
     def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
