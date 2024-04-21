@@ -1796,6 +1796,7 @@ class WaterNetworkModel(AbstractModel):
             if remove_controls:
                 self.remove_control(name)
         return to_delete
+        
 class PatternRegistry(Registry):
     """A registry for patterns."""
 
