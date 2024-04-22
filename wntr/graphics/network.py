@@ -228,14 +228,14 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
         clb.ax.set_title(node_colorbar_label, fontsize=10)
     if add_link_colorbar and link_attribute:
-        if directed:
-            vmin = min(map(abs,link_attribute.values()))
-            vmax = max(map(abs,link_attribute.values())) 
-            sm = plt.cm.ScalarMappable(cmap=link_cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
-            sm.set_array([])
-            clb = plt.colorbar(sm, shrink=0.5, pad=0.05, ax=ax)
-        else:
-            clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+        #if directed:
+        vmin = min(map(abs,link_attribute.values()))
+        vmax = max(map(abs,link_attribute.values())) 
+        sm = plt.cm.ScalarMappable(cmap=link_cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+        sm.set_array([])
+        clb = plt.colorbar(sm, shrink=0.5, pad=0.05, ax=ax)
+        #else:
+        #    clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
         clb.ax.set_title(link_colorbar_label, fontsize=10)
         
     ax.axis('off')
