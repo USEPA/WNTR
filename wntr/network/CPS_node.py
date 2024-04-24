@@ -757,6 +757,10 @@ class EIP(CPS_Edge):
     ----------
     name : string
         Name of the cps edge
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this cps edge will belong to.
     
@@ -808,10 +812,10 @@ class SER(CPS_Edge):
     ----------
     name : string
         Name of the pump
-    start_edge_name : string
-         Name of the start edge
-    end_edge_name : string
-         Name of the end edge
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
     
@@ -830,13 +834,9 @@ class SER(CPS_Edge):
     .. rubric:: Read-only simulation results
 
     .. autosummary::
-
-        flow
-        headloss
-        velocity
-        quality
-        status
-        setting
+        
+        start_node_name
+        end_node_name
 
     """
 
@@ -979,24 +979,6 @@ class CPSNodeRegistry(Registry):
         -------------------
         name : string
             Name of the tank.
-        elevation : float
-            Elevation at the tank.
-        init_level : float
-            Initial tank level.
-        min_level : float
-            Minimum tank level.
-        max_level : float
-            Maximum tank level.
-        diameter : float
-            Tank diameter of a cylindrical tank (only used when the volume 
-            curve is None)
-        min_vol : float
-            Minimum tank volume (only used when the volume curve is None)
-        vol_curve : string, optional
-            Name of a volume curve. The volume curve overrides the tank diameter
-            and minimum volume.
-        overflow : bool, optional
-            Overflow indicator (Always False for the WNTRSimulator)
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
@@ -1211,20 +1193,12 @@ class CPSEdgeRegistry(Registry):
         -------------------
         name : string
             Name of the junction.
-        base_demand : float
-            Base demand at the junction.
-        demand_pattern : string or Pattern
-            Name of the demand pattern or the Pattern object
-        elevation : float
-            Elevation of the junction.
+        start_node_name : string
+             Name of the start node
+        end_node_name : string
+             Name of the end node
         coordinates : tuple of floats, optional
             X-Y coordinates of the edge location.
-        demand_category : str, optional
-            Category to the **base** demand
-        emitter_coeff : float, optional
-            Emitter coefficient
-        initial_quality : float, optional
-            Initial quality at this junction
         """
         assert (
             isinstance(name, str) and len(name) < 64 and name.find(" ") == -1
@@ -1264,24 +1238,10 @@ class CPSEdgeRegistry(Registry):
         -------------------
         name : string
             Name of the tank.
-        elevation : float
-            Elevation at the tank.
-        init_level : float
-            Initial tank level.
-        min_level : float
-            Minimum tank level.
-        max_level : float
-            Maximum tank level.
-        diameter : float
-            Tank diameter of a cylindrical tank (only used when the volume 
-            curve is None)
-        min_vol : float
-            Minimum tank volume (only used when the volume curve is None)
-        vol_curve : string, optional
-            Name of a volume curve. The volume curve overrides the tank diameter
-            and minimum volume.
-        overflow : bool, optional
-            Overflow indicator (Always False for the WNTRSimulator)
+        start_node_name : string
+             Name of the start node
+        end_node_name : string
+             Name of the end node
         coordinates : tuple of floats, optional
             X-Y coordinates of the edge location.
             
@@ -1322,6 +1282,10 @@ class CPSEdgeRegistry(Registry):
         Parameters
         ----------
         name : string
+        start_node_name : string
+             Name of the start node
+        end_node_name : string
+             Name of the end node
         coordinates : tuple of floats, optional
             X-Y coordinates of the edge location.
         

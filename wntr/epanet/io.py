@@ -2683,7 +2683,7 @@ class BinFile(object):
             """
             logger.debug('... read energy data ...')
             for i in range(npumps):
-                pidx = int(np.fromfile(fin,dtype=np.int32, count=1))
+                pidx = int(np.fromfile(fin,dtype=np.int32, count=1)[0]) #changed to reduce warning output, extracts first value and ensures int-- shouldn't change function
                 energy = np.fromfile(fin, dtype=np.dtype(ftype), count=6)
                 self.save_energy_line(pidx, linknames[pidx-1], energy)
             peakenergy = np.fromfile(fin, dtype=np.dtype(ftype), count=1)
