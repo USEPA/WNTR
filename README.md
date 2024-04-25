@@ -6,6 +6,18 @@
 [![Coverage Status](https://coveralls.io/repos/github/USEPA/WNTR/badge.svg?branch=main)](https://coveralls.io/github/USEPA/WNTR?branch=main)
 [![Documentation Status](https://github.com/USEPA/WNTR/actions/workflows/build_deploy_pages.yml/badge.svg)](https://github.com/usepa/wntr/actions/workflows/build_deploy_pages.yml)
 
+
+WNTR+CPS Fork Information
+--------------
+This fork of the USEPA WNTR project is an experimental branch worked on as part of research collaboration 
+between Boise State University and Sandia National Labs focusing on representation of 
+Cyber-physical Systems (CPS) within water distribution networks. The capabilities introduced by the components
+introduced in this module may not have full test coverage, but the developer will attempt to address any bugs or 
+errors as they are reported, and add corresponding tests as necessary.
+
+
+Core WNTR Information
+--------------
 The Water Network Tool for Resilience (WNTR) is a Python package designed to simulate and 
 analyze resilience of water distribution networks. The software includes capability to:
 
