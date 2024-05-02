@@ -29,11 +29,11 @@ Related software
 
 * PTSNet: https://github.com/gandresr/ptsnet
 
-* pyincore: https://github.com/IN-CORE/pyincore
-
 * TSNet: https://github.com/glorialulu/TSNet
 
 * VisWaterNet: https://github.com/tylertrimble/viswaternet
+
+See the `WNTR GitHub Dependeny Graph <https://github.com/USEPA/WNTR/network/dependents?dependent_type=REPOSITORY>`_ to find additional repositories and packages that use WNTR.
 
 Publications
 ------------

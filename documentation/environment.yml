@@ -1,6 +1,6 @@
 name: wntr
 dependencies:
-    - python=3.8
+    - python=3.10
     - numpy
     - scipy
     - networkx
