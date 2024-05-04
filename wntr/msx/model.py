@@ -755,7 +755,7 @@ class MsxModel(QualityModelBase):
         ver = data.get("wntr-version", None)
         if ver != __version__:
             logger.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
-            warnings.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
+            # warnings.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
         new = cls()
         new.name = data.get("name", None)
         new.title = data.get("title", None)
