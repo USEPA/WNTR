@@ -6,9 +6,11 @@ import os
 import subprocess
 
 try:
+    import pyswmm
     import swmmio
     has_swmmio = True
 except ModuleNotFoundError:
+    pyswmm = None
     swmmio = None
     has_swmmio = False
 
@@ -60,12 +62,12 @@ class SWMMSimulator(object):
         write_inpfile(self._swn, temp_inpfile)
         
         # The simulation can also be run with pyswmm, see test_stormwater.py, test_basics
-        p = subprocess.run("python -m swmmio --run " + temp_inpfile)
+        #p = subprocess.run("python -m swmmio --run " + temp_inpfile)
         
-        # with pyswmm.Simulation(temp_inpfile) as sim: 
-        #     for step in sim:
-        #         pass
-        #     sim.report()
+        with pyswmm.Simulation(temp_inpfile) as sim: 
+             for step in sim:
+                 pass
+             sim.report()
         
         if full_results:
             results = read_outfile(temp_outfile)
