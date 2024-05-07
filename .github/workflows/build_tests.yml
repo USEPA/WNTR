@@ -88,16 +88,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         python -m pip install -e .
-    #- name: Run Tests on Windows
-    #  if: matrix.os == 'windows-latest'
-    #  run: | # the following skips windows rst doctests that rely on geopandas (gis.rst and model_io.rst) because skipif is not working properly
-    #    coverage erase
-    #    coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-    #    coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" --ignore-glob="*model_io.rst" --ignore-glob="*gis.rst" documentation
-    #  env:
-    #    COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Run Tests
-      #if: matrix.os != 'windows-latest'
       run: | 
         coverage erase
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
