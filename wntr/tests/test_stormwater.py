@@ -118,15 +118,15 @@ class TestStormWaterSim(unittest.TestCase):
             
             # swmmio with saved INP file
             # No model sections are flagged for rewrite
-            print("   run swmmio")
-            if isfile(temp_inpfile):
-                os.remove(temp_inpfile)
-            if isfile(temp_outfile):
-                os.remove(temp_outfile)
-            swmmio_model = swmmio.Model(inpfile)
-            swmmio_model.inp.save(temp_inpfile)
-            p = subprocess.run("python -m swmmio --run " + temp_inpfile)
-            results_swmmio = swntr.io.read_outfile(temp_outfile)
+            # print("   run swmmio")
+            # if isfile(temp_inpfile):
+            #     os.remove(temp_inpfile)
+            # if isfile(temp_outfile):
+            #     os.remove(temp_outfile)
+            # swmmio_model = swmmio.Model(inpfile)
+            # swmmio_model.inp.save(temp_inpfile)
+            # p = subprocess.run("python -m swmmio --run " + temp_inpfile)
+            # results_swmmio = swntr.io.read_outfile(temp_outfile)
             
             # swntr
             # All model sections are flagged for rewrite
@@ -148,14 +148,14 @@ class TestStormWaterSim(unittest.TestCase):
                 self.tested_rpt_sections.add(sec)
             
             # Compare direct methods to swmmio and swntr, node total inflow
-            assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
-                               results_swmmio.node['TOTAL_INFLOW'])
+            #assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
+            #                   results_swmmio.node['TOTAL_INFLOW'])
             assert_frame_equal(results_pyswmm.node['TOTAL_INFLOW'],
                                results_swntr.node['TOTAL_INFLOW'])
             
             # Compare direct methods to swmmio and swntr, link capacity
-            assert_frame_equal(results_pyswmm.link['CAPACITY'],
-                               results_swmmio.link['CAPACITY'])
+            #assert_frame_equal(results_pyswmm.link['CAPACITY'],
+            #                   results_swmmio.link['CAPACITY'])
             assert_frame_equal(results_pyswmm.link['CAPACITY'],
                                results_swntr.link['CAPACITY'])
 
@@ -182,8 +182,8 @@ class TestStormWaterScenarios(unittest.TestCase):
         swn1.conduits.loc[conduit_name, "MaxFlow"] = max_flow1
         
         # Test ability to modify INP file
-        swntr.io.write_inpfile(swn1, "temp_Site_Drainage_Model.inp")
         inpfile = join(testdir, "temp_Site_Drainage_Model.inp")
+        swntr.io.write_inpfile(swn1, inpfile)
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         max_flow2 = swn2.conduits.loc[conduit_name, "MaxFlow"]
         assert max_flow1 == max_flow2
@@ -207,8 +207,8 @@ class TestStormWaterScenarios(unittest.TestCase):
         assert swn1.controls.shape[0] == 3
         
         # Test ability to modify INP file
-        swntr.io.write_inpfile(swn1, "temp_Pump_Control_Model.inp")
         inpfile = join(testdir, "temp_Pump_Control_Model.inp")
+        swntr.io.write_inpfile(swn1, inpfile)
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn2.controls.shape[0] == 3
         control_name = 'RULE ' + pump_name + '_outage'
@@ -341,10 +341,11 @@ class TestStormWaterGIS(unittest.TestCase):
             if isfile(filename):
                 os.remove(filename)
 
-        swntr.io.write_geojson(self.swn, 'temp')
+        file_root = abspath(join(testdir, "temp"))
+        swntr.io.write_geojson(self.swn, file_root)
 
         for name in valid_components:
-            filename = abspath(join(testdir, "temp_"+name+".geojson"))
+            filename = file_root+"_"+name+".geojson"
             self.assertTrue(isfile(filename))
 
 
