@@ -285,8 +285,7 @@ To install optional dependencies, run::
 .. note:: 
    Proper installation of geopandas requires installing several geopandas dependencies, including 
    fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
-   On Linux and Mac OS X, installing geopandas through the conda-forge channel will install the dependencies.
-   On Windows, the dependencies must be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
+   On Windows, the dependencies can be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
    
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
