@@ -232,9 +232,7 @@ def valve_segments(G, valve_layer):
             seg_label[all_names.index(node_name)] = seg_index
     
     # Collect valved link names
-    valved_link_names = []    
-    for i, row in valve_layer.iterrows():
-        valved_link_names.append(row[0])
+    valved_link_names = list(valve_layer['link'].unique()) 
 
     # Remove valved edges from G
     valved_edges = []
