@@ -60,14 +60,14 @@ class SWMMSimulator(object):
             os.remove(temp_rptfile)
 
         write_inpfile(self._swn, temp_inpfile)
-        
-        # The simulation can also be run with pyswmm, see test_stormwater.py, test_basics
-        #p = subprocess.run("python -m swmmio --run " + temp_inpfile)
-        
+
         with pyswmm.Simulation(temp_inpfile) as sim: 
              for step in sim:
                  pass
              sim.report()
+        
+        # The simulation can also be run with swmmio
+        #p = subprocess.run("python -m swmmio --run " + temp_inpfile)
         
         if full_results:
             results = read_outfile(temp_outfile)
