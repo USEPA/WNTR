@@ -93,7 +93,8 @@ The earthquake properties can be plotted on the network using the following exam
 
     >>> plt.tight_layout()
     >>> plt.savefig('network_pga.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-network:
 .. figure:: figures/network_pga.png
    :width: 640
