@@ -8,11 +8,23 @@ Water Network Tool for Resilience (WNTR)
 
 The Water Network Tool for Resilience (WNTR) is an EPANET compatible Python package 
 designed to simulate and analyze resilience of water distribution networks.
-The official WNTR software repository is in the U.S. EPA's GitHub repository
-(https://github.com/USEPA/WNTR); releases are also made available via PyPI and conda-forge
+
+The official WNTR software repository is hosted in the U.S. EPA's GitHub organization
+(https://github.com/USEPA/WNTR); releases are available via PyPI and conda-forge
 (see :ref:`installation`).
 
+Key Features in WNTR
+=====================
 
+.. list-table:: 
+   :widths: 65 35
+   :header-rows: 0
+
+   * - .. _fig-fragility:
+       .. figure:: figures/wntr_features.png
+          :width: 750
+     - .. include:: attention.rst
+	   
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -20,17 +32,8 @@ The official WNTR software repository is in the U.S. EPA's GitHub repository
    userguide
    wntr-api
    users
-   
-Citing WNTR
-===========
-To cite WNTR, use one of the following references:
 
-* Klise, K.A., Hart, D.B., Bynum, M., Hogge, J., Haxton, T., Murray, R., Burkhardt, J. (2020). Water Network Tool for Resilience (WNTR) User Manual: Version 0.2.3. U.S. EPA Office of Research and Development, Washington, DC, EPA/600/R-20/185, 82p.
-
-* Klise, K.A., Murray, R., Haxton, T. (2018). An overview of the Water Network Tool for Resilience (WNTR), In Proceedings of the 1st International WDSA/CCWI Joint Conference, Kingston, Ontario, Canada, July 23-25, 075, 8p.
-
-* Klise, K.A., Bynum, M., Moriarty, D., Murray, R. (2017). A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study, Environmental Modelling and Software, 95, 420-431, doi: 10.1016/j.envsoft.2017.06.022
-
+.. include:: citing_wntr.rst
 
 US EPA Disclaimer
 =================

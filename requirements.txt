@@ -1,6 +1,6 @@
 # Required
 numpy>=1.21
-scipy
+scipy<1.13.0
 networkx
 pandas
 matplotlib
