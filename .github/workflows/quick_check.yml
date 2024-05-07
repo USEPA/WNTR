@@ -30,7 +30,7 @@ jobs:
         pip install --upgrade coverage pytest
         git clone https://github.com/pyswmm/swmmio
         cd swmmio
-        python -m pip install -e .
+        python -m pip install .
         cd ..
     - name: Install package for development
       run: |
