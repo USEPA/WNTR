@@ -167,17 +167,21 @@ class StormWaterNetworkModel(object):
     @property
     def nodes(self):
         """Nodes database (read only)"""
-        return pd.concat([self.junctions, 
-                          self.outfalls,
-                          self.storage])
+        df_list = [self.junctions, 
+                   self.outfalls, 
+                   self.storage]
+        df = pd.concat([df for df in df_list if not df.empty])
+        return df
     
     @property
     def links(self):
         """Links database (read only)"""
-        return pd.concat([self.conduits, 
-                          self.weirs,
-                          self.orifices,
-                          self.pumps])
+        df_list = [self.conduits, 
+                   self.weirs,
+                   self.orifices,
+                   self.pumps]
+        df = pd.concat([df for df in df_list if not df.empty])
+        return df
 
     @property
     def node_name_list(self):
