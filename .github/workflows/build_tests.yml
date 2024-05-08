@@ -41,8 +41,7 @@ jobs:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/wntr*
 
-  test:
-    name: Test install and usage of wntr
+  install_import:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -70,7 +69,7 @@ jobs:
       run: |
         python -c "import wntr"
 
-  create_coverage_reports:
+  pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -103,7 +102,7 @@ jobs:
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   combine_reports:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
@@ -148,7 +147,7 @@ jobs:
         path: htmlcov
 
   combine_reports_upload_coveralls:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
