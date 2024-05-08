@@ -54,6 +54,7 @@ The following example defines a fragility curve with two damage states: Minor da
     
     >>> plt.tight_layout()
     >>> plt.savefig('fragility_curve.png', dpi=300)
+    >>> plt.close()
 
 :numref:`fig-fragility` illustrates the fragility curve as a function of peak ground acceleration.  
 For example, if the peak ground acceleration is 0.3 at 
@@ -108,7 +109,8 @@ To plot the damage state on the network, the state (i.e., Major) can be converte
     
     >>> plt.tight_layout()
     >>> plt.savefig('damage_state.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-damage-state:
 .. figure:: figures/damage_state.png
    :width: 640

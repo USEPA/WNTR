@@ -63,7 +63,8 @@ which can be further customized by the user.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_basic_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
    :width: 640
@@ -118,7 +119,8 @@ See https://matplotlib.org for more colormap options.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_subplot_basic_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-network-3:
 .. figure:: figures/plot_subplot_basic_network.png
    :width: 800
@@ -267,7 +269,8 @@ The following example uses simulation results from above, and converts the graph
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_pump_curve.png', dpi=300)
-	
+    >>> plt.close()
+
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
    :width: 640
@@ -331,7 +334,8 @@ The following example plots a pump curve (:numref:`fig-pump`).
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_pump_curve.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
    :width: 640
@@ -380,7 +384,8 @@ level of the tank is included in the figure.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_tank_volume_curve.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-tank:
 .. figure:: figures/plot_tank_volume_curve.png
    :width: 800
@@ -420,6 +425,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_valve_segment.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-valve_segment:
 .. figure:: figures/plot_valve_segment.png
@@ -447,7 +453,8 @@ valves surrounding each valve is plotted on the network
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_valve_segment_attributes.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-valve_segment_attributes:
 .. figure:: figures/plot_valve_segment_attributes.png
    :width: 640
