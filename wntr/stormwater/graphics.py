@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 def plot_network(swn, node_attribute=None, link_attribute=None, subcatchment_attribute=None, title=None,
                 node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                 link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
+                subcatchment_width=1, subcatchment_range=[None,None], subcatchment_alpha=0.5, subcatchment_cmap=None,
                 add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
                 directed=False, ax=None, filename=None):
     
@@ -59,14 +60,26 @@ def plot_network(swn, node_attribute=None, link_attribute=None, subcatchment_att
             geom[subcatch_name] = Polygon(vertices)
         geom = pd.Series(geom)
         subcatchments = gpd.GeoDataFrame(swn.subcatchments, geometry=geom)
+        
         if subcatchment_attribute is None:
-            subcatchments.boundary.plot(color='darkblue', linewidth=0.5, alpha=0.5, ax=ax)
+            subcatchments.boundary.plot(color='darkblue', 
+                                        linewidth=subcatchment_width, 
+                                        vmin=subcatchment_range[0], 
+                                        vmax=subcatchment_range[1],
+                                        alpha=subcatchment_alpha, 
+                                        cmap=subcatchment_cmap,
+                                        ax=ax)
         else:
-            subcatchments.plot(column=subcatchment_attribute, linewidth=0.5, alpha=0.5, ax=ax)
+            subcatchments.plot(column=subcatchment_attribute, 
+                               linewidth=subcatchment_width, 
+                               vmin=subcatchment_range[0], 
+                               vmax=subcatchment_range[1],
+                               alpha=subcatchment_alpha, 
+                               cmap=subcatchment_cmap,
+                               ax=ax)
             
     _plot_network(swn, node_attribute, link_attribute, title, 
                    node_size, node_range, node_alpha, node_cmap, node_labels,
                    link_width, link_range, link_alpha, link_cmap, link_labels,
                    add_colorbar, node_colorbar_label, link_colorbar_label, 
                    directed, ax=ax, filename=filename)
-
