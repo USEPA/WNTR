@@ -148,7 +148,8 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_example.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
    :width: 800
@@ -203,7 +204,8 @@ Pressure differences are very small in this example.
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_hydraulics.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
    :width: 640

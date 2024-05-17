@@ -1,0 +1,11 @@
+v1.2.0 (main)
+---------------------------------------------------
+WNTR version 1.2.0 includes the following updates:
+
+* Added basic and geospatial jupyter notebook demos, updated documentation, dropped Python 3.7 and 3.8 from testing https://github.com/USEPA/WNTR/pull/419
+* Fix: plot_network bug due to changed networkx draw function behavior https://github.com/USEPA/WNTR/pull/417
+* Fix: Addressing bug caused when units="SI" in a call to write_inp() https://github.com/USEPA/WNTR/pull/410
+* Added EpanetException class and subclasses that allow for cleaner error reporting during IO https://github.com/USEPA/WNTR/pull/381
+* Added google analytics key https://github.com/USEPA/WNTR/pull/406
+* Documentation updates to install WNTR without Anaconda https://github.com/USEPA/WNTR/pull/403
+* Added setuptools and removed readthedocs config https://github.com/USEPA/WNTR/pull/396

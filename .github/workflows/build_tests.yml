@@ -17,7 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [windows-latest, macOS-latest, ubuntu-latest] 
     steps:
     - uses: actions/checkout@v2
@@ -41,13 +41,12 @@ jobs:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/wntr*
 
-  test:
-    name: Test install and usage of wntr
+  install_import:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [windows-latest, macOS-latest, ubuntu-latest]    
     steps:
     - name: Set up Python 
@@ -64,17 +63,17 @@ jobs:
     - name: Install wntr
       run: |
         python -m pip install --upgrade pip
-        pip install wheel numpy scipy networkx pandas matplotlib
+        pip install wheel numpy scipy networkx pandas matplotlib setuptools
         pip install --no-index --pre --find-links=. wntr
     - name: Usage of wntr
       run: |
         python -c "import wntr"
 
-  create_coverage_reports:
+  pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.9', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
@@ -88,16 +87,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         python -m pip install -e .
-    - name: Run Tests on Windows
-      if: matrix.os == 'windows-latest'
-      run: | # the following skips windows rst doctests that rely on geopandas (gis.rst and model_io.rst) because skipif is not working properly
-        coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" --ignore-glob="*model_io.rst" --ignore-glob="*gis.rst" documentation
-      env:
-        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Run Tests
-      if: matrix.os != 'windows-latest'
       run: | 
         coverage erase
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
@@ -112,13 +102,13 @@ jobs:
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   combine_reports:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9
+        python-version: 3.11
     - uses: actions/checkout@v2
     - name: Install coverage
       run: |
@@ -157,14 +147,14 @@ jobs:
         path: htmlcov
 
   combine_reports_upload_coveralls:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9
+        python-version: 3.11
     - uses: actions/checkout@v2
     - name: Install coverage
       run: |

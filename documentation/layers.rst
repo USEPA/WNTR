@@ -80,6 +80,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
     >>> plt.tight_layout()
     >>> plt.savefig('random_valve_layer.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-random-valve-layer:
 .. figure:: figures/random_valve_layer.png
@@ -104,6 +105,7 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 
     >>> plt.tight_layout()
     >>> plt.savefig('strategic_valve_layer.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-strategic-valve-layer:
 .. figure:: figures/strategic_valve_layer.png

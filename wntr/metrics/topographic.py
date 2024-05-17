@@ -232,9 +232,7 @@ def valve_segments(G, valve_layer):
             seg_label[all_names.index(node_name)] = seg_index
     
     # Collect valved link names
-    valved_link_names = []    
-    for i, row in valve_layer.iterrows():
-        valved_link_names.append(row[0])
+    valved_link_names = list(valve_layer['link'].unique()) 
 
     # Remove valved edges from G
     valved_edges = []
@@ -271,7 +269,7 @@ def valve_segments(G, valve_layer):
         # and label link and unvalved node together
         if link_valves.shape[0] == 1:
             both_node_names = [node1_name, node2_name]
-            valved_node_name = link_valves.iloc[0][1]
+            valved_node_name = link_valves.iloc[0]['node']
             both_node_names.remove(valved_node_name)
             unvalved_node_name = both_node_names[0]
             unvalved_node_index = all_names.index('N_'+unvalved_node_name)
@@ -283,7 +281,7 @@ def valve_segments(G, valve_layer):
                 seg_label[link_index] = seg_label[unvalved_node_index]
 
         # Links with link_valves.size == 2 are already labelled (isolated link)
-        elif link_valves.shape[0] ==2:
+        elif link_valves.shape[0] == 2:
             continue
         else:
             raise Exception("Each link should have a maximum of two valves.")
