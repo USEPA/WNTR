@@ -5,6 +5,7 @@ build/
 wntr.egg-info/
 dist/
 docker/
+/.vscode
 
 *.pyd
 *.pyc
