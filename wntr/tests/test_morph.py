@@ -295,7 +295,13 @@ class TestMorph(unittest.TestCase):
 
         inp_file = join(datadir, "skeletonize.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-
+        
+        # Run skeletonization without excluding junctions or pipes
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
+        # Junction 13 and Pipe 60 are not in the skeletonized model
+        assert "13" not in skel_wn.junction_name_list
+        assert "60" not in skel_wn.pipe_name_list
+        
         # add control to a link
         action = wntr.network.ControlAction(
             wn.get_link("60"), "status", wntr.network.LinkStatus.Closed
@@ -310,21 +316,46 @@ class TestMorph(unittest.TestCase):
         control = wntr.network.Control(condition=condition, then_action=action)
         wn.add_control("raise_node", control)
 
+        # Rerun skeletonize
         skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
-
+        assert "13" in skel_wn.junction_name_list
+        assert "60" in skel_wn.pipe_name_list
         self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
         self.assertEqual(skel_wn.num_links, wn.num_links - 22)
 
-        wn = wntr.network.WaterNetworkModel(inp_file)
+    def test_skeletonize_with_excluding_nodes_and_pipes(self):
 
-        # Change link 60 and 11 diameter to > 12, should get some results as above
+        inp_file = join(datadir, "skeletonize.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        
+        # Run skeletonization without excluding junctions or pipes
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
+        # Junction 13 and Pipe 60 are not in the skeletonized model
+        assert "13" not in skel_wn.junction_name_list
+        assert "60" not in skel_wn.pipe_name_list
+        
+        # Run skeletonization excluding Junction 13 and Pipe 60
+        skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False, 
+                                         junctions_to_exclude=["13"], 
+                                         pipes_to_exclude=["60"])
+        # Junction 13 and Pipe 60 are in the skeletonized model
+        assert "13" in skel_wn.junction_name_list
+        assert "60" in skel_wn.pipe_name_list
+        self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
+        self.assertEqual(skel_wn.num_links, wn.num_links - 22)
+
+        # Change diameter of link 60 one link connected to Junction 13 to be 
+        # greater than 12, should get some results as above
+        # Note, link 11 is connected to Junction 13
         link = wn.get_link("60")
         link.diameter = 16 * 0.0254
-        link = wn.get_link("11")
+        link_connected_to_13 = wn.get_links_for_node('13')[0]
+        link = wn.get_link(link_connected_to_13)
         link.diameter = 16 * 0.0254
 
         skel_wn = wntr.morph.skeletonize(wn, 12.0 * 0.0254, use_epanet=False)
-
+        assert "13" in skel_wn.junction_name_list
+        assert "60" in skel_wn.pipe_name_list
         self.assertEqual(skel_wn.num_nodes, wn.num_nodes - 17)
         self.assertEqual(skel_wn.num_links, wn.num_links - 22)
 
