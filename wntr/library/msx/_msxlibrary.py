@@ -5,7 +5,7 @@ models
 
 .. rubric:: Environment Variable
 
-.. envvar:: WNTR_RXN_LIBRARY_PATH
+.. envvar:: WNTR_LIBRARY_PATH
 
     This environment variable, if set, will add additional folder(s) to the
     path to search for multi-species water quality model files, 
@@ -23,8 +23,8 @@ from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, Value
 
 from pkg_resources import resource_filename
 
-from .base import ExpressionType, ReactionType, SpeciesType
-from .model import MsxModel
+from wntr.msx.base import ExpressionType, ReactionType, SpeciesType
+from wntr.msx.model import MsxModel
 
 try:
     import yaml
@@ -45,7 +45,7 @@ FORMULA = ExpressionType.FORMULA
 logger = logging.getLogger(__name__)
 
 
-class ReactionLibrary:
+class MsxLibrary:
     """Library of multi-species water quality models
 
     This object can be accessed and treated like a dictionary, where keys are
@@ -78,7 +78,7 @@ class ReactionLibrary:
             Load files built-in with WNTR, by default True
         include_envvar_paths : bool, optional
             Load files from the paths specified in
-            :envvar:`WNTR_RXN_LIBRARY_PATH`, by default True
+            :envvar:`WNTR_LIBRARY_PATH`, by default True
         load : bool or str, optional
             Load the files immediately on creation, by default True.
             If a string, then it will be passed as the `duplicates` argument
@@ -99,12 +99,12 @@ class ReactionLibrary:
         self.__data = dict()
 
         if include_builtins:
-            default_path = os.path.abspath(resource_filename(__name__, "_library_data"))
+            default_path = os.path.abspath(resource_filename(__name__, '.'))
             if default_path not in self.__library_paths:
                 self.__library_paths.append(default_path)
 
         if include_envvar_paths:
-            environ_path = os.environ.get("WNTR_RXN_LIBRARY_PATH", None)
+            environ_path = os.environ.get("WNTR_LIBRARY_PATH", None)
             if environ_path:
                 lib_folders = environ_path.split(";")
                 for folder in lib_folders:

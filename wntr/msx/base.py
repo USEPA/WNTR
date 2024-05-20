@@ -209,6 +209,9 @@ class VariableType(Enum):
     C = CONST = CONSTANT
     R = RES = RESERVED
 
+    def __repr__(self):
+        return repr(self.name)
+
 
 @add_get(abbrev=True)
 class SpeciesType(Enum):
@@ -238,6 +241,9 @@ class SpeciesType(Enum):
     B = BULK
     W = WALL
 
+    def __repr__(self):
+        return repr(self.name)
+    
 
 @add_get(abbrev=True)
 class ReactionType(Enum):
@@ -266,6 +272,9 @@ class ReactionType(Enum):
     P = PIPE
     T = TANK
 
+    def __repr__(self):
+        return repr(self.name)
+    
 
 @add_get(abbrev=True)
 class ExpressionType(Enum):
@@ -302,6 +311,9 @@ class ExpressionType(Enum):
     E = EQUIL
     R = RATE
     F = FORMULA
+
+    def __repr__(self):
+        return repr(self.name)
 
 
 class ReactionBase(ABC):
@@ -374,7 +386,8 @@ class ReactionBase(ABC):
         """Name of the species that has a reaction being defined."""
         return self._species_name
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def reaction_type(self) -> Enum:
         """Reaction type (reaction location)."""
         raise NotImplementedError
@@ -450,15 +463,15 @@ class VariableBase(ABC):
         """Optional note regarding the variable (see :class:`~wntr.epanet.util.NoteType`)
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def var_type(self) -> Enum:
         """Type of reaction variable"""
         raise NotImplementedError
 
-    @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Represent the object as a dictionary"""
-        raise NotImplementedError
+        return dict(name=self.name)
 
     def __str__(self) -> str:
         """Return the name of the variable"""
@@ -573,7 +586,8 @@ class VariableValuesBase(ABC):
     and methods documented here must be defined by a subclass.
     """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def var_type(self) -> Enum:
         """Type of variable this object holds data for."""
         raise NotImplementedError
@@ -650,7 +664,8 @@ class QualityModelBase(ABC):
         self._wn = None
         """Protected water network object"""
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def options(self):
         """Model options structure
 
@@ -659,7 +674,8 @@ class QualityModelBase(ABC):
         """
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def reaction_system(self) -> ReactionSystemBase:
         """Reaction variables defined for this model
 
@@ -667,7 +683,8 @@ class QualityModelBase(ABC):
         """
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def network_data(self) -> NetworkDataBase:
         """Network-specific values added to this model
 
@@ -680,7 +697,8 @@ class QualityModelBase(ABC):
         """Represent the object as a dictionary"""
         raise NotImplementedError
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def from_dict(self, data: dict) -> "QualityModelBase":
         """Create a new model from a dictionary
 

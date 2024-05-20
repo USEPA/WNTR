@@ -252,7 +252,9 @@ The solution for :math:`u` and :math:`v` is then returned and printed to four si
 Building MSX models
 -------------------
 
-The following two examples illustrate how to build :class:`~wntr.msx.model.MsxModel` objects in WNTR
+The following two examples illustrate how to build :class:`~wntr.msx.model.MsxModel` objects in WNTR.
+There is also a jupyter notebook in the examples/demos source directory called multisource-cl-decay.ipynb
+that demonstrates this process with Net3.
 
 .. _msx_example1_lead:
 
@@ -260,7 +262,7 @@ Plumbosolvency of lead
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The following example builds the plumbosolvency of lead model 
-described in [BWMS20]_. The model represents plumbosolvency 
+described in :cite:p:`bwms20`. The model represents plumbosolvency 
 in lead pipes within a dwelling.
 The MSX model is built without a specific water network model in mind.
 
@@ -332,7 +334,7 @@ Type             Name             Value            Units                        
 ---------------  ---------------  ---------------  ---------------------------------  ------------------------
 constant         :math:`M`        0.117            :math:`\mathrm{μg~m^{-2}~s^{-1}}`  desorption rate
 constant         :math:`E`        140.0            :math:`\mathrm{μg~L^{-1}}`         saturation level
-parameter        :math:`F`        0                `n/a`                              is pipe made of lead?
+parameter        :math:`F`        0                `flag`                             is pipe made of lead?
 ===============  ===============  ===============  =================================  ========================
 
 These are added to the MsxModel using the using the 
@@ -344,7 +346,18 @@ methods.
 
     >>> msx.add_constant("M", value=0.117, note="Desorption rate (ug/m^2/s)", units="ug * m^(-2) * s^(-1)")
     >>> msx.add_constant("E", value=140.0, note="saturation/plumbosolvency level (ug/L)", units="ug/L")
-    >>> msx.add_parameter("F", global_value=0, note="determines which pipes have reactions")
+    >>> msx.add_parameter("F", global_value=0, note="determines which pipes are made of lead")
+
+If the value of one of these needs to be modified, then it can be accessed and modified as an object
+in the same manner as other WNTR objects.
+
+.. doctest::
+
+  >>> M = msx.reaction_system.constants['M']
+  >>> M.value = 0.118
+  >>> M
+  Constant(name='M', value=0.118, units='ug * m^(-2) * s^(-1)', note='Desorption rate (ug/m^2/s)')
+
 
 Note that all models must include both pipe and tank reactions.
 Since the model only has reactions within 
@@ -374,16 +387,23 @@ method.
 .. doctest::
 
     >>> msx.add_reaction("PB2", "pipe", "RATE", expression="F * Av * M * (E - PB2) / E")
+
+
+If the species is saved as an object, as was done above, then it can be passed instead of the species name.
+
+.. doctest::
+
     >>> msx.add_reaction(PB2, "tank", "rate", expression="0")
+
 
 Arsenic oxidation and adsorption
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This example models monochloramine oxidation of arsenite/arsenate and wall
-adsorption/desorption, as given in section 3 of the EPANET-MSX user manual [SRU23]_.
+adsorption/desorption, as given in section 3 of the EPANET-MSX user manual :cite:p:`shang2023`.
 
 The system of equations for the reaction in pipes is given in Eq. (2.4) through (2.7)
-in [SRU23]_. This is a simplified model, taken from [GSCL94]_. 
+in :cite:p:`shang2023`. This is a simplified model, taken from :cite:p:`gscl94`. 
 
 .. math::
 

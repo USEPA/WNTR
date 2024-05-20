@@ -18,13 +18,13 @@
 Multi-species water quality simulation
 =======================================
 
-The EpanetSimulator can use EPANET-MSX 2.0 [SRU23]_ to run 
+The EpanetSimulator can use EPANET-MSX 2.0 :cite:p:`shang2023` to run 
 multi-species water quality simulations.
 Additional multi-species simulation options are discussed in :ref:`advanced_simulation`.
 
 A multi-species analysis is run if a :class:`~wntr.msx.model.MsxModel` is added to the 
 :class:`~wntr.network.model.WaterNetworkModel`, as shown below.
-In this example, the MsxModel is created from a MSX file (see [SRU23]_ for more information on file format).
+In this example, the MsxModel is created from a MSX file (see :cite:p:`shang2023` for more information on file format).
 
 .. doctest::
 
@@ -80,9 +80,9 @@ WNTR also contains a library of MSX models that are accessed through the
 :class:`~wntr.msx.library.ReactionLibrary`.
 This includes the following models:
 
-* `Arsenic oxidation/adsorption <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ [SRU23]_
+* `Arsenic oxidation/adsorption <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
 * `Batch chloramine decay <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
-* `Lead plumbosolvency <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ [BWMS20]_
+* `Lead plumbosolvency <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ :cite:p:`bwms20`
 * `Nicotine/chlorine reaction <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
 * `Nicotine/chlorine reaction with reactive intermediate <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
 

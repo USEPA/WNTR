@@ -133,13 +133,14 @@ class MsxReactionSystem(ReactionSystemBase):
         # FIXME: rename without "all_" for this
         """Generator looping through all variables"""
         for k, v in self._vars.items():
-            yield k, v.var_type.name.lower(), v
+            if v.var_type.name.lower() not in ['reserved']:
+                yield k, v
 
     def reactions(self) -> Generator[tuple, None, None]:
         """Generator looping through all reactions"""
         for k2, v in self._rxns.items():
             for k1, v1 in v.items():
-                yield k1, k2, v1
+                yield k1, v1
 
     def to_dict(self) -> dict:
         """Dictionary representation of the MsxModel."""
@@ -724,14 +725,14 @@ class MsxModel(QualityModelBase):
         """
         reaction_type = ReactionType.get(reaction_type, allow_none=False)
         species_name = str(species_name)
-        del self.reaction_system.reactions[reaction_type.name.lower()][species_name]
+        del self.reaction_system._rxns[reaction_type.name.lower()][species_name]
 
     def to_dict(self) -> dict:
         """Dictionary representation of the MsxModel"""
         from wntr import __version__
 
         return {
-            "wntr-version": "{}".format(__version__),
+            "version": "wntr-{}".format(__version__),
             "name": self.name,
             "title": self.title,
             "description": self.description if self.description is None or "\n" not in self.description else self.description.splitlines(),
@@ -752,8 +753,8 @@ class MsxModel(QualityModelBase):
         """
         from wntr import __version__
 
-        ver = data.get("wntr-version", None)
-        if ver != __version__:
+        ver = data.get("version", None)
+        if ver != 'wntr-{}'.format(__version__):
             logger.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
             # warnings.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
         new = cls()

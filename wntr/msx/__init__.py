@@ -8,6 +8,5 @@ from .base import VariableType, SpeciesType, ReactionType, ExpressionType
 from .elements import Species, Constant, Parameter, Term, Reaction, HydraulicVariable, MathFunction
 from .model import MsxModel
 from .options import MsxSolverOptions
-from .library import ReactionLibrary
 
-from . import base, elements, library, model, options
+from . import base, elements, model, options, io

@@ -48,6 +48,7 @@ Arsenic Oxidation/Adsorption Example
   ;Initial conditions (= 0 if not specified here)
   NODE    River AS3   10.0
   NODE    River NH2CL 2.5
+  NODE    Lake  NH2CL 2.5
 
 [REPORT]
   NODES   All                ;Report results for nodes C and D

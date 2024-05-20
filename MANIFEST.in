@@ -8,5 +8,5 @@ include wntr/sim/aml/numpy.i
 include wntr/sim/network_isolation/network_isolation*
 include wntr/sim/network_isolation/numpy.i
 include wntr/tests/networks_for_testing/*.inp
-include wntr/msx/_library_data/*.json
-include wntr/msx/_library_data/*.msx
+include wntr/library/msx/*.json
+include wntr/library/msx/*.msx

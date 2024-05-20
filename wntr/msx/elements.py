@@ -464,9 +464,9 @@ class ReservedName(VariableBase):
         """Type of variable, :attr:`~wntr.msx.base.VariableType.RESERVED`."""
         return VariableType.RESERVED
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Dictionary representation of the object"""
-        return "{}({})".format(self.__class__.__name__, ", ".join(["name={}".format(repr(self.name)), "note={}".format(repr(self.note))]))
+    # def to_dict(self) -> Dict[str, Any]:
+    #     """Dictionary representation of the object"""
+    #     return "{}({})".format(self.__class__.__name__, ", ".join(["name={}".format(repr(self.name)), "note={}".format(repr(self.note))]))
 
 
 class HydraulicVariable(ReservedName):

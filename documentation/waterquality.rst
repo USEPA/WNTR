@@ -18,10 +18,10 @@ Water quality simulation
 
 Water quality simulations can only be run using the EpanetSimulator. 
 This includes the ability to run 
-EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or
-EPANET 2.2.0 Programmer's Toolkit [RWTS20]_ for single species, water age, and tracer analysis.
+EPANET 2.00.12 Programmer's Toolkit :cite:p:`ross00` or
+EPANET 2.2.0 Programmer's Toolkit :cite:p:`rwts20` for single species, water age, and tracer analysis.
 
-WNTR also includes the ability to run EPANET-MSX 2.0 [SRU23]_, see :ref:`msx_water_quality` for more information.
+WNTR also includes the ability to run EPANET-MSX 2.0 :cite:p:`shang2023`, see :ref:`msx_water_quality` for more information.
 
 After defining water quality options and sources (described in the :ref:`wq_options` and :ref:`sources` sections below), a hydraulic and water quality simulation 
 using the EpanetSimulator is run using the following code:

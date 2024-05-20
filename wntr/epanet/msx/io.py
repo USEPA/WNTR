@@ -847,7 +847,7 @@ class MsxFile(object):
         fout.write("\n")
 
 
-def MsxBinFile(filename, wn: wntr.network.WaterNetworkModel, res = None):
+def MsxBinFile(filename, wn, res = None):
     duration = int(wn.options.time.duration)
     if res is None:
         from wntr.sim.results import SimulationResults
