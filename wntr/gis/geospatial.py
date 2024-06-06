@@ -250,13 +250,13 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             weighted_mean = True
             
     if weighted_mean and B_value is not None:
-        stats['weighted_mean'] = 0
+        stats['weighted_mean'] = 0.0
         A_length = A.length
-        covered_length = pd.Series(0, index = A.index)
+        covered_length = pd.Series(0.0, index = A.index)
         
         for i in B.index:
             B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
-            val = float(B_geom[B_value])
+            val = B_geom[B_value].iloc[0]
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
             A_clip = gpd.clip(A_subset, B_geom) 
