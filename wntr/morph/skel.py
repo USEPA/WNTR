@@ -14,7 +14,8 @@ from wntr.sim import EpanetSimulator
 logger = logging.getLogger(__name__)
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
-                parallel_pipe_merge=True, max_cycles=None, use_epanet=True, 
+                parallel_pipe_merge=True, max_cycles=None, use_epanet=True,
+                pipes_to_exclude:list=[], junctions_to_exclude:list=[],
                 return_map=False, return_copy=True):
     """
     Perform network skeletonization using branch trimming, series pipe merge, 
@@ -43,6 +44,10 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     use_epanet: bool, optional
         If True, use the EpanetSimulator to compute headloss in pipes.  
         If False, use the WNTRSimulator to compute headloss in pipes.
+    pipes_to_exclude: list, optional
+        List of pipe names to exclude from skeletonization
+    junctions_to_exclude: list, optional
+        List of junction names to exclude from skeletonization
     return_map: bool, optional
         If True, return a skeletonization map. The map is a dictionary 
         that includes original nodes as keys and a list of skeletonized nodes 
@@ -60,7 +65,12 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
         nodes as keys and a list of skeletonized nodes that were merged into 
         each original node as values.
     """
-    skel = _Skeletonize(wn, use_epanet, return_copy)
+    if len(pipes_to_exclude) > 0:
+        assert len(set(pipes_to_exclude) - set(wn.pipe_name_list)) == 0
+    if len(junctions_to_exclude) > 0:
+        assert len(set(junctions_to_exclude) - set(wn.junction_name_list)) == 0
+    
+    skel = _Skeletonize(wn, use_epanet, return_copy, pipes_to_exclude, junctions_to_exclude)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
              parallel_pipe_merge, max_cycles)
@@ -73,7 +83,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 		
 class _Skeletonize(object):
     
-    def __init__(self, wn, use_epanet, return_copy):
+    def __init__(self, wn, use_epanet, return_copy, pipes_to_exclude, junctions_to_exclude):
         
         if return_copy:
             # Get a copy of the WaterNetworkModel
@@ -93,6 +103,7 @@ class _Skeletonize(object):
         self.skeleton_map = skel_map
 
         # Get a list of junction and pipe names that are associated with controls
+        # Add them to junctions and pipes to exclude
         junc_with_controls = []
         pipe_with_controls = []
         for name, control in self.wn.controls():
@@ -101,8 +112,10 @@ class _Skeletonize(object):
                     junc_with_controls.append(req.name)
                 elif isinstance(req, Pipe):
                     pipe_with_controls.append(req.name)
-        self.junc_with_controls = list(set(junc_with_controls))
-        self.pipe_with_controls = list(set(pipe_with_controls))
+        self.junc_to_exclude = list(set(junc_with_controls))
+        self.junc_to_exclude.extend(junctions_to_exclude)
+        self.pipe_to_exclude = list(set(pipe_with_controls))
+        self.pipe_to_exclude.extend(pipes_to_exclude)
         
         # Calculate pipe headloss using a single period EPANET simulation
         duration = self.wn.options.time.duration
@@ -163,7 +176,7 @@ class _Skeletonize(object):
         patterns) to the neighboring junction.
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.junc_with_controls:
+            if junc_name in self.junc_to_exclude:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if len(neighbors) > 1:
@@ -181,7 +194,7 @@ class _Skeletonize(object):
             pipe = self.wn.get_link(pipe_name)
             if not ((isinstance(pipe, Pipe)) and \
                 (pipe.diameter <= pipe_threshold) and \
-                pipe_name not in self.pipe_with_controls):
+                pipe_name not in self.pipe_to_exclude):
                 continue
             
             logger.info('Branch trim: '+ str(junc_name) + str(neighbors))
@@ -215,7 +228,7 @@ class _Skeletonize(object):
         to the nearest junction.
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.junc_with_controls:
+            if junc_name in self.junc_to_exclude:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if not (len(neighbors) == 2):
@@ -239,8 +252,8 @@ class _Skeletonize(object):
                 (isinstance(pipe1, Pipe)) and \
                 ((pipe0.diameter <= pipe_threshold) and \
                 (pipe1.diameter <= pipe_threshold)) and \
-                pipe_name0 not in self.pipe_with_controls and \
-                pipe_name1 not in self.pipe_with_controls):
+                pipe_name0 not in self.pipe_to_exclude and \
+                pipe_name1 not in self.pipe_to_exclude):
                 continue
             # Find closest neighbor junction
             if (isinstance(neigh_junc0, Junction)) and \
@@ -305,7 +318,7 @@ class _Skeletonize(object):
         """
         
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.junc_with_controls:
+            if junc_name in self.junc_to_exclude:
                 continue
             neighbors = nx.neighbors(self.G,junc_name)
             for neighbor in [n for n in neighbors]:
@@ -322,8 +335,8 @@ class _Skeletonize(object):
                        (isinstance(pipe1, Pipe)) and \
                         ((pipe0.diameter <= pipe_threshold) and \
                         (pipe1.diameter <= pipe_threshold)) and \
-                        pipe_name0 not in self.pipe_with_controls and \
-                        pipe_name1 not in self.pipe_with_controls):
+                        pipe_name0 not in self.pipe_to_exclude and \
+                        pipe_name1 not in self.pipe_to_exclude):
                         continue
                     
                     logger.info('Parallel pipe merge: '+ str(junc_name) + str((pipe_name0, pipe_name1)))

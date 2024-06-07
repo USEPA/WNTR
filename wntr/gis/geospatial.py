@@ -256,7 +256,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         
         for i in B.index:
             B_geom = gpd.GeoDataFrame(B.loc[[i],:], crs=B.crs)
-            val = B_geom[B_value].iloc[0]
+            val = float(B_geom.iloc[0][B_value])
             A_subset = A.loc[stats['intersections'].apply(lambda x: i in x),:]
             #print(i, lines_subset)
             A_clip = gpd.clip(A_subset, B_geom) 
