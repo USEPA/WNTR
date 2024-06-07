@@ -153,7 +153,8 @@ Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_timeseries.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
    :width: 640
@@ -182,7 +183,8 @@ plotted in a similar manner.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
    :width: 640
