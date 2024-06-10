@@ -70,6 +70,14 @@ class TestGIS(unittest.TestCase):
     def tearDownClass(self):
         pass
     
+    def test_gis_index(self):
+        # Tests that WN can be made using dataframes with customized index names
+        wn_gis = self.wn.to_gis()
+        wn_gis.junctions.index.name = "my_index"
+        wn_gis.pipes.index.name = "my_index"
+        wn2 = wntr.network.from_gis(wn_gis)
+        self.wn == wn2
+    
     def test_wn_to_gis(self):
         # Check type
         isinstance(self.gis_data.junctions, gpd.GeoDataFrame)
