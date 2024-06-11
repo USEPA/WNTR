@@ -3,6 +3,7 @@ The wntr.graphics.network module includes methods plot the
 water network model.
 """
 import logging
+import math
 import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,15 @@ except:
 from wntr.graphics.color import custom_colormap
 
 logger = logging.getLogger(__name__)
+
+def _get_angle(line, loc=0.5):
+    # calculate orientation angle
+    p1 = line.interpolate(loc-0.01, normalized=True)
+    p2 = line.interpolate(loc+0.01, normalized=True)
+    angle = math.atan2(p2.y-p1.y, p2.x - p1.x)
+    return angle
+
+# def _create_oriented_arrow(line, length=0.01)
 
 def _format_node_attribute(node_attribute, wn):
     
@@ -42,6 +52,141 @@ def _format_link_attribute(link_attribute, wn):
         link_attribute = dict(link_attribute)
             
     return link_attribute
+
+def plot_network_gis(
+    wn, node_attribute=None, link_attribute=None, title=None,
+    node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
+    link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
+    add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+    directed=False, ax=None, filename=None):
+    
+    
+    # # Define node properties
+    # add_node_colorbar = add_colorbar
+    # if node_attribute is not None:
+        
+    #     if isinstance(node_attribute, list):
+    #         if node_cmap is None:
+    #             node_cmap = ['red', 'red']
+    #         add_node_colorbar = False
+        
+    #     if node_cmap is None:
+    #         node_cmap = plt.get_cmap('Spectral_r')
+    #     elif isinstance(node_cmap, list):
+    #         if len(node_cmap) == 1:
+    #             node_cmap = node_cmap*2
+    #         node_cmap = custom_colormap(len(node_cmap), node_cmap)  
+         
+    #     node_attribute = _format_node_attribute(node_attribute, wn)
+    #     nodelist,nodecolor = zip(*node_attribute.items())
+
+    # else:
+    #     nodelist = None
+    #     nodecolor = 'k'
+    
+    # # Define link properties
+    # add_link_colorbar = add_colorbar
+    # if link_attribute is not None:
+        
+    #     if isinstance(link_attribute, list):
+    #         if link_cmap is None:
+    #             link_cmap = ['red', 'red']
+    #         add_link_colorbar = False
+
+    #     if link_cmap is None:
+    #         link_cmap = plt.get_cmap('Spectral_r')
+    #     elif isinstance(link_cmap, list):
+    #         if len(link_cmap) == 1:
+    #             link_cmap = link_cmap*2
+    #         link_cmap = custom_colormap(len(link_cmap), link_cmap)  
+            
+    #     link_attribute = _format_link_attribute(link_attribute, wn)
+        
+    #     # Replace link_attribute dictionary defined as
+    #     # {link_name: attr} with {(start_node, end_node, link_name): attr}
+    #     attr = {}
+    #     for link_name, value in link_attribute.items():
+    #         link = wn.get_link(link_name)
+    #         attr[(link.start_node_name, link.end_node_name, link_name)] = value
+    #     link_attribute = attr
+        
+    #     linklist,linkcolor = zip(*link_attribute.items())
+    # else:
+    #     linklist = None
+    #     linkcolor = 'k'
+    
+    
+    if ax is None: # create a new figure
+        plt.figure(facecolor='w', edgecolor='k')
+        ax = plt.gca()
+        
+    if title is not None:
+        ax.set_title(title)
+        
+    # set aspect setting
+    aspect = None
+        
+    wn_gis = wn.to_gis()
+    
+
+    # link preprocessing
+    pipes_kwds = {}
+    if link_attribute is not None:
+        pipes_kwds["column"] = link_attribute
+        pipes_kwds["cmap"] = "Spectral_r"
+        pipes_kwds["legend"] = True
+    else:
+        pipes_kwds["color"] = "black"
+
+        
+    # node preprocessing
+    if node_attribute is not None:
+        node_color = node_attribute
+    else:
+        node_color = "black"
+    
+    # plot pipes
+    wn_gis.pipes.plot(ax=ax, aspect=aspect, zorder=0, linewidth=link_width, **pipes_kwds)
+    
+    # plot pumps
+    if len(wn_gis.pumps) >0:
+        wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
+        wn_gis.pumps["midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
+        wn_gis.pumps["angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
+        # valve_midpoints.plot(ax=ax, marker=">", aspect=aspect)
+        for idx , row in wn_gis.pumps.iterrows():
+            x,y = row["midpoint"].x, row["midpoint"].y
+            # dx = math.cos(math.radians(row["angle"]))
+            # dy = math.sin(math.radians(row["angle"]))
+            angle = row["angle"]
+            ax.scatter(x,y, color="purple", s=100, marker=(3,0, angle-90))
+            # ax.arrow(x,y, dx*0.1, dy*0.1, head_width=0.05, head_length=0.1, fc="blue", ec="blue")
+
+    # plot valves
+    if len(wn_gis.valves) >0:
+        wn_gis.valves.plot(ax=ax, color="green", aspect=aspect)
+        wn_gis.valves["midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
+        wn_gis.valves["angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
+        # valve_midpoints.plot(ax=ax, marker=">", aspect=aspect)
+        for idx , row in wn_gis.valves.iterrows():
+            x,y = row["midpoint"].x, row["midpoint"].y
+            # dx = math.cos(math.radians(row["angle"]))
+            # dy = math.sin(math.radians(row["angle"]))
+            angle = row["angle"]
+            ax.scatter(x,y, color="green", s=100, marker=(3,0, angle-90))
+            # ax.arrow(x,y, dx*0.1, dy*0.1, head_width=0.05, head_length=0.1, fc="blue", ec="blue")
+        
+    # plot junctions
+    wn_gis.junctions.plot(ax=ax, aspect=aspect, color=node_color, markersize=node_size, zorder=1)
+    
+    # plot tanks
+    wn_gis.tanks.plot(ax=ax, marker="P", aspect=aspect, zorder=1)
+    
+    # plot reservoirs
+    wn_gis.reservoirs.plot(ax=ax, marker="s", aspect=aspect, zorder=1)
+    
+    return ax
+    
         
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
