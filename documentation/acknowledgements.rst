@@ -3,7 +3,7 @@
     \clearpage
 
 Acknowledgements
-======================================
+================
 
 WNTR is developed through a collaboration between U.S. Environmental Protection Agency, Sandia National
 Laboratories, and the open-source community. The U.S. Environmental Protection Agency acknowledges the

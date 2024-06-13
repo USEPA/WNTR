@@ -153,7 +153,8 @@ Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_timeseries.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
    :width: 640
@@ -182,7 +183,8 @@ plotted in a similar manner.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
    :width: 640
@@ -194,7 +196,7 @@ Network and time series graphics can be customized to add titles, legends, axis 
    
 Pandas includes methods to write DataFrames to the following file formats:
 
-* Excel
+* Microsoft Excel (xlsx)
 * Comma-separated values (CSV)
 * Hierarchical Data Format (HDF)
 * JavaScript Object Notation (JSON)
@@ -205,4 +207,4 @@ For example, DataFrames can be saved to Excel files using:
    >>> pressure.to_excel('pressure.xlsx')
 
 .. note:: 
-   The Pandas method ``to_excel`` requires the Python package **openpyxl** [GaCl18]_, which is an optional dependency of WNTR.
+   The Pandas method ``to_excel`` requires the Python package **openpyxl** :cite:p:`gacl18`, which is an optional dependency of WNTR.

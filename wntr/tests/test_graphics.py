@@ -30,16 +30,29 @@ class TestGraphics(unittest.TestCase):
         self.assertTrue(isfile(filename))
 
     def test_plot_network2(self):
-        filename = abspath(join(testdir, "plot_network2.png"))
-        if isfile(filename):
-            os.remove(filename)
-
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
+        # undirected
+        filename = abspath(join(testdir, "plot_network2_undirected.png"))
+        if isfile(filename):
+            os.remove(filename)
         plt.figure()
         wntr.graphics.plot_network(
             wn, node_attribute="elevation", link_attribute="length"
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+        
+        # directed
+        filename = abspath(join(testdir, "plot_network2_directed.png"))
+        if isfile(filename):
+            os.remove(filename)
+        plt.figure()
+        wntr.graphics.plot_network(
+            wn, node_attribute="elevation", link_attribute="length", directed=True
         )
         plt.savefig(filename, format="png")
         plt.close()

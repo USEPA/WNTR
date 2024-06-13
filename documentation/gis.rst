@@ -46,8 +46,8 @@ Open source GIS platforms include QGIS and GRASS GIS.
 The following section describes capabilities in WTNR that use GeoPandas GeoDataFrames.  
 
 .. note:: 
-   Functions that use GeoDataFrames require the Python package **geopandas** [JVFM21]_ 
-   and **rtree** [rtree]_. Both are optional dependencies of WNTR.
+   Functions that use GeoDataFrames require the Python package **geopandas** :cite:p:`jvfm21` 
+   and **rtree** :cite:p:`rtree`. Both are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.
@@ -427,6 +427,7 @@ the hydrants snapped to the junctions in Net1.
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('snap_points.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-snap-points:
 .. figure:: figures/snap_points.png
@@ -511,6 +512,7 @@ illustrates the valve layer created by snapping points to lines in Net1.
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('snap_lines.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-snap-lines:
 .. figure:: figures/snap_lines.png
@@ -615,7 +617,8 @@ The pipes are colored based upon their maximum earthquake probability.
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_earthquake.png', dpi=300)
-	
+    >>> plt.close()
+
 .. _fig-intersect-earthquake:
 .. figure:: figures/intersect_earthquake.png
    :width: 640
@@ -699,6 +702,7 @@ The pipes are colored based upon their weighted mean landslide probability.
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_landslide.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-intersect-landslide:
 .. figure:: figures/intersect_landslide.png
@@ -807,6 +811,7 @@ the census tracts (polygons) is different than the junction and pipe attributes.
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
     >>> plt.savefig('intersect_demographics.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-intersect-demographics:
 .. figure:: figures/intersect_demographics.png

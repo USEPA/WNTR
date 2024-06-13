@@ -1,21 +1,25 @@
 # Required
 numpy>=1.21
-scipy
+scipy<1.13.0
 networkx
 pandas
 matplotlib
+setuptools
 
 # Optional
-plotly<=5.11.0
+plotly
 folium
 utm
 openpyxl
-geopandas; sys_platform == "darwin" or sys_platform == "linux"
-rtree; sys_platform == "darwin" or sys_platform == "linux"
+geopandas
+rtree
 
 # Documentation
 sphinx
+sphinx_design
 sphinx_rtd_theme
+pydata_sphinx_theme
+sphinxcontrib-bibtex
 
 # Testing
 pytest

@@ -1,18 +1,6 @@
 """
 The wntr.network.model module includes methods to build a water network
 model.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    WaterNetworkModel
-    PatternRegistry
-    CurveRegistry
-    SourceRegistry
-    NodeRegistry
-    LinkRegistry
-
 """
 import logging
 from collections import OrderedDict
@@ -1316,8 +1304,8 @@ class WaterNetworkModel(AbstractModel):
 
             # Extract the node demand pattern and resample to match the pattern timestep
             demand_pattern = demand.loc[:, junc_name]
-            demand_pattern.index = pd.TimedeltaIndex(demand_pattern.index, "s")
-            resample_offset = str(int(self.options.time.pattern_timestep)) + "S"
+            demand_pattern.index = pd.to_timedelta(demand_pattern.index, "s")
+            resample_offset = str(int(self.options.time.pattern_timestep)) + "s"
             demand_pattern = demand_pattern.resample(resample_offset).mean() / self.options.hydraulic.demand_multiplier
 
             # Add the pattern

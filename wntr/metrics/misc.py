@@ -1,15 +1,6 @@
 """
 The wntr.metrics.misc module contains metrics that do not fall into the
 topographic, hydraulic, water quality, water security, or economic categories.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    query
-    population
-    population_impacted
-
 """
 from wntr.metrics.hydraulic import average_expected_demand
 import logging
@@ -47,7 +38,7 @@ def query(arg1, operation, arg2):
 
 def population(wn, R=0.00000876157):
     r"""
-    Compute population per node, rounded to the nearest integer [USEPA15]_.
+    Compute population per node, rounded to the nearest integer :cite:p:`usepa15`.
 
     .. math:: pop=\dfrac{Average\ expected\ demand}{R}
 

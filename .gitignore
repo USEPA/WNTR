@@ -5,6 +5,7 @@ build/
 wntr.egg-info/
 dist/
 docker/
+/.vscode
 
 *.pyd
 *.pyc
@@ -20,3 +21,5 @@ temp*
 examples/*.inp
 wntr/tests/*.png
 
+documentation/_local
+documentation/apidoc

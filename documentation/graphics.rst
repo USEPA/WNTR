@@ -63,7 +63,8 @@ which can be further customized by the user.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_basic_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
    :width: 640
@@ -118,7 +119,8 @@ See https://matplotlib.org for more colormap options.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_subplot_basic_network.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-network-3:
 .. figure:: figures/plot_subplot_basic_network.png
    :width: 800
@@ -137,7 +139,7 @@ As with basic network graphics, a wide range of plotting options can be supplied
 However, link attributes currently cannot be displayed on the graphic.
 
 .. note:: 
-   This function requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
+   This function requires the Python package **plotly** :cite:p:`sphc16`, which is an optional dependency of WNTR.
    
 The following example plots the network along with node population (:numref:`fig-plotly`).
 
@@ -164,10 +166,10 @@ See :ref:`modify_node_coords` for more information on converting node coordinate
 As with basic network graphics, a wide range of plotting options can be supplied. 
 
 .. note:: 
-   This function requires the Python package **folium** [Folium]_, which is an optional dependency of WNTR.
+   This function requires the Python package **folium** :cite:p:`folium`, which is an optional dependency of WNTR.
    
 The following example using EPANET Example Network 3 (Net3) converts node coordinates to longitude/latitude and plots the network along 
-with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'. This example requires the Python package **utm** [Bieni19]_ to convert the node coordinates.
+with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). The longitude and latitude for two locations are needed to plot the network. For the EPANET Example Network 3, these locations are the reservoir 'Lake' and node '219'. This example requires the Python package **utm** :cite:p:`bieni19` to convert the node coordinates.
 
 .. doctest::
 
@@ -246,7 +248,7 @@ Interactive time series graphics are useful when visualizing large datasets.
 Basic time series graphics can be converted to interactive time series graphics using the ``plotly.express`` module.
 
 .. note:: 
-   This functionality requires the Python package **plotly** [SPHC16]_, which is an optional dependency of WNTR.
+   This functionality requires the Python package **plotly** :cite:p:`sphc16`, which is an optional dependency of WNTR.
    
 The following example uses simulation results from above, and converts the graphic to an interactive graphic  (:numref:`fig-interactive-timeseries`).
 
@@ -267,7 +269,8 @@ The following example uses simulation results from above, and converts the graph
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_pump_curve.png', dpi=300)
-	
+    >>> plt.close()
+
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
    :width: 640
@@ -331,7 +334,8 @@ The following example plots a pump curve (:numref:`fig-pump`).
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_pump_curve.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
    :width: 640
@@ -380,7 +384,8 @@ level of the tank is included in the figure.
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_tank_volume_curve.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-tank:
 .. figure:: figures/plot_tank_volume_curve.png
    :width: 800
@@ -420,6 +425,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_valve_segment.png', dpi=300)
+    >>> plt.close()
 
 .. _fig-valve_segment:
 .. figure:: figures/plot_valve_segment.png
@@ -447,7 +453,8 @@ valves surrounding each valve is plotted on the network
 
     >>> plt.tight_layout()
     >>> plt.savefig('plot_valve_segment_attributes.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-valve_segment_attributes:
 .. figure:: figures/plot_valve_segment_attributes.png
    :width: 640

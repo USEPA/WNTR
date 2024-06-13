@@ -1,6 +1,6 @@
 name: wntr
 dependencies:
-    - python=3.8
+    - python=3.11
     - numpy
     - scipy
     - networkx
@@ -9,3 +9,6 @@ dependencies:
     - sphinx
     - numpydoc
     - docutils<0.17
+    - sphinx_design
+    - pydata_sphinx_theme
+    - sphinxcontrib-bibtex

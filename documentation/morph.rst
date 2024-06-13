@@ -13,7 +13,7 @@ splitting or breaking pipes.
 Network skeletonization
 ----------------------------
 The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavior.
-Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
+Network skeletonization in WNTR follows the procedure outlined in :cite:p:`wcsg03`.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
 Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
@@ -82,6 +82,7 @@ This initial set of operations can generate new branch pipes, pipes in series, a
 This cycle repeats until the network can no longer be reduced.  
 The user can specify if branch trimming, series pipe merge, and/or parallel pipe merge should be included in the skeletonization operations.  
 The user can also specify a maximum number of cycles to include in the process. 
+The user can also specify a list of junctions and pipes which should be excluded from skeletonization operations.
 
 .. only:: latex
 
@@ -147,7 +148,8 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_example.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
    :width: 800
@@ -202,7 +204,8 @@ Pressure differences are very small in this example.
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_hydraulics.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
    :width: 640
@@ -241,7 +244,7 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
   the nodes could be in the upper right and lower left).
 
 .. note:: 
-   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** [Bieni19]_, which is an optional dependency of WNTR.
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** :cite:p:`bieni19`, which is an optional dependency of WNTR.
 		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.

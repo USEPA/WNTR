@@ -1,13 +1,5 @@
 """
 The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    InpFile
-    BinFile
-
 """
 from __future__ import absolute_import
 
@@ -25,6 +17,7 @@ import numpy as np
 import pandas as pd
 import six
 import wntr
+from wntr.epanet.exceptions import ENKeyError, ENSyntaxError, ENValueError, EpanetException
 import wntr.network
 from wntr.network.base import Link
 from wntr.network.controls import (AndCondition, Comparison, Control,
@@ -147,8 +140,7 @@ def _str_time_to_sec(s):
             if bool(time_tuple):
                 return int(time_tuple.groups()[0])*60*60
             else:
-                raise RuntimeError("Time format in "
-                                   "INP file not recognized. ")
+                raise ENValueError(213, s)
 
 
 def _clock_time_to_sec(s, am_pm):
@@ -176,7 +168,7 @@ def _clock_time_to_sec(s, am_pm):
     elif am_pm.upper() == 'PM':
         am = False
     else:
-        raise RuntimeError('am_pm option not recognized; options are AM or PM')
+        raise ENValueError(213, s, 'Ambiguous time of day')
 
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -188,7 +180,7 @@ def _clock_time_to_sec(s, am_pm):
             time_sec -= 3600*12
         if not am:
             if time_sec >= 3600*12:
-                raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
             time_sec += 3600*12
         return time_sec
     else:
@@ -201,7 +193,7 @@ def _clock_time_to_sec(s, am_pm):
                 time_sec -= 3600*12
             if not am:
                 if time_sec >= 3600 * 12:
-                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
                 time_sec += 3600*12
             return time_sec
         else:
@@ -213,12 +205,11 @@ def _clock_time_to_sec(s, am_pm):
                     time_sec -= 3600*12
                 if not am:
                     if time_sec >= 3600 * 12:
-                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                        raise ENValueError(213, s, 'Cannot specify am/pm for times greater than 12:00:00')
                     time_sec += 3600*12
                 return time_sec
             else:
-                raise RuntimeError("Time format in "
-                                   "INP file not recognized. ")
+                raise ENValueError(213, s, 'Cannot parse time')
 
 
 def _sec_to_string(sec):
@@ -259,7 +250,7 @@ class InpFile(object):
 
         Returns
         -------
-        :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel
             A water network model object
 
         """
@@ -313,99 +304,102 @@ class InpFile(object):
                         section = None
                         break
                     else:
-                        raise RuntimeError('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
+                        raise ENSyntaxError(201, line_num=lnum, line = line)
                 elif section is None and line.startswith(';'):
                     self.top_comments.append(line[1:])
                     continue
                 elif section is None:
                     logger.debug('Found confusing line: %s', repr(line))
-                    raise RuntimeError('%(fname)s:%(lnum)d: Non-comment outside of valid section!' % edata)
+                    raise ENSyntaxError(201, line_num=lnum, line=line)
                 # We have text, and we are in a section
                 self.sections[section].append((lnum, line))
 
         # Parse each of the sections
         # The order of operations is important as certain things require prior knowledge
+        try:
 
-        ### OPTIONS
-        self._read_options()
+            ### OPTIONS
+            self._read_options()
 
-        ### TIMES
-        self._read_times()
+            ### TIMES
+            self._read_times()
 
-        ### CURVES
-        self._read_curves()
+            ### CURVES
+            self._read_curves()
 
-        ### PATTERNS
-        self._read_patterns()
+            ### PATTERNS
+            self._read_patterns()
 
-        ### JUNCTIONS
-        self._read_junctions()
+            ### JUNCTIONS
+            self._read_junctions()
 
-        ### RESERVOIRS
-        self._read_reservoirs()
+            ### RESERVOIRS
+            self._read_reservoirs()
 
-        ### TANKS
-        self._read_tanks()
+            ### TANKS
+            self._read_tanks()
 
-        ### PIPES
-        self._read_pipes()
+            ### PIPES
+            self._read_pipes()
 
-        ### PUMPS
-        self._read_pumps()
+            ### PUMPS
+            self._read_pumps()
 
-        ### VALVES
-        self._read_valves()
+            ### VALVES
+            self._read_valves()
 
-        ### COORDINATES
-        self._read_coordinates()
+            ### COORDINATES
+            self._read_coordinates()
 
-        ### SOURCES
-        self._read_sources()
+            ### SOURCES
+            self._read_sources()
 
-        ### STATUS
-        self._read_status()
+            ### STATUS
+            self._read_status()
 
-        ### CONTROLS
-        self._read_controls()
+            ### CONTROLS
+            self._read_controls()
 
-        ### RULES
-        self._read_rules()
+            ### RULES
+            self._read_rules()
 
-        ### REACTIONS
-        self._read_reactions()
+            ### REACTIONS
+            self._read_reactions()
 
-        ### TITLE
-        self._read_title()
+            ### TITLE
+            self._read_title()
 
-        ### ENERGY
-        self._read_energy()
+            ### ENERGY
+            self._read_energy()
 
-        ### DEMANDS
-        self._read_demands()
+            ### DEMANDS
+            self._read_demands()
 
-        ### EMITTERS
-        self._read_emitters()
-        
-        ### QUALITY
-        self._read_quality()
+            ### EMITTERS
+            self._read_emitters()
+            
+            ### QUALITY
+            self._read_quality()
 
-        self._read_mixing()
-        self._read_report()
-        self._read_vertices()
-        self._read_labels()
+            self._read_mixing()
+            self._read_report()
+            self._read_vertices()
+            self._read_labels()
 
-        ### Parse Backdrop
-        self._read_backdrop()
+            ### Parse Backdrop
+            self._read_backdrop()
 
-        ### TAGS
-        self._read_tags()
+            ### TAGS
+            self._read_tags()
 
-        # Set the _inpfile io data inside the water network, so it is saved somewhere
-        wn._inpfile = self
-        
-        ### Finish tags
-        self._read_end()
-        
+            # Set the _inpfile io data inside the water network, so it is saved somewhere
+            wn._inpfile = self
+            
+            ### Finish tags
+            self._read_end()
+        except EpanetException as e:
+            raise EpanetException(200, filename) from e
+
         return self.wn
 
     def write(self, filename, wn, units=None, version=2.2, force_coordinates=False):
@@ -440,6 +434,8 @@ class InpFile(object):
             raise ValueError('Must pass a WaterNetworkModel object')
         if units is not None and isinstance(units, str):
             units=units.upper()
+            if units=="SI":
+                raise Exception("unit cannot be 'SI'")
             self.flow_units = FlowUnits[units]
         elif units is not None and isinstance(units, FlowUnits):
             self.flow_units = units
@@ -635,7 +631,7 @@ class InpFile(object):
                 overflow = False
                 volume = 0.0
             else:
-                raise RuntimeError('Tank entry format not recognized.')
+                raise ENSyntaxError(201, 'Tank entry format not recognized.', line_num=lnum, line=line)
             self.wn.add_tank(current[0],
                         to_si(self.flow_units, float(current[1]), HydParam.Elevation),
                         to_si(self.flow_units, float(current[2]), HydParam.Length),
@@ -699,8 +695,8 @@ class InpFile(object):
                 minor_loss = 0.
                 link_status = LinkStatus.Open
                 check_valve = False
-
-            self.wn.add_pipe(current[0],
+            try:
+                self.wn.add_pipe(current[0],
                         current[1],
                         current[2],
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
@@ -709,6 +705,10 @@ class InpFile(object):
                         minor_loss,
                         link_status,
                         check_valve)
+            except KeyError as e:
+                raise ENKeyError(203, str(e.args[0]), line_num=lnum) from e
+            except ValueError as e:
+                raise ENValueError(211, str(e.args[0]), line_num=lnum) from e
 
     def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode(sys_default_enc))
@@ -772,13 +772,12 @@ class InpFile(object):
 #                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
                     pattern = self.wn.get_pattern(current[i+1]).name
                 else:
-                    raise RuntimeError('Pump keyword in inp file not recognized.')
-
+                    raise ENSyntaxError(201, 'Pump keyword not recognized: {}'.format(current[i].upper()), line_num=lnum, line=line)
             if speed is None:
                 speed = 1.0
 
             if pump_type is None:
-                raise RuntimeError('Either head curve id or pump power must be specified for all pumps.')
+                raise ENSyntaxError(217, line_num=lnum, line=line)
             self.wn.add_pump(current[0], current[1], current[2], pump_type, value, speed, pattern)
 
     def _write_pumps(self, f, wn):
@@ -826,7 +825,7 @@ class InpFile(object):
                 current.append(0.0)
             else:
                 if len(current) != 7:
-                    raise RuntimeError('The [VALVES] section of an INP file must have 6 or 7 entries.')
+                    raise ENSyntaxError(201, 'valve definitions must have 6 or 7 values', line_num=lnum, line=line)
             valve_type = current[4].upper()
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(self.flow_units, float(current[5]), HydParam.Pressure)
@@ -844,7 +843,7 @@ class InpFile(object):
                 self.wn.add_curve(curve_name, 'HEADLOSS', curve_points)
                 valve_set = curve_name
             else:
-                raise RuntimeError('VALVE type "%s" unrecognized' % valve_type)
+                raise ENSyntaxError(213, 'valve type unrecognized', line_num=lnum, line=line)
             self.wn.add_valve(current[0],
                          current[1],
                          current[2],
@@ -994,7 +993,7 @@ class InpFile(object):
             # If default is '1' but it does not exist, then it is constant
             # Any other default that does not exist is an error
             if self.wn.options.hydraulic.pattern is not None and self.wn.options.hydraulic.pattern != '1':
-                raise KeyError('Default pattern {} is undefined'.format(self.wn.options.hydraulic.pattern))
+                raise ENKeyError(205, self.wn.options.hydraulic.pattern)
             self.wn.options.hydraulic.pattern = None
 
     def _write_patterns(self, f, wn):
@@ -1402,7 +1401,7 @@ class InpFile(object):
             elif key1 == 'ROUGHNESS':
                 self.wn.options.reaction.roughness_correl = float(current[2])
             else:
-                raise RuntimeError('Reaction option not recognized: %s'%key1)
+                raise ENValueError(213, key1, line_num=lnum, line=line)
 
     def _write_reactions(self, f, wn):
         f.write( '[REACTIONS]\n'.encode(sys_default_enc))
@@ -1512,7 +1511,7 @@ class InpFile(object):
                 tank.mixing_model = MixType.Mix2
                 tank.mixing_fraction = float(current[2])
             elif key == '2COMP' and len(current) < 3:
-                raise RuntimeError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
+                raise ENSyntaxError(201, 'missing fraction for mixing', line_num=lnum, line=line)
             elif key == 'FIFO':
                 tank.mixing_model = MixType.FIFO
             elif key == 'LIFO':
@@ -1555,7 +1554,7 @@ class InpFile(object):
             if words is not None and len(words) > 0:
                 if len(words) < 2:
                     edata['key'] = words[0]
-                    raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                    raise ENValueError(213, 'NULL', line_num=lnum, line=line)
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
@@ -1583,7 +1582,7 @@ class InpFile(object):
                                 self.mass_units = MassUnits.ug
                                 opts.quality.inpfile_units = words[2]
                             else:
-                                raise ValueError('Invalid chemical units in OPTIONS section')
+                                raise ENValueError(213, 'for chemical units', line_num=lnum, line=line)
                         else:
                             self.mass_units = MassUnits.mg
                             opts.quality.inpfile_units = 'mg/L'                            
@@ -1617,7 +1616,7 @@ class InpFile(object):
                             opts.hydraulic.pressure_exponent = float(words[2])
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise ENSyntaxError(201, 'unknown option', line_num=lnum, line=line)
                     else:
                         opts.hydraulic.inpfile_pressure_units = words[1]
                 elif key == 'PATTERN':
@@ -1630,16 +1629,16 @@ class InpFile(object):
                             opts.hydraulic.demand_model = words[2]
                         else:
                             edata['key'] = ' '.join(words)
-                            raise RuntimeError('%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
+                            raise ENSyntaxError(201, 'unknown option', line_num=lnum, line=line)
                     else:
                         edata['key'] = ' '.join(words)
-                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise ENSyntaxError(201, 'unknown option', line_num=lnum, line=line)
                 elif key == 'EMITTER':
                     if len(words) > 2:
                         opts.hydraulic.emitter_exponent = float(words[2])
                     else:
                         edata['key'] = 'EMITTER EXPONENT'
-                        raise RuntimeError('%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                        raise ENSyntaxError(201, 'unknown option', line_num=lnum, line=line)
                 elif key == 'TOLERANCE':
                     opts.quality.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
@@ -1661,9 +1660,9 @@ class InpFile(object):
                         logger.warn('%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
         if isinstance(opts.time.report_timestep, (float, int)):
             if opts.time.report_timestep < opts.time.hydraulic_timestep:
-                raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
+                raise ENValueError(202, 'report timestep less than hydraulic timestep')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
-                raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
+                raise ENValueError(202, 'report timestep must be integer multiple of hydraulic timestep')
 
     def _write_options(self, f, wn, version=2.2):
         f.write('[OPTIONS]\n'.encode(sys_default_enc))
@@ -2451,34 +2450,33 @@ class _EpanetRule(object):
 
 
 class BinFile(object):
-    """
-    EPANET binary output file reader.
+    """EPANET binary output file reader.
     
     This class provides read functionality for EPANET binary output files.
     
     Parameters
     ----------
-    results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
+    results_type : list of ResultType, optional
         This parameter is *only* active when using a subclass of the BinFile that implements
-	    a custom reader or writer.
-        If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
-        Otherwise, a list of result types can be passed to limit the memory used.
-    network : bool, default=False
-        Save a new WaterNetworkModel from the description in the output binary file. Certain
+        a custom reader or writer, by default None. If None, then all results will be saved (node quality, 
+        demand, link flow, etc.). Otherwise, a list of result types can be passed to limit the memory used.
+    network : bool, optional
+        Save a new WaterNetworkModel from the description in the output binary file, by default None. Certain
         elements may be missing, such as patterns and curves, if this is done.
-    energy : bool, default=False
-        Save the pump energy results.
-    statistics : bool, default=False
+    energy : bool, optional
+        Save the pump energy results, by default False.
+    statistics : bool, optional
         Save the statistics lines (different from the stats flag in the inp file) that are
-        automatically calculated regarding hydraulic conditions.
-    convert_status : bool, default=True
-        Convert the EPANET link status (8 values) to simpler WNTR status (3 values). By 
-        default, this is done, and the encoded-cause status values are converted simple state
+        automatically calculated regarding hydraulic conditions, by default False.
+    convert_status : bool, optional
+        Convert the EPANET link status (8 values) to simpler WNTR status (3 values), by default True. 
+        When this is done, the encoded-cause status values are converted simple stat
         values, instead.
 
+    
     Returns
-    ----------
-    :class:`~wntr.sim.results.SimulationResults`
+    -------
+    SimulationResults
         A WNTR results object will be created and added to the instance after read.
 
     """
@@ -2685,7 +2683,7 @@ class BinFile(object):
             """
             logger.debug('... read energy data ...')
             for i in range(npumps):
-                pidx = int(np.fromfile(fin,dtype=np.int32, count=1))
+                pidx = int(np.fromfile(fin,dtype=np.int32, count=1)[0])
                 energy = np.fromfile(fin, dtype=np.dtype(ftype), count=6)
                 self.save_energy_line(pidx, linknames[pidx-1], energy)
             peakenergy = np.fromfile(fin, dtype=np.dtype(ftype), count=1)

@@ -2,11 +2,13 @@
 
     \clearpage
 
+.. _installation:
+
 Installation
 ======================================
 .. include:: <isonum.txt>
 
-WNTR requires 64-bit Python (tested on versions 3.7, 3.8, 3.9, and 3.10) along with several 
+WNTR requires 64-bit Python (tested on versions 3.9, 3.10, 3.11, and 3.12) along with several 
 Python package dependencies. 
 See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
@@ -56,9 +58,10 @@ Step 1: Setup the Python environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires 64-bit Python (tested on versions 3.7, 3.8, 3.9, and 3.10) along with several Python package dependencies.
+	WNTR requires 64-bit Python (tested on versions 3.9, 3.10, 3.11, and 3.12) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/products/individual.
+	Additional instructions for setting up a Python environment independent of Anaconda are available at https://docs.python.org/.
 	General information on Python can be found at https://www.python.org/.
 	
 	.. note:: 
@@ -72,17 +75,20 @@ Step 1: Setup the Python environment
 	     While the second option allows the user to define priority, this requires administrator privileges. 
 	     If Anaconda is not added to the PATH environment variable, Python can be run by using the full path name (e.g., C:\\Users\\username\\Anaconda3\\python).
 		 
-	Anaconda includes the Python packages needed for WNTR, including NumPy, SciPy, NetworkX, pandas, and
+	Anaconda includes the Python packages needed for WNTR, including NumPy, SciPy, NetworkX, Pandas, and
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	If the Python installation does not include these dependencies, the user will need to install them. 
 	This is most commonly done using pip or conda. 
+	Detailed guidance concerning package installation using pip is available at https://packaging.python.org/.
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debugging features along with a graphical user interface. 
-	Debugging options are available from the toolbar.  
-	Code documentation is displayed in the object inspection 
-	window.  Pop-up information on class structure and functions are displayed in the 
-	editor and console windows.  
+	The IDE provides debugging options accessible from the toolbar, 
+	displays code documentation in the object inspection window, and 
+	shows pop-up information on class structure and functions in the 
+	editor and console windows. Non-Anaconda users can download 
+	Spyder from https://www.spyder-ide.org/. 
+	For a detailed installation guide, please refer to https://docs.spyder-ide.org/.
 	
 	To open a Python console, open a command prompt (cmd.exe on Windows, terminal window on Linux and Mac OS X) 
 	and run 'python', as shown in :numref:`fig-cmd-python`, 
@@ -110,9 +116,9 @@ Step 2: Install WNTR
 	Information for developers can be found in the :ref:`developer_instructions` section.
 	
 	.. note:: 
-	   If WNTR is installed using PyPI or Anaconda (Options 1 or 2 below), the examples folder will not be downloaded.  
+	   If WNTR is installed using PyPI or Anaconda (Options 1 or 2 below), the examples folder is not included with the Python package.   
 	   The examples can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
-	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
+	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store the example files in a folder. 
 	   
 	* **Option 1**: Users can install WNTR from PyPI using pip, which is a command line software tool used to install and manage Python 
 	  packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
@@ -234,19 +240,20 @@ To test WNTR, developers can run software tests locally using the following comm
 Requirements
 -------------
 
-Requirements for WNTR include 64-bit Python (tested on versions 3.7, 3.8, 3.9, and 3.10) along with several Python packages. 
+Requirements for WNTR include 64-bit Python (tested on versions 3.9, 3.10, 3.11, and 3.12) along with several Python packages. 
 Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
 
-* NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
+* NumPy :cite:p:`vacv11`: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* SciPy [VaCV11]_: used to support efficient routines for numerical integration, 
+* SciPy :cite:p:`vacv11`: used to support efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX [HaSS08]_: used to create and analyze complex networks, 
+* NetworkX :cite:p:`hass08`: used to create and analyze complex networks, 
   https://networkx.github.io/
-* pandas [Mcki13]_: used to analyze and store time series data, 
+* pandas :cite:p:`mcki13`: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* Matplotlib [Hunt07]_: used to produce graphics, 
+* Matplotlib :cite:p:`hunt07`: used to produce graphics, 
   http://matplotlib.org/
+* Setuptools: used to install the WNTR package, https://setuptools.pypa.io/
   
 These packages are included in the Anaconda Python distribution.
  
@@ -257,17 +264,17 @@ Optional dependencies
 
 The following Python packages are optional:
 
-* plotly [SPHC16]_: used to produce interactive scalable graphics, 
+* plotly :cite:p:`sphc16`: used to produce interactive scalable graphics, 
   https://plot.ly/
-* folium [Folium]_: used to produce Leaflet maps, 
+* folium :cite:p:`folium`: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/
-* utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
+* utm :cite:p:`bieni19`: used to translate node coordinates to utm and lat/long,
   https://pypi.org/project/utm/
-* geopandas [JVFM21]_: used to work with geospatial data,
+* geopandas :cite:p:`jvfm21`: used to work with geospatial data,
   https://geopandas.org/
-* rtree [rtree]_: used for overlay operations in geopandas,
+* rtree :cite:p:`rtree`: used for overlay operations in geopandas,
   https://rtree.readthedocs.io/
-* openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
+* openpyxl :cite:p:`gacl18`: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 
 All of these packages **except geopandas** are included in the Anaconda Python distribution.
@@ -278,8 +285,7 @@ To install optional dependencies, run::
 .. note:: 
    Proper installation of geopandas requires installing several geopandas dependencies, including 
    fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
-   On Linux and Mac OS X, installing geopandas through the conda-forge channel will install the dependencies.
-   On Windows, the dependencies must be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
+   On Windows, the dependencies can be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
    
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 

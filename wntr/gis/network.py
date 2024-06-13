@@ -202,7 +202,7 @@ class WaterNetworkGIS:
                 assert 'start_node_name' in element.columns
                 assert 'end_node_name' in element.columns
                 df = element.reset_index(names="name")
-                # TODO: create vertices from LineString geometry
+                df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
                 wn_dict['links'].extend(df.to_dict('records'))
         

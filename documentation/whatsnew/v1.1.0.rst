@@ -1,0 +1,17 @@
+v1.1.0 (November 27, 2023)
+---------------------------------------------------
+WNTR version 1.1.0 includes the following updates:
+
+* Fixed bug in valve test https://github.com/USEPA/WNTR/pull/344
+* Updated logo https://github.com/USEPA/WNTR/pull/343
+* Updated user manual documentation and a minor change for non-Latin encodings https://github.com/USEPA/WNTR/pull/345
+* Updated snap GIS function to use node name as a tie breaker https://github.com/USEPA/WNTR/pull/370
+* Ensure variables and parameters keep their values when constraints are removed https://github.com/USEPA/WNTR/pull/360
+* Cleaned up Newton Solver https://github.com/USEPA/WNTR/pull/361
+* Added GH pages functionality https://github.com/USEPA/WNTR/pull/365
+* Documentation updates including column/field names for GeoJSON and Shapefiles https://github.com/USEPA/WNTR/pull/372
+* Added link to GitHub pages at https://usepa.github.io/WNTR/ https://github.com/USEPA/WNTR/pull/376
+* Added function for reverse links direction https://github.com/USEPA/WNTR/pull/368
+* Added vertices from line string geometries when converting GIS object to WN model https://github.com/USEPA/WNTR/pull/388
+* Added scheduled testing to workflow https://github.com/USEPA/WNTR/pull/392
+* Updated documentation theme https://github.com/USEPA/WNTR/pull/393

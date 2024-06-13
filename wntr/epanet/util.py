@@ -1,27 +1,5 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
-
-.. rubric:: Contents
-
-.. autosummary::
-
-    FlowUnits
-	MassUnits
-	QualParam
-	HydParam
-	to_si
-	from_si
-	StatisticsType
-	QualType
-	SourceType
-	PressureUnits
-	FormulaType
-	ControlType
-	LinkTankStatus
-	MixType
-	ResultType
-	EN
-
 """
 import enum
 import logging
@@ -92,17 +70,17 @@ class FlowUnits(enum.Enum):
     .. rubric:: Enum Members
 
     ==============  ====================================  ========================
-    :attr:`~CFS`    :math:`ft^3\,/\,s`                    :attr:`is_traditional`
-    :attr:`~GPM`    :math:`gal\,/\,min`                   :attr:`is_traditional`
-    :attr:`~MGD`    :math:`10^6\,gal\,/\,day`             :attr:`is_traditional`
-    :attr:`~IMGD`   :math:`10^6\,Imp.\,gal\,/\,day`       :attr:`is_traditional`
-    :attr:`~AFD`    :math:`acre\cdot\,ft\,/\,day`         :attr:`is_traditional`
-    :attr:`~LPS`    :math:`L\,/\,s`                       :attr:`is_metric`
-    :attr:`~LPM`    :math:`L\,/\,min`                     :attr:`is_metric`
-    :attr:`~MLD`    :math:`ML\,/\,day`                    :attr:`is_metric`
-    :attr:`~CMH`    :math:`m^3\,\,hr`                     :attr:`is_metric`
-    :attr:`~CMD`    :math:`m^3\,/\,day`                   :attr:`is_metric`
-    :attr:`~SI`     :math:`m^3\,/\,s`
+    :attr:`~CFS`    :math:`\rm ft^3\,/\,s`                :attr:`is_traditional`
+    :attr:`~GPM`    :math:`\rm gal\,/\,min`               :attr:`is_traditional`
+    :attr:`~MGD`    :math:`\rm 10^6\,gal\,/\,day`         :attr:`is_traditional`
+    :attr:`~IMGD`   :math:`\rm 10^6\,Imp.\,gal\,/\,day`   :attr:`is_traditional`
+    :attr:`~AFD`    :math:`\rm acre\cdot\,ft\,/\,day`     :attr:`is_traditional`
+    :attr:`~LPS`    :math:`\rm L\,/\,s`                   :attr:`is_metric`
+    :attr:`~LPM`    :math:`\rm L\,/\,min`                 :attr:`is_metric`
+    :attr:`~MLD`    :math:`\rm ML\,/\,day`                :attr:`is_metric`
+    :attr:`~CMH`    :math:`\rm m^3\,\,hr`                 :attr:`is_metric`
+    :attr:`~CMD`    :math:`\rm m^3\,/\,day`               :attr:`is_metric`
+    :attr:`~SI`     :math:`\rm m^3\,/\,s`
     ==============  ====================================  ========================
 
     .. rubric:: Enum Member Attributes
@@ -331,11 +309,11 @@ class QualParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The EPANET flow units to use in the conversion
         data : array-like
             The data to be converted (scalar, array or dictionary)
-        mass_units : ~MassUnits
+        mass_units : MassUnits
             The EPANET mass units to use in the conversion (mg or ug)
         reaction_order : int
             The reaction order for use converting reaction coefficients
@@ -404,11 +382,11 @@ class QualParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The EPANET flow units to use in the conversion
         data : array-like
             The SI unit data to be converted (scalar, array or dictionary)
-        mass_units : ~MassUnits
+        mass_units : MassUnits
             The EPANET mass units to use in the conversion (mg or ug)
         reaction_order : int
             The reaction order for use converting reaction coefficients
@@ -481,21 +459,21 @@ class HydParam(enum.Enum):
     .. rubric:: Enum Members
 
     ==========================  ===================================================================
-    :attr:`~Elevation`          Nodal elevation
-    :attr:`~Demand`             Nodal demand
-    :attr:`~HydraulicHead`      Nodal head
-    :attr:`~Pressure`           Nodal pressure
-    :attr:`~EmitterCoeff`       Emitter coefficient
-    :attr:`~TankDiameter`       Tank diameter
-    :attr:`~Volume`             Tank volume
-    :attr:`~Length`             Link length
-    :attr:`~PipeDiameter`       Pipe diameter
-    :attr:`~Flow`               Link flow
-    :attr:`~Velocity`           Link velocity
-    :attr:`~HeadLoss`           Link headloss (from start node to end node)
-    :attr:`~RoughnessCoeff`     Link roughness (requires `darcy_weisbach` setting for conversion)
-    :attr:`~Energy`             Pump energy
-    :attr:`~Power`              Pump power
+    :attr:`Elevation`           Nodal elevation
+    :attr:`Demand`              Nodal demand
+    :attr:`HydraulicHead`       Nodal head
+    :attr:`Pressure`            Nodal pressure
+    :attr:`EmitterCoeff`        Emitter coefficient
+    :attr:`TankDiameter`        Tank diameter
+    :attr:`Volume`              Tank volume
+    :attr:`Length`              Link length
+    :attr:`PipeDiameter`        Pipe diameter
+    :attr:`Flow`                Link flow
+    :attr:`Velocity`            Link velocity
+    :attr:`HeadLoss`            Link headloss (from start node to end node)
+    :attr:`RoughnessCoeff`      Link roughness (requires `darcy_weisbach` setting for conversion)
+    :attr:`Energy`              Pump energy
+    :attr:`Power`               Pump power
     ==========================  ===================================================================
 
 
@@ -548,7 +526,7 @@ class HydParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : ~FlowUnits
+        flow_units : FlowUnits
             The flow units to use in the conversion
         data : array-like
             The EPANET-units data to be converted (scalar, array or dictionary)
@@ -649,7 +627,7 @@ class HydParam(enum.Enum):
 
         Parameters
         ----------
-        flow_units : :class:`~FlowUnits`
+        flow_units : FlowUnits
             The flow units to use in the conversion
         data : array-like
             The SI unit data to be converted (scalar, array or dictionary)
@@ -874,14 +852,17 @@ class FormulaType(enum.Enum):
         0,
         "H-W",
     )
+    """Hazen-Williams headloss formula."""
     DW = (
         1,
         "D-W",
     )
+    """Darcy-Weisbach formula, requires untis conversion."""
     CM = (
         2,
         "C-M",
     )
+    """Chezy-Manning formula."""
 
     def __init__(self, eid, inpcode):
         v2mm = getattr(self, "_value2member_map_")
