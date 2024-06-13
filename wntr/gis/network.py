@@ -191,8 +191,8 @@ class WaterNetworkGIS:
         for element in [self.junctions, self.tanks, self.reservoirs]:
             if element.shape[0] > 0:
                 assert (element['geometry'].geom_type).isin(['Point']).all()
-                df = element.reset_index()
-                df.rename(columns={'index':'name', 'geometry':'coordinates'}, inplace=True)
+                df = element.reset_index(names="name")
+                df.rename(columns={'geometry':'coordinates'}, inplace=True)
                 df['coordinates'] = [[x,y] for x,y in zip(df['coordinates'].x, 
                                                           df['coordinates'].y)]
                 wn_dict['nodes'].extend(df.to_dict('records'))
@@ -201,8 +201,7 @@ class WaterNetworkGIS:
             if element.shape[0] > 0:
                 assert 'start_node_name' in element.columns
                 assert 'end_node_name' in element.columns
-                df = element.reset_index()
-                df.rename(columns={'index':'name'}, inplace=True)
+                df = element.reset_index(names="name")
                 df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
                 wn_dict['links'].extend(df.to_dict('records'))
