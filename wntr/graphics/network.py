@@ -228,8 +228,14 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
         clb.ax.set_title(node_colorbar_label, fontsize=10)
     if add_link_colorbar and link_attribute:
-        vmin = min(map(abs,link_attribute.values()))
-        vmax = max(map(abs,link_attribute.values())) 
+        if link_range[0] is None:
+            vmin = min(link_attribute.values())
+        else:
+            vmin = link_range[0]
+        if link_range[1] is None:
+            vmax = max(link_attribute.values())
+        else:
+            vmax = link_range[1]
         sm = plt.cm.ScalarMappable(cmap=link_cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
         sm.set_array([])
         clb = plt.colorbar(sm, shrink=0.5, pad=0.05, ax=ax)
