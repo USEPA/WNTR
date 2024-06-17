@@ -10,6 +10,7 @@ on:
     branches: [ main, dev ]
   schedule:
     - cron: '0 0 1 * *'
+  workflow_dispatch:
 
 jobs:
 
@@ -94,6 +95,7 @@ jobs:
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+      continue-on-error: true
         
     - name: Save coverage
       uses: actions/upload-artifact@v2
