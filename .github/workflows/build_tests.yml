@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-latest, ubuntu-latest] 
+        os: [windows-latest, macOS-13, ubuntu-latest] 
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -47,7 +47,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-latest, ubuntu-latest]    
+        os: [windows-latest, macOS-13, ubuntu-latest]    
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v4
@@ -68,14 +68,13 @@ jobs:
     - name: Usage of wntr
       run: |
         python -c "import wntr"
-      continue-on-error: true
 
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-latest, ubuntu-latest]
+        os: [windows-latest, macOS-13, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -95,7 +94,6 @@ jobs:
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-      continue-on-error: true
         
     - name: Save coverage
       uses: actions/upload-artifact@v2
