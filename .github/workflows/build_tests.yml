@@ -18,7 +18,8 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-13, ubuntu-latest] 
+        os: [windows-latest, macOS-13, ubuntu-latest]
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
