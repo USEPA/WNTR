@@ -142,7 +142,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l.name, "p1")
         self.assertEqual(l.start_node_name, "j1")
         self.assertEqual(l.end_node_name, "j2")
-        self.assertEqual(l.initial_status, self.wntr.network.LinkStatus.opened)
+        self.assertEqual(l.initial_status, self.wntr.network.LinkStatus.Opened)
         self.assertEqual(l.length, 1000.0)
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
@@ -255,7 +255,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         control_action = self.wntr.network.ControlAction(
-            wn.get_link("21"), "status", self.wntr.network.LinkStatus.opened
+            wn.get_link("21"), "status", self.wntr.network.LinkStatus.Opened
         )
         control = self.wntr.network.controls.Control._conditional_control(
             wn.get_node("2"), "head", np.greater_equal, 10.0, control_action
