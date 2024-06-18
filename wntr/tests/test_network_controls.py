@@ -102,13 +102,13 @@ class TestTimeControls(unittest.TestCase):
                     link_res["flowrate"].at[t, "pipe2"], 150 / 3600.0
                 )
                 self.assertEqual(
-                    link_res["status"].at[t, "pipe2"], self.wntr.network.LinkStatus.open
+                    link_res["status"].at[t, "pipe2"], self.wntr.network.LinkStatus.Open
                 )
             else:
                 self.assertAlmostEqual(link_res["flowrate"].at[t, "pipe2"], 0.0)
                 self.assertEqual(
                     link_res["status"].at[t, "pipe2"],
-                    self.wntr.network.LinkStatus.closed,
+                    self.wntr.network.LinkStatus.Closed,
                 )
 
 
@@ -147,14 +147,14 @@ class TestConditionalControls(unittest.TestCase):
                 self.assertAlmostEqual(link_res["flowrate"].at[t, "pump1"], 0.0)
                 self.assertEqual(
                     link_res["status"].at[t, "pump1"],
-                    self.wntr.network.LinkStatus.closed,
+                    self.wntr.network.LinkStatus.Closed,
                 )
                 count += 1
             else:
                 self.assertGreaterEqual(link_res["flowrate"].at[t, "pump1"], 0.0001)
                 self.assertEqual(
                     link_res["status"].loc[t, "pump1"],
-                    self.wntr.network.LinkStatus.open,
+                    self.wntr.network.LinkStatus.Open,
                 )
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
@@ -229,20 +229,20 @@ class TestConditionalControls(unittest.TestCase):
                 self.assertGreaterEqual(results.link["flowrate"].at[t, "pipe1"], 0.002)
                 self.assertEqual(
                     results.link["status"].at[t, "pipe1"],
-                    self.wntr.network.LinkStatus.open,
+                    self.wntr.network.LinkStatus.Open,
                 )
                 count += 1
             else:
                 self.assertAlmostEqual(results.link["flowrate"].at[t, "pipe1"], 0.0)
                 self.assertEqual(
                     results.link["status"].at[t, "pipe1"],
-                    self.wntr.network.LinkStatus.closed,
+                    self.wntr.network.LinkStatus.Closed,
                 )
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
         self.assertEqual(
             results.link["status"].at[results.link["status"].index[0], "pipe1"],
-            self.wntr.network.LinkStatus.closed,
+            self.wntr.network.LinkStatus.Closed,
         )  # make sure the pipe starts closed
         self.assertLessEqual(
             results.node["pressure"].at[results.node["pressure"].index[0], "tank1"],
@@ -277,7 +277,7 @@ class TestTankControls(unittest.TestCase):
                 self.assertLessEqual(results.link["flowrate"].at[t, "pipe1"], 0.0)
                 self.assertEqual(
                     results.link["status"].at[t, "pipe1"],
-                    self.wntr.network.LinkStatus.closed,
+                    self.wntr.network.LinkStatus.Closed,
                 )
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
@@ -384,7 +384,7 @@ class TestControlCombinations(unittest.TestCase):
         inp_file = join(test_datadir, "control_comb.inp")
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         control_action = self.wntr.network.ControlAction(
-            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.opened
+            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.Opened
         )
         control = self.wntr.network.controls.Control._time_control(
             wn, 6 * 3600, "SIM_TIME", False, control_action
@@ -432,9 +432,9 @@ class TestControlCombinations(unittest.TestCase):
         tank1.init_level = 40.0
         tank1._head = tank1.elevation + 40.0
         pipe1 = wn.get_link("pipe1")
-        pipe1._user_status = self.wntr.network.LinkStatus.opened
+        pipe1._user_status = self.wntr.network.LinkStatus.Opened
         control_action = self.wntr.network.ControlAction(
-            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.opened
+            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.Opened
         )
         control = self.wntr.network.controls.Control._time_control(
             wn, 19 * 3600, "SIM_TIME", False, control_action
@@ -482,9 +482,9 @@ class TestControlCombinations(unittest.TestCase):
         tank1.init_level = 40.0
         tank1._head = tank1.elevation + 40.0
         pipe1 = wn.get_link("pipe1")
-        pipe1._user_status = self.wntr.network.LinkStatus.opened
+        pipe1._user_status = self.wntr.network.LinkStatus.Opened
         control_action = self.wntr.network.ControlAction(
-            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.opened
+            wn.get_link("pipe1"), "status", self.wntr.network.LinkStatus.Opened
         )
         control = self.wntr.network.controls.Control._time_control(
             wn, 5 * 3600, "SIM_TIME", False, control_action
