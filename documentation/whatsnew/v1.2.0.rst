@@ -1,4 +1,4 @@
-v1.2.0 (June 14, 2024)
+v1.2.0 (June 18, 2024)
 ---------------------------------------------------
 WNTR version 1.2.0 includes the following updates:
 
@@ -15,3 +15,4 @@ WNTR version 1.2.0 includes the following updates:
 * Fixed bug related to link colormap https://github.com/USEPA/WNTR/pull/429
 * Fixed bug in GIS I/O caused by index names https://github.com/USEPA/WNTR/pull/395
 * Fixed bug in network_animation https://github.com/USEPA/WNTR/pull/405
+* Updated workflow and testing to hold numpy < 2.0 and use macOS-13 https://github.com/USEPA/WNTR/pull/430
