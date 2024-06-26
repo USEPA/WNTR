@@ -4,7 +4,8 @@
 
 {{ objname | escape | underline}}
 
-.. rubric:: *module* :mod:`{{ module }}`
+.. 
+    rubric:: *module* :mod:`{{ module }}`
 
 .. currentmodule:: {{ module }}
 

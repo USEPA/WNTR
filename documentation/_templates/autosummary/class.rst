@@ -1,10 +1,12 @@
 {{ objname | escape | underline}}
 
-.. rubric:: *module* :mod:`{{ module }}`
+.. 
+   rubric:: *module* :mod:`{{ module }}`
 
 .. currentmodule:: {{ module }}
 
-.. autoclass:: {{ objname }}
+.. autoclass:: {{ fullname }}
+   :exclude-members: __new__
 
 {% block methods %}
 {% if methods %}
