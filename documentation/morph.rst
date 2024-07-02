@@ -82,6 +82,7 @@ This initial set of operations can generate new branch pipes, pipes in series, a
 This cycle repeats until the network can no longer be reduced.  
 The user can specify if branch trimming, series pipe merge, and/or parallel pipe merge should be included in the skeletonization operations.  
 The user can also specify a maximum number of cycles to include in the process. 
+The user can also specify a list of junctions and pipes which should be excluded from skeletonization operations.
 
 .. only:: latex
 
@@ -147,7 +148,8 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_example.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
    :width: 800
@@ -202,7 +204,8 @@ Pressure differences are very small in this example.
     
     >>> plt.tight_layout()
     >>> plt.savefig('skel_hydraulics.png', dpi=300)
-    
+    >>> plt.close()
+
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
    :width: 640

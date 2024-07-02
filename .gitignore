@@ -47,6 +47,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 docker/
+/.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
