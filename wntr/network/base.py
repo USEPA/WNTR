@@ -589,8 +589,8 @@ class Registry(MutableMapping):
     """
     
     def __init__(self, wn):
-        # if not isinstance(wn, AbstractModel):
-        #     raise ValueError('Registry must be initialized with a model')
+        if not isinstance(wn, AbstractModel):
+            raise ValueError('Registry must be initialized with a model')
 #        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
