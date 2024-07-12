@@ -299,7 +299,7 @@ class WaterNetworkGIS:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value
     
-    def _read(self, files, index_col='index'):
+    def _read(self, files, index_col='name'):
         
         if 'junctions' in files.keys():
             data = gpd.read_file(files['junctions']).set_index(index_col)
