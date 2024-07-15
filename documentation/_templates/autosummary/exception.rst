@@ -1,13 +1,11 @@
 {{ objname | escape | underline}}
 
-.. 
-   rubric:: *module* :mod:`{{ module }}`
+.. rubric:: *module* :mod:`{{ module }}`
 
 .. currentmodule:: {{ module }}
 
-.. autoexception:: {{ fullname }}
+.. autoexception:: {{ objname }}
    :no-inherited-members:
-   :exclude-members: __new__
 
 {% block methods %}
 {% if methods %}
