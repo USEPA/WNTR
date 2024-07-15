@@ -45,7 +45,7 @@ extensions = [
 ]    
 
 add_function_parentheses = True
-add_module_names = True
+add_module_names = False
 python_display_short_literal_types = True
 
 toc_object_entries = True
@@ -53,7 +53,7 @@ toc_object_entries_show_parents = 'hide'
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = False
+napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
 napoleon_use_admonition_for_examples = False
@@ -69,7 +69,7 @@ napoleon_custom_sections = ['Read-only Simulation Attributes', 'Class Methods', 
 # viewcode_import = False
 
 autodoc_default_options = {
-    'undoc-members': False,
+    'undoc-members': True,
     'private-members': False,
     'special-members': False,
     'inherited-members': True,
@@ -77,13 +77,13 @@ autodoc_default_options = {
     'member-order': 'groupwise',
 }
 
-autodoc_class_signature = 'mixed'
+autodoc_class_signature = 'separated'
 autodoc_typehints = 'description'
 autodoc_typehints_format = 'short'
 autodoc_typehints_description_target = 'documented'
-autodoc_type_aliases = {'DataFrame': 'pandas.DataFrame',}
+autodoc_type_aliases = {'DataFrame': 'pandas DataFrame',}
 
-autoclass_content = 'both'
+autoclass_content = 'class'
 
 numfig=True
 numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
