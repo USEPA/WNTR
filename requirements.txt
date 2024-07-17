@@ -11,7 +11,7 @@ plotly
 folium
 utm
 openpyxl
-geopandas
+geopandas<1.0
 rtree
 
 # Documentation
