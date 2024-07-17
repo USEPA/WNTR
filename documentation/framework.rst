@@ -33,7 +33,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.network`	                          Contains classes and methods to define a water network model, network controls, model options, and graph representation of the network.
    :class:`~wntr.scenario`                            Contains classes and methods to define disaster scenarios and fragility/survival curves.
    :class:`~wntr.sim`		                          Contains classes and methods to run hydraulic and water quality simulations using the water network model.
-   :class:`~wntr.metrics`	                          Contains functions to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
+   :class:`~wntr.metrics`	                          Contains functions to compute resilience, including topographic, hydraulic, water quality, water security, and economic metrics.
    :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
    :class:`~wntr.gis`	                              Contains geospatial capabilities, including a function to convert the water network model to GeoDataFrames.
    :class:`~wntr.graphics`                            Contains functions to generate graphics.
