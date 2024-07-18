@@ -3,6 +3,7 @@ import warnings
 import os
 from os.path import abspath, dirname, join, isfile
 from pandas.testing import assert_frame_equal
+import numpy as np
 import networkx as nx
 import pandas as pd
 import matplotlib.pylab as plt
@@ -34,25 +35,79 @@ class TestStormWaterModel(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
-        self.swn = swntr.network.StormWaterNetworkModel(inpfile)
+        pass
 
     @classmethod
     def tearDownClass(self):
         pass
 
-    def test_cross_section(self):
-        pass
+    def test_conduit_cross_section_and_volume(self):
+        inpfile = join(test_datadir, "SWMM_examples", "Detention_Pond_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
         
+        conduit_cross_section = swn.conduit_cross_section
+        conduit_volume = swn.conduit_volume
+        
+        link_name = 'C3'
+        assert swn.xsections.loc[link_name, 'Shape'] == 'CIRCULAR'
+        
+        diameter = swn.xsections.loc[link_name, 'Geom1']
+        cross_section = np.pi*(diameter/2)**2
+        self.assertAlmostEqual(conduit_cross_section[link_name], cross_section, 4)
+        
+        volume = cross_section*swn.conduits.loc[link_name, 'Length']
+        self.assertAlmostEqual(conduit_volume[link_name], volume, 4)
+    
+    def test_timeseries_to_datetime_format(self):
+        inpfile = join(test_datadir, "SWMM_examples", "Detention_Pond_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        
+        ts = swn.timeseries_to_datetime_format()
+        assert set(ts.columns) == set(['2-yr', '10-yr', '100-yr'])
+        assert ts.shape == (24, 3)
+    
     def test_to_graph(self):
-        pass
+        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        
+        G = swn.to_graph()
+        
+        assert isinstance(G, nx.MultiDiGraph)
+        assert G.number_of_nodes() == swn.junctions.shape[0] + \
+                                      swn.outfalls.shape[0] + \
+                                      swn.storage.shape[0]
+        assert G.number_of_edges() == swn.conduits.shape[0] + \
+                                      swn.weirs.shape[0] + \
+                                      swn.orifices.shape[0] + \
+                                      swn.pumps.shape[0]
 
-    def test_to_gis(self):
-        pass
+    def test_add_composite_pattern(self):
+        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        
+        swn.patterns.loc['Pat1',:] = ['HOURLY', 0.8, 0.9, 1.0, 0.9, 0.8, 1.1, 
+                                                     1.2, 1.3, 1.4, 1.0, 0.9, 0.8, 
+                                                     0.7, 0.8, 0.9, 0.8, 1.1, 1.2, 
+                                                     1.3, 1.4, 1.2, 1.0, 0.9, 0.7]
+        dwf_data = pd.DataFrame([['KRO3001', 1, 'DWF'], 
+                                 ['KRO3001', 0.03, 'Pat1']], 
+                                columns=['Node', 'AverageValue', 'Pattern'])
+        dwf_data.set_index('Node', inplace=True)
 
-    def test_composite_pattern(self):
-        pass
+        composite = swn.add_composite_patterns(dwf_data)
+        
+        composite_pattern = composite.copy()
+        del composite_pattern['AverageValue']
+        pattern_mean = composite_pattern.T.mean()
 
+        self.assertEqual(composite.index, ['KRO3001'])
+        self.assertAlmostEqual(pattern_mean['KRO3001'], 1, 4)
+        
+        self.assertEqual(set(swn.patterns.index), 
+                         set(['DWF', 'Pat1', 'KRO3001_Composite']))
+        self.assertAlmostEqual(swn.dwf.loc['KRO3001', 'AverageValue'], 
+                               composite.loc['KRO3001', 'AverageValue'], 4)
+        
 
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
@@ -441,7 +496,6 @@ class TestStormWaterGraphics(unittest.TestCase):
         plt.close()
 
         self.assertTrue(isfile(filename))
-
 
 if __name__ == "__main__":
     unittest.main()

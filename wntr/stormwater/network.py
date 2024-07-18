@@ -420,27 +420,6 @@ class StormWaterNetworkModel(object):
         volume = cross_section*length
         
         return volume
-        
-    def anonymize_coordinates(self, seed=None, update_model=True):
-        
-        G = self.to_graph()
-
-        pos = nx.spring_layout(G, seed=seed)
-        coordinates = pd.DataFrame(pos).T
-        coordinates.rename(columns={0: 'X', 1: 'Y'}, inplace=True)
-        
-        if update_model:
-            self.coordinates = coordinates
-            self.vertices.drop(self.vertices.index, inplace=True)
-            self.polygons.drop(self.polygons.index, inplace=True)
-            
-        return coordinates
-        
-    def patterns_to_datetime_format(self):
-        pass
-    
-    def patterns_from_datetime_format(self):
-        pass
     
     def timeseries_to_datetime_format(self):
         """
@@ -581,49 +560,72 @@ class StormWaterNetworkModel(object):
             "Composite patterns is not implemented for variable pattern length"
 
         nodes = data.index.unique()
-        cols = ['Base']
+        cols = ['AverageValue']
         cols.extend(list(factor_cols))
         composite = pd.DataFrame(index=nodes, columns=cols)
 
         for name, group in data.groupby('Node'):
-            patterns = group['Pattern']
-
-            factors = self.patterns.loc[patterns, factor_cols].values
-            base = group['Base'].values
+            pattern_names = group['Pattern']
+            factors = self.patterns.loc[pattern_names, factor_cols].values
+            base = group['AverageValue'].values
+            
+            # Scale each factor by its base value
             scaled = np.multiply(factors, np.expand_dims(base, axis=1))
-            composite_vals = scaled.sum(axis=0)
-
-            composite_base = np.round(composite_vals.mean(), 6)
-            composite_factors = composite_vals
+            composite_factors = scaled.sum(axis=0)
+            
+            # Assign the composite base to the mean value
+            composite_base = np.round(composite_factors.mean(), 6)
+            
+            # Normalize the composite factos by the mean value
             if composite_base > 0:
                 composite_factors = composite_factors/composite_base
             composite_factors = np.around(composite_factors, 6)
 
-            composite.loc[name, 'Base'] = composite_base
+            composite.loc[name, 'AverageValue'] = composite_base
             composite.loc[name, factor_cols] = composite_factors
 
-        data = composite.copy()
-        data['TimePatterns'] = data.index + pattern_suffix
-
-        composite_dwf = data[['Base', 'TimePatterns']]
-        composite_dwf.loc[:,'Parameter'] = 'FLOW'
-        composite_dwf.rename(columns={'Base':'AverageValue'}, inplace=True)
-        composite_dwf = composite_dwf[['Parameter', 'AverageValue', 'TimePatterns']]
-
-        composite_patterns = data[factor_cols]
-        composite_patterns.index = data['TimePatterns']
-        composite_patterns.loc[:, 'Type'] = 'HOURLY'
-
         if update_model:
+            data = composite.copy()
+            data['TimePatterns'] = data.index + pattern_suffix
+            
             # Override DWF with new composite values
+            composite_dwf = data[['AverageValue', 'TimePatterns']]
+            composite_dwf.loc[:,'Parameter'] = 'FLOW'
+            composite_dwf = composite_dwf[['Parameter', 'AverageValue', 'TimePatterns']]
             self.dwf.loc[composite_dwf.index, :] = composite_dwf
-
+            
             # Concat Patterns with new composite values
+            composite_patterns = data[factor_cols]
+            composite_patterns.index = data['TimePatterns']
+            composite_patterns.loc[:,'Type'] = 'HOURLY'
             concat_patterns = pd.concat([self.patterns, composite_patterns])
             self.patterns = concat_patterns
 
         return composite
 
+    """
+    def anonymize_coordinates(self, seed=None, update_model=True):
+        
+        G = self.to_graph()
+
+        pos = nx.spring_layout(G, seed=seed)
+        coordinates = pd.DataFrame(pos).T
+        coordinates.rename(columns={0: 'X', 1: 'Y'}, inplace=True)
+        
+        if update_model:
+            self.coordinates = coordinates
+            self.vertices.drop(self.vertices.index, inplace=True)
+            self.polygons.drop(self.polygons.index, inplace=True)
+            
+        return coordinates
+        
+    def patterns_to_datetime_format(self):
+        pass
+    
+    def patterns_from_datetime_format(self):
+        pass
+    """
+    
 class Node(object):
     """
     Base class for nodes.

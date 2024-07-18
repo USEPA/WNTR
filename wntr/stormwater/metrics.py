@@ -137,7 +137,7 @@ def conduit_travel_time(length, velocity):
 
 def conduit_time_to_capacity(available_volume, flowrate, flow_units, connected=False):
     """
-    Conduit time to capacity [s]
+    Conduit time to capacity [s] based on a given flowrate
     
     Parameters
     ------------
