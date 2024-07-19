@@ -486,7 +486,6 @@ def write_inpfile(wn, filename: str, units=None, version: float = 2.2,
 
     """
     if wn._inpfile is None:
-        logger.warning("Writing a minimal INP file without saved non-WNTR options (energy, etc.)")
         wn._inpfile = wntr.epanet.InpFile()
     if units is None:
         units = wn._options.hydraulic.inpfile_units
