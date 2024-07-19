@@ -226,12 +226,18 @@ The model is stored in a
 	  and update the model (updates ``swn.dwf`` and ``swn.patterns``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_pump_outage_control`: 
 	  Add a pump outage control to the model (updates ``swn.controls``)
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_datetime_indexed_timeseries`: 
+	  Add timeseries to the model from a datetime indexed DataFrame (updates ``swn.timeseries``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.anonymize_coordinates`: 
 	  Anonymize model coordinates (using a spring layout) and remove vertices and polygons 
 	  to anonymize the model (updates ``swn.coordinates``, ``swn.vertices``, and ``swn.polygons``)
-	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` and 
-	  :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_from_datetime_format`: 
-	  Convert between SWMM formatted timeseries DataFrames and datetime indexed DataFrames
+	
+	The following class methods convert timeseries and patterns to datetime index DataFrames.
+	
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format`:
+	  Convert SWMM formatted timeseries DataFrame to a datetime indexed DataFrame
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.patterns_to_datetime_format`:
+	  Convert SWMM formatted patterns DataFrame to a datetime indexed DataFrame
 
 .. dropdown:: **Model I/O**
 
@@ -422,7 +428,7 @@ where the impact of individual component failures is evaluated.
     * **Extreme rainfall events**: Increased runoff impacts combined stormwater/wastewater systems.
       The methods :class:`~wntr.stormwater.network.StormWaterNetworkModel.timeseries_to_datetime_format` can be used to 
       convert ``swn.timeseries`` into a datetime Pandas DataFrame.  This format is easy to modify or import from other data sources.
-      The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_timeseries_from_datetime_format` can then be used to 
+      The method :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_datetime_indexed_timeseries` can then be used to 
       add timeseries formatted as datetime Pandas DataFrames to the model.  This facilitates greater flexibility in the way timeseries are modified.
       
       The following example creates a new timeseries that is a combination of a 100 and 10 year rainfall event, 
@@ -679,15 +685,16 @@ The following example creates a network plot with invert elevation.
    
    Basic stormwater network graphic.
 
-.. _stormwater_examples:
+..
+  .. _stormwater_examples:
 
-Examples
---------
+  Examples
+  --------
 
-``[TODO: Add examples, or link to Jupyter notebooks]``
+  ``[TODO: Add examples, or link to Jupyter notebooks]``
 
-* Upstream and downstream assets
-* Time to reach capacity
-* Conduit criticality
-* Power outages
-* Extreme rainfall
+  * Upstream and downstream assets
+  * Time to reach capacity
+  * Conduit criticality
+  * Power outages
+  * Extreme rainfall
