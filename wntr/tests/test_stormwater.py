@@ -294,7 +294,7 @@ class TestStormWaterMetrics(unittest.TestCase):
         self.swn = swntr.network.StormWaterNetworkModel(inpfile)
         sim = swntr.sim.SWMMSimulator(self.swn) 
         self.results = sim.run_sim()
-        flowrate = self.results.link['FLOW_RATE']
+        flowrate = self.results.link['FLOW_RATE'].mean()
         self.G = self.swn.to_graph(link_weight=flowrate, modify_direction=True)
         
     @classmethod
@@ -348,7 +348,7 @@ class TestStormWaterMetrics(unittest.TestCase):
         pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
         head = results.node['HYDRAULIC_HEAD']
 
-        pump_headloss = swntr.metrics.headloss(head, swn.pump_name_list, swn)
+        pump_headloss = swntr.metrics.headloss(head, swn, swn.pump_name_list)
         pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, flow_units)
         pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, flow_units)
         
@@ -357,10 +357,107 @@ class TestStormWaterMetrics(unittest.TestCase):
         from_rpt = results.report['Pumping Summary'].loc[pump_name,'PowerUsage(kW-hr)']
         
         self.assertAlmostEqual(from_metrics, from_rpt, 1)
-
-    def test_response_time(self):
-        pass
+    
+    def test_conduit_available_volume(self):
+        # Network values
+        volume = self.swn.conduit_volume
+        capacity = self.results.link['CAPACITY']
+        available_volume = swntr.metrics.conduit_available_volume(volume, capacity)
+        fraction = available_volume/volume
+        del fraction['C2'] # no volume
+        assert (fraction <= 1).all().all()
         
+        # Simplified values
+        volume = pd.Series([1000], index=['C1'])
+        capacity = pd.DataFrame([1, 0.75, 0.5, 0.25, 0], index=[0,1,2,3,4], columns=['C1'])
+        available_volume = swntr.metrics.conduit_available_volume(volume, capacity)
+        assert (available_volume['C1'].values == [0,250,500,750,1000]).all()
+        
+        available_volume = swntr.metrics.conduit_available_volume(volume, capacity, 0.5)
+        # remove nan
+        temp = available_volume['C1']
+        assert temp.isna().sum() == 2
+        temp = temp[~temp.isna()]
+        assert (temp.values == [0,250,500]).all()
+        
+    def test_conduit_travel_time(self):
+        # Network values
+        length = self.swn.conduits['Length']
+        velocity = self.results.link['FLOW_VELOCITY']
+        
+        travel_time = swntr.metrics.conduit_travel_time(length, velocity)
+        
+        assert travel_time.shape == velocity.shape
+        
+        # Simplified values
+        length = pd.Series([1000], index=['C1'])
+        velocity = pd.DataFrame([1, 2, 5, 10, 50], 
+                                index=[0,1,2,3,4], 
+                                columns=['C1'])
+        
+        travel_time = swntr.metrics.conduit_travel_time(length, velocity)
+        
+        assert (travel_time['C1'].values == [1000,500,200,100,20]).all()
+
+    def test_conduit_time_to_capacity(self):
+        available_volume = pd.Series([0, 250, 500, 750, 1000], 
+                                     index=['C1', 'C2', 'C3', 'C4', 'C5'])
+        flowrate = pd.Series([1, 2, 5, 10, 50], 
+                             index=['C1', 'C2', 'C3', 'C4', 'C5'])
+        flow_units = 'CFS' # no conversion
+        
+        # When connected = True, time_to_capacity = available_volume/flowrate 
+        # One value per timestep
+        time_to_capacity = swntr.metrics.conduit_time_to_capacity(available_volume, 
+                                                                  flowrate, 
+                                                                  flow_units, 
+                                                                  connected=False)
+        assert (time_to_capacity.values == [0,125,100,75,20]).all()
+        
+        # When connected = True, time_to_capacity = sum(available_volume)/max(flowrate)
+        time_to_capacity = swntr.metrics.conduit_time_to_capacity(available_volume, 
+                                                                  flowrate, 
+                                                                  flow_units, 
+                                                                  connected=True)
+        assert time_to_capacity == 50
+    
+    def test_shortest_path_metrics(self):
+        swn = self.swn
+        G = self.G
+        results = self.results
+        
+        length = swn.conduits.loc[:,'Length']
+        cross_section = swn.conduit_cross_section
+        volume = swn.conduit_volume
+        flow_units = swn.options.loc['FLOW_UNITS', 'Value']
+
+        flowrate = results.link['FLOW_RATE'].mean()
+        capacity = results.link['CAPACITY'].mean()
+        available_volume = swntr.metrics.conduit_available_volume(volume, capacity)
+        time_to_capacity = swntr.metrics.conduit_time_to_capacity(available_volume, flowrate, flow_units)
+
+        # Shortest path
+        source_node = 'J4'
+        target_node = 'J8'
+        edge_list = swntr.metrics.shortest_path_edges(G, source_node, target_node)
+
+        # Shortest path metrics
+        total_length = length[edge_list].sum()
+        total_volume = volume[edge_list].sum()
+        total_available_volume = available_volume[edge_list].sum()
+        
+        time_to_capacity = time_to_capacity[edge_list]
+        total_time_to_capacity = swntr.metrics.conduit_time_to_capacity(available_volume[edge_list], 
+                                                                        flowrate[edge_list], 
+                                                                        flow_units,
+                                                                        connected=True)
+
+        self.assertAlmostEqual(total_length, 435.0, 1)
+        self.assertAlmostEqual(total_volume, 9074.0, 1)
+        self.assertAlmostEqual(total_available_volume, 8958.8, 1)
+        self.assertAlmostEqual(total_time_to_capacity, 7675.9, 1)
+
+    
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterGIS(unittest.TestCase):
