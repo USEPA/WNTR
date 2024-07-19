@@ -64,8 +64,7 @@ def snap(A, B, tolerance):
     assert A.crs == B.crs
     
     # Modify B to include "indexB" as a separate column
-    B = B.reset_index()
-    B.rename(columns={'index':'indexB'}, inplace=True)
+    B = B.reset_index(names='indexB')
     
     # Define the coordinate reference system, based on B
     crs = B.crs
