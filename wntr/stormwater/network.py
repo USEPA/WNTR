@@ -34,6 +34,7 @@ class StormWaterNetworkModel(object):
     inp_file_name: string 
         Directory and filename of SWMM inp file to load into the
         StormWaterNetworkModel object.
+        
     """
 
     def __init__(self, inp_file_name):
@@ -144,7 +145,7 @@ class StormWaterNetworkModel(object):
         for sec in self.section_names:
             df = getattr(self._swmmio_model.inp, sec)
             setattr(self, sec, df.copy())
-            
+        
         # Reset inp file path and remove temp file
         self._swmmio_model.inp.path = inp_file_name
         os.remove("temp.inp")
@@ -171,6 +172,11 @@ class StormWaterNetworkModel(object):
                    self.outfalls, 
                    self.storage]
         df = pd.concat([df for df in df_list if not df.empty])
+        
+        df.loc[df.index.isin(self.junction_name_list), 'Type'] = 'Junction'
+        df.loc[df.index.isin(self.outfall_name_list), 'Type'] = 'Outfalls'
+        df.loc[df.index.isin(self.storage_name_list), 'Type'] = 'Storage'
+        
         return df
     
     @property
@@ -181,6 +187,12 @@ class StormWaterNetworkModel(object):
                    self.orifices,
                    self.pumps]
         df = pd.concat([df for df in df_list if not df.empty])
+        
+        df.loc[df.index.isin(self.conduit_name_list), 'Type'] = 'Conduit'
+        df.loc[df.index.isin(self.weir_name_list), 'Type'] = 'Weir'
+        df.loc[df.index.isin(self.orifice_name_list), 'Type'] = 'Orifice'
+        df.loc[df.index.isin(self.pump_name_list), 'Type'] = 'Pump'
+        
         return df
 
     @property
@@ -248,63 +260,9 @@ class StormWaterNetworkModel(object):
         """List of control names"""
         return list(self.controls.index)
 
-    # @property
-    # def num_nodes(self):
-    #     """Number of nodes"""
-    #     return len(self.node_name_list)
-
-    # @property
-    # def num_junctions(self):
-    #     """Number of junctions"""
-    #     return len(self.junction_name_list)
-
-    # @property
-    # def num_outfalls(self):
-    #     """Number of outfalls"""
-    #     return len(self.outfall_name_list)
-
-    # @property
-    # def num_storages(self):
-    #     """Number of storages"""
-    #     return len(self.storage_name_list)
-
-    # @property
-    # def num_links(self):
-    #     """Number of links"""
-    #     return len(self.link_name_list)
-
-    # @property
-    # def num_conduits(self):
-    #     """Number of conduits"""
-    #     return len(self.conduit_name_list)
-
-    # @property
-    # def num_weirs(self):
-    #     """Number of weirs"""
-    #     return len(self.weir_name_list)
-
-    # @property
-    # def num_orifices(self):
-    #     """Number of orifices"""
-    #     return len(self.orifice_name_list)
-
-    # @property
-    # def num_pumps(self):
-    #     """Number of pumps"""
-    #     return len(self.pump_name_list)
-
-    # @property
-    # def num_subcatchments(self):
-    #     """Number of subcatchments"""
-    #     return len(self.subcatchment_name_list)
-
-    # @property
-    # def num_raingages(self):
-    #     """Number of raingages"""
-    #     return len(self.raingage_name_list)
-
     def get_node(self, name):
-        """Get a specific node
+        """
+        Get a specific node
 
         Parameters
         ----------
@@ -319,7 +277,8 @@ class StormWaterNetworkModel(object):
         return Node(name, self.nodes.loc[name,:])
 
     def get_link(self, name):
-        """Get a specific link
+        """
+        Get a specific link
 
         Parameters
         ----------
@@ -338,8 +297,12 @@ class StormWaterNetworkModel(object):
         """
         Cross section area of each conduit, according to the geometric 
         parameters stored in xsections
+        
+        Returns
+        -------
+        pandas Series with conduit cross section
+        
         """
-
         cross_section = {}
 
         for link_name in self.conduit_name_list:
@@ -413,13 +376,40 @@ class StormWaterNetworkModel(object):
         """
         Volume of each conduit, according to the geometric 
         parameters stored in xsections and length
-        """
         
+        Returns
+        -------
+        pandas Series with conduit volume
+        
+        """
         cross_section = self.conduit_cross_section
         length =self.conduits['Length']
         volume = cross_section*length
         
         return volume
+    
+    def to_gis(self, crs=None):
+        """
+        Convert a StormWaterNetworkModel into GeoDataFrames
+
+        Parameters
+        ----------
+        crs : str, optional
+            Coordinate reference system, by default None
+            
+        """
+        return to_gis(self, crs)
+
+    def to_graph(self, node_weight=None, link_weight=None, modify_direction=False):
+        """
+        Convert a StormWaterNetworkModel into a networkx MultiDiGraph
+
+        Returns
+        --------
+        networkx MultiDiGraph
+        
+        """
+        return to_graph(self, node_weight, link_weight, modify_direction)
     
     def timeseries_to_datetime_format(self):
         """
@@ -427,7 +417,7 @@ class StormWaterNetworkModel(object):
 
         Returns
         -------
-        pandas DataFrame, with one column per named timeseries
+        pandas DataFrame, with one column per timeseries
 
         """
         assert set(self.timeseries.columns) == set(['Date', 'Time', 'Value'])
@@ -446,8 +436,79 @@ class StormWaterNetworkModel(object):
         
         return ts
     
-    def add_timeseries_from_datetime_format(self, ts, name=None, update_model=True):
+    def patterns_to_datetime_format(self, names=None):
+        """
+        Reformat "Type, Factor1, Factor2, ..." pattern to a datetime 
+        indexed DataFrame
         
+        Parameters
+        ----------
+        names : list of str (optional, defaults to all patterns)
+            List of pattern names
+        
+        Returns
+        -------
+        pandas DataFrame, with one column per pattern
+
+        """
+        
+        if names is None:
+            patterns = self.patterns.copy()
+        else:
+            patterns = self.patterns.loc[names,:]
+        
+        # Check to make sure there is one type of pattern 
+        # (MONTHLY, DAILY, HOURLY, WEEKEND)
+        """
+        The MONTHLY format is used to set monthly pattern factors for dry 
+        weather flow constituents.
+        The DAILY format is used to set dry weather pattern factors for each 
+        day of the week, where Sunday is day 1.
+        The HOURLY format is used to set dry weather factors for each hour 
+        of the day starting from midnight. 
+        If these factors are different for weekend days than for weekday days 
+        then the WEEKEND format can be used to specify hourly adjustment 
+        factors just for weekends.
+        """
+        assert len(patterns['Type'].unique()) == 1 
+        
+        mask = patterns.columns.str.contains('Factor')
+        factor_cols = self.patterns.columns[mask]
+        factors = patterns[factor_cols].T
+
+        if patterns.iloc[0]['Type'] == 'MONTHLY':
+            #factors.index = pd.to_timedelta(np.arange(12), unit="MS") # month start?
+            raise NotImplementedError
+        elif patterns.iloc[0]['Type'] == 'DAILY':
+            factors.index = pd.to_timedelta(np.arange(7), unit="D")
+        elif (patterns.iloc[0]['Type'] == 'HOURLY') or (patterns.iloc[0]['Type'] == 'WEEKEND'):
+            factors.index = pd.to_timedelta(np.arange(24), unit="H")
+
+        return factors
+    
+    def add_datetime_indexed_timeseries(self, ts, name=None, update_model=True):
+        """
+        Add a datetime indexed timeseries to the model.
+        
+        Note, if you have timeseries data in "Date, Time, Value" format,
+        you can update/modify the swn.timeseries DataFrame directly.
+        
+        Parameters
+        ----------
+        ts : pandas Series
+            Datetime indexed timeseries data
+        name : str (optional, default = None)
+            Name of the timeseries
+        update_model : Bool (optional, default = True)
+            Flag indicating if the timeseries are added to the
+            model. If False, the timeseries are converted to swn format, but 
+            not used to update the model.
+            
+        Returns
+        -------
+        pandas DataFrame with timeseries in swn model format
+        
+        """
         if name is None:
             name = ts.name
         ts = ts.to_frame(name)
@@ -464,42 +525,43 @@ class StormWaterNetworkModel(object):
             self.timeseries = pd.concat([self.timeseries, timeseries], axis=0)
             
         return timeseries
+    
+    def add_datetime_indexed_patterns(self, ts, update_model=True):
+        """
+        Add a datetime indexed indexed pattern to the model
         
-    def to_gis(self, crs=None):
-        """
-        Convert a StormWaterNetworkModel into GeoDataFrames
-
-        Parameters
-        ----------
-        crs : str, optional
-            Coordinate reference system, by default None
-        """
-        return to_gis(self, crs)
-
-    def to_graph(self, node_weight=None, link_weight=None, modify_direction=False):
-        """
-        Convert a StormWaterNetworkModel into a networkx MultiDiGraph
-
+        Note, if you have pattern data in "Type, Factor1, Factor2, ..." format,
+        you can update/modify the swn.patterns DataFrame directly.
+        
         Returns
-        --------
-        networkx MultiDiGraph
+        -------
+        pandas DataFrame with patterns in swn model format
+        
         """
-        return to_graph(self, node_weight, link_weight, modify_direction)
-
+        raise NotImplementedError
+    
     def add_pump_outage_control(self, pump_name, start_time, end_time=None, 
-                                priority=4, control_suffix="_outage", 
+                                priority=4, control_suffix="_Outage", 
                                 update_model=True):
         """
         Add a pump outage rule to the stormwater network model.
     
         Parameters
         ----------
+        pump_name : str
+            Name of the pump
         start_time : int
            The time at which the outage starts in decimal hours
         end_time : int
            The time at which the outage stops in decimal hours
         priority : int
             The outage rule priority, default = 4 (highest priority)
+        control_suffix : str (optional, default = "_Outage")
+            Control name suffix, appended to the pump name
+        update_model : Bool (optional, default = True)
+            Flag indicating if the control is added to the
+            model. If False, the control string is returned, but 
+            not used to update the model.
         """
         assert pump_name in self.pump_name_list
         
@@ -539,20 +601,18 @@ class StormWaterNetworkModel(object):
             the Base column contains base values for mean flow, and 
             the Pattern column contains pattern names that already exist in the 
             model (swn).
-
         pattern_suffix : string (optional, default = "_Composite")
             Pattern name suffix, appended to the node name
-
-        add_to_model : Bool (optional, default = True)
+        update_model : Bool (optional, default = True)
             Flag indicating if the composite DWF and Patterns are added to the
             model. If False, the composite base and patterns are returned, but 
-            not used to update the model (swn).
+            not used to update the model.
 
         Returns
         -------
         pd.DataFrame with one base and pattern value per node.
+        
         """
-
         mask = self.patterns.columns.str.contains('Factor')
         factor_cols = self.patterns.columns[mask]
 
@@ -566,6 +626,12 @@ class StormWaterNetworkModel(object):
 
         for name, group in data.groupby('Node'):
             pattern_names = group['Pattern']
+            
+            # Check to make sure there is one type of pattern 
+            # (MONTHLY, DAILY, HOURLY, WEEKEND)
+            pattern_types = self.patterns.loc[pattern_names, 'Type']
+            assert len(pattern_types.unique()) == 1 
+            
             factors = self.patterns.loc[pattern_names, factor_cols].values
             base = group['AverageValue'].values
             
@@ -603,9 +669,25 @@ class StormWaterNetworkModel(object):
 
         return composite
 
-    """
+
     def anonymize_coordinates(self, seed=None, update_model=True):
+        """
+        Anonymize coordinates using a spring layout
         
+        Parameters
+        ----------
+        seed : int
+            Random seed used to set the spring layout
+        update_model : Bool (optional, default = True)
+            Flag indicating if the model coordinates are updated and vertices 
+            and polygons are removed. If False, the coordinates are returned, 
+            but not used to update the model.
+        
+        returns
+        -------
+        pandas DataFrame with coordinates
+        
+        """
         G = self.to_graph()
 
         pos = nx.spring_layout(G, seed=seed)
@@ -618,13 +700,7 @@ class StormWaterNetworkModel(object):
             self.polygons.drop(self.polygons.index, inplace=True)
             
         return coordinates
-        
-    def patterns_to_datetime_format(self):
-        pass
-    
-    def patterns_from_datetime_format(self):
-        pass
-    """
+
     
 class Node(object):
     """
@@ -635,12 +711,17 @@ class Node(object):
 
         # Set the node name
         self._name = name
-
+        self._node_type = data['Type']
+        
     @property
     def name(self):
         """str: The name of the node (read only)"""
         return self._name
-
+    
+    @property
+    def node_type(self):
+        """str: The node type (read only)"""
+        return self._node_type
 
 class Link(object):
     """
@@ -652,6 +733,7 @@ class Link(object):
         self._link_name = name
         self._start_node_name = data['InletNode']
         self._end_node_name = data['OutletNode']
+        self._link_type = data['Type']
 
     @property
     def name(self):
@@ -667,6 +749,11 @@ class Link(object):
     def end_node_name(self):
         """str: The name of the end node (read only)"""
         return self._end_node_name
+    
+    @property
+    def link_type(self):
+        """str: The link type (read only)"""
+        return self._link_type
 
 
 def generate_valve_layer(swn, placement_type='strategic', n=1, seed=None):
@@ -692,7 +779,7 @@ def generate_valve_layer(swn, placement_type='strategic', n=1, seed=None):
         - If 'strategic', n is the number of pipes from each node that do not 
           contain a valve.
         - If 'random', n is the number of number of randomly placed valves.
-        
+
     seed : int or None
         Random seed
        
@@ -702,8 +789,8 @@ def generate_valve_layer(swn, placement_type='strategic', n=1, seed=None):
         Valve layer, defined by node and link pairs (for example, valve 0 is 
         on link A and protects node B). The valve_layer DataFrame is indexed by
         valve number, with columns named 'node' and 'link'.
+        
     """
-    
     if seed is not None:
         np.random.seed(seed)
         random.seed(seed)

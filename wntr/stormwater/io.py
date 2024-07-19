@@ -51,7 +51,6 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     NetworkX MultiDiGraph
     
     """
-
     # Note, this function could use "G = swn._swmmio_model.network" but that would 
     # require an additional write/read of the inp file to capture model 
     # updates
@@ -59,10 +58,11 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
     G = nx.MultiDiGraph()
 
     for name in swn.node_name_list:
+        node = swn.get_node(name)
         G.add_node(name)
         coords = (swn.coordinates.loc[name, 'X'], swn.coordinates.loc[name, 'Y'])
         nx.set_node_attributes(G, name="pos", values={name: coords})
-        #nx.set_node_attributes(G, name="type", values={name: node.node_type})
+        nx.set_node_attributes(G, name="type", values={name: node.node_type})
 
         if node_weight is not None:
             try:  # weight nodes
@@ -76,7 +76,7 @@ def to_graph(swn, node_weight=None, link_weight=None, modify_direction=False):
         start_node = link.start_node_name
         end_node = link.end_node_name
         G.add_edge(start_node, end_node, key=name)
-        #nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
+        nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
 
         if link_weight is not None:
             try:  # weight links
@@ -124,6 +124,7 @@ def write_inpfile(swn, filename):
         Water network model
     filename : string
        Name of the inp file
+    
     """
     for sec in swn.section_names:
         df = getattr(swn, sec)
@@ -143,6 +144,7 @@ def read_inpfile(filename):
     Returns
     -------
     StormWaterNetworkModel
+    
     """
     swn = wntr.stormwater.network.StormWaterNetworkModel(filename)
 
@@ -160,6 +162,7 @@ def read_rptfile(filename):
     Returns
     -------
     dict
+    
     """
     report = {}
     
@@ -187,6 +190,7 @@ def read_outfile(filename):
     Returns
     -------
     SimulationResults
+    
     """
     results = SimulationResults()
     
@@ -253,7 +257,7 @@ def write_geojson(swn, prefix: str, crs=None):
         File prefix
     crs : str, optional
         Coordinate reference system, by default None
+        
     """
-
     swn_gis = swn.to_gis(crs)
     swn_gis.write_geojson(prefix=prefix)

@@ -436,7 +436,7 @@ where the impact of individual component failures is evaluated.
           >>> ts['New'] = ts['100-yr'] + ts['10-yr'].shift(periods=12, fill_value=0)
           >>> ax = ts.plot()
           
-          >>> timeseries = swn.add_timeseries_from_datetime_format(ts['New'])
+          >>> timeseries = swn.add_datetime_indexed_timeseries(ts['New'])
           >>> swn.timeseries_name_list
           ['2-yr', '10-yr', '100-yr', 'New']
           >>> swn.raingages['DataSourceName'] = 'New'

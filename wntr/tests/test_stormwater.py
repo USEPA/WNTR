@@ -65,7 +65,15 @@ class TestStormWaterModel(unittest.TestCase):
         ts = swn.timeseries_to_datetime_format()
         assert set(ts.columns) == set(['2-yr', '10-yr', '100-yr'])
         assert ts.shape == (24, 3)
-    
+        
+    def test_patterns_to_datetime_format(self):
+        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        swn = swntr.network.StormWaterNetworkModel(inpfile)
+        
+        ts = swn.patterns_to_datetime_format()
+        assert set(ts.columns) == set(['DWF'])
+        assert ts.shape == (24, 1)
+        
     def test_to_graph(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
@@ -79,7 +87,7 @@ class TestStormWaterModel(unittest.TestCase):
         assert G.number_of_edges() == swn.conduits.shape[0] + \
                                       swn.weirs.shape[0] + \
                                       swn.orifices.shape[0] + \
-                                      swn.pumps.shape[0]
+                                      swn.pumps.shape[0]  
 
     def test_add_composite_pattern(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
@@ -108,7 +116,7 @@ class TestStormWaterModel(unittest.TestCase):
         self.assertAlmostEqual(swn.dwf.loc['KRO3001', 'AverageValue'], 
                                composite.loc['KRO3001', 'AverageValue'], 4)
         
-
+    
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterSim(unittest.TestCase):
@@ -266,7 +274,7 @@ class TestStormWaterScenarios(unittest.TestCase):
         swntr.io.write_inpfile(swn1, inpfile)
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn2.controls.shape[0] == 3
-        control_name = 'RULE ' + pump_name + '_outage'
+        control_name = 'RULE ' + pump_name + '_Outage'
         assert control_name in swn2.controls.index
 
         # Test simulation results
@@ -594,5 +602,26 @@ class TestStormWaterGraphics(unittest.TestCase):
 
         self.assertTrue(isfile(filename))
 
+    def test_plot_network6(self):
+        # Anonymize coordinates
+        filename = abspath(join(testdir, "plot_network6_swmm.png"))
+        if isfile(filename):
+            os.remove(filename)
+        
+        coordinates = self.swn.anonymize_coordinates(seed=12345)
+        
+        G = self.swn.to_graph()
+        node_degree = pd.Series(dict(nx.degree(G)))
+        
+        plt.figure()
+        swntr.graphics.plot_network(self.swn, 
+                                    node_attribute=node_degree, 
+                                    node_range=[1, 4], 
+                                    title="Anonymized coordinates")
+        plt.savefig(filename, format="png")
+        plt.close()
+    
+        self.assertTrue(isfile(filename))
+    
 if __name__ == "__main__":
     unittest.main()

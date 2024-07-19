@@ -148,11 +148,9 @@ def conduit_available_volume(volume, capacity, threshold=1):
     ------------
     volume : pandas Series
         Conduit volume, see `swn.conduit_volume (index = conduit names)
-        
     capacity : pandas DataFrame
         Conduit capacity, from simulation results
         (index = times, columns = conduit names)
-        
     threshold : float (optional, default = 1)
         Capacity threshold
     
@@ -180,7 +178,6 @@ def conduit_travel_time(length, velocity):
     ----------
     length : pandas Series
         Conduit length
-        
     velocity : pandas DataFrame
         Conduit velocity, from simulation results
         (index = times, columns = conduit names)
@@ -214,14 +211,11 @@ def conduit_time_to_capacity(volume, flowrate, flow_units, connected=False):
     volume : pandas Series
         Conduit volume (or steady state available volume) in ft^3 or m^3,
         (index = conduit names)
-        
     flowrate :  pandas Series
         Steady state conduit flowrate, from simulation results
         (index = conduit names)
-        
     flow_units : str
         Stormwater network model flow units
-    
     connected : bool (default = False)
         If connected = False, each conduit is treated individually and 
         time_to_capacity = available_volume/flowrate
