@@ -247,7 +247,7 @@ class TestStormWaterSim(unittest.TestCase):
                                results_swntr.link['CAPACITY'])
 
     def test_report_summary(self):
-        inpfile = join(test_datadir, "SWMM_examples", "Site_Drainage_Model.inp")
+        inpfile = join(ex_datadir, "Site_Drainage_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         sim = swntr.sim.SWMMSimulator(swn) 
         results = sim.run_sim()
