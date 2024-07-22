@@ -77,7 +77,7 @@ class TestStormWaterModel(unittest.TestCase):
         assert swn.timeseries.shape == (24*5, 3)
         
     def test_patterns_to_datetime_format(self):
-        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        inpfile = join(ex_datadir, "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
         # 1 24-hour pattern
@@ -95,7 +95,7 @@ class TestStormWaterModel(unittest.TestCase):
         assert swn.patterns.shape == (3, 25)
         
     def test_to_graph(self):
-        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        inpfile = join(ex_datadir, "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
         G = swn.to_graph()
@@ -110,7 +110,7 @@ class TestStormWaterModel(unittest.TestCase):
                                       swn.pumps.shape[0]  
 
     def test_add_composite_pattern(self):
-        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        inpfile = join(ex_datadir, "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
         swn.patterns.loc['Pat1',:] = ['HOURLY', 0.8, 0.9, 1.0, 0.9, 0.8, 1.1, 
@@ -180,8 +180,12 @@ class TestStormWaterSim(unittest.TestCase):
 
         for inpfile_name in inpfiles:
             print(inpfile_name)
-
-            inpfile = join(test_datadir, "SWMM_examples", inpfile_name)
+            
+            if inpfile_name in ['Pump_Control_Model.inp', 'Site_Drainage_Model.inp']:
+                inpfile = join(ex_datadir, inpfile_name)
+            else:
+                inpfile = join(test_datadir, "SWMM_examples", inpfile_name)
+            print(inpfile)
             rootname = inpfile.split('.inp')[0]
             outfile = join(test_datadir, rootname+'.out')
 
@@ -252,6 +256,7 @@ class TestStormWaterSim(unittest.TestCase):
         assert 'MaxNodeDepth' in report['Node Depth Summary'].columns
         assert set(report['Node Depth Summary'].index) == set(swn.node_name_list)
 
+
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterScenarios(unittest.TestCase):
@@ -283,7 +288,7 @@ class TestStormWaterScenarios(unittest.TestCase):
         start_time = 4.5
         end_time = 12
 
-        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        inpfile = join(ex_datadir, "Pump_Control_Model.inp")
         swn1 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn1.controls.shape[0] == 2
         swn1.add_pump_outage_control(pump_name, start_time, end_time) # Outage times in decimal hours
@@ -366,7 +371,7 @@ class TestStormWaterMetrics(unittest.TestCase):
         assert set(edges) == set(solution)
         
     def test_pump_headloss_power_energy(self):
-        inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
+        inpfile = join(ex_datadir, "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         flow_units = swn.options.loc['FLOW_UNITS', 'Value']
         
@@ -642,6 +647,7 @@ class TestStormWaterGraphics(unittest.TestCase):
         plt.close()
     
         self.assertTrue(isfile(filename))
+
 
 if __name__ == "__main__":
     unittest.main()
