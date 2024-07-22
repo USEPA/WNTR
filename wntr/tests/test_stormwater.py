@@ -62,17 +62,37 @@ class TestStormWaterModel(unittest.TestCase):
         inpfile = join(test_datadir, "SWMM_examples", "Detention_Pond_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
+        # 3 24-hour timeseries
+        assert swn.timeseries.shape == (24*3, 3)
+        
         ts = swn.timeseries_to_datetime_format()
         assert set(ts.columns) == set(['2-yr', '10-yr', '100-yr'])
         assert ts.shape == (24, 3)
+        
+        ts['New1'] = 1
+        ts['New2'] = 2
+        timeseries = swn.add_datetime_indexed_timeseries(ts[['New1', 'New2']])
+        
+        # 5 24-hour timeseries
+        assert swn.timeseries.shape == (24*5, 3)
         
     def test_patterns_to_datetime_format(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
         swn = swntr.network.StormWaterNetworkModel(inpfile)
         
+        # 1 24-hour pattern
+        assert swn.patterns.shape == (1, 25)
+        
         ts = swn.patterns_to_datetime_format()
         assert set(ts.columns) == set(['DWF'])
         assert ts.shape == (24, 1)
+        
+        ts['New1'] = 1
+        ts['New2'] = 2
+        pattern = swn.add_datetime_indexed_patterns(ts[['New1', 'New2']])
+        
+        # 3 24-hour pattern
+        assert swn.patterns.shape == (3, 25)
         
     def test_to_graph(self):
         inpfile = join(test_datadir, "SWMM_examples", "Pump_Control_Model.inp")
@@ -116,7 +136,7 @@ class TestStormWaterModel(unittest.TestCase):
         self.assertAlmostEqual(swn.dwf.loc['KRO3001', 'AverageValue'], 
                                composite.loc['KRO3001', 'AverageValue'], 4)
         
-    
+
 @unittest.skipIf(not has_swmmio,
                  "Cannot test SWNTR capabilities: swmmio is missing")
 class TestStormWaterSim(unittest.TestCase):
@@ -622,6 +642,6 @@ class TestStormWaterGraphics(unittest.TestCase):
         plt.close()
     
         self.assertTrue(isfile(filename))
-    
+
 if __name__ == "__main__":
     unittest.main()

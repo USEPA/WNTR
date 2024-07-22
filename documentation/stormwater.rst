@@ -228,6 +228,8 @@ The model is stored in a
 	  Add a pump outage control to the model (updates ``swn.controls``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_datetime_indexed_timeseries`: 
 	  Add timeseries to the model from a datetime indexed DataFrame (updates ``swn.timeseries``)
+	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.add_datetime_indexed_patterns`: 
+	  Add patterns to the model from a datetime indexed DataFrame (updates ``swn.patterns``)
 	* :class:`~wntr.stormwater.network.StormWaterNetworkModel.anonymize_coordinates`: 
 	  Anonymize model coordinates (using a spring layout) and remove vertices and polygons 
 	  to anonymize the model (updates ``swn.coordinates``, ``swn.vertices``, and ``swn.polygons``)
@@ -442,7 +444,7 @@ where the impact of individual component failures is evaluated.
           >>> ts['New'] = ts['100-yr'] + ts['10-yr'].shift(periods=12, fill_value=0)
           >>> ax = ts.plot()
           
-          >>> timeseries = swn.add_datetime_indexed_timeseries(ts['New'])
+          >>> timeseries = swn.add_datetime_indexed_timeseries(ts[['New']])
           >>> swn.timeseries_name_list
           ['2-yr', '10-yr', '100-yr', 'New']
           >>> swn.raingages['DataSourceName'] = 'New'

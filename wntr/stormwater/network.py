@@ -451,7 +451,6 @@ class StormWaterNetworkModel(object):
         pandas DataFrame, with one column per pattern
 
         """
-        
         if names is None:
             patterns = self.patterns.copy()
         else:
@@ -486,19 +485,17 @@ class StormWaterNetworkModel(object):
 
         return factors
     
-    def add_datetime_indexed_timeseries(self, ts, name=None, update_model=True):
+    def add_datetime_indexed_timeseries(self, ts, update_model=True):
         """
-        Add a datetime indexed timeseries to the model.
+        Add datetime indexed timeseries data to the model
         
         Note, if you have timeseries data in "Date, Time, Value" format,
         you can update/modify the swn.timeseries DataFrame directly.
         
         Parameters
         ----------
-        ts : pandas Series
+        ts : pandas DataFrame
             Datetime indexed timeseries data
-        name : str (optional, default = None)
-            Name of the timeseries
         update_model : Bool (optional, default = True)
             Flag indicating if the timeseries are added to the
             model. If False, the timeseries are converted to swn format, but 
@@ -509,9 +506,9 @@ class StormWaterNetworkModel(object):
         pandas DataFrame with timeseries in swn model format
         
         """
-        if name is None:
-            name = ts.name
-        ts = ts.to_frame(name)
+        assert isinstance(ts, pd.DataFrame)
+        assert isinstance(update_model, bool)
+        
         timeseries = ts.unstack().reset_index()
         timeseries = timeseries.set_index('level_1')
         timeseries['Date'] = timeseries.index.strftime('%m/%d/%Y')
@@ -528,17 +525,44 @@ class StormWaterNetworkModel(object):
     
     def add_datetime_indexed_patterns(self, ts, update_model=True):
         """
-        Add a datetime indexed indexed pattern to the model
+        Add datetime indexed pattern data to the model
         
         Note, if you have pattern data in "Type, Factor1, Factor2, ..." format,
         you can update/modify the swn.patterns DataFrame directly.
+        
+        Parameters
+        ----------
+        ts : pandas DataFrame
+            Datetime indexed patterns data
+        update_model : Bool (optional, default = True)
+            Flag indicating if the patterns are added to the
+            model. If False, the patterns are converted to swn format, but 
+            not used to update the model.
         
         Returns
         -------
         pandas DataFrame with patterns in swn model format
         
         """
-        raise NotImplementedError
+        assert isinstance(ts, pd.DataFrame)
+        assert isinstance(update_model, bool)
+        
+        t_delta = ts.index.diff()[1]
+        if t_delta == pd.Timedelta('0 days 01:00:00'):
+            type_str = 'HOURLY'
+        elif t_delta == pd.Timedelta('1 days 00:00:00'):
+            type_str = 'DAILY'
+        else: # Monthly
+            raise NotImplementedError
+        
+        ts.index = ['Factor'+str(i+1) for i in range(ts.shape[0])]
+        patterns = ts.T
+        patterns['Type'] = type_str
+        
+        if update_model:
+            self.patterns = pd.concat([self.patterns, patterns], axis=0)
+            
+        return patterns
     
     def add_pump_outage_control(self, pump_name, start_time, end_time=None, 
                                 priority=4, control_suffix="_Outage", 
