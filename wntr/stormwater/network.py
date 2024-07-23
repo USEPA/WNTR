@@ -565,7 +565,7 @@ class StormWaterNetworkModel(object):
         return patterns
     
     def add_pump_outage_control(self, pump_name, start_time, end_time=None, 
-                                priority=4, control_suffix="_Outage", 
+                                priority=4, control_suffix="_outage", 
                                 update_model=True):
         """
         Add a pump outage rule to the stormwater network model.
@@ -580,7 +580,7 @@ class StormWaterNetworkModel(object):
            The time at which the outage stops in decimal hours
         priority : int
             The outage rule priority, default = 4 (highest priority)
-        control_suffix : str (optional, default = "_Outage")
+        control_suffix : str (optional, default = "_outage")
             Control name suffix, appended to the pump name
         update_model : Bool (optional, default = True)
             Flag indicating if the control is added to the
@@ -603,7 +603,7 @@ class StormWaterNetworkModel(object):
         
         return rule
         
-    def add_composite_patterns(self, data, pattern_suffix="_Composite", 
+    def add_composite_patterns(self, data, pattern_suffix="_composite", 
                                update_model=True):
         """
         Add composite dry weather flow (DWF) and composite patterns to the 
@@ -625,7 +625,7 @@ class StormWaterNetworkModel(object):
             the Base column contains base values for mean flow, and 
             the Pattern column contains pattern names that already exist in the 
             model (swn).
-        pattern_suffix : string (optional, default = "_Composite")
+        pattern_suffix : string (optional, default = "_composite")
             Pattern name suffix, appended to the node name
         update_model : Bool (optional, default = True)
             Flag indicating if the composite DWF and Patterns are added to the

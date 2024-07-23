@@ -132,7 +132,7 @@ class TestStormWaterModel(unittest.TestCase):
         self.assertAlmostEqual(pattern_mean['KRO3001'], 1, 4)
         
         self.assertEqual(set(swn.patterns.index), 
-                         set(['DWF', 'Pat1', 'KRO3001_Composite']))
+                         set(['DWF', 'Pat1', 'KRO3001_composite']))
         self.assertAlmostEqual(swn.dwf.loc['KRO3001', 'AverageValue'], 
                                composite.loc['KRO3001', 'AverageValue'], 4)
         
@@ -299,7 +299,7 @@ class TestStormWaterScenarios(unittest.TestCase):
         swntr.io.write_inpfile(swn1, inpfile)
         swn2 = swntr.network.StormWaterNetworkModel(inpfile)
         assert swn2.controls.shape[0] == 3
-        control_name = 'RULE ' + pump_name + '_Outage'
+        control_name = 'RULE ' + pump_name + '_outage'
         assert control_name in swn2.controls.index
 
         # Test simulation results

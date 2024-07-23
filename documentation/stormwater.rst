@@ -646,7 +646,7 @@ Additional metrics could also be added at a later date.
 		
 		>>> pump_flowrate = results.link['FLOW_RATE'].loc[:, swn.pump_name_list]
 		>>> node_head = results.node['HYDRAULIC_HEAD']
-		>>> pump_headloss = swntr.metrics.headloss(node_head, swn.pump_name_list, swn)
+		>>> pump_headloss = swntr.metrics.headloss(node_head, swn, swn.pump_name_list)
 		>>> pump_power = swntr.metrics.pump_power(pump_flowrate, pump_headloss, flow_units)
 		>>> pump_energy = swntr.metrics.pump_energy(pump_flowrate, pump_headloss, flow_units)
 
