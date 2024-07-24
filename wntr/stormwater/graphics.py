@@ -32,6 +32,111 @@ def plot_network(swn, node_attribute=None, link_attribute=None, subcatchment_att
                 subcatchment_width=1, subcatchment_range=[None,None], subcatchment_alpha=0.5, subcatchment_cmap=None,
                 add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
                 directed=False, ax=None, filename=None):
+    """
+    Plot network graphic
+	
+    Parameters
+    ----------
+    wn : wntr WaterNetworkModel
+        A WaterNetworkModel object
+		
+    node_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a 
+          value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float. 
+        - If node_attribute is a dict, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float
+    
+	link_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If link_attribute is a string, then a link attribute dictionary is
+          created using edge_attribute = wn.query_link_attribute(str)
+        - If link_attribute is a list, then each link in the list is given a 
+          value of 1.
+        - If link_attribute is a pd.Series, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float. 
+        - If link_attribute is a dict, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float.
+    
+    subcatchment_attribute : None, str
+        Name of the subcatchment attribute to plot (only supports string, 
+        which must be a column name in swn.subcatchments)
+    
+    title: str, optional
+        Plot title 
+
+    node_size: int, optional
+        Node size 
+
+    node_range: list, optional
+        Node color range ([None,None] indicates autoscale)
+        
+    node_alpha: int, optional
+        Node transparency
+        
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Node colormap 
+        
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name. 
+        
+    link_width: int, optional
+        Link width
+		
+    link_range : list, optional
+        Link color range ([None,None] indicates autoscale)
+		
+    link_alpha : int, optional
+        Link transparency
+    
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Link colormap
+        
+    link_labels: bool, optional
+        If True, the graph will include each link labelled with its name.
+    
+    subcatchment_width: int, optional
+        Subcatchment width
+    
+    subcatchment_range: list, optional
+        Subcatchment color range ([None,None] indicates autoscale)
+    
+    subcatchment_alpha : int, optional
+        Subcatchment transparency
+    
+    subcatchment_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Subcatchment colormap
+    
+    add_colorbar: bool, optional
+        Add colorbar
+
+    node_colorbar_label: str, optional
+        Node colorbar label
+        
+    link_colorbar_label: str, optional
+        Link colorbar label
+        
+    directed: bool, optional
+        If True, plot the directed graph
+    
+    ax: matplotlib axes object, optional
+        Axes for plotting (None indicates that a new figure with a single 
+        axes will be used)
+    
+    show_plot: bool, optional
+        If True, show plot with plt.show()
+    
+    filename : str, optional
+        Filename used to save the figure
+        
+    Returns
+    -------
+    ax : matplotlib axes object  
+    """
     
     if ax is None:  # create a new figure
         plt.figure(facecolor="w", edgecolor="k")
