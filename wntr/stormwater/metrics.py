@@ -49,7 +49,6 @@ def headloss(head, swn, link_names=None):
 
     return headloss
 
-
 def pump_power(flowrate, headloss, flow_units, efficiency=100):
     """
     Pump power [kW]
@@ -253,7 +252,6 @@ def conduit_time_to_capacity(volume, flowrate, flow_units, connected=False):
         time_to_capacity = volume/cflowrate
 
     return time_to_capacity
-
 
 def shortest_path_nodes(G, source_node, target_node):
     """

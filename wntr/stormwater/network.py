@@ -91,11 +91,11 @@ class StormWaterNetworkModel(object):
             'pumps',
             'orifices',
             'weirs',
-            'xsections', # requires udpate to swmmio
+            'xsections',
             'streets',
             'inlets',
             'inlet_usage',
-            'controls', # requires udpate to swmmio
+            'controls', 
             
             # Quality
             'pollutants',
@@ -103,13 +103,13 @@ class StormWaterNetworkModel(object):
             'coverages',
             'buildup',
             'washoff',
-            'inflows', # requires udpate to swmmio
+            'inflows',
             'dwf',
             
             # Curves, timeseries, patterns
-            'curves', # requires udpate to swmmio
+            'curves',
             'timeseries',
-            'patterns', # requires udpate to swmmio
+            'patterns',
             
             # Map
             'polygons',
