@@ -77,11 +77,36 @@ class TestGIS(unittest.TestCase):
     def test_gis_index(self):
         # Tests that WN can be made using dataframes with customized index names
         wn_gis = self.wn.to_gis()
+        
+        # check that index name of geodataframes is "name"
+        assert wn_gis.junctions.index.name == "name"
+        assert wn_gis.tanks.index.name == "name"
+        assert wn_gis.reservoirs.index.name == "name"
+        assert wn_gis.pipes.index.name == "name"
+        assert wn_gis.pumps.index.name == "name"
+        
+        # check that index names can be changed and still be read back into a wn
         wn_gis.junctions.index.name = "my_index"
         wn_gis.pipes.index.name = "my_index"
         wn2 = wntr.network.from_gis(wn_gis)
-        self.wn == wn2
-    
+        
+        assert self.wn.pipe_name_list == wn2.pipe_name_list
+        assert self.wn.junction_name_list == wn2.junction_name_list
+        
+        # test snap and intersect functionality with alternate index names
+        result = wntr.gis.snap(self.points, wn_gis.junctions, tolerance=5.0)
+        assert len(result) > 0
+        result = wntr.gis.snap(wn_gis.junctions, self.points, tolerance=5.0)
+        assert len(result) > 0
+        result = wntr.gis.intersect(wn_gis.junctions, self.polygons)
+        assert len(result) > 0
+        result = wntr.gis.intersect(self.polygons, wn_gis.pipes)
+        assert len(result) > 0
+        
+        # check that custom index name persists after running snap/intersect
+        assert wn_gis.junctions.index.name == "my_index"
+        assert wn_gis.pipes.index.name == "my_index"
+
     def test_wn_to_gis(self):
         # Check type
         isinstance(self.gis_data.junctions, gpd.GeoDataFrame)
@@ -256,8 +281,13 @@ class TestGIS(unittest.TestCase):
         for component in components:
             if component == 'valves':
                 continue # Net1 has no valves
+            # check file exists
             filename = abspath(join(testdir, prefix+'_'+component+'.geojson'))
             self.assertTrue(isfile(filename))
+            
+            # check for "name" column
+            gdf = gpd.read_file(filename)
+            assert "name" in gdf.columns
 
     def test_snap_points_to_points(self):
         
