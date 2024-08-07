@@ -13,6 +13,8 @@ utm
 openpyxl
 geopandas<1.0
 rtree
+pyswmm
+swmmio
 
 # Documentation
 sphinx

@@ -1,0 +1,39 @@
+PARAMETER,US CUSTOMARY,SI METRIC
+Area (Subcatchment),acres,hectares
+Area (Storage Unit),square feet,square meters
+Area (Ponding),square feet,square meters
+Capillary Suction,inches,millimeters
+Concentration,"* mg/L (milligrams/liter) 
+* ug/L (micrograms/liter) 
+* #/L (counts/liter)","* mg/L 
+* ug/L 
+* #/L"
+Decay Constant (Infiltration),1/hours,1/hours
+Decay Constant (Pollutants),1/days,1/days
+Depression Storage,inches,millimeters
+Depth,feet,meters
+Diameter,feet,meters
+Discharge Coefficient (Orifice),dimensionless,dimensionless
+Discharge Coefficient (Weir),CFS/foot,CMS/meter
+Elevation,feet,meters
+Evaporation,inches/day,millimeters/day
+Flow,"* CFS (cubic feet / second)
+* GPM (gallons / minute) 
+* MGD (million gallons/day)","* CMS (cubic meters/second)
+* LPS (liters/second)
+* MLD (million liters/day)"
+Head,feet,meters
+Hydraulic Conductivity,inches/hour,millimeters/hour
+Infiltration Rate,inches/hour,millimeters/hour
+Length,feet,meters
+Manning's Coefficient (n),seconds/meter1/3,seconds/meter1/3
+Pollutant Buildup,"* mass/length
+* mass/acre","* mass/length
+* mass/hectare"
+Rainfall Intensity,inches/hour,millimeters/hour
+Rainfall Volume,inches,millimeters
+Slope (Subcatchments),percent,percent
+Slope (Cross Section),rise/run,rise/run
+Street Cleaning Interval,days,days
+Volume,cubic feet,cubic meters
+Width,feet,meters
