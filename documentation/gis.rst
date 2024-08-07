@@ -112,12 +112,13 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-       node_type  elevation  initial_quality                   geometry
-    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
-    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
-    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
-    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
-    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+         node_type  elevation  initial_quality                   geometry
+    name                                                                 
+    10    Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11    Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12    Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13    Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21    Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
 
 Each GeoDataFrame contains attributes and geometry:
 
