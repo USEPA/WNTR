@@ -133,7 +133,6 @@ class WaterNetworkGIS:
                 # Set index
                 if len(df) > 0:
                     df.set_index('name', inplace=True)
-                    df.index.name = None
                 
                 df = gpd.GeoDataFrame(df, crs=crs, geometry=geom)
             else:
@@ -300,7 +299,7 @@ class WaterNetworkGIS:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value
     
-    def _read(self, files, index_col='index'):
+    def _read(self, files, index_col='name'):
         
         if 'junctions' in files.keys():
             data = gpd.read_file(files['junctions']).set_index(index_col)
@@ -321,7 +320,7 @@ class WaterNetworkGIS:
             data = gpd.read_file(files['valves']).set_index(index_col)
             self.valves = pd.concat([self.valves, data])
 
-    def read_geojson(self, files, index_col='index'):
+    def read_geojson(self, files, index_col='name'):
         """
         Append information from GeoJSON files to a WaterNetworkGIS object
 
@@ -336,7 +335,7 @@ class WaterNetworkGIS:
         """
         self._read(files, index_col)
 
-    def read_shapefile(self, files, index_col='index'):
+    def read_shapefile(self, files, index_col='name'):
         """
         Append information from Esri Shapefiles to a WaterNetworkGIS object
 
