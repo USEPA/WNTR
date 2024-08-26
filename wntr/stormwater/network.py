@@ -694,14 +694,17 @@ class StormWaterNetworkModel(object):
         return composite
 
 
-    def anonymize_coordinates(self, seed=None, update_model=True):
+    def anonymize_coordinates(self, seed=None, dot_graphviz=False, update_model=True):
         """
-        Anonymize coordinates using a spring layout
+        Anonymize coordinates using a networkX spring layout or graphviz dot layout
         
         Parameters
         ----------
         seed : int
             Random seed used to set the spring layout
+        dot_graphviz : Bool (optional, default = False)
+            Flag indicating if dot_graphviz is used to anonymize coordinates.  
+            If False, spring layout is used.
         update_model : Bool (optional, default = True)
             Flag indicating if the model coordinates are updated and vertices 
             and polygons are removed. If False, the coordinates are returned, 
@@ -714,7 +717,10 @@ class StormWaterNetworkModel(object):
         """
         G = self.to_graph()
 
-        pos = nx.spring_layout(G, seed=seed)
+        if dot_graphviz:
+            pos = nx.nx_agraph.pygraphviz_layout(G, prog="dot", args="-Gmclimit=100")
+        else:
+            pos = nx.spring_layout(G, seed=seed)
         coordinates = pd.DataFrame(pos).T
         coordinates.rename(columns={0: 'X', 1: 'Y'}, inplace=True)
         
