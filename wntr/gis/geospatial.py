@@ -64,8 +64,7 @@ def snap(A, B, tolerance):
     assert A.crs == B.crs
     
     # Modify B to include "indexB" as a separate column
-    B = B.reset_index()
-    B.rename(columns={'index':'indexB'}, inplace=True)
+    B = B.reset_index(names='indexB')
     
     # Define the coordinate reference system, based on B
     crs = B.crs
@@ -228,7 +227,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     
     n = intersects.groupby('_tmp_index_name')['geometry'].count()
     B_indices = intersects.groupby('_tmp_index_name')['index_right'].apply(list)
-    stats = pd.DataFrame(index=A.index, data={'intersections': B_indices,
+    stats = pd.DataFrame(index=A.index.copy(), data={'intersections': B_indices,
                                               'n': n,})
     stats['n'] = stats['n'].fillna(0)
     stats['n'] = stats['n'].apply(int)
