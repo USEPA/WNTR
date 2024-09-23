@@ -37,7 +37,7 @@ jobs:
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/wntr*
@@ -96,7 +96,7 @@ jobs:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
         
     - name: Save coverage
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: coverage
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
@@ -136,12 +136,12 @@ jobs:
         coverage json --pretty-print
         coverage html --show-contexts
     - name: Save coverage JSON
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: coverage
         path: coverage.json
     - name: Save coverage html
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: coverage
         path: htmlcov
