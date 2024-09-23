@@ -37,7 +37,7 @@ jobs:
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/wntr*
@@ -56,7 +56,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Download wheel
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
     - name: Install wntr
@@ -96,7 +96,7 @@ jobs:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
         
     - name: Save coverage
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: coverage
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
@@ -117,7 +117,7 @@ jobs:
         python -m pip install -e .
     # pip install coveralls
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         name: coverage
     - name: Setup coverage and combine reports
@@ -136,12 +136,12 @@ jobs:
         coverage json --pretty-print
         coverage html --show-contexts
     - name: Save coverage JSON
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: coverage
         path: coverage.json
     - name: Save coverage html
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: coverage
         path: htmlcov
@@ -163,7 +163,7 @@ jobs:
         pip install -r requirements.txt
         python -m pip install -e .
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         name: coverage
     - name: Setup coverage and combine reports
