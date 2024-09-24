@@ -94,14 +94,11 @@ jobs:
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-    - name: view files
-      run: tree -a
-        
     - name: Save coverage
       uses: actions/upload-artifact@v4
       with:
         name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        path: ./.coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   combine_reports:
     needs: [ pytest_coverage ]
