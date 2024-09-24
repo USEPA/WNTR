@@ -1,6 +1,7 @@
 import sys
 import unittest
 from os.path import abspath, dirname, join
+import pandas as pd
 
 from numpy.testing._private.utils import assert_string_equal
 
@@ -665,7 +666,45 @@ class TestNet3InpUnitsResults(unittest.TestCase):
             ),
             0.00001,
         )
-        
+    
+    def test_pipe_roughess_units_convert(self):
+        """
+        See Table 3.2 Roughness Coefficients, this test uses values for Plastic Pipes
+        https://epanet22.readthedocs.io/en/latest/3_network_model.html?highlight=roughness#id3
+        """
+        for headloss in ['H-W', 'D-W', 'C-M']:
+            
+            wn = self.wn
+            inp_file = join(ex_datadir, "Net1.inp")
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wn.options.hydraulic.demand_model = 'DDA'
+            
+            wn.options.hydraulic.headloss = headloss
+            if headloss == 'H-W':
+                roughness = 145 # unitless
+            elif headloss == 'D-W':
+                roughness = 0.005*(1000*0.3048) # m (the value in the INP file should be 0.005)
+            else: # C-M
+                roughness = 0.011 # unitless
+                
+            print('-------------')
+            print(headloss, roughness)
 
+            for name, pipe in wn.pipes():
+                pipe.roughness = roughness
+                
+            pressure = {}
+            for units in ['LPS', 'GPM']:
+                file_prefix = headloss+'_'+units
+                wn.options.hydraulic.inpfile_units = units
+                sim = self.wntr.sim.EpanetSimulator(wn)
+                results_sim = sim.run_sim(file_prefix=file_prefix)
+                pressure[units] = results_sim.node['pressure'].loc[0,:]
+            
+            print((pressure['GPM'] - pressure['LPS']).abs().sort_values())
+            MAE = (pressure['GPM'] - pressure['LPS']).abs().mean()
+
+            self.assertLessEqual(MAE, 0.01) # 1 cm
+            
 if __name__ == "__main__":
     unittest.main()
