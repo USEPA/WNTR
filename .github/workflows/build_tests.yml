@@ -95,7 +95,7 @@ jobs:
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: view files
-      run: tree
+      run: tree -a
         
     - name: Save coverage
       uses: actions/upload-artifact@v4
