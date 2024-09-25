@@ -6,6 +6,7 @@ intersects with polygons.
 import pandas as pd
 import numpy as np
 
+
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
     has_shapely = True
@@ -18,6 +19,13 @@ try:
 except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
+    
+try:
+    import rasterio as rio
+    has_rasterio = True
+except ModuleNotFoundError:
+    rio = None
+    has_rasterio = False
 
 
 def snap(A, B, tolerance):  
@@ -281,3 +289,46 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     stats.index.name = None
     
     return stats
+
+
+def sample_raster(A, filepath, indexes):
+    """Sample a raster (e.g., GeoTIFF file) at the point locations given
+    by the geometry of GeoDataFrame A.
+    
+    This function can take either a filepath to a raster or a virtual raster (VRT),
+    which combines multiple raster tiles into a single object, opens the raster, and
+    samples it at the coordinates of the point geometries in A. This function
+    assigns nan to values that match the raster's `nodata` attribute. These sampled
+    values are returned as a Series which has an index matching A.
+
+    Parameters
+    ----------
+    A : GeoDataFrame
+        Geodataframe containing point geometries (lines and polygons not yet implemented)
+    filepath : str
+        Path to raster or alternatively a VRT
+    band : int or list[int]
+        Index or indices of bands to sample
+
+    Returns
+    -------
+    Series
+        Pandas Series containing the sampled values for each geometry in gdf
+    """
+    # further functionality could include the implementation for other geometries (line, polygon),
+    # and use of multiprocessing to speed up querying.
+    
+    assert (A['geometry'].geom_type == "Point").all()
+    with rio.open(filepath) as raster:
+        xys = zip(A.geometry.x, A.geometry.y)
+        
+        values = np.array(
+            tuple(raster.sample(xys, indexes)), dtype=float # force to float to allow for conversion of nodata to nan
+        ).squeeze()
+        
+    values[values == raster.nodata] = np.nan
+    values = pd.Series(values, index=A.index)
+    
+    return values
+        
+        
