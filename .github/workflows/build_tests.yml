@@ -120,7 +120,9 @@ jobs:
       with:
         pattern: .coverage.*
     - name: Setup coverage and combine reports
-      run: coverage combine .coverage.*
+      run: |
+        ls -la
+        coverage combine .coverage.*
     - name: Create coverage report
       run: |
         coverage report
