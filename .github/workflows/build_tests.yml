@@ -130,6 +130,7 @@ jobs:
         echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
         echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
         echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    ${{ github.workspace }}/wntr" >> .coveragerc
         coverage report
         coverage json --pretty-print
         coverage html --show-contexts
