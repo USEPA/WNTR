@@ -96,16 +96,12 @@ jobs:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: view files
       run: | 
-        ls -la
-        touch test_artifact
-        ls -la
-        
+        [ -f .coverage.${{ matrix.python-version }}.${{ matrix.os }} ] && echo "File exists" || echo "File does not exist"
     - name: Save coverage
       uses: actions/upload-artifact@v4
       with:
         name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-        path: test_artifact
-
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
   combine_reports:
     needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
