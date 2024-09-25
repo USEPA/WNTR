@@ -120,11 +120,16 @@ jobs:
       with:
         pattern: .coverage.*
     - name: Setup coverage and combine reports
-      run: |
-        ls -la
-        coverage combine .coverage.*
+      run: coverage combine .coverage.*
     - name: Create coverage report
       run: |
+        echo "[paths]" > .coveragerc
+        echo "source = " >> .coveragerc
+        echo "    wntr/" >> .coveragerc
+        echo "    wntr\\" >> .coveragerc
+        echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
+        echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
         coverage report
         coverage json --pretty-print
         coverage html --show-contexts
