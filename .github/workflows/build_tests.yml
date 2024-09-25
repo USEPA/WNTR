@@ -101,7 +101,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        path: '.coverage.*'
   combine_reports:
     needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
