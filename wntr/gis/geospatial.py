@@ -317,6 +317,8 @@ def sample_raster(A, filepath, indexes):
     """
     # further functionality could include the implementation for other geometries (line, polygon),
     # and use of multiprocessing to speed up querying.
+    if not has_rasterio:
+        raise ModuleNotFoundError('rasterio is required')
     
     assert (A['geometry'].geom_type == "Point").all()
     with rio.open(filepath) as raster:
