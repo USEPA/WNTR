@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [ubuntu-latest]
+        os: [windows-latest, macOS-13, ubuntu-latest]
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [ubuntu-latest] 
+        os: [windows-latest, macOS-13, ubuntu-latest]
       fail-fast: false
     steps:
     - name: Set up Python 
@@ -73,7 +73,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [ubuntu-latest]
+        os: [windows-latest, macOS-13, ubuntu-latest]
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -118,7 +118,7 @@ jobs:
     - name: Download coverage artifacts from test matrix
       uses: actions/download-artifact@v4
       with:
-        pattern: .coverage.*
+        pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
     - name: Setup coverage and combine reports
       run: coverage combine .coverage.*
     - name: Create coverage report
