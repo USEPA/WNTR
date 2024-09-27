@@ -293,7 +293,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
 
 def sample_raster(A, filepath, indexes):
     """Sample a raster (e.g., GeoTIFF file) at the point locations given
-    by the geometry of GeoDataFrame A.
+    by the geometry of GeoDataFrame A. 
     
     This function can take either a filepath to a raster or a virtual raster (VRT),
     which combines multiple raster tiles into a single object, opens the raster, and
