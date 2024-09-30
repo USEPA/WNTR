@@ -133,7 +133,6 @@ class WaterNetworkGIS:
                 # Set index
                 if len(df) > 0:
                     df.set_index('name', inplace=True)
-                    df.index.name = None
                 
                 df = gpd.GeoDataFrame(df, crs=crs, geometry=geom)
             else:
@@ -191,8 +190,8 @@ class WaterNetworkGIS:
         for element in [self.junctions, self.tanks, self.reservoirs]:
             if element.shape[0] > 0:
                 assert (element['geometry'].geom_type).isin(['Point']).all()
-                df = element.reset_index()
-                df.rename(columns={'index':'name', 'geometry':'coordinates'}, inplace=True)
+                df = element.reset_index(names="name")
+                df.rename(columns={'geometry':'coordinates'}, inplace=True)
                 df['coordinates'] = [[x,y] for x,y in zip(df['coordinates'].x, 
                                                           df['coordinates'].y)]
                 wn_dict['nodes'].extend(df.to_dict('records'))
@@ -201,8 +200,7 @@ class WaterNetworkGIS:
             if element.shape[0] > 0:
                 assert 'start_node_name' in element.columns
                 assert 'end_node_name' in element.columns
-                df = element.reset_index()
-                df.rename(columns={'index':'name'}, inplace=True)
+                df = element.reset_index(names="name")
                 df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
                 wn_dict['links'].extend(df.to_dict('records'))
@@ -301,7 +299,7 @@ class WaterNetworkGIS:
                     self.pumps[name] = np.nan
                 self.pumps.loc[link_name, name] = value
     
-    def _read(self, files, index_col='index'):
+    def _read(self, files, index_col='name'):
         
         if 'junctions' in files.keys():
             data = gpd.read_file(files['junctions']).set_index(index_col)
@@ -322,7 +320,7 @@ class WaterNetworkGIS:
             data = gpd.read_file(files['valves']).set_index(index_col)
             self.valves = pd.concat([self.valves, data])
 
-    def read_geojson(self, files, index_col='index'):
+    def read_geojson(self, files, index_col='name'):
         """
         Append information from GeoJSON files to a WaterNetworkGIS object
 
@@ -337,7 +335,7 @@ class WaterNetworkGIS:
         """
         self._read(files, index_col)
 
-    def read_shapefile(self, files, index_col='index'):
+    def read_shapefile(self, files, index_col='name'):
         """
         Append information from Esri Shapefiles to a WaterNetworkGIS object
 

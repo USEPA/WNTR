@@ -112,12 +112,13 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-       node_type  elevation  initial_quality                   geometry
-    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
-    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
-    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
-    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
-    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+         node_type  elevation  initial_quality                   geometry
+    name                                                                 
+    10    Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11    Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12    Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13    Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21    Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
 
 Each GeoDataFrame contains attributes and geometry:
 
@@ -333,21 +334,23 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
 	
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
     >>> print(wn_gis.junctions.head())
-       node_type  elevation  initial_quality                   geometry
-    10  Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
-    11  Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
-    12  Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
-    13  Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
-    21  Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
-	
+         node_type  elevation  initial_quality                   geometry
+    name                                                                 
+    10    Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
+    11    Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
+    12    Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
+    13    Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
+    21    Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+
     >>> wn_gis.to_crs('EPSG:3857')
     >>> print(wn_gis.junctions.head())
-       node_type  elevation  initial_quality                          geometry
-    10  Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
-    11  Junction    216.408        5.000e-04  POINT (3339584.724 11068715.659)
-    12  Junction    213.360        5.000e-04  POINT (5565974.540 11068715.659)
-    13  Junction    211.836        5.000e-04  POINT (7792364.356 11068715.659)
-    21  Junction    213.360        5.000e-04   POINT (3339584.724 4865942.280)
+         node_type  elevation  initial_quality                          geometry
+    name                                                                        
+    10    Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
+    11    Junction    216.408        5.000e-04  POINT (3339584.724 11068715.659)
+    12    Junction    213.360        5.000e-04  POINT (5565974.540 11068715.659)
+    13    Junction    211.836        5.000e-04  POINT (7792364.356 11068715.659)
+    21    Junction    213.360        5.000e-04   POINT (3339584.724 4865942.280)
 
 Snap point geometries to the nearest point or line
 ----------------------------------------------------
