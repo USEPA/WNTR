@@ -55,67 +55,96 @@ def _format_link_attribute(link_attribute, wn):
 
 def plot_network_gis(
     wn, node_attribute=None, link_attribute=None, title=None,
-    node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
-    link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
+    node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
+    link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
     add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
     directed=False, ax=None, filename=None):
+    """
+    Plot network graphic
+	
+    Parameters
+    ----------
+    wn : wntr WaterNetworkModel
+        A WaterNetworkModel object
+		
+    node_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a 
+          value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float. 
+        - If node_attribute is a dict, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float
     
-    
-    # # Define node properties
-    # add_node_colorbar = add_colorbar
-    # if node_attribute is not None:
-        
-    #     if isinstance(node_attribute, list):
-    #         if node_cmap is None:
-    #             node_cmap = ['red', 'red']
-    #         add_node_colorbar = False
-        
-    #     if node_cmap is None:
-    #         node_cmap = plt.get_cmap('Spectral_r')
-    #     elif isinstance(node_cmap, list):
-    #         if len(node_cmap) == 1:
-    #             node_cmap = node_cmap*2
-    #         node_cmap = custom_colormap(len(node_cmap), node_cmap)  
-         
-    #     node_attribute = _format_node_attribute(node_attribute, wn)
-    #     nodelist,nodecolor = zip(*node_attribute.items())
+	link_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If link_attribute is a string, then a link attribute dictionary is
+          created using edge_attribute = wn.query_link_attribute(str)
+        - If link_attribute is a list, then each link in the list is given a 
+          value of 1.
+        - If link_attribute is a pd.Series, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float. 
+        - If link_attribute is a dict, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float.
+		  
+    title: str, optional
+        Plot title 
 
-    # else:
-    #     nodelist = None
-    #     nodecolor = 'k'
-    
-    # # Define link properties
-    # add_link_colorbar = add_colorbar
-    # if link_attribute is not None:
-        
-    #     if isinstance(link_attribute, list):
-    #         if link_cmap is None:
-    #             link_cmap = ['red', 'red']
-    #         add_link_colorbar = False
+    node_size: int, optional
+        Node size 
 
-    #     if link_cmap is None:
-    #         link_cmap = plt.get_cmap('Spectral_r')
-    #     elif isinstance(link_cmap, list):
-    #         if len(link_cmap) == 1:
-    #             link_cmap = link_cmap*2
-    #         link_cmap = custom_colormap(len(link_cmap), link_cmap)  
-            
-    #     link_attribute = _format_link_attribute(link_attribute, wn)
+    node_range: list, optional
+        Node color range ([None,None] indicates autoscale)
         
-    #     # Replace link_attribute dictionary defined as
-    #     # {link_name: attr} with {(start_node, end_node, link_name): attr}
-    #     attr = {}
-    #     for link_name, value in link_attribute.items():
-    #         link = wn.get_link(link_name)
-    #         attr[(link.start_node_name, link.end_node_name, link_name)] = value
-    #     link_attribute = attr
+    node_alpha: int, optional
+        Node transparency
         
-    #     linklist,linkcolor = zip(*link_attribute.items())
-    # else:
-    #     linklist = None
-    #     linkcolor = 'k'
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Node colormap 
+        
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name. 
+        
+    link_width: int, optional
+        Link width
+		
+    link_range : list, optional
+        Link color range ([None,None] indicates autoscale)
+		
+    link_alpha : int, optional
+        Link transparency
     
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Link colormap
+        
+    link_labels: bool, optional
+        If True, the graph will include each link labelled with its name.
+        
+    add_colorbar: bool, optional
+        Add colorbar
+
+    node_colorbar_label: str, optional
+        Node colorbar label
+        
+    link_colorbar_label: str, optional
+        Link colorbar label
+        
+    directed: bool, optional
+        If True, plot the directed graph
     
+    ax: matplotlib axes object, optional
+        Axes for plotting (None indicates that a new figure with a single 
+        axes will be used)
+    
+    filename : str, optional
+        Filename used to save the figure
+        
+    Returns
+    -------
+    ax : matplotlib axes object  
+    """
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
         ax = plt.gca()
@@ -125,28 +154,74 @@ def plot_network_gis(
         
     # set aspect setting
     aspect = None
-        
+
     wn_gis = wn.to_gis()
     
+    # colormap
+    if link_cmap is None:
+        link_cmap = plt.get_cmap('Spectral_r')
+    if node_cmap is None:
+        node_cmap = plt.get_cmap('Spectral_r')
+        
+    # ranges
+    if link_range is None:
+        link_range = (None, None)
+    if node_range is None:
+        node_range = (None, None)
+    
 
-    # link preprocessing
+    # prepare pipe plotting keywords
     pipes_kwds = {}
     if link_attribute is not None:
         pipes_kwds["column"] = link_attribute
-        pipes_kwds["cmap"] = "Spectral_r"
-        pipes_kwds["legend"] = True
+        pipes_kwds["cmap"] = link_cmap
+        if add_colorbar:
+            pipes_kwds["legend"] = True
     else:
         pipes_kwds["color"] = "black"
+    pipes_kwds["alpha"] = link_alpha
+    
+    pipes_cbar_kwds = {}
+    pipes_cbar_kwds["shrink"] = 0.5
+    pipes_cbar_kwds["pad"] = 0.0
+    pipes_cbar_kwds["label"] = link_colorbar_label
 
-        
-    # node preprocessing
+    # prepare junctin plotting keywords
+    junction_kwds = {}
     if node_attribute is not None:
-        node_color = node_attribute
+        junction_kwds["column"] = node_attribute
+        junction_kwds["cmap"] = node_cmap
+        if add_colorbar:
+            junction_kwds["legend"] = True
     else:
-        node_color = "black"
+        junction_kwds["color"] = "black"
+    junction_kwds["alpha"] = node_alpha
+    
+    junction_cbar_kwds = {}
+    junction_cbar_kwds["shrink"] = 0.5
+    junction_cbar_kwds["pad"] = 0.0
+    junction_cbar_kwds["label"] = node_colorbar_label
+    
+    # TODO handle node/link labels
+        
+    # colorbar kwds
+
+    
+    # plot junctions
+    wn_gis.junctions.plot(
+        ax=ax, aspect=aspect, markersize=node_size, zorder=1,
+        vmax=node_range[0], vmin=node_range[1],legend_kwds=junction_cbar_kwds, **junction_kwds)
+    
+    # plot tanks
+    wn_gis.tanks.plot(ax=ax, marker="P", aspect=aspect, zorder=1)
+    
+    # plot reservoirs
+    wn_gis.reservoirs.plot(ax=ax, marker="s", aspect=aspect, zorder=1)
     
     # plot pipes
-    wn_gis.pipes.plot(ax=ax, aspect=aspect, zorder=0, linewidth=link_width, **pipes_kwds)
+    wn_gis.pipes.plot(
+        ax=ax, aspect=aspect, zorder=0, linewidth=link_width, 
+        vmax=link_range[0], vmin=link_range[1], legend_kwds=pipes_cbar_kwds, **pipes_kwds)
     
     # plot pumps
     if len(wn_gis.pumps) >0:
@@ -175,15 +250,21 @@ def plot_network_gis(
             angle = row["angle"]
             ax.scatter(x,y, color="green", s=100, marker=(3,0, angle-90))
             # ax.arrow(x,y, dx*0.1, dy*0.1, head_width=0.05, head_length=0.1, fc="blue", ec="blue")
-        
-    # plot junctions
-    wn_gis.junctions.plot(ax=ax, aspect=aspect, color=node_color, markersize=node_size, zorder=1)
     
-    # plot tanks
-    wn_gis.tanks.plot(ax=ax, marker="P", aspect=aspect, zorder=1)
+    # annotation
+    if node_labels:
+        for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
+            ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
+    if link_labels:
+        # compute midpoints
+        midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
+        for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
+            ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
     
-    # plot reservoirs
-    wn_gis.reservoirs.plot(ax=ax, marker="s", aspect=aspect, zorder=1)
+    ax.axis('off')
+    
+    if filename:
+        plt.savefig(filename)
     
     return ax
     
