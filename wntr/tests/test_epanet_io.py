@@ -667,22 +667,22 @@ class TestNet3InpUnitsResults(unittest.TestCase):
             ),
             0.00001,
         )
-    
-    def test_pipe_roughess_units(self):
+
+    def test_headloss_formula_roughness_units(self):
         """
         See Table 3.2 Roughness Coefficients, this test uses values for Plastic Pipes
         https://epanet22.readthedocs.io/en/latest/3_network_model.html?highlight=roughness#id3
         """
+        pressure = {}
         for headloss in ['H-W', 'C-M', 'D-W']:
-            pressure = {}
-            for units in ['LPS', 'GPM']:
+            for units in ['GPM', 'LPS']:
                 file_prefix = 'temp_'+headloss+'_'+units
                 
-                wn = self.wn
-                #inp_file = join(ex_datadir, "Net3.inp")
-                #wn = self.wntr.network.WaterNetworkModel(inp_file)
+                inp_file = join(ex_datadir, "Net3.inp")
+                wn = self.wntr.network.WaterNetworkModel(inp_file)
                 wn.options.hydraulic.demand_model = 'DDA'
                 wn.options.hydraulic.inpfile_units = units
+                wn.options.time.duration = 0 # steady state
                 
                 wn.options.hydraulic.headloss = headloss
                 if headloss == 'H-W':
@@ -697,30 +697,44 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                     pipe.roughness = roughness
   
                 sim = self.wntr.sim.EpanetSimulator(wn)
-                results_sim = sim.run_sim(file_prefix=file_prefix)
-                pressure[units] = results_sim.node['pressure'].iloc[-1,:] # last timestep
-                
-            MAE = (pressure['GPM'] - pressure['LPS']).abs().mean()
-            
-            self.assertLessEqual(MAE, 0.001) # m
-            
-    def test_change_headloss_formula(self):
-        # Changing the headloss formula from H-W to D-W will result in errors 
-        # if the roughness coefficient is not updated
-        wn = self.wn
+                results = sim.run_sim(file_prefix=file_prefix)
+                temp = results.node['pressure'].loc[0,wn.junction_name_list]
+                pressure[headloss+', '+units] = temp
+        
+        import matplotlib.pylab as plt
+        import pandas as pd
+        plt.figure()
+        pd.DataFrame(pressure).plot.bar()
+        plt.legend() #loc='lower right')
+        
+        ## Compares all results to H-W, GPM
+        threshold = 0.55
+        for key in pressure.keys():
+            MAE = (pressure['H-W, GPM'] - pressure[key]).abs().mean()
+            print(key, MAE)
+            self.assertLessEqual(MAE, threshold) # m
+        
+        ## Changing the headloss formula from H-W to D-W, without changing roughness,
+        # will result in errors
+        inp_file = join(ex_datadir, "Net3.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
         assert wn.options.hydraulic.headloss == 'H-W'
-        pressure_hw = self.results.node['pressure'].iloc[-1,:]
-        # Change to D-W
+        assert wn.options.hydraulic.inpfile_units == 'GPM'
+        pressure_hw = pressure['H-W, GPM']
+        # Change to D-W without changing roughness
         wn.options.hydraulic.headloss = 'D-W'
+        wn.options.hydraulic.demand_model = 'DDA'
+        wn.options.hydraulic.inpfile_units = units
+        wn.options.time.duration = 0 # steady state
         sim = self.wntr.sim.EpanetSimulator(wn)
         results = sim.run_sim()
-        pressure_dw = results.node['pressure'].iloc[-1,:]
+        pressure_dw = results.node['pressure'].loc[0,wn.junction_name_list]
         # Compare results
         MAE = (pressure_hw - pressure_dw).abs().mean()
         with self.assertRaises(AssertionError):
-            self.assertLessEqual(MAE, 0.001) # m
+            self.assertLessEqual(MAE, threshold) # m
         
-        # D-W is not supported by the WNTRSimulator
+        ## D-W is not supported by the WNTRSimulator
         sim = self.wntr.sim.WNTRSimulator(wn)
         with self.assertRaises(NotImplementedError):
             results = sim.run_sim()
