@@ -57,7 +57,7 @@ def plot_network_gis(
     wn, node_attribute=None, link_attribute=None, title=None,
     node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
     link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
-    add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+    add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
     directed=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
@@ -156,8 +156,8 @@ def plot_network_gis(
         ax.set_title(title)
         
     # set aspect setting
-    # aspect = None
-    aspect = "auto"
+    aspect = None
+    # aspect = "auto"
     # aspect = "equal"
 
     # initialize gis objects
@@ -169,8 +169,11 @@ def plot_network_gis(
     
     # missing keyword args
     # these are used for elements that do not have a value for the link_attribute
-    missing_kwds = {"color": "black"}
+    # missing_kwds = {"color": "black"}
     
+    # set tank and reservoir marker
+    tank_marker = "P"
+    reservoir_marker = "s"
     
     # colormap
     if link_cmap is None:
@@ -188,13 +191,40 @@ def plot_network_gis(
     # prepare pipe plotting keywords
     link_kwds = {}
     if link_attribute is not None:
-        link_kwds["column"] = link_attribute
+        # if dict convert to a series
+        if isinstance(link_attribute, dict):
+            link_attribute = pd.Series(link_attribute)
+        # if series add as a column to link gdf
+        if isinstance(link_attribute, pd.Series):
+            link_gdf["_link_attribute"] = link_attribute
+            link_kwds["column"] = "_link_attribute"
+        # if list, create new boolean column that captures which indices are in the list
+        # TODO need to check this with original behavior
+        elif isinstance(link_attribute, list):
+            link_gdf["_link_attribute"] = link_gdf.index.isin(link_attribute).astype(int)
+            link_kwds["column"] = "_link_attribute"
+        # if str, assert that column name exists
+        elif isinstance(link_attribute, str):
+            if link_attribute not in link_gdf.columns:
+                raise KeyError(f"link_attribute {link_attribute} does not exist.")
+            link_kwds["column"] = link_attribute   
+        else:
+            raise TypeError("link_attribute must be dict, Series, list, or str")
         link_kwds["cmap"] = link_cmap
         if add_colorbar:
             link_kwds["legend"] = True
+        link_kwds["vmin"] = link_range[0]
+        link_kwds["vmax"] = link_range[1]
     else:
         link_kwds["color"] = "black"
+    
+    link_kwds["linewidth"] = link_width
     link_kwds["alpha"] = link_alpha
+    
+    background_link_kwds = {}
+    background_link_kwds["color"] = "grey"
+    background_link_kwds["linewidth"] = link_width
+    background_link_kwds["alpha"] = link_alpha
     
     link_cbar_kwds = {}
     link_cbar_kwds["shrink"] = 0.5
@@ -204,43 +234,67 @@ def plot_network_gis(
     # prepare junctin plotting keywords
     node_kwds = {}
     if node_attribute is not None:
-        node_kwds["column"] = node_attribute
+        # if dict convert to a series
+        if isinstance(node_attribute, dict):
+            node_attribute = pd.Series(node_attribute)
+        # if series add as a column to node gdf
+        if isinstance(node_attribute, pd.Series):
+            node_gdf["_node_attribute"] = node_attribute
+            node_kwds["column"] = "_node_attribute"
+        # if list, create new boolean column that captures which indices are in the list
+        # TODO need to check this with original behavior
+        elif isinstance(node_attribute, list):
+            node_gdf["_node_attribute"] = node_gdf.index.isin(node_attribute).astype(int)
+            node_kwds["column"] = "_node_attribute"
+        # if str, assert that column name exists
+        elif isinstance(node_attribute, str):
+            if node_attribute not in node_gdf.columns:
+                raise KeyError(f"node_attribute {node_attribute} does not exist.")
+            node_kwds["column"] = node_attribute   
+        else:
+            raise TypeError("node_attribute must be dict, Series, list, or str")
         node_kwds["cmap"] = node_cmap
         if add_colorbar:
             node_kwds["legend"] = True
+        node_kwds["vmin"] = node_range[0]
+        node_kwds["vmax"] = node_range[1]
     else:
         node_kwds["color"] = "black"
     node_kwds["alpha"] = node_alpha
+    node_kwds["markersize"] = node_size
     
     node_cbar_kwds = {}
     node_cbar_kwds["shrink"] = 0.5
     node_cbar_kwds["pad"] = 0.0
     node_cbar_kwds["label"] = node_colorbar_label
     
-    # TODO handle node/link labels
-        
-    # colorbar kwds
-
-    
     # plot junctions
-    # node_gdf.plot(
-    #     ax=ax, aspect=aspect, markersize=node_size, zorder=1,
-    #     vmax=node_range[0], vmin=node_range[1], legend_kwds=node_cbar_kwds, **node_kwds)
+    # junction_mask
+    node_gdf[node_gdf.node_type == "Junction"].plot(
+        ax=ax, aspect=aspect, zorder=3, legend_kwds=node_cbar_kwds, **node_kwds)
     
-    # # plot tanks
-    # wn_gis.tanks.plot(ax=ax, marker="P", aspect=aspect, zorder=1)
+    # turn off legend for subsequent node plots
+    node_kwds["legend"] = False
     
-    # # plot reservoirs
-    # wn_gis.reservoirs.plot(ax=ax, marker="s", aspect=aspect, zorder=1)
+    # plot tanks
+    node_kwds["markersize"] = node_size * 1.5
+    node_gdf[node_gdf.node_type == "Tank"].plot(
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, **node_kwds)
+    
+    # plot reservoirs
+    node_kwds["markersize"] = node_size * 2.0
+    node_gdf[node_gdf.node_type == "Reservoir"].plot(
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, **node_kwds)
     
     # plot pipes
-    minx, miny, maxx, maxy = link_gdf.total_bounds
+    # background
     link_gdf.plot(
-        ax=ax, aspect=aspect, zorder=0, linewidth=link_width, 
-        vmax=link_range[0], vmin=link_range[1], missing_kwds=missing_kwds, legend_kwds=link_cbar_kwds, **link_kwds)
-    ax.set_xlim([minx, maxx])
-    ax.set_ylim([miny, maxy])
-    # # plot pumps
+        ax=ax, aspect=aspect, zorder=1, **background_link_kwds)
+    
+    link_gdf.plot(
+        ax=ax, aspect=aspect, zorder=2, legend_kwds=link_cbar_kwds, **link_kwds)
+
+    # plot pumps
     # if len(wn_gis.pumps) >0:
     #     wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
     #     wn_gis.pumps["midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
@@ -270,7 +324,7 @@ def plot_network_gis(
         for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
     
-    # ax.axis('off')
+    ax.axis('off')
     
     if filename:
         plt.savefig(filename)
