@@ -1,7 +1,6 @@
 import sys
 import unittest
 from os.path import abspath, dirname, join
-import pandas as pd
 
 from numpy.testing._private.utils import assert_string_equal
 
@@ -626,7 +625,9 @@ class TestNet3InpUnitsResults(unittest.TestCase):
     def tearDownClass(self):
         pass
 
-    def test_link_flowrate_units_convert(self):
+    def test_units_convert(self):
+        # Compares Net3 EpanetSimulator flowrate results using INP files saved 
+        # using GPM and CMH units
         for link_name, link in self.wn.links():
             for t in self.results2.link["flowrate"].index:
                 self.assertLessEqual(
@@ -637,7 +638,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                     0.00001,
                 )
     
-    def test_link_headloss_units_convert(self):
+    def test_link_headloss_units(self):
         
         # headloss = per unit length for pipes and CVs
         pipe_name = '123'
@@ -667,7 +668,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
             0.00001,
         )
     
-    def test_pipe_roughess_units_convert(self):
+    def test_pipe_roughess_units(self):
         """
         See Table 3.2 Roughness Coefficients, this test uses values for Plastic Pipes
         https://epanet22.readthedocs.io/en/latest/3_network_model.html?highlight=roughness#id3
@@ -700,8 +701,30 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                 pressure[units] = results_sim.node['pressure'].iloc[-1,:] # last timestep
                 
             MAE = (pressure['GPM'] - pressure['LPS']).abs().mean()
-
+            
             self.assertLessEqual(MAE, 0.001) # m
+            
+    def test_change_headloss_formula(self):
+        # Changing the headloss formula from H-W to D-W will result in errors 
+        # if the roughness coefficient is not updated
+        wn = self.wn
+        assert wn.options.hydraulic.headloss == 'H-W'
+        pressure_hw = self.results.node['pressure'].iloc[-1,:]
+        # Change to D-W
+        wn.options.hydraulic.headloss = 'D-W'
+        sim = self.wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim()
+        pressure_dw = results.node['pressure'].iloc[-1,:]
+        # Compare results
+        MAE = (pressure_hw - pressure_dw).abs().mean()
+        with self.assertRaises(AssertionError):
+            self.assertLessEqual(MAE, 0.001) # m
+        
+        # D-W is not supported by the WNTRSimulator
+        sim = self.wntr.sim.WNTRSimulator(wn)
+        with self.assertRaises(NotImplementedError):
+            results = sim.run_sim()
+        
             
 if __name__ == "__main__":
     unittest.main()
