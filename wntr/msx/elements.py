@@ -28,7 +28,46 @@ logger = logging.getLogger(__name__)
 
 
 class Species(VariableBase):
-    """Biological or chemical species
+    """Biological or chemical species.
+
+    Parameters
+    ----------
+    name
+        Species name
+    species_type
+        Species type
+    units
+        Units of mass for this species, see :attr:`units` property.
+    atol : float | None
+        Absolute tolerance when solving this species' equations, by default
+        None
+    rtol : float | None
+        Relative tolerance when solving this species' equations, by default
+        None
+    note
+        Supplementary information regarding this variable, by default None
+        (see :class:`~wntr.epanet.util.NoteType`)
+    diffusivity
+        Diffusivity of the species in water, by default None
+    _vars
+        Reaction system this species is a part of, by default None
+    _vals
+        Initial quality values for this species, by default None
+
+    Raises
+    ------
+    KeyExistsError
+        If the name has already been used
+    TypeError
+        If `atol` and `rtol` are not the same type
+    ValueError
+        If `atol` or `rtol` ≤ 0
+
+    Notes
+    -----
+    EPANET-MSX requires that `atol` and `rtol` either both be omitted, or
+    both be provided. In order to enforce this, the arguments passed for
+    `atol` and `rtol` must both be None or both be positive values.
     """
 
     def __init__(
@@ -44,47 +83,6 @@ class Species(VariableBase):
         _vars: ReactionSystemBase = None,
         _vals: VariableValuesBase = None,
     ) -> None:
-        """Biological or chemical species
-
-        Parameters
-        ----------
-        name
-            Species name
-        species_type
-            Species type
-        units
-            Units of mass for this species, see :attr:`units` property.
-        atol : float | None
-            Absolute tolerance when solving this species' equations, by default
-            None
-        rtol : float | None
-            Relative tolerance when solving this species' equations, by default
-            None
-        note
-            Supplementary information regarding this variable, by default None
-            (see :class:`~wntr.epanet.util.NoteType`)
-        diffusivity
-            Diffusivity of the species in water, by default None
-        _vars
-            Reaction system this species is a part of, by default None
-        _vals
-            Initial quality values for this species, by default None
-
-        Raises
-        ------
-        KeyExistsError
-            If the name has already been used
-        TypeError
-            If `atol` and `rtol` are not the same type
-        ValueError
-            If `atol` or `rtol` ≤ 0
-
-        Notes
-        -----
-        EPANET-MSX requires that `atol` and `rtol` either both be omitted, or
-        both be provided. In order to enforce this, the arguments passed for
-        `atol` and `rtol` must both be None or both be positive values.
-        """
         super().__init__(name, note=note)
         if _vars is not None and not isinstance(_vars, ReactionSystemBase):
             raise TypeError("Invalid type for _vars, {}".format(type(_vars)))
@@ -256,24 +254,23 @@ class Species(VariableBase):
 
 
 class Constant(VariableBase):
-    """Constant coefficient for use in expressions"""
+    """Constant coefficient for use in expressions.
+
+    Parameters
+    ----------
+    name
+        Name of the variable.
+    value
+        Constant value.
+    units
+        Units for the variable, by default None
+    note
+        Supplementary information regarding this variable, by default None
+    _vars
+        Reaction system this constant is a part of, by default None
+    """
 
     def __init__(self, name: str, value: float, *, units: str = None, note: Union[str, dict, ENcomment] = None, _vars: ReactionSystemBase = None) -> None:
-        """Constant coefficient for use in expressions
-
-        Parameters
-        ----------
-        name
-            Name of the variable.
-        value
-            Constant value.
-        units
-            Units for the variable, by default None
-        note
-            Supplementary information regarding this variable, by default None
-        _vars
-            Reaction system this constant is a part of, by default None
-        """
         super().__init__(name, note=note)
         if _vars is not None and not isinstance(_vars, ReactionSystemBase):
             raise TypeError("Invalid type for _vars, {}".format(type(_vars)))
@@ -306,28 +303,26 @@ class Constant(VariableBase):
 
 
 class Parameter(VariableBase):
-    """Parameterized variable for use in expressions"""
+    """Parameterized variable for use in expressions.
 
+    Parameters
+    ----------
+    name
+        Name of this parameter.
+    global_value
+        Global value for the parameter if otherwise unspecified.
+    units
+        Units for this parameter, by default None
+    note
+        Supplementary information regarding this variable, by default None
+    _vars
+        Reaction system this parameter is a part of, by default None
+    _vals
+        Network-specific values for this parameter, by default None
+    """
     def __init__(
         self, name: str, global_value: float, *, units: str = None, note: Union[str, dict, ENcomment] = None, _vars: ReactionSystemBase = None, _vals: VariableValuesBase = None
     ) -> None:
-        """Parameterized variable for use in expressions
-
-        Parameters
-        ----------
-        name
-            Name of this parameter.
-        global_value
-            Global value for the parameter if otherwise unspecified.
-        units
-            Units for this parameter, by default None
-        note
-            Supplementary information regarding this variable, by default None
-        _vars
-            Reaction system this parameter is a part of, by default None
-        _vals
-            Network-specific values for this parameter, by default None
-        """
         super().__init__(name, note=note)
         if _vars is not None and not isinstance(_vars, ReactionSystemBase):
             raise TypeError("Invalid type for _vars, {}".format(type(_vars)))
@@ -396,24 +391,22 @@ class Parameter(VariableBase):
 
 
 class Term(VariableBase):
-    """Named expression (term) that can be used in expressions"""
+    """Named expression (term) that can be used in expressions
 
+    Parameters
+    ----------
+    name
+        Variable name.
+    expression
+        Mathematical expression to be aliased
+    note
+        Supplementary information regarding this variable, by default None
+    _vars
+        Reaction system this species is a part of, by default None
+    """
     def __init__(self, name: str, expression: str, *,
                  note: Union[str, dict, ENcomment] = None,
                  _vars: ReactionSystemBase = None) -> None:
-        """Named expression (term) that can be used in expressions
-
-        Parameters
-        ----------
-        name
-            Variable name.
-        expression
-            Mathematical expression to be aliased
-        note
-            Supplementary information regarding this variable, by default None
-        _vars
-            Reaction system this species is a part of, by default None
-        """
         super().__init__(name, note=note)
         if _vars is not None and not isinstance(_vars, ReactionSystemBase):
             raise TypeError("Invalid type for _vars, {}".format(type(_vars)))
@@ -439,23 +432,22 @@ class Term(VariableBase):
 
 
 class ReservedName(VariableBase):
-    """Reserved name that should not be used"""
+    """Reserved name that should not be used
+
+    Parameters
+    ----------
+    name
+        Reserved name.
+    note
+        Supplementary information regarding this variable, by default None
+
+    Raises
+    ------
+    KeyExistsError
+        If the name has already been registered
+    """
 
     def __init__(self, name: str, *, note: Union[str, dict, ENcomment] = None) -> None:
-        """Reserved name that should not be used
-
-        Parameters
-        ----------
-        name
-            Reserved name.
-        note
-            Supplementary information regarding this variable, by default None
-
-        Raises
-        ------
-        KeyExistsError
-            If the name has already been registered
-        """
         self.name: str = name
         self.note: Union[str, dict, ENcomment] = note
 
@@ -470,43 +462,41 @@ class ReservedName(VariableBase):
 
 
 class HydraulicVariable(ReservedName):
-    """Reserved name for hydraulic variables"""
+    """Reserved name for hydraulic variables
+
+    The user should not need to create any variables using this class, they
+    are created automatically by the MsxModel object during initialization.
+
+    Parameters
+    ----------
+    name
+        Name of the variable (predefined by MSX)
+    units
+        Units for hydraulic variable, by default None
+    note
+        Supplementary information regarding this variable, by default None
+    """
 
     def __init__(self, name: str, units: str = None, *, note: Union[str, dict, ENcomment] = None) -> None:
-        """Reserved name for hydraulic variables
-
-        The user should not need to create any variables using this class, they
-        are created automatically by the MsxModel object during initialization.
-
-        Parameters
-        ----------
-        name
-            Name of the variable (predefined by MSX)
-        units
-            Units for hydraulic variable, by default None
-        note
-            Supplementary information regarding this variable, by default None
-        """
         super().__init__(name, note=note)
         self.units: str = units
         """Hydraulic variable's units"""
 
 
 class MathFunction(ReservedName):
-    """Reserved name for math functions"""
+    """Reserved name for math functions
+
+    Parameters
+    ----------
+    name
+        Function name
+    func
+        Callable function
+    note
+        Supplementary information regarding this variable, by default None
+    """
 
     def __init__(self, name: str, func: callable, *, note: Union[str, dict, ENcomment] = None) -> None:
-        """Reserved name for math functions
-
-        Parameters
-        ----------
-        name
-            Function name
-        func
-            Callable function
-        note
-            Supplementary information regarding this variable, by default None
-        """
         super().__init__(name, note=note)
         self.func: callable = func
         """A callable function or SymPy function"""
@@ -517,7 +507,25 @@ class MathFunction(ReservedName):
 
 
 class Reaction(ReactionBase):
-    """Water quality reaction dynamics definition for a specific species"""
+    """Water quality reaction dynamics definition for a specific species.
+
+    Parameters
+    ----------
+    species_name
+        Species (object or name) this reaction is applicable to.
+    reaction_type
+        Reaction type (location), from {PIPE, TANK}
+    expression_type
+        Expression type (left-hand-side) of the equation, from 
+        {RATE, EQUIL, FORMULA}
+    expression
+        Mathematical expression for the right-hand-side of the reaction
+        equation.
+    note
+        Supplementary information regarding this variable, by default None
+    _vars
+        Reaction system this species is a part of, by default None
+    """
 
     def __init__(
         self,
@@ -529,25 +537,6 @@ class Reaction(ReactionBase):
         note: Union[str, dict, ENcomment] = None,
         _vars: ReactionSystemBase = None,
     ) -> None:
-        """Water quality reaction dynamics definition for a specific species
-
-        Parameters
-        ----------
-        species_name
-            Species (object or name) this reaction is applicable to.
-        reaction_type
-            Reaction type (location), from {PIPE, TANK}
-        expression_type
-            Expression type (left-hand-side) of the equation, from 
-            {RATE, EQUIL, FORMULA}
-        expression
-            Mathematical expression for the right-hand-side of the reaction
-            equation.
-        note
-            Supplementary information regarding this variable, by default None
-        _vars
-            Reaction system this species is a part of, by default None
-        """
         super().__init__(species_name=species_name, note=note)
         if _vars is not None and not isinstance(_vars, ReactionSystemBase):
             raise TypeError("Invalid type for _vars, {}".format(type(_vars)))
@@ -591,22 +580,21 @@ class Reaction(ReactionBase):
 
 
 class InitialQuality(VariableValuesBase):
-    """Initial quality values for a species in a specific network"""
+    """Initial quality values for a species in a specific network.
+
+    Parameters
+    ----------
+    global_value
+        Global initial quality value, by default 0.0
+    node_values
+        Any different initial quality values for specific nodes,
+        by default None
+    link_values
+        Any different initial quality values for specific links,
+        by default None
+    """
 
     def __init__(self, global_value: float = 0.0, node_values: dict = None, link_values: dict = None):
-        """Initial quality values for a species in a specific network
-
-        Parameters
-        ----------
-        global_value
-            Global initial quality value, by default 0.0
-        node_values
-            Any different initial quality values for specific nodes,
-            by default None
-        link_values
-            Any different initial quality values for specific links,
-            by default None
-        """
         self.global_value = global_value
         """Global initial quality values for this species."""
         self._node_values = node_values if node_values is not None else dict()
@@ -641,20 +629,19 @@ class InitialQuality(VariableValuesBase):
 
 
 class ParameterValues(VariableValuesBase):
-    """Pipe and tank specific values of a parameter for a specific network"""
+    """Pipe and tank specific values of a parameter for a specific network.
+
+    Parameters
+    ----------
+    pipe_values
+        Any different values for this parameter for specific pipes,
+        by default None
+    tank_values
+        Any different values for this parameter for specific tanks,
+        by default None
+    """
 
     def __init__(self, *, pipe_values: dict = None, tank_values: dict = None) -> None:
-        """Pipe and tank specific values of a parameter for a specific network
-
-        Parameters
-        ----------
-        pipe_values
-            Any different values for this parameter for specific pipes,
-            by default None
-        tank_values
-            Any different values for this parameter for specific tanks,
-            by default None
-        """
         self._pipe_values = pipe_values if pipe_values is not None else dict()
         self._tank_values = tank_values if tank_values is not None else dict()
 

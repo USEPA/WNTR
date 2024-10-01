@@ -42,7 +42,6 @@ class MsxReactionSystem(ReactionSystemBase):
     """
 
     def __init__(self) -> None:
-        """Create a new reaction system."""
         super().__init__()
         self._vars.add_disjoint_group("reserved")
         self._species = self._vars.add_disjoint_group("species")
@@ -130,7 +129,6 @@ class MsxReactionSystem(ReactionSystemBase):
         self._rxns[reaction.reaction_type.name.lower()][reaction.species_name] = reaction
 
     def variables(self) -> Generator[tuple, None, None]:
-        # FIXME: rename without "all_" for this
         """Generator looping through all variables"""
         for k, v in self._vars.items():
             if v.var_type.name.lower() not in ['reserved']:
@@ -155,47 +153,47 @@ class MsxReactionSystem(ReactionSystemBase):
 
 
 class MsxNetworkData(NetworkDataBase):
+    """Network-specific values associated with a multi-species water 
+    quality model
+
+    Data is copied from dictionaries passed in, so once created, the
+    dictionaries passed are not connected to this object.
+
+    Parameters
+    ----------
+    patterns : dict, optional
+        Patterns to use for sources
+    sources : dict, optional
+        Sources defined for the model
+    initial_quality : dict, optional
+        Initial values for different species at different nodes, links, and
+        the global value
+    parameter_values : dict, optional
+        Parameter values for different pipes and tanks
+
+    Notes
+    -----
+    ``patterns``
+        Dictionary keyed by pattern name (str) with values being the
+        multipliers (list of float)
+    ``sources``
+        Dictionary keyed by species name (str) with values being
+        dictionaries keyed by junction name (str) with values being the
+        dictionary of settings for the source
+    ``initial_quality``
+        Dictionary keyed by species name (str) with values being either an
+        :class:`~wntr.msx.elements.InitialQuality` object or the
+        appropriate dictionary representation thereof.
+    ``parameter_values``
+        Dictionary keyed by parameter name (str) with values being either
+        a :class:`~wntr.msx.elements.ParameterValues` object or the
+        appropriate dictionary representation thereof.
+    """
 
     def __init__(self, patterns: Dict[str, List[float]] = None,
                  sources: Dict[str, Dict[str, dict]] = None,
                  initial_quality: Dict[str, Union[dict, InitialQuality]] = None,
                  parameter_values: Dict[str, Union[dict, ParameterValues]] = None) -> None:
-        """Network-specific values associated with a multi-species water 
-        quality model
-
-        Data is copied from dictionaries passed in, so once created, the
-        dictionaries passed are not connected to this object.
-
-        Parameters
-        ----------
-        patterns : dict, optional
-            Patterns to use for sources
-        sources : dict, optional
-            Sources defined for the model
-        initial_quality : dict, optional
-            Initial values for different species at different nodes, links, and
-            the global value
-        parameter_values : dict, optional
-            Parameter values for different pipes and tanks
-
-        Notes
-        -----
-        ``patterns``
-            Dictionary keyed by pattern name (str) with values being the
-            multipliers (list of float)
-        ``sources``
-            Dictionary keyed by species name (str) with values being
-            dictionaries keyed by junction name (str) with values being the
-            dictionary of settings for the source
-        ``initial_quality``
-            Dictionary keyed by species name (str) with values being either an
-            :class:`~wntr.msx.elements.InitialQuality` object or the
-            appropriate dictionary representation thereof.
-        ``parameter_values``
-            Dictionary keyed by parameter name (str) with values being either
-            a :class:`~wntr.msx.elements.ParameterValues` object or the
-            appropriate dictionary representation thereof.
-        """
         if sources is None:
             sources = dict()
         if initial_quality is None:
@@ -335,16 +333,15 @@ class MsxNetworkData(NetworkDataBase):
 
 
 class MsxModel(QualityModelBase):
-    """Multi-species water quality model"""
+    """Multi-species water quality model
+
+    Arguments
+    ---------
+    msx_file_name : str, optional
+        MSX file to to load into the MsxModel object, by default None
+    """
 
     def __init__(self, msx_file_name=None) -> None:
-        """Multi-species water quality model
-
-        Arguments
-        ---------
-        msx_file_name : str, optional
-            MSX file to to load into the MsxModel object, by default None
-        """
         super().__init__(msx_file_name)
         self._references: List[Union[str, Dict[str, str]]] = list()
         self._options: MsxSolverOptions = MsxSolverOptions()
@@ -509,7 +506,6 @@ class MsxModel(QualityModelBase):
         if name not in self.reaction_system.species:
             raise KeyError('The specified variable is not a registered species in the reaction system')
         self.network_data.remove_species(name)
-        # FIXME: validate additional items
         self.reaction_system.__delitem__(name)
 
     def add_constant(self, name: str, value: float, units: str = None, note: NoteType = None) -> Constant:
@@ -558,7 +554,6 @@ class MsxModel(QualityModelBase):
         name = str(variable_or_name)
         if name not in self.reaction_system.constants:
             raise KeyError('The specified variable is not a registered constant in the reaction system')
-        # FIXME: validate deletion
         self.reaction_system.__delitem__(name)
 
     def add_parameter(self, name: str, global_value: float, units: str = None, note: NoteType = None) -> Parameter:
@@ -611,7 +606,6 @@ class MsxModel(QualityModelBase):
         if name not in self.reaction_system.parameters:
             raise KeyError('The specified variable is not a registered parameter in the reaction system')
         self.network_data.remove_parameter(name)
-        # FIXME: validate additional items
         self.reaction_system.__delitem__(name)
 
     def add_term(self, name: str, expression: str, note: NoteType = None) -> Term:
@@ -657,7 +651,6 @@ class MsxModel(QualityModelBase):
             If `variable_or_name` is not a term in the model
         """
         name = str(variable_or_name)
-        # FIXME: validate deletion
         if name not in self.reaction_system.terms:
             raise KeyError('The specified variable is not a registered term in the reaction system')
         self.reaction_system.__delitem__(name)

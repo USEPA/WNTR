@@ -42,7 +42,7 @@ def from_dict(d: dict):
     from wntr.msx.model import MsxModel
     return MsxModel.from_dict(d)
 
-def write_json(msx, path_or_buf, as_library=False, **kw_json):
+def write_json(msx, path_or_buf, as_library=False, indent=4, **kw_json):
     """
     Write the MSX model to a JSON file
 
@@ -67,9 +67,9 @@ def write_json(msx, path_or_buf, as_library=False, **kw_json):
         d.get('options', {}).get('report',{}).setdefault('links', None)
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "w") as fout:
-            json.dump(d, fout, **kw_json)
+            json.dump(d, fout, indent=indent **kw_json)
     else:
-        json.dump(d, path_or_buf, **kw_json)
+        json.dump(d, path_or_buf, indent=indent, **kw_json)
 
 def read_json(path_or_buf, **kw_json):
     """

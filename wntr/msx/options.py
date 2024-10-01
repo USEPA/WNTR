@@ -15,6 +15,25 @@ logger = logging.getLogger(__name__)
 class MsxReportOptions(_OptionsBase):
     """
     Report options
+
+    Parameters
+    ----------
+    report_filename : str
+        Filename for the EPANET-MSX report file, by default this will be
+        the prefix plus ".rpt".
+    species : dict[str, bool]
+        Output species concentrations
+    species_precision : dict[str, float]
+        Output species concentrations with the specified precision
+    nodes : None, "ALL", or list
+        Output node information. If a list of node names is provided,
+        EPANET-MSX only provides report information for those nodes.
+    links : None, "ALL", or list
+        Output link information. If a list of link names is provided,
+        EPANET-MSX only provides report information for those links.
+    pagesize : str
+        Page size for EPANET-MSX report output
+
     """
 
     def __init__(
@@ -26,28 +45,6 @@ class MsxReportOptions(_OptionsBase):
         nodes: Union[Literal["ALL"], List[str]] = None,
         links: Union[Literal["ALL"], List[str]] = None,
     ):
-        """
-        Report options
-
-        Parameters
-        ----------
-        report_filename : str
-            Filename for the EPANET-MSX report file, by default this will be
-            the prefix plus ".rpt".
-        species : dict[str, bool]
-            Output species concentrations
-        species_precision : dict[str, float]
-            Output species concentrations with the specified precision
-        nodes : None, "ALL", or list
-            Output node information. If a list of node names is provided,
-            EPANET-MSX only provides report information for those nodes.
-        links : None, "ALL", or list
-            Output link information. If a list of link names is provided,
-            EPANET-MSX only provides report information for those links.
-        pagesize : str
-            Page size for EPANET-MSX report output
-
-        """
         self.pagesize = pagesize
         """Pagesize for the report"""
         self.report_filename = report_filename
@@ -68,7 +65,44 @@ class MsxReportOptions(_OptionsBase):
 
 
 class MsxSolverOptions(_OptionsBase):
-    """Solver options"""
+    """
+    Solver options
+
+    Parameters
+    ----------
+    timestep : int >= 1
+        Water quality timestep (seconds), by default 60 (one minute).
+    area_units : str, optional
+        Units of area to use in surface concentration forms, by default
+        ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
+    rate_units : str, optional
+        Time units to use in all rate reactions, by default ``MIN``. Valid
+        values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
+    solver : str, optional
+        Solver to use, by default ``RK5``. Options are ``RK5`` (5th order
+        Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or
+        ``EUL`` (Euler method).
+    coupling : str, optional
+        Use coupling method for solution, by default ``NONE``. Valid
+        options are ``FULL`` or ``NONE``.
+    atol : float, optional
+        Absolute concentration tolerance, by default 0.01 (regardless of
+        species concentration units).
+    rtol : float, optional
+        Relative concentration tolerance, by default 0.001 (±0.1%).
+    compiler : str, optional
+        Whether to use a compiler, by default ``NONE``. Valid options are
+        ``VC``, ``GC``, or ``NONE``
+    segments : int, optional
+        Maximum number of segments per pipe (MSX 2.0 or newer only), by
+        default 5000.
+    peclet : int, optional
+        Peclet threshold for applying dispersion (MSX 2.0 or newer only),
+        by default 1000.
+    report : MsxReportOptions or dict
+        Options on how to report out results.
+
+    """
 
     def __init__(
         self,
@@ -85,44 +119,6 @@ class MsxSolverOptions(_OptionsBase):
         # global_initial_quality: Dict[str, float] = None,
         report: MsxReportOptions = None,
     ):
-        """
-        Solver options
-
-        Parameters
-        ----------
-        timestep : int >= 1
-            Water quality timestep (seconds), by default 60 (one minute).
-        area_units : str, optional
-            Units of area to use in surface concentration forms, by default
-            ``M2``. Valid values are ``FT2``, ``M2``, or ``CM2``.
-        rate_units : str, optional
-            Time units to use in all rate reactions, by default ``MIN``. Valid
-            values are ``SEC``, ``MIN``, ``HR``, or ``DAY``.
-        solver : str, optional
-            Solver to use, by default ``RK5``. Options are ``RK5`` (5th order
-            Runge-Kutta method), ``ROS2`` (2nd order Rosenbrock method), or
-            ``EUL`` (Euler method).
-        coupling : str, optional
-            Use coupling method for solution, by default ``NONE``. Valid
-            options are ``FULL`` or ``NONE``.
-        atol : float, optional
-            Absolute concentration tolerance, by default 0.01 (regardless of
-            species concentration units).
-        rtol : float, optional
-            Relative concentration tolerance, by default 0.001 (±0.1%).
-        compiler : str, optional
-            Whether to use a compiler, by default ``NONE``. Valid options are
-            ``VC``, ``GC``, or ``NONE``
-        segments : int, optional
-            Maximum number of segments per pipe (MSX 2.0 or newer only), by
-            default 5000.
-        peclet : int, optional
-            Peclet threshold for applying dispersion (MSX 2.0 or newer only),
-            by default 1000.
-        report : MsxReportOptions or dict
-            Options on how to report out results.
-
-        """
         self.timestep: int = timestep
         """Timestep, in seconds, by default 360"""
         self.area_units: str = area_units

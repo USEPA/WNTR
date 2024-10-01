@@ -317,7 +317,7 @@ class ExpressionType(Enum):
 
 
 class ReactionBase(ABC):
-    """Water quality reaction class
+    """Water quality reaction class.
 
     This is an abstract class for water quality reactions with partial concrete
     attribute and method definitions. All parameters and methods documented
@@ -355,9 +355,13 @@ class ReactionBase(ABC):
     """
 
     def __init__(self, species_name: str, *, note: NoteType = None) -> None:
-        """Water quality reaction definition
+        """Reaction ABC init method.
 
-        This abstract class must be subclassed.
+        Make sure you call this method from your concrete subclass ``__init__`` method:
+        
+        .. code::
+            
+            super().__init__(species_name, note=note)
 
         Parameters
         ----------
@@ -438,7 +442,13 @@ class VariableBase(ABC):
     """
 
     def __init__(self, name: str, *, note: NoteType = None) -> None:
-        """Multi-species variable constructor arguments
+        """Variable ABC init method.
+
+        Make sure you call this method from your concrete subclass ``__init__`` method:
+        
+        .. code::
+            
+            super().__init__(name, note=note)
 
         Parameters
         ----------
@@ -522,7 +532,15 @@ class ReactionSystemBase(ABC):
     """
 
     def __init__(self) -> None:
-        """Constructor for the reaction system."""
+        """Constructor for the reaction system.
+        
+        Make sure you call this method from your concrete subclass ``__init__`` method:
+        
+        .. code::
+            
+            super().__init__()
+
+        """
         self._vars: DisjointMapping = DisjointMapping()
         """Variables registry, which is mapped to dictionary functions on the
         reaction system object"""
@@ -639,7 +657,13 @@ class QualityModelBase(ABC):
     """
 
     def __init__(self, filename=None):
-        """Abstract water quality model
+        """QualityModel ABC init method.
+
+        Make sure you call this method from your concrete subclass ``__init__`` method:
+        
+        .. code::
+            
+            super().__init__(filename=filename)
 
         Parameters
         ----------
