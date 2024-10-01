@@ -2012,7 +2012,7 @@ class Pattern(object):
         A list of multipliers that makes up the pattern.
     time_options : wntr TimeOptions or tuple
         The water network model options.time object or a tuple of (pattern_start, 
-        pattern_timestep) in seconds.
+        pattern_timestep, pattern_interpolation) in seconds or bool.
     wrap : bool, optional
         Boolean indicating if the pattern should be wrapped.
         If True (the default), then the pattern repeats itself forever; if 
@@ -2030,6 +2030,8 @@ class Pattern(object):
                 tmp = TimeOptions()
                 tmp.pattern_start = time_options[0]
                 tmp.pattern_timestep = time_options[1]
+                if len(time_options) == 3:
+                    tmp.pattern_interpolation = time_options[2]
                 time_options = tmp
             elif not isinstance(time_options, TimeOptions):
                 raise ValueError('Pattern->time_options must be a TimeOptions class or null')

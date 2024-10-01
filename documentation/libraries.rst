@@ -1,0 +1,214 @@
+.. raw:: latex
+
+    \clearpage
+
+.. _options:
+
+.. doctest::
+    :hide:
+
+    >>> import matplotlib.pylab as plt
+    >>> import wntr
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net1.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net1.inp')
+	
+Libraries
+================================
+
+WNTR includes the following libraries to help create water network models. 
+Libraries reside in the :class:`wntr.library` module.
+
+* Demand pattern library
+* Multispecies water quality library (coming soon)
+
+Demand pattern library
+----------------------
+
+The :class:`~wntr.library.demand_library.DemandPatternLibrary` class contains demand patterns 
+and methods to help create and modify patterns.  
+The demand pattern library can be used to add or modify patterns in a :class:`~wntr.network.model.WaterNetworkModel`.
+
+The demand pattern library includes the following capabilities:
+
+* Load a library of patterns from a JSON file
+* Add a pattern to the library
+* Create a pulse pattern (on/off sequence)
+* Create a pattern that follows a gaussian or triangular distribution
+* Combine patterns
+* Create a copy of a pattern
+* Modify the pattern timestep or start clocktime
+* Add gaussian random noise to a pattern
+* Normalize the pattern to have a mean of 1
+* Filter patterns by category
+* Create a :class:`~wntr.network.elements.Pattern` object to add the pattern to a :class:`~wntr.network.model.WaterNetworkModel`
+* Create a Pandas Series (pattern indexed by time in seconds) to easily analyze or further modify the pattern
+* Plot patterns
+* Save and load custom libraries for use in subsequent projects
+
+Each library entry is defined as a dictionary with the following keys:
+
+* **name**: Pattern name (string)
+* **category**: Pattern category (string, optional)
+* **description**: Pattern description (string, optional)
+* **citation**: Pattern citation (string, optional)
+* **start_clocktime**: Time of day (in seconds from midnight) at which pattern begins (integer)
+* **pattern_timestep**: Pattern timestep in seconds (integer)
+* **wrap**: Indicates if the sequence of pattern values repeats (True or False)
+* **multipliers**: Pattern values (list of floats)
+
+Note that the pattern duration is not explicitly defined.  Duration is inferred from the list of multipliers and the pattern timestep.
+Several methods include duration as a optional input argument to change how long multipliers are repeated.  
+If wrap = False, the pattern values are set to 0 after the final multiplier value.
+
+A default demand pattern library loads a JSON file that contains patterns from Net1, Net2, Net3, and Micropolis water network models.  
+Additional patterns could be added to the default library.
+A sample entry from the default demand pattern library is shown below:: 
+
+	{
+		"name": "Micropolis_2",
+		"category": "Residential",
+		"description": "Residential",
+		"citation": "Brumbelow, Kelly, 02 Micropolis (2021). Synthetic Systems. 4. https://uknowledge.uky.edu/wdst_synthetic/4",
+		"start_clocktime": 0,
+		"pattern_timestep": 3600,
+		"wrap": true,
+		"multipliers": [
+			0.55, 0.55, 0.58, 0.67, 0.85, 1.05,
+			1.16, 1.12, 1.15, 1.1, 1.02, 1.0,
+			1.02, 1.1, 1.2, 1.35, 1.45, 1.5,
+			1.5, 1.35, 1.0, 0.8, 0.7, 0.6]
+	}
+
+The following example illustrates functionality of the demand pattern library.
+
+Load the default demand pattern library, print names of the library entries, and plot patterns.
+
+.. doctest::
+
+    >>> from wntr.library import DemandPatternLibrary
+	
+    >>> demand_library = DemandPatternLibrary()
+    >>> print(demand_library.pattern_name_list)
+    ['Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
+    >>> ax = demand_library.plot_patterns()
+	
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('demand_library.png', dpi=300)
+	
+.. _fig_demand_library:
+.. figure:: figures/demand_library.png
+   :width: 640
+   :alt: Demand library patterns
+
+   Demand library patterns.
+   
+Add a pulse and gaussian pattern.
+
+.. doctest::
+
+    >>> demand_library.add_pulse_pattern(on_off_sequence=[3*3600,6*3600,14*3600,20*3600], name='Pulse')
+    >>> demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, duration=24*3600, pattern_timestep=3600, 
+    ...     start_clocktime=0, normalize=True, name='Gaussian')
+
+Add noise to a pattern.
+
+.. doctest::
+
+    >>> demand_library.copy_pattern('Gaussian', 'Gaussian_with_noise')
+    >>> multipliers = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True, seed=123)
+    >>> ax = demand_library.plot_patterns(names=['Gaussian', 'Gaussian_with_noise'])
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('demand_library_gaussian.png', dpi=300)
+	
+.. _fig_demand_library_gaussian:
+.. figure:: figures/demand_library_gaussian.png
+   :width: 640
+   :alt: New demand library patterns
+
+   Demand patterns, with and without noise.
+   
+Return a Pandas Series of the pattern.
+
+.. doctest::
+
+    >>> series = demand_library.to_Series('Gaussian_with_noise', duration=48*3600)
+    >>> print(series.head())
+    0        0.000747
+    3600     0.267610
+    7200     0.286198
+    10800    0.230225
+    14400    0.474233
+    dtype: float64
+
+Create a library of only commercial patterns.
+
+.. doctest::
+
+    >>> commercial_patterns = demand_library.filter_by_category('Commercial')
+    >>> commercial_demand_library = DemandPatternLibrary(commercial_patterns)
+    >>> print(commercial_demand_library.pattern_name_list)
+    ['Micropolis_1', 'Micropolis_4', 'Micropolis_5']
+
+Resample a pattern with new time parameters.  This is useful when applying patterns to a network with different start clocktime and/or pattern timestep.
+For example, pattern "Net2_1", which has a start clocktime of 28800 seconds and pattern timestep of 3600 seconds, 
+can be resampled so it can be used in Net1, which has a start clocktime of 0 seconds and pattern timestep of 7200 seconds.
+
+.. doctest::
+
+    >>> demand_library.copy_pattern('Net2_1', 'Net2_1_resampled')
+    >>> multipliers = demand_library.resample_multipliers('Net2_1_resampled', duration=3*24*3600,
+    ...     pattern_timestep=7200, start_clocktime=0)
+    >>> ax = demand_library.plot_patterns(names=['Net2_1', 'Net2_1_resampled'])
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('demand_library_resampled.png', dpi=300)
+	
+.. _fig_demand_library_resampled:
+.. figure:: figures/demand_library_resampled.png
+   :width: 640
+   :alt: New demand library patterns
+
+   Demand patterns, with and without resampling to match the start clocktime and pattern timestep of Net1.
+   
+Add the new pattern to a :class:`~wntr.network.model.WaterNetworkModel` of Net1.
+
+.. doctest::
+
+    >>> import wntr
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> junction = wn.get_node('11')
+	
+    >>> pattern = demand_library.to_Pattern('Net2_1_resampled')
+    >>> category = demand_library.library['Net2_1_resampled']['category']
+	
+    >>> wn.add_pattern('from_Net2', pattern)
+    >>> junction.add_demand(base=5e-5, pattern_name='from_Net2', category=category)
+    >>> print(junction.demand_timeseries_list)
+    <Demands: [<TimeSeries: base_value=0.00946352946, pattern_name='1', category='None'>, <TimeSeries: base_value=5e-05, pattern_name='from_Net2', category='None'>]>
+
+Write the new pattern library to a file.
+
+.. doctest::
+
+    >>> demand_library.write_json("Custom_demand_pattern_library.json")
+
+Load an existing demand pattern library for use in subsequent projects.
+
+.. doctest::
+
+    >>> custom_demand_library = DemandPatternLibrary("Custom_demand_pattern_library.json")
+    >>> print(custom_demand_library.pattern_name_list)
+    ['Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5', 'Pulse', 'Gaussian', 'Gaussian_with_noise', 'Net2_1_resampled']
+	

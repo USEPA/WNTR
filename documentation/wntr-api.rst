@@ -19,6 +19,7 @@ API documentation
         wntr.epanet
         wntr.gis
         wntr.graphics
+        wntr.library
         wntr.metrics
         wntr.morph
         wntr.network
