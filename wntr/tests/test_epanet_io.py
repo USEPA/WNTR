@@ -701,11 +701,11 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                 temp = results.node['pressure'].loc[0,wn.junction_name_list]
                 pressure[headloss+', '+units] = temp
         
-        import matplotlib.pylab as plt
-        import pandas as pd
-        plt.figure()
-        pd.DataFrame(pressure).plot.bar()
-        plt.legend() #loc='lower right')
+        #import matplotlib.pylab as plt
+        #import pandas as pd
+        #plt.figure()
+        #pd.DataFrame(pressure).plot.bar()
+        #plt.legend() #loc='lower right')
         
         ## Compares all results to H-W, GPM
         threshold = 0.55
