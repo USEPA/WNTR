@@ -117,18 +117,18 @@ def from_dict(d: dict, append=None):
                 if dl is not None and len(dl) > 0:
                     base_demand = dl[0].setdefault("base_val", 0.0)
                     pattern_name = dl[0].setdefault("pattern_name")
-                    category = dl[0].setdefault("category")
+                    demand_category = dl[0].setdefault("category")
                 else:
-                    base_demand = 0.0
-                    pattern_name = None
-                    category = None
+                    base_demand = node.setdefault('base_demand',0.0)
+                    pattern_name = node.setdefault('pattern_name')
+                    demand_category = node.setdefault('demand_category')
                 wn.add_junction(
                     name=name,
                     base_demand=base_demand,
                     demand_pattern=pattern_name,
                     elevation=node.setdefault("elevation"),
                     coordinates=node.setdefault("coordinates", list()),
-                    demand_category=category,
+                    demand_category=demand_category,
                 )
                 j = wn.get_node(name)
                 j.emitter_coefficient = node.setdefault("emitter_coefficient")
