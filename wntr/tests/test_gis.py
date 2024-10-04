@@ -330,20 +330,23 @@ class TestRaster(unittest.TestCase):
         points = wn_gis.junctions
         self.points = points
         
-        # create test raster file
-        min_lon, min_lat = -180, -90  
-        max_lon, max_lat = 180, 90
-        
+        min_lon, min_lat, max_lon, max_lat = self.points.total_bounds
+
         resolution = 1.0
+        
+        # adjust to include boundary
+        max_lon += resolution
+        min_lat -= resolution
                 
         lon_values = np.arange(min_lon, max_lon, resolution)
         lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
-        raster_data = np.outer(lon_values,lat_values) # value is product of coordinate
+        raster_data = np.outer(lat_values,lon_values) # value is product of coordinate
 
-        transform = rasterio.transform.from_bounds(min_lon, min_lat, max_lon, max_lat, raster_data.shape[0], raster_data.shape[1])
-        
+
+        # transform = rasterio.transform.from_bounds(min_lon, min_lat, max_lon, max_lat, raster_data.shape[0], raster_data.shape[1])
+        transform = rasterio.transform.from_origin(min_lon, max_lat, resolution, resolution)
         with rasterio.open(
-            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[1], width=raster_data.shape[0], 
+            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1], 
             count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as file:
             file.write(raster_data, 1) 
         
@@ -355,7 +358,6 @@ class TestRaster(unittest.TestCase):
         raster_values = wntr.gis.sample_raster(self.points, "test_raster.tif")
         assert (raster_values.index == self.points.index).all()
         
-        # self.points.plot(column=values, legend=True)
         # values should be product of coordinates
         expected_values = self.points.apply(lambda row: row.geometry.x * row.geometry.y, axis=1)
         assert np.isclose(raster_values.values, expected_values, atol=1e-5).all()
