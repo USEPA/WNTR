@@ -21,10 +21,10 @@ except ModuleNotFoundError:
     has_geopandas = False
     
 try:
-    import rasterio as rio
+    import rasterio
     has_rasterio = True
 except ModuleNotFoundError:
-    rio = None
+    rasterio = None
     has_rasterio = False
 
 
@@ -324,7 +324,7 @@ def sample_raster(A, filepath, bands=1):
     assert isinstance(filepath, str)
     assert isinstance(bands, (int, list))
     
-    with rio.open(filepath) as raster:
+    with rasterio.open(filepath) as raster:
         xys = zip(A.geometry.x, A.geometry.y)
         
         values = np.array(

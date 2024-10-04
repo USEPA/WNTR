@@ -24,10 +24,10 @@ except ModuleNotFoundError:
     has_geopandas = False
     
 try:
-    import rasterio as rio
+    import rasterio
     has_rasterio = True
 except ModuleNotFoundError:
-    rio = None
+    rasterio = None
     has_rasterio = False
     
 testdir = dirname(abspath(str(__file__)))
@@ -323,36 +323,29 @@ class TestGIS(unittest.TestCase):
 class TestRaster(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-
-        # raster testing
-        points = [
-            (-120.5, 38.5),
-            (-120.6, 38.6),
-            (-120.55, 38.65),
-            (-120.65, 38.55),
-            (-120.7, 38.7)
-        ]
-        point_geometries = [Point(xy) for xy in points]
-        points = gpd.GeoDataFrame(geometry=point_geometries, crs="EPSG:4326")
-        points.index = ["A", "B", "C", "D", "E"]
+        # use net1 junctions as example points
+        inp_file = join(ex_datadir, "Net1.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn_gis = wn.to_gis(crs="EPSG:4326")
+        points = wn_gis.junctions
         self.points = points
         
-        # create example raster
-        minx, miny, maxx, maxy = points.total_bounds 
-        raster_width = 100
-        raster_height = 100 
+        # create test raster file
+        min_lon, min_lat = -180, -90  
+        max_lon, max_lat = 180, 90
         
-        x = np.linspace(0, 1, raster_width)
-        y = np.linspace(0, 1, raster_height)
-        raster_data = np.cos(y)[:, np.newaxis] * np.sin(x) # arbitrary values
+        resolution = 1.0
+                
+        lon_values = np.arange(min_lon, max_lon, resolution)
+        lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
+        raster_data = np.outer(lon_values,lat_values) # value is product of coordinate
 
-        transform = rio.transform.from_bounds(minx, miny, maxx, maxy, raster_width, raster_height)
-        self.transform = transform
+        transform = rasterio.transform.from_bounds(min_lon, min_lat, max_lon, max_lat, raster_data.shape[0], raster_data.shape[1])
         
-        with rio.open(
-            "test_raster.tif", "w", driver="GTiff", height=raster_height, width=raster_width, 
-            count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as dst:
-            dst.write(raster_data, 1) 
+        with rasterio.open(
+            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[1], width=raster_data.shape[0], 
+            count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as file:
+            file.write(raster_data, 1) 
         
     @classmethod
     def tearDownClass(self):
@@ -363,7 +356,8 @@ class TestRaster(unittest.TestCase):
         assert (raster_values.index == self.points.index).all()
         
         # self.points.plot(column=values, legend=True)
-        expected_values = np.array([0.000000, 0.423443, 0.665369, 0.174402, 0.000000])
+        # values should be product of coordinates
+        expected_values = self.points.apply(lambda row: row.geometry.x * row.geometry.y, axis=1)
         assert np.isclose(raster_values.values, expected_values, atol=1e-5).all()
 
 
