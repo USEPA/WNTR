@@ -830,11 +830,13 @@ the census tracts (polygons) is different than the junction and pipe attributes.
 
    Net1 with mean income demographic data intersected with junctions and pipes.
 
-Find the intersect between geometries
+Sample raster at points geometries
 --------------------------------------
 
 The :class:`~wntr.gis.sample_raster` function can be used to query a raster file at point geometries,
-such as the nodes of a water network.
+such as the nodes of a water network. A common use case for this function is to assign elevation to the 
+nodes of a water network, however other geospatial data such as climate projections could be sampled 
+using this function. 
 
 The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 
 The raster data in the GeoTIFF format is also in EPSG:4326 CRS.
@@ -846,33 +848,17 @@ See :ref:`crs` for more information.
     >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
 
-Assign elevations to nodes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sample elevations at junctions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Elevation is an essential attribute for accurate simulation of pressure in a water network. Elevation data is
-commonly provided in GeoTIFF files, such as that provided by the 
-`USGS 3D Elevation Program <https://www.usgs.gov/3d-elevation-program>_`. 
+Elevation is an essential attribute for accurate simulation of pressure in a water network and is
+commonly provided in GeoTIFF (.tif) files. The following example shows how such files can be sampled at
+the junctions of a network.
 
 .. doctest::
     :skipif: gpd is None or rasterio is None
 
     >>> junctions = wn_gis.junctions
-    >>> print(junctions["elevation"])
-    name
-    10    216.408
-    11    216.408
-    12    213.360
-    13    211.836
-    21    213.360
-    22    211.836
-    23    210.312
-    31    213.360
-    32    216.408
-    Name: elevation, dtype: float64
-
-.. doctest::
-    :skipif: gpd is None or rasterio is None
-
     >>> elevation_data_path = 'data/elevation.tif' # doctest: +SKIP
     >>> junctions["elevation"] = wntr.gis.sample_raster(junctions, elevation_data_path)
     >>> print(junctions["elevation"])
@@ -888,8 +874,8 @@ commonly provided in GeoTIFF files, such as that provided by the
     32     500.0
     Name: elevation, dtype: float64
 
-The assigned elevations can be plotted as follows. The 
-resulting :numref:`fig-assingn-elevations` illustrates Net1 with the elevations queried from the raster file.
+The sampled elevations can be plotted as follows. The 
+resulting :numref:`fig-sample-elevations` illustrates Net1 with the elevations queried from the raster file.
 Note that to use these elevations in a simulation, they would need to be added to the water network object directly.
 Tanks, in addition to junctions, would need their elevations updated.
 
@@ -908,9 +894,9 @@ Tanks, in addition to junctions, would need their elevations updated.
     >>> plt.savefig('assign_elevations.png', dpi=300)
     >>> plt.close()
 
-.. _fig-assign-elevations:
+.. _fig-sample-elevations:
 .. figure:: figures/assign_elevations.png
    :width: 640
    :alt: Net1 junctions with elevations from raster.
 
-    Net1 junctions with elevations assigned from raster.
+   Net1 junctions with elevations assigned from raster.
