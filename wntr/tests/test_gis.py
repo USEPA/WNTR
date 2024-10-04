@@ -76,37 +76,7 @@ class TestGIS(unittest.TestCase):
             
         df = pd.DataFrame(point_data)
         self.points = gpd.GeoDataFrame(df, crs=None)
-        
-        # raster testing
-        points = [
-            (-120.5, 38.5),
-            (-120.6, 38.6),
-            (-120.55, 38.65),
-            (-120.65, 38.55),
-            (-120.7, 38.7)
-        ]
-        point_geometries = [Point(xy) for xy in points]
-        raster_points = gpd.GeoDataFrame(geometry=point_geometries, crs="EPSG:4326")
-        raster_points.index = ["A", "B", "C", "D", "E"]
-        self.raster_points = raster_points
-        
-        # create example raster
-        minx, miny, maxx, maxy = raster_points.total_bounds 
-        raster_width = 100
-        raster_height = 100 
-        
-        x = np.linspace(0, 1, raster_width)
-        y = np.linspace(0, 1, raster_height)
-        raster_data = np.cos(y)[:, np.newaxis] * np.sin(x) # arbitrary values
 
-        transform = rio.transform.from_bounds(minx, miny, maxx, maxy, raster_width, raster_height)
-        self.transform = transform
-        
-        with rio.open(
-            "test_raster.tif", "w", driver="GTiff", height=raster_height, width=raster_width, 
-            count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as dst:
-            dst.write(raster_data, 1) 
-        
     @classmethod
     def tearDownClass(self):
         pass
@@ -348,13 +318,54 @@ class TestGIS(unittest.TestCase):
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
 
-    def test_sample_raster(self):
-        raster_values = wntr.gis.sample_raster(self.raster_points, "test_raster.tif", 1)
+@unittest.skipIf(not has_rasterio,
+                 "Cannot test raster capabilities: rasterio is missing")
+class TestRaster(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+
+        # raster testing
+        points = [
+            (-120.5, 38.5),
+            (-120.6, 38.6),
+            (-120.55, 38.65),
+            (-120.65, 38.55),
+            (-120.7, 38.7)
+        ]
+        point_geometries = [Point(xy) for xy in points]
+        points = gpd.GeoDataFrame(geometry=point_geometries, crs="EPSG:4326")
+        points.index = ["A", "B", "C", "D", "E"]
+        self.points = points
         
-        assert (raster_values.index == self.raster_points.index).all()
-        # self.raster_points.plot(column=values, legend=True)
+        # create example raster
+        minx, miny, maxx, maxy = points.total_bounds 
+        raster_width = 100
+        raster_height = 100 
+        
+        x = np.linspace(0, 1, raster_width)
+        y = np.linspace(0, 1, raster_height)
+        raster_data = np.cos(y)[:, np.newaxis] * np.sin(x) # arbitrary values
+
+        transform = rio.transform.from_bounds(minx, miny, maxx, maxy, raster_width, raster_height)
+        self.transform = transform
+        
+        with rio.open(
+            "test_raster.tif", "w", driver="GTiff", height=raster_height, width=raster_width, 
+            count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as dst:
+            dst.write(raster_data, 1) 
+        
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_sample_raster(self):
+        raster_values = wntr.gis.sample_raster(self.points, "test_raster.tif")
+        assert (raster_values.index == self.points.index).all()
+        
+        # self.points.plot(column=values, legend=True)
         expected_values = np.array([0.000000, 0.423443, 0.665369, 0.174402, 0.000000])
         assert np.isclose(raster_values.values, expected_values, atol=1e-5).all()
-    
+
+
 if __name__ == "__main__":
     unittest.main()
