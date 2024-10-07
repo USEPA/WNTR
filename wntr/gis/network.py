@@ -138,6 +138,11 @@ class WaterNetworkGIS:
                         drop_cols.append(col) 
                 df = df.drop(columns=drop_cols)
                 
+                # Add back in valid base attributes that had all None values
+                cols = list(set(valid_base_names) - set(df.columns))
+                if len(cols) > 0:
+                    df[cols] = None
+                    
                 # Set index
                 if len(df) > 0:
                     df.set_index('name', inplace=True)
@@ -145,12 +150,7 @@ class WaterNetworkGIS:
                 df = gpd.GeoDataFrame(df, crs=crs, geometry=geom)
             else:
                 df = gpd.GeoDataFrame()
-            
-            # Add back in valid base attributes that had all None values
-            cols = list(set(valid_base_names) - set(df.columns))
-            if len(cols) > 0:
-                df[cols] = None
-                
+
             return df
         
         # Convert the WaterNetworkModel to a dictionary
@@ -502,10 +502,6 @@ class WaterNetworkGIS:
                 valid_names[key].remove('coordinates')
             if 'vertices' in valid_names[key]:
                 valid_names[key].remove('vertices')
-            
-            # Remove 'name' (the index can have any name)
-            if 'name' in valid_names[key]:
-                valid_names[key].remove('name')
             
             # Add geometry
             if 'geometry' not in valid_names[key]:
