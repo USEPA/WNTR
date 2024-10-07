@@ -1026,6 +1026,7 @@ class TestNetworkIO_GIS(unittest.TestCase):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
             A = wn.to_gis()
+            A.junctions.replace('Junction','Reservoir',inplace=True) # Should make no difference
             B = self.wntr.network.from_gis(A)
             assert(wn._compare(B, level=0))
     
@@ -1087,6 +1088,32 @@ class TestNetworkIO_GIS(unittest.TestCase):
                 files['valves'] = 'temp_valves'
             B = self.wntr.network.read_shapefile(files)
             assert(wn._compare(B, level=0))
-
+    
+    def test_valid_gis_names(self):
+        
+        required_names = wntr.network.io.valid_gis_names(complete_list=False, truncate_names=None)
+        valid_names = wntr.network.io.valid_gis_names(complete_list=True, truncate_names=None)
+        
+        wn = self.wntr.network.WaterNetworkModel(join(ex_datadir, "Net1.inp"))
+        gis_data = wn.to_gis()
+        
+        for component in required_names.keys():
+            required_columns = required_names[component]
+            valid_columns = valid_names[component]
+            
+            data = getattr(gis_data, component)
+            data_columns = list(data.columns)
+   
+            # Check that all data columns are valid
+            assert len(set(data_columns)-set(valid_columns)) == 0
+            # Check that all required columns are in the data
+            assert len(set(required_columns)-set(data_columns)) == 0
+            # Assert that node_type and link_type are not in data columns
+            assert 'node_type' not in data_columns
+            assert 'link_type' not in data_columns
+            # Assert that name is not in data columns, attribute names are the index
+            assert 'name' not in data_columns
+            
+            
 if __name__ == "__main__":
     unittest.main()
