@@ -1026,7 +1026,6 @@ class TestNetworkIO_GIS(unittest.TestCase):
         for inp_file in self.inp_files:
             wn = self.wntr.network.WaterNetworkModel(inp_file)
             A = wn.to_gis()
-            A.junctions.replace('Junction','Reservoir',inplace=True) # Should make no difference
             B = self.wntr.network.from_gis(A)
             assert(wn._compare(B, level=0))
     
