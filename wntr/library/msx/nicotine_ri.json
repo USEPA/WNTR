@@ -1,0 +1,158 @@
+{
+    "wntr-version": "",
+    "name": "nicotine_ri",
+    "title": "Nicotine - Chlorine reaction with reactive intermediate",
+    "description": null,
+    "references": [],
+    "reaction_system": {
+        "species": [
+            {
+                "name": "Nx",
+                "species_type": "bulk",
+                "units": "mg",
+                "atol": null,
+                "rtol": null,
+                "note": "Nicotine"
+            },
+            {
+                "name": "HOCL",
+                "species_type": "bulk",
+                "units": "mg",
+                "atol": null,
+                "rtol": null,
+                "note": "Free Chlorine"
+            },
+            {
+                "name": "NX2",
+                "species_type": "bulk",
+                "units": "mg",
+                "atol": null,
+                "rtol": null,
+                "note": "Intermediate Nicotine Reactive"
+            }
+        ],
+        "constants": [
+            {
+                "name": "kd",
+                "value": 3e-05,
+                "units": "1/min",
+                "note": "decay constant for chlorine over time"
+            },
+            {
+                "name": "K1",
+                "value": 0.0975,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for chlorine as function of mass(Nic)"
+            },
+            {
+                "name": "K2",
+                "value": 0.573,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for nicotine as function of mass(Cl)"
+            },
+            {
+                "name": "K3",
+                "value": 0.0134,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for nicotine as function of mass(Nic2)"
+            },
+            {
+                "name": "K4",
+                "value": 0.0219,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for nicotine as function of mass(Cl)"
+            }
+        ],
+        "parameters": [],
+        "terms": [
+            {
+                "name": "RXCL",
+                "expression": "kd * HOCL + K1 * Nx * HOCL + K3 * NX2 * HOCL"
+            },
+            {
+                "name": "RXN",
+                "expression": "K2 * Nx * HOCL"
+            },
+            {
+                "name": "RXNX2",
+                "expression": "K2 * Nx * HOCL - K4 * NX2 * HOCL"
+            }
+        ],
+        "pipe_reactions": [
+            {
+                "species_name": "Nx",
+                "expression_type": "rate",
+                "expression": "-RXN"
+            },
+            {
+                "species_name": "HOCL",
+                "expression_type": "rate",
+                "expression": "-RXCL"
+            },
+            {
+                "species_name": "NX2",
+                "expression_type": "rate",
+                "expression": "RXNX2"
+            }
+        ],
+        "tank_reactions": [
+            {
+                "species_name": "Nx",
+                "expression_type": "rate",
+                "expression": "-RXN"
+            },
+            {
+                "species_name": "HOCL",
+                "expression_type": "rate",
+                "expression": "-RXCL"
+            },
+            {
+                "species_name": "NX2",
+                "expression_type": "rate",
+                "expression": "RXNX2"
+            }
+        ]
+    },
+    "network_data": {
+        "initial_quality": {
+            "Nx": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "HOCL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NX2": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            }
+        },
+        "parameter_values": {},
+        "sources": {},
+        "patterns": {}
+    },
+    "options": {
+        "timestep": 1,
+        "area_units": "m2",
+        "rate_units": "min",
+        "solver": "RK5",
+        "coupling": "NONE",
+        "rtol": 1e-10,
+        "atol": 1e-10,
+        "compiler": "NONE",
+        "segments": 5000,
+        "peclet": 1000,
+        "report": {
+            "pagesize": null,
+            "report_filename": null,
+            "species": {},
+            "species_precision": {},
+            "nodes": null,
+            "links": null
+        }
+    }
+}

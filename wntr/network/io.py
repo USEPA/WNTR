@@ -50,6 +50,7 @@ def to_dict(wn) -> dict:
         version="wntr-{}".format(__version__),
         comment="WaterNetworkModel - all values given in SI units",
         name=wn.name,
+        references=wn._references.copy(),
         options=wn._options.to_dict(),
         curves=wn._curve_reg.to_list(),
         patterns=wn._pattern_reg.to_list(),
@@ -84,6 +85,7 @@ def from_dict(d: dict, append=None):
         "version",
         "comment",
         "name",
+        "references",
         "options",
         "curves",
         "patterns",
@@ -101,6 +103,8 @@ def from_dict(d: dict, append=None):
         wn = append
     if "name" in d:
         wn.name = d["name"]
+    if "references" in d:
+        wn._references = d["references"]
     if "options" in d:
         wn.options.__init__(**d["options"])
     if "curves" in d:
