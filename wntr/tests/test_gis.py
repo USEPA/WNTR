@@ -327,7 +327,7 @@ class TestRaster(unittest.TestCase):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn_gis = wn.to_gis(crs="EPSG:4326")
-        points = wn_gis.junctions
+        points = pd.concat((wn_gis.junctions, wn_gis.tanks))
         self.points = points
         
         min_lon, min_lat, max_lon, max_lat = self.points.total_bounds
