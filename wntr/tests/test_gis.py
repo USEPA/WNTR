@@ -342,8 +342,6 @@ class TestRaster(unittest.TestCase):
         lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
         raster_data = np.outer(lat_values,lon_values) # value is product of coordinate
 
-
-        # transform = rasterio.transform.from_bounds(min_lon, min_lat, max_lon, max_lat, raster_data.shape[0], raster_data.shape[1])
         transform = rasterio.transform.from_origin(min_lon, max_lat, resolution, resolution)
         with rasterio.open(
             "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1], 
