@@ -35,7 +35,7 @@
     :hide:
     :skipif: gpd is None or rasterio is None
 	
-    >>> elevation_data_path = examples_dir+'/data/elevation.tif'
+    >>> elevation_data_path = examples_dir+'/data/Net1_elevation_data.tif'
 
 .. _geospatial:
 
@@ -833,10 +833,10 @@ the census tracts (polygons) is different than the junction and pipe attributes.
 Sample raster at points geometries
 --------------------------------------
 
-The :class:`~wntr.gis.sample_raster` function can be used to query a raster file at point geometries,
+The :class:`~wntr.gis.sample_raster` function can be used to sample a raster file at point geometries,
 such as the nodes of a water network. A common use case for this function is to assign elevation to the 
-nodes of a water network, however other geospatial data such as climate projections could be sampled 
-using this function. 
+nodes of a water network, however other geospatial information such as climate or hazard data could be sampled 
+using this function.
 
 The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 
 The raster data in the GeoTIFF format is also in EPSG:4326 CRS.
@@ -852,16 +852,16 @@ Sample elevations at junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Elevation is an essential attribute for accurate simulation of pressure in a water network and is
-commonly provided in GeoTIFF (.tif) files. The following example shows how such files can be sampled at
-the junctions of a network.
+commonly provided in GeoTIFF (.tif) files. The following example shows how such files can be sampled 
+and assigned to the junctions and tanks of a network. 
 
 .. doctest::
     :skipif: gpd is None or rasterio is None
 
+    >>> elevation_data_path = 'data/Net1_elevation_data.tif' # doctest: +SKIP
     >>> junctions = wn_gis.junctions
-    >>> elevation_data_path = 'data/elevation.tif' # doctest: +SKIP
-    >>> junctions["elevation"] = wntr.gis.sample_raster(junctions, elevation_data_path)
-    >>> print(junctions["elevation"])
+    >>> junction_elevations = wntr.gis.sample_raster(junctions, elevation_data_path)
+    >>> print(junction_elevations)
     name
     10    1400.0
     11    2100.0
@@ -872,17 +872,43 @@ the junctions of a network.
     23    2800.0
     31     300.0
     32     500.0
-    Name: elevation, dtype: float64
-
-The sampled elevations can be plotted as follows. The 
-resulting :numref:`fig-sample-elevations` illustrates Net1 with the elevations queried from the raster file.
-Note that to use these elevations in a simulation, they would need to be added to the water network object directly.
-Tanks, in addition to junctions, would need their elevations updated.
+    dtype: float64
 
 .. doctest::
     :skipif: gpd is None or rasterio is None
 
-    >>> ax = wntr.graphics.plot_network(wn, node_attribute=junctions["elevation"], link_width=1.5, 
+    >>> tanks = wn_gis.tanks
+    >>> tank_elevations = wntr.gis.sample_raster(tanks, elevation_data_path)
+    >>> print(tank_elevations)
+    name
+    2    4500.0
+    dtype: float64
+
+To use these elevations for hydraulic simulations, 
+they need to be added to the water network object.
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> for junction_name in wn.junction_name_list:
+    ...     junction = wn.get_node(junction_name)
+    ...     junction.elevation = junction_elevations[junction_name]
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> for tank_name in wn.tank_name_list:
+    ...     tank = wn.get_node(tank_name)
+    ...     tank.elevation = tank_elevations[tank_name]
+
+The sampled elevations can be plotted as follows. The 
+resulting :numref:`fig-sample-elevations` illustrates Net1 with the elevations 
+sampled from the raster file.
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute="elevation", link_width=1.5, 
     ...     node_size=40, node_colorbar_label='Raster Elevation')
 
 .. doctest::
@@ -891,12 +917,12 @@ Tanks, in addition to junctions, would need their elevations updated.
     
     >>> bounds = ax.axis('equal')
     >>> plt.tight_layout()
-    >>> plt.savefig('assign_elevations.png', dpi=300)
+    >>> plt.savefig('sample_elevations.png', dpi=300)
     >>> plt.close()
 
 .. _fig-sample-elevations:
-.. figure:: figures/assign_elevations.png
+.. figure:: figures/sample_elevations.png
    :width: 640
-   :alt: Net1 junctions with elevations from raster.
+   :alt: Net1 with elevations sampled from raster.
 
-   Net1 junctions with elevations assigned from raster.
+   Net1 with elevations sampled from raster.
