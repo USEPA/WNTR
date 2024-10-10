@@ -1,11 +1,12 @@
-# This is a basic workflow to help you get started with Actions
-
 name: docs
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
 jobs:
   build:
     name: Build the documentation with Sphinx
@@ -36,6 +37,7 @@ jobs:
   deploy:
     name: Deploy documentation to GitHub Pages
     needs: build
+    if: github.event_name == 'push'
     permissions:
       contents: read
       pages: write      # to deploy to Pages
