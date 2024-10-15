@@ -3,6 +3,7 @@ The wntr.graphics.network module includes methods plot the
 water network model.
 """
 import logging
+import math
 import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,15 @@ except:
 from wntr.graphics.color import custom_colormap
 
 logger = logging.getLogger(__name__)
+
+def _get_angle(line, loc=0.5):
+    # calculate orientation angle
+    p1 = line.interpolate(loc-0.01, normalized=True)
+    p2 = line.interpolate(loc+0.01, normalized=True)
+    angle = math.atan2(p2.y-p1.y, p2.x - p1.x)
+    return angle
+
+# def _create_oriented_arrow(line, length=0.01)
 
 def _format_node_attribute(node_attribute, wn):
     
@@ -42,6 +52,285 @@ def _format_link_attribute(link_attribute, wn):
         link_attribute = dict(link_attribute)
             
     return link_attribute
+
+def plot_network_gis(
+    wn, node_attribute=None, link_attribute=None, title=None,
+    node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
+    link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
+    add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
+    directed=False, ax=None, show_plot=True, filename=None):
+    """
+    Plot network graphic
+	
+    Parameters
+    ----------
+    wn : wntr WaterNetworkModel
+        A WaterNetworkModel object
+		
+    node_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a 
+          value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float. 
+        - If node_attribute is a dict, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float
+    
+	link_attribute : None, str, list, pd.Series, or dict, optional
+	
+        - If link_attribute is a string, then a link attribute dictionary is
+          created using edge_attribute = wn.query_link_attribute(str)
+        - If link_attribute is a list, then each link in the list is given a 
+          value of 1.
+        - If link_attribute is a pd.Series, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float. 
+        - If link_attribute is a dict, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float.
+		  
+    title: str, optional
+        Plot title 
+
+    node_size: int, optional
+        Node size 
+
+    node_range: list, optional
+        Node color range ([None,None] indicates autoscale)
+        
+    node_alpha: int, optional
+        Node transparency
+        
+    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Node colormap 
+        
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name. 
+        
+    link_width: int, optional
+        Link width
+		
+    link_range : list, optional
+        Link color range ([None,None] indicates autoscale)
+		
+    link_alpha : int, optional
+        Link transparency
+    
+    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
+        Link colormap
+        
+    link_labels: bool, optional
+        If True, the graph will include each link labelled with its name.
+        
+    add_colorbar: bool, optional
+        Add colorbar
+
+    node_colorbar_label: str, optional
+        Node colorbar label
+        
+    link_colorbar_label: str, optional
+        Link colorbar label
+        
+    directed: bool, optional
+        If True, plot the directed graph
+    
+    ax: matplotlib axes object, optional
+        Axes for plotting (None indicates that a new figure with a single 
+        axes will be used)
+
+    show_plot: bool, optional
+        If True, show plot with plt.show()
+    
+    filename : str, optional
+        Filename used to save the figure
+        
+    Returns
+    -------
+    ax : matplotlib axes object  
+    """
+    if ax is None: # create a new figure
+        plt.figure(facecolor='w', edgecolor='k')
+        ax = plt.gca()
+        
+    if title is not None:
+        ax.set_title(title)
+        
+    # set aspect setting
+    aspect = None
+    # aspect = "auto"
+    # aspect = "equal"
+
+    # initialize gis objects
+    wn_gis = wn.to_gis()
+    
+    link_gdf = pd.concat((wn_gis.pipes, wn_gis.pumps, wn_gis.valves))
+    
+    node_gdf = pd.concat((wn_gis.junctions, wn_gis.tanks, wn_gis.reservoirs))
+    
+    # missing keyword args
+    # these are used for elements that do not have a value for the link_attribute
+    # missing_kwds = {"color": "black"}
+    
+    # set tank and reservoir marker
+    tank_marker = "P"
+    reservoir_marker = "s"
+    
+    # colormap
+    if link_cmap is None:
+        link_cmap = plt.get_cmap('Spectral_r')
+    if node_cmap is None:
+        node_cmap = plt.get_cmap('Spectral_r')
+        
+    # ranges
+    if link_range is None:
+        link_range = (None, None)
+    if node_range is None:
+        node_range = (None, None)
+    
+
+    # prepare pipe plotting keywords
+    link_kwds = {}
+    if link_attribute is not None:
+        # if dict convert to a series
+        if isinstance(link_attribute, dict):
+            link_attribute = pd.Series(link_attribute)
+        # if series add as a column to link gdf
+        if isinstance(link_attribute, pd.Series):
+            link_gdf["_link_attribute"] = link_attribute
+            link_kwds["column"] = "_link_attribute"
+        # if list, create new boolean column that captures which indices are in the list
+        # TODO need to check this with original behavior
+        elif isinstance(link_attribute, list):
+            link_gdf["_link_attribute"] = link_gdf.index.isin(link_attribute).astype(int)
+            link_kwds["column"] = "_link_attribute"
+        # if str, assert that column name exists
+        elif isinstance(link_attribute, str):
+            if link_attribute not in link_gdf.columns:
+                raise KeyError(f"link_attribute {link_attribute} does not exist.")
+            link_kwds["column"] = link_attribute   
+        else:
+            raise TypeError("link_attribute must be dict, Series, list, or str")
+        link_kwds["cmap"] = link_cmap
+        if add_colorbar:
+            link_kwds["legend"] = True
+        link_kwds["vmin"] = link_range[0]
+        link_kwds["vmax"] = link_range[1]
+    else:
+        link_kwds["color"] = "black"
+    
+    link_kwds["linewidth"] = link_width
+    link_kwds["alpha"] = link_alpha
+    
+    background_link_kwds = {}
+    background_link_kwds["color"] = "grey"
+    background_link_kwds["linewidth"] = link_width
+    background_link_kwds["alpha"] = link_alpha
+    
+    link_cbar_kwds = {}
+    link_cbar_kwds["shrink"] = 0.5
+    link_cbar_kwds["pad"] = 0.0
+    link_cbar_kwds["label"] = link_colorbar_label
+
+    # prepare junctin plotting keywords
+    node_kwds = {}
+    if node_attribute is not None:
+        # if dict convert to a series
+        if isinstance(node_attribute, dict):
+            node_attribute = pd.Series(node_attribute)
+        # if series add as a column to node gdf
+        if isinstance(node_attribute, pd.Series):
+            node_gdf["_node_attribute"] = node_attribute
+            node_kwds["column"] = "_node_attribute"
+        # if list, create new boolean column that captures which indices are in the list
+        # TODO need to check this with original behavior
+        elif isinstance(node_attribute, list):
+            node_gdf["_node_attribute"] = node_gdf.index.isin(node_attribute).astype(int)
+            node_kwds["column"] = "_node_attribute"
+        # if str, assert that column name exists
+        elif isinstance(node_attribute, str):
+            if node_attribute not in node_gdf.columns:
+                raise KeyError(f"node_attribute {node_attribute} does not exist.")
+            node_kwds["column"] = node_attribute   
+        else:
+            raise TypeError("node_attribute must be dict, Series, list, or str")
+        node_kwds["cmap"] = node_cmap
+        if add_colorbar:
+            node_kwds["legend"] = True
+        node_kwds["vmin"] = node_range[0]
+        node_kwds["vmax"] = node_range[1]
+    else:
+        node_kwds["color"] = "black"
+    node_kwds["alpha"] = node_alpha
+    node_kwds["markersize"] = node_size
+    
+    node_cbar_kwds = {}
+    node_cbar_kwds["shrink"] = 0.5
+    node_cbar_kwds["pad"] = 0.0
+    node_cbar_kwds["label"] = node_colorbar_label
+    
+    # plot junctions
+    # junction_mask
+    node_gdf[node_gdf.node_type == "Junction"].plot(
+        ax=ax, aspect=aspect, zorder=3, legend_kwds=node_cbar_kwds, **node_kwds)
+    
+    # turn off legend for subsequent node plots
+    node_kwds["legend"] = False
+    
+    # plot tanks
+    node_kwds["markersize"] = node_size * 1.5
+    node_gdf[node_gdf.node_type == "Tank"].plot(
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, **node_kwds)
+    
+    # plot reservoirs
+    node_kwds["markersize"] = node_size * 2.0
+    node_gdf[node_gdf.node_type == "Reservoir"].plot(
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, **node_kwds)
+    
+    # plot pipes
+    # background
+    link_gdf.plot(
+        ax=ax, aspect=aspect, zorder=1, **background_link_kwds)
+    
+    link_gdf.plot(
+        ax=ax, aspect=aspect, zorder=2, legend_kwds=link_cbar_kwds, **link_kwds)
+
+    # plot pumps
+    # if len(wn_gis.pumps) >0:
+    #     wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
+    #     wn_gis.pumps["midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
+    #     wn_gis.pumps["angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
+    #     for idx , row in wn_gis.pumps.iterrows():
+    #         x,y = row["midpoint"].x, row["midpoint"].y
+    #         angle = row["angle"]
+    #         ax.scatter(x,y, color="purple", s=100, marker=(3,0, angle-90))
+
+    # plot valves
+    # if len(wn_gis.valves) >0:
+    #     # wn_gis.valves.plot(ax=ax, color="green", aspect=aspect)
+    #     wn_gis.valves["midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
+    #     wn_gis.valves["angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
+    #     for idx , row in wn_gis.valves.iterrows():
+    #         x,y = row["midpoint"].x, row["midpoint"].y
+    #         angle = row["angle"]
+    #         ax.scatter(x,y, color="green", s=100, marker=(3,0, angle-90))
+    
+    # annotation
+    if node_labels:
+        for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
+            ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
+    if link_labels:
+        # compute midpoints
+        midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
+        for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
+            ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
+    
+    ax.axis('off')
+    
+    if filename:
+        plt.savefig(filename)
+    
+    return ax
+    
         
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
