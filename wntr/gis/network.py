@@ -99,8 +99,11 @@ class WaterNetworkGIS:
             Represent valves as points (True) or lines (False), by default False
         """
         
-        def _extract_geodataframe(df, crs=None, valid_base_names=[], 
+        def _extract_geodataframe(df, crs=None, valid_base_names=None, 
                                   links_as_points=False):
+            if valid_base_names is None:
+                valid_base_names = []
+            
             # Drop any column with all NaN, this removes excess attributes
             # Valid base attributes that have all None values are added back 
             # at the end of this routine
