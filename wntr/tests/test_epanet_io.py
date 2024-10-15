@@ -625,7 +625,9 @@ class TestNet3InpUnitsResults(unittest.TestCase):
     def tearDownClass(self):
         pass
 
-    def test_link_flowrate_units_convert(self):
+    def test_units_convert(self):
+        # Compares Net3 EpanetSimulator flowrate results using INP files saved 
+        # using GPM and CMH units
         for link_name, link in self.wn.links():
             for t in self.results2.link["flowrate"].index:
                 self.assertLessEqual(
@@ -636,7 +638,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
                     0.00001,
                 )
     
-    def test_link_headloss_units_convert(self):
+    def test_link_headloss_units(self):
         
         # headloss = per unit length for pipes and CVs
         pipe_name = '123'
@@ -665,7 +667,78 @@ class TestNet3InpUnitsResults(unittest.TestCase):
             ),
             0.00001,
         )
-        
 
+    def test_headloss_formula_roughness_units(self):
+        """
+        See Table 3.2 Roughness Coefficients, this test uses values for Plastic Pipes
+        https://epanet22.readthedocs.io/en/latest/3_network_model.html?highlight=roughness#id3
+        """
+        pressure = {}
+        for headloss in ['H-W', 'C-M', 'D-W']:
+            for units in ['GPM', 'LPS']:
+                file_prefix = 'temp_'+headloss+'_'+units
+                
+                inp_file = join(ex_datadir, "Net3.inp")
+                wn = self.wntr.network.WaterNetworkModel(inp_file)
+                wn.options.hydraulic.demand_model = 'DDA'
+                wn.options.hydraulic.inpfile_units = units
+                wn.options.time.duration = 0 # steady state
+                
+                wn.options.hydraulic.headloss = headloss
+                if headloss == 'H-W':
+                    roughness = 145 # unitless
+                elif headloss == 'D-W':
+                    roughness = 0.005 # 0.001*ft
+                    roughness = (roughness*0.001)*0.3048 #  1.524e-6 m == 0.001524 mm
+                else: # C-M
+                    roughness = 0.011 # unitless
+    
+                for name, pipe in wn.pipes():
+                    pipe.roughness = roughness
+  
+                sim = self.wntr.sim.EpanetSimulator(wn)
+                results = sim.run_sim(file_prefix=file_prefix)
+                temp = results.node['pressure'].loc[0,wn.junction_name_list]
+                pressure[headloss+', '+units] = temp
+        
+        #import matplotlib.pylab as plt
+        #import pandas as pd
+        #plt.figure()
+        #pd.DataFrame(pressure).plot.bar()
+        #plt.legend() #loc='lower right')
+        
+        ## Compares all results to H-W, GPM
+        threshold = 0.55
+        for key in pressure.keys():
+            MAE = (pressure['H-W, GPM'] - pressure[key]).abs().mean()
+            print(key, MAE)
+            self.assertLessEqual(MAE, threshold) # m
+        
+        ## Changing the headloss formula from H-W to D-W, without changing roughness,
+        # will result in errors
+        inp_file = join(ex_datadir, "Net3.inp")
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        assert wn.options.hydraulic.headloss == 'H-W'
+        assert wn.options.hydraulic.inpfile_units == 'GPM'
+        pressure_hw = pressure['H-W, GPM']
+        # Change to D-W without changing roughness
+        wn.options.hydraulic.headloss = 'D-W'
+        wn.options.hydraulic.demand_model = 'DDA'
+        wn.options.hydraulic.inpfile_units = units
+        wn.options.time.duration = 0 # steady state
+        sim = self.wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim()
+        pressure_dw = results.node['pressure'].loc[0,wn.junction_name_list]
+        # Compare results
+        MAE = (pressure_hw - pressure_dw).abs().mean()
+        with self.assertRaises(AssertionError):
+            self.assertLessEqual(MAE, threshold) # m
+        
+        ## D-W is not supported by the WNTRSimulator
+        sim = self.wntr.sim.WNTRSimulator(wn)
+        with self.assertRaises(NotImplementedError):
+            results = sim.run_sim()
+        
+            
 if __name__ == "__main__":
     unittest.main()

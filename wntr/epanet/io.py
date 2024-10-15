@@ -674,6 +674,8 @@ class InpFile(object):
         f.write('\n'.encode(sys_default_enc))
 
     def _read_pipes(self):
+        darcy_weisbach = self.wn.options.hydraulic.headloss == "D-W"
+        
         for lnum, line in self.sections['[PIPES]']:
             line = line.split(';')[0]
             current = line.split()
@@ -701,7 +703,8 @@ class InpFile(object):
                         current[2],
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
                         to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                        float(current[5]),
+                        to_si(self.flow_units, float(current[5]), HydParam.RoughnessCoeff, 
+                              darcy_weisbach=darcy_weisbach),
                         minor_loss,
                         link_status,
                         check_valve)
@@ -711,6 +714,8 @@ class InpFile(object):
                 raise ENValueError(211, str(e.args[0]), line_num=lnum) from e
 
     def _write_pipes(self, f, wn):
+        darcy_weisbach = wn.options.hydraulic.headloss == "D-W"
+        
         f.write('[PIPES]\n'.encode(sys_default_enc))
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                    'Roughness', 'Minor Loss', 'Status').encode(sys_default_enc))
@@ -723,7 +728,9 @@ class InpFile(object):
                  'node2': pipe.end_node_name,
                  'len': from_si(self.flow_units, pipe.length, HydParam.Length),
                  'diam': from_si(self.flow_units, pipe.diameter, HydParam.PipeDiameter),
-                 'rough': pipe.roughness,
+                 'rough': from_si(self.flow_units, pipe.roughness, 
+                                  HydParam.RoughnessCoeff, 
+                                  darcy_weisbach=darcy_weisbach),
                  'mloss': pipe.minor_loss,
                  'status': str(pipe.initial_status),
                  'com': ';'}
