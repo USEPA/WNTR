@@ -835,7 +835,7 @@ Sample raster at points geometries
 
 The :class:`~wntr.gis.sample_raster` function can be used to sample a raster file at point geometries,
 such as the nodes of a water network. A common use case for this function is to assign elevation to the 
-nodes of a water network, however other geospatial information such as climate or hazard data could be sampled 
+nodes of a water network model, however other geospatial information such as climate or hazard data could be sampled 
 using this function.
 
 The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 
@@ -853,7 +853,8 @@ Sample elevations at junctions
 
 Elevation is an essential attribute for accurate simulation of pressure in a water network and is
 commonly provided in GeoTIFF (.tif) files. The following example shows how such files can be sampled 
-and assigned to the junctions and tanks of a network. 
+and assigned to the junctions and tanks of a network. Note that elevation data generally needs 
+to be adjusted to account for buried pipes.
 
 .. doctest::
     :skipif: gpd is None or rasterio is None
