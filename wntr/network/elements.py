@@ -2599,7 +2599,7 @@ class Source(object):
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):
-    def __init__(self, model, name, node_name, source_type, strength, pattern=None):
+    def __init__(self, model, name, node_name, source_type, strength, pattern=None, species=None):
         self._strength_timeseries = TimeSeries(model._pattern_reg, strength, pattern, name)
         self._pattern_reg = model._pattern_reg
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
@@ -2608,6 +2608,7 @@ class Source(object):
         self._name = name
         self._node_name = node_name
         self._source_type = source_type
+        self._species = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2619,8 +2620,8 @@ class Source(object):
         return False
 
     def __repr__(self):
-        fmt = "<Source: '{}', '{}', '{}', {}, {}>"
-        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name)
+        fmt = "<Source: '{}', '{}', '{}', {}, {}, {}>"
+        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name, repr(self._species))
 
     @property
     def strength_timeseries(self): 
@@ -2651,6 +2652,13 @@ class Source(object):
     def source_type(self, value):
         self._source_type = value
 
+    @property
+    def species(self):
+        """str : species name for multispecies reactions, by default None"""
+    @species.setter
+    def species(self, value):
+        self._species = str(value)
+
     def to_dict(self):
         ret = dict()
         ret['name'] = self.name
@@ -2658,4 +2666,6 @@ class Source(object):
         ret['source_type'] = self.source_type
         ret['strength'] = self.strength_timeseries.base_value
         ret['pattern'] = self.strength_timeseries.pattern_name
+        if self.species:
+            ret['species'] = self.species
         return ret
