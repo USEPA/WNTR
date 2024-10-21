@@ -216,7 +216,7 @@ The following example returns valid base GeoJSON column names for junctions.
 
     >>> geojson_column_names = wntr.network.io.valid_gis_names()
     >>> print(geojson_column_names['junctions'])
-    ['name', 'elevation', 'coordinates', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
+    ['name', 'elevation', 'coordinates', 'base_demand', 'demand_pattern', 'demand_category', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
 
 A minimal list of valid column names can also be obtained by setting ``complete_list`` to False.
 Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
@@ -311,7 +311,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
 
       >>> shapefile_field_names = wntr.network.io.valid_gis_names(truncate_names=10)
       >>> print(shapefile_field_names['junctions'])
-      ['name', 'elevation', 'coordinate', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
+      ['name', 'elevation', 'coordinate', 'base_deman', 'demand_pat', 'demand_cat', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
 
   A minimal list of valid field names can also be obtained by setting ``complete_list`` to False.
   Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
