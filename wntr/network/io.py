@@ -644,12 +644,13 @@ def valid_gis_names(complete_list=True, truncate_names=None):
     Valid column/field names for GeoJSON or Shapefiles
     
     Note that Shapefile field names are truncated to 10 characters 
-    (set truncate=10)
+    (set truncate_names=10)
     
     Parameters
     ----------
     complete_list : bool
-        Include a complete list of column/field names (beyond basic attributes)
+        When true, returns both optional and required column/field names.
+        When false, only returns required column/field names.
     truncate_names : None or int
         Truncate column/field names to specified number of characters, 
         set truncate=10 for Shapefiles.  None indicates no truncation.
