@@ -206,10 +206,11 @@ GeoJSON files
 GeoJSON files are commonly used to store geographic data structures. 
 More information on GeoJSON files can be found at https://geojson.org.
 
-To use GeoJSON files in WNTR, a set of valid base column names are required.
-Valid base GeoJSON column names can be obtained using the 
-:class:`~wntr.network.io.valid_gis_names` function.
-The following example returns valid base GeoJSON column names for junctions.
+When reading GeoJSON files into WNTR, only a set of valid column names can be used.
+Valid GeoJSON column names can be obtained using the 
+:class:`~wntr.network.io.valid_gis_names` function. By default, the function
+returns all column names, both required and optional.
+The following example returns valid GeoJSON column names for junctions.
 
 .. doctest::
     :skipif: gpd is None
@@ -218,8 +219,9 @@ The following example returns valid base GeoJSON column names for junctions.
     >>> print(geojson_column_names['junctions'])
     ['name', 'elevation', 'geometry', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
 
-A minimal list of valid column names can also be obtained by setting ``complete_list`` to False.
-Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
+A minimal list of required column names can also be obtained by setting ``complete_list`` to False.
+Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are 
+defined using default values.
 
 .. doctest::
     :skipif: gpd is None
@@ -253,7 +255,7 @@ Note that patterns, curves, sources, controls, and options are not stored in the
 
 The :class:`~wntr.network.io.read_geojson` function creates a WaterNetworkModel from a 
 dictionary of GeoJSON files.  
-Valid base column names and additional custom attributes are added to the model.
+Valid column names and additional custom attributes are added to the model.
 The function can also be used to append information from GeoJSON files into an existing WaterNetworkModel.
 
 .. doctest::
@@ -300,11 +302,12 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
   assumed that the first 10 characters of each attribute are unique.  
   
 * To create WaterNetworkModel from Shapefiles, a set of valid field names are required.
-  Valid base Shapefiles field names can be obtained using the 
-  :class:`~wntr.network.io.valid_gis_names` function.
-  For Shapefiles, the `truncate` input parameter should be set to 10 (characters).
-  The following example returns valid base Shapefile field names for junctions.
-  Note that attributes like ``base_demand`` are truncated to ``base_deman``. 
+  Valid Shapefiles field names can be obtained using the 
+  :class:`~wntr.network.io.valid_gis_names` function. By default, the function
+  returns all column names, both required and optional.
+  For Shapefiles, the `truncate_names` input parameter should be set to 10 (characters).
+  The following example returns valid Shapefile field names for junctions.
+  Note that attributes like ``minimum_pressure`` are truncated to ``minimum_pr``. 
 
   .. doctest::
       :skipif: gpd is None
@@ -313,7 +316,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
       >>> print(shapefile_field_names['junctions'])
       ['name', 'elevation', 'geometry', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
 
-  A minimal list of valid field names can also be obtained by setting ``complete_list`` to False.
+  A minimal list of required field names can also be obtained by setting ``complete_list`` to False.
   Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
 
   .. doctest::
@@ -349,7 +352,7 @@ Note that patterns, curves, sources, controls, and options are not stored in the
 
 The :class:`~wntr.network.io.read_shapefile` function creates a WaterNetworkModel from a dictionary of
 Shapefile directories.
-Valid base field names and additional custom field names are added to the model.
+Valid field names and additional custom field names are added to the model.
 The function can also be used to append information from Shapefiles into an existing WaterNetworkModel.
 
 .. doctest::
