@@ -227,7 +227,7 @@ class Junction(Node):
         """
         if len(self.demand_timeseries_list) > 0:
             return self.demand_timeseries_list[0].pattern_name
-        return 0.0
+        return None
     @demand_pattern.setter
     def demand_pattern(self, value):
         raise RuntimeWarning('The demand_pattern property is read-only. Please modify using demand_timeseries_list[0].pattern_name')
@@ -240,7 +240,7 @@ class Junction(Node):
         """
         if len(self.demand_timeseries_list) > 0:
             return self.demand_timeseries_list[0].category
-        return 0.0
+        return None
     @demand_category.setter
     def demand_category(self, value):
         raise RuntimeWarning('The demand_category property is read-only. Please modify using demand_timeseries_list[0].category.')
