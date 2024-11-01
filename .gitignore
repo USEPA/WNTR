@@ -22,6 +22,7 @@ temp*
 
 examples/*.inp
 wntr/tests/*.png
+wntr/tests/*.tif
 
 documentation/_local
 documentation/apidoc

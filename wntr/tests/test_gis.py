@@ -23,6 +23,13 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
     
+try:
+    import rasterio
+    has_rasterio = True
+except ModuleNotFoundError:
+    rasterio = None
+    has_rasterio = False
+    
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
@@ -69,7 +76,7 @@ class TestGIS(unittest.TestCase):
             
         df = pd.DataFrame(point_data)
         self.points = gpd.GeoDataFrame(df, crs=None)
-        
+
     @classmethod
     def tearDownClass(self):
         pass
@@ -310,6 +317,49 @@ class TestGIS(unittest.TestCase):
                                  {'link': '121', 'node': '21', 'snap_distance': 3.0, 'line_position': 0.1, 'geometry': Point([30.0,37.0])}])
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
+
+@unittest.skipIf(not has_rasterio,
+                 "Cannot test raster capabilities: rasterio is missing")
+class TestRaster(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        # use net1 junctions as example points
+        inp_file = join(ex_datadir, "Net1.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn_gis = wn.to_gis(crs="EPSG:4326")
+        points = pd.concat((wn_gis.junctions, wn_gis.tanks))
+        self.points = points
+        
+        min_lon, min_lat, max_lon, max_lat = self.points.total_bounds
+
+        resolution = 1.0
+        
+        # adjust to include boundary
+        max_lon += resolution
+        min_lat -= resolution
+                
+        lon_values = np.arange(min_lon, max_lon, resolution)
+        lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
+        raster_data = np.outer(lat_values,lon_values) # value is product of coordinate
+
+        transform = rasterio.transform.from_origin(min_lon, max_lat, resolution, resolution)
+        with rasterio.open(
+            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1], 
+            count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as file:
+            file.write(raster_data, 1) 
+        
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_sample_raster(self):
+        raster_values = wntr.gis.sample_raster(self.points, "test_raster.tif")
+        assert (raster_values.index == self.points.index).all()
+        
+        # values should be product of coordinates
+        expected_values = self.points.apply(lambda row: row.geometry.x * row.geometry.y, axis=1)
+        assert np.isclose(raster_values.values, expected_values, atol=1e-5).all()
+
 
 if __name__ == "__main__":
     unittest.main()
