@@ -281,3 +281,93 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     stats.index.name = None
     
     return stats
+
+
+def reconnect_network(pipes, tolerance: float):
+    """Connect a network where pipes are all disconnected from each other.
+
+    Parameters
+    ----------
+    pipes : gpd.GeoDataFrame
+        GeoDataFrame that has pipe LineString values in the geometry column.
+    tolerance : float
+        Maximum distance between pipe endpoints to merge into one.
+
+    Returns
+    -------
+    Tuple[GeoDataFrame, Dict[str, Point]]
+        * The GeoDataFrame contains the pipes dataframe with the modified geometry and two new columns: *new_start_node* and *new_end_node*. 
+        * The dict constains the new node names and their Points.
+
+    """
+    if gpd is None:
+        raise RuntimeError('geopandas not installed by required for reconnect_network')
+    if not isinstance(pipes, gpd.GeoDataFrame):
+        raise TypeError('pipes must be a GeoDataFrame')
+    junctions = dict()
+    new_pipe_geom = None
+    for idx, pipe in pipes.iterrows():
+        tmp_sn_id = "{}_s".format(idx)
+        tmp_en_id = "{}_e".format(idx)
+        geoms = [Point(g) for g in pipe.geometry.coords]
+        first = geoms[0]
+        last = geoms[-1]
+        vertices = geoms[1:-1]
+        if new_pipe_geom is None:
+            new_pipe_geom = [(tmp_sn_id, tmp_en_id, pipe.geometry)]
+            junctions[tmp_sn_id] = first
+            junctions[tmp_en_id] = last
+            continue
+        finished = gpd.GeoDataFrame(
+            data=new_pipe_geom, columns=["start_node_name", "end_node_name", "geometry"]
+        )
+        endpoints = gpd.GeoDataFrame(index=[tmp_sn_id, tmp_en_id], geometry=[first, last])
+        snapped = snap(endpoints, finished, tolerance=10)
+        if tmp_sn_id in snapped.index:
+            tmp_sn_id = snapped.loc[tmp_sn_id].node
+        else:
+            junctions[tmp_sn_id] = first
+        if tmp_en_id in snapped.index:
+            tmp_en_id = snapped.loc[tmp_en_id].node
+        else:
+            junctions[tmp_en_id] = last
+        vertices.insert(0, junctions[tmp_sn_id])
+        vertices.append(junctions[tmp_en_id])
+        new_pipe_geom.append((tmp_sn_id, tmp_en_id, LineString(vertices)))
+    finished = gpd.GeoDataFrame(
+        data=new_pipe_geom, columns=["start_node_name", "end_node_name", "geometry"]
+    )
+    pipes.geometry = finished.geometry
+    pipes['new_start_node'] = finished.start_node_name
+    pipes['new_end_node'] = finished.end_node_name
+    return pipes, junctions
+
+def estimate_elevations(junctions: dict, elevations):
+    """Estimate elevations from a subset of data.
+
+    Parameters
+    ----------
+    junctions : dict[str, Point]
+        The junctions you wish to interpolate elevations for
+    elevations : GeoDataFrame
+        A GeoDataFrame with the elevations that are actually available.
+
+    Returns
+    -------
+    GeoDataFrame 
+        The junctions with a column called "elevation"
+    """
+    if gpd is None:
+        raise RuntimeError('geopandas not installed by required for reconnect_network')
+    if not isinstance(elevations, gpd.GeoDataFrame):
+        raise TypeError('elevations must be a GeoDataFrame')
+    new_juncs = gpd.GeoDataFrame(
+        data=[k for k in junctions.keys()],
+        geometry=[v for v in junctions.values()],
+        columns=["index"],
+        crs=elevations.crs,
+    )
+    snapped_juncs = snap(new_juncs, elevations, tolerance=10000)
+    elevs = elevations.set_index("index").elevation
+    new_juncs["elevation"] = elevs[snapped_juncs.node].values
+    return new_juncs
