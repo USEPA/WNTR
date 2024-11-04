@@ -10,48 +10,72 @@ on:
 jobs:
 
   wheels:
+    name: Build distribution 📦 on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-2019, macOS-13, ubuntu-20.04] 
+        os: [windows-latest, macOS-13, macos-13, ubuntu-latest] 
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      with:
+        egress-policy: audit
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.11.1
+      uses: pypa/cibuildwheel@79b0dd328794e1180a7268444d46cdf12e1abd01 # v2.21.0
       env:
         CIBW_ENVIRONMENT: BUILD_WNTR_EXTENSIONS='true'
-        CIBW_BUILD: cp37-* cp38-* cp39-* cp310-* cp311-*
+        CIBW_BUILD: cp38-* cp39-* cp310-* cp311-* cp312-*
         CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
       with:
+        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
         path: ./wheelhouse/*.whl
 
   source:
+    name: Make SDist artifact 📦
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: build the sdist
-        run: |
-          python -m pip install --upgrade build
-          python -m build --sdist
-      - uses: actions/upload-artifact@v3
+
+      - name: Build SDist
+        run: pipx run build --sdist
+    
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
+          name: cibw-sdist
           path: dist/*.tar.gz
 
   publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
     needs: [wheels, source]
     runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      id-token: write
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
-          name: artifact
-          path: dist
+          egress-policy: audit
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_WNTR_API_TOKEN }}

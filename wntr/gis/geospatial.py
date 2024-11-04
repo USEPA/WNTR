@@ -110,6 +110,7 @@ def snap(A, B, tolerance):
     B.index.name = None
     
     # snap to points
+    snapped_points = None
     if B['geometry'].geom_type.isin(['Point']).all():
         snapped_points = closest.rename(columns={"indexB":"node"})
         snapped_points = snapped_points[["node", "snap_distance", "geometry"]]
@@ -282,6 +283,98 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     
     return stats
 
+def connect_lines(lines, threshold):
+    """
+    Connect lines by identifying start and end nodes that are within a 
+    threshold distance
+
+    Parameters
+    ----------
+    lines : gpd.GeoDataFrame
+        GeoDataFrame with LineString geometry
+    tolerance : float
+        Maximum distance between line endpoints, used to define connecting 
+        Point geometry
+
+    Returns
+    -------
+    Tuple[line GeoDataFrame, node GeoDataFrame]
+        * line GeoDataFrame contains LineString geometry, start_node_name, and 
+          end_node_name, along with original columns in lines
+        * node GeoDataFrame contains connecting Point geometry and node names
+    """
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+        
+    lines = lines.copy()
+
+    # Create start and end node name and Point geometry for each line
+    nodes = []
+    geometry = []
+    lines['start_node_name'] = None #create new columns
+    lines['end_node_name'] = None
+    j = 0
+    for i, line in lines.iterrows(): # loop through every line
+        try:
+            geom = line.geometry.geoms[0]
+        except:
+            geom = line.geometry
+        
+        geometry.append(Point([geom.coords[0][0], geom.coords[0][1]])) 
+        nodes.append({'Line': i, 'Node': j}) #node list holds the line ID
+        #unique number for each start node and end node for each line 
+        lines.loc[i,'start_node_name'] = j
+        j = j+1
+            
+        geometry.append(Point([geom.coords[-1][0], geom.coords[-1][1]]))
+        nodes.append({'Line': i, 'Node': j})
+        lines.loc[i,'end_node_name'] = j
+        j = j+1
+            
+    nodes = gpd.GeoDataFrame(nodes, geometry=geometry)
+    nodes.set_crs(lines.crs, inplace=True)
+        
+    # Group nodes into "supernodes"
+    # supernode is composed of all nodes within certain radius 
+    nodes_buffer = nodes.copy()
+    nodes_buffer.geometry = nodes_buffer.buffer(threshold) #how big is the buffer, to connect lines 
+    intersect_nodes = intersect(nodes, nodes_buffer)
+    intersect_nodes.sort_values(by=['n'], ascending=False, inplace=True) # sort high to low
+    
+    intersect_nodes['visited'] = False #new column
+    nodes['supernode'] = None
+    # Walk through each node, and assign supernodes
+    # If node has already been visited, don't need to assign to supernode again
+    # The solution is dependent on node order
+    for i in intersect_nodes.index:
+        if intersect_nodes.loc[i,'visited'] == True:
+            continue
+        for j in intersect_nodes.loc[i,'intersections']: # list of intersecting vertices
+            if intersect_nodes.loc[j,'visited'] == True: # maybe see which point is closer, the current one of the new one
+                continue
+            nodes.loc[j, 'supernode'] = i
+            intersect_nodes.loc[j,'visited'] = True
+
+    assert intersect_nodes['visited'].all()
+
+    # Update lines GeoDataFrame with start and end supernode names
+    map_node_to_supernode = nodes['supernode']
+    lines['start_node_name'] = map_node_to_supernode[lines['start_node_name']].values
+    lines['end_node_name'] = map_node_to_supernode[lines['end_node_name']].values
+    
+    # Update nodes GeoDataFrame to only include unique supernodes
+    unique_supernodes = nodes['supernode'].unique()
+    nodes = nodes[['Node', 'geometry']]
+    nodes.set_index('Node', inplace=True)
+    nodes = nodes.loc[unique_supernodes,:]
+    nodes.index.name = None
+    nodes.crs = lines.crs
+    
+    nodes.index = nodes.index.astype(str)
+    lines['start_node_name'] = lines['start_node_name'].astype(str)
+    lines['end_node_name'] = lines['end_node_name'].astype(str)
+    
+    return lines, nodes
 
 def reconnect_network(pipes, tolerance: float):
     """Connect a network where pipes are all disconnected from each other.
@@ -322,7 +415,7 @@ def reconnect_network(pipes, tolerance: float):
             data=new_pipe_geom, columns=["start_node_name", "end_node_name", "geometry"]
         )
         endpoints = gpd.GeoDataFrame(index=[tmp_sn_id, tmp_en_id], geometry=[first, last])
-        snapped = snap(endpoints, finished, tolerance=10)
+        snapped = snap(endpoints, finished, tolerance=tolerance)
         if tmp_sn_id in snapped.index:
             tmp_sn_id = snapped.loc[tmp_sn_id].node
         else:
@@ -340,6 +433,9 @@ def reconnect_network(pipes, tolerance: float):
     pipes.geometry = finished.geometry
     pipes['new_start_node'] = finished.start_node_name
     pipes['new_end_node'] = finished.end_node_name
+    
+    junctions = gpd.GeoSeries(junctions)
+    
     return pipes, junctions
 
 def estimate_elevations(junctions: dict, elevations):

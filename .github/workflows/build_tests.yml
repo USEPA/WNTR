@@ -21,9 +21,9 @@ jobs:
         os: [windows-latest, macOS-13, ubuntu-latest]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -37,7 +37,7 @@ jobs:
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/wntr*
@@ -52,11 +52,11 @@ jobs:
       fail-fast: false
     steps:
     - name: Set up Python 
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Download wheel
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
     - name: Install wntr
@@ -76,9 +76,9 @@ jobs:
         os: [windows-latest, macOS-13, ubuntu-latest]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -94,33 +94,35 @@ jobs:
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-        
     - name: Save coverage
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        include-hidden-files: true
 
   combine_reports:
     needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install coverage
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         python -m pip install -e .
-    # pip install coveralls
+        pip install coveralls
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
-        name: coverage
+        pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
     - name: Setup coverage and combine reports
+      run: coverage combine .coverage.*.ubuntu-latest
+    - name: Create coverage report
       run: |
         echo "[paths]" > .coveragerc
         echo "source = " >> .coveragerc
@@ -129,55 +131,21 @@ jobs:
         echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
         echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
         echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-        coverage combine
-    - name: Create coverage report
-      run: |
+        echo "    ${{ github.workspace }}/wntr" >> .coveragerc
         coverage report
         coverage json --pretty-print
         coverage html --show-contexts
     - name: Save coverage JSON
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: coverage-json
         path: coverage.json
     - name: Save coverage html
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: coverage-html
         path: htmlcov
-
-  combine_reports_upload_coveralls:
-    needs: [ pytest_coverage ]
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-    - name: Set up Python 
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    - uses: actions/checkout@v2
-    - name: Install coverage
-      run: |
-        python -m pip install --upgrade pip
-        pip install coveralls
-        pip install -r requirements.txt
-        python -m pip install -e .
-    - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v2
-      with:
-        name: coverage
-    - name: Setup coverage and combine reports
-      run: |
-        echo "[paths]" > .coveragerc
-        echo "source = " >> .coveragerc
-        echo "    wntr/" >> .coveragerc
-        echo "    wntr\\" >> .coveragerc
-        echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
-        echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-        echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-        coverage combine
     - name: Push to coveralls
-      run: |
-        coveralls --service=github
+      run: coveralls --service=github --rcfile=.coveragerc
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
