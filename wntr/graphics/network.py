@@ -54,7 +54,6 @@ def _prepare_attribute(attribute, gdf):
             gdf["_attribute"] = attribute
             kwds["column"] = "_attribute"
         # if list, create new boolean column that captures which indices are in the list
-        # TODO need to check this with original behavior
         elif isinstance(attribute, list):
             gdf["_attribute"] = np.nan
             gdf.loc[gdf.index.isin(attribute), "_attribute"] = 1
@@ -69,12 +68,6 @@ def _prepare_attribute(attribute, gdf):
     else:
         kwds["color"] = "black"
     return kwds
-
-    
-
-
-
-# def _create_oriented_arrow(line, length=0.01)
 
 def _format_node_attribute(node_attribute, wn):
     
@@ -270,60 +263,60 @@ def plot_network(
     node_cbar_kwds["label"] = node_colorbar_label
     
     # plot nodes - each type is plotted separately to allow for different marker types
-    # plot junctions
     node_gdf[node_gdf.node_type == "Junction"].plot(
         ax=ax, aspect=aspect, zorder=3, legend_kwds=node_cbar_kwds, **node_kwds)
     
     # turn off legend for subsequent node plots
     node_kwds["legend"] = False
     
-    # plot tanks
     node_kwds["markersize"] = node_size * 2.0
     node_gdf[node_gdf.node_type == "Tank"].plot(
         ax=ax, aspect=aspect, zorder=4, marker=tank_marker, **node_kwds)
     
-    # plot reservoirs
     node_kwds["markersize"] = node_size * 3.0
     node_gdf[node_gdf.node_type == "Reservoir"].plot(
         ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, **node_kwds)
     
-    # plot pipes
-    # background
+    # plot links
     link_gdf.plot(
         ax=ax, aspect=aspect, zorder=1, **background_link_kwds)
     
     link_gdf.plot(
         ax=ax, aspect=aspect, zorder=2, legend_kwds=link_cbar_kwds, **link_kwds)
 
-    # plot pumps
     if len(wn_gis.pumps) >0:
         # wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
-        wn_gis.pumps["midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
-        wn_gis.pumps["angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
+        wn_gis.pumps["_midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
+        wn_gis.pumps["_angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
         for idx , row in wn_gis.pumps.iterrows():
-            x,y = row["midpoint"].x, row["midpoint"].y
-            angle = row["angle"]
+            x,y = row["_midpoint"].x, row["_midpoint"].y
+            angle = row["_angle"]
             ax.scatter(x,y, color="black", s=100, marker=(3, 0, angle-90))
-            # ax.scatter(x,y, color="purple", s=100, marker=arrow_marker)
 
-    # plot valves
     if len(wn_gis.valves) >0:
-        wn_gis.valves["midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
-        wn_gis.valves["angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
+        wn_gis.valves["_midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
+        wn_gis.valves["_angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
         for idx , row in wn_gis.valves.iterrows():
-            x,y = row["midpoint"].x, row["midpoint"].y
-            angle = row["angle"]
+            x,y = row["_midpoint"].x, row["_midpoint"].y
+            angle = row["_angle"]
             ax.scatter(x,y, color="black", s=200, marker=(2,0, angle))
     
-    # annotation
     if node_labels:
         for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
+            
     if link_labels:
-        # compute midpoints
         midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
         for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
+            
+    if directed:
+        link_gdf["_midpoint"] = link_gdf.geometry.interpolate(0.5, normalized=True)
+        link_gdf["_angle"] = link_gdf.apply(lambda row: _get_angle(row.geometry), axis=1)
+        for idx , row in link_gdf.iterrows():
+            x,y = row["_midpoint"].x, row["_midpoint"].y
+            angle = row["_angle"]
+            ax.scatter(x,y, color="black", s=200, marker=(3,0, angle-90))
     
     ax.axis('off')
     
