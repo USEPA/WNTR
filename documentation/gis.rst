@@ -31,6 +31,12 @@
     >>> hydrant_data = gpd.read_file(examples_dir+'/data/Net1_hydrant_data.geojson')
     >>> valve_data = gpd.read_file(examples_dir+'/data/Net1_valve_data.geojson')
 
+.. doctest::
+    :hide:
+    :skipif: gpd is None or rasterio is None
+	
+    >>> elevation_data_path = examples_dir+'/data/Net1_elevation_data.tif'
+
 .. _geospatial:
 
 Geospatial capabilities
@@ -47,7 +53,8 @@ The following section describes capabilities in WTNR that use GeoPandas GeoDataF
 
 .. note:: 
    Functions that use GeoDataFrames require the Python package **geopandas** :cite:p:`jvfm21` 
-   and **rtree** :cite:p:`rtree`. Both are optional dependencies of WNTR.
+   and **rtree** :cite:p:`rtree`, and functions that use raster files require the
+   Python package **rasterio**. All three are optional dependencies of WNTR.
    Note that **shapely** is installed with geopandas.
 
 The following examples use a water network generated from Net1.inp.
@@ -822,3 +829,101 @@ the census tracts (polygons) is different than the junction and pipe attributes.
    :alt: Intersection of junctions and pipes with mean income demographic data in EPANET example Net1
 
    Net1 with mean income demographic data intersected with junctions and pipes.
+
+Sample raster at points geometries
+--------------------------------------
+
+The :class:`~wntr.gis.sample_raster` function can be used to sample a raster file at point geometries,
+such as the nodes of a water network. A common use case for this function is to assign elevation to the 
+nodes of a water network model, however other geospatial information such as climate or hazard data could be sampled 
+using this function.
+
+The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 
+The raster data in the GeoTIFF format is also in EPSG:4326 CRS.
+See :ref:`crs` for more information.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
+
+Sample elevations at junctions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Elevation is an essential attribute for accurate simulation of pressure in a water network and is
+commonly provided in GeoTIFF (.tif) files. The following example shows how such files can be sampled 
+and assigned to the junctions and tanks of a network. Note that elevation data generally needs 
+to be adjusted to account for buried pipes.
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> elevation_data_path = 'data/Net1_elevation_data.tif' # doctest: +SKIP
+    >>> junctions = wn_gis.junctions
+    >>> junction_elevations = wntr.gis.sample_raster(junctions, elevation_data_path)
+    >>> print(junction_elevations)
+    name
+    10    1400.0
+    11    2100.0
+    12    3500.0
+    13    4900.0
+    21    1200.0
+    22    2000.0
+    23    2800.0
+    31     300.0
+    32     500.0
+    dtype: float64
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> tanks = wn_gis.tanks
+    >>> tank_elevations = wntr.gis.sample_raster(tanks, elevation_data_path)
+    >>> print(tank_elevations)
+    name
+    2    4500.0
+    dtype: float64
+
+To use these elevations for hydraulic simulations, 
+they need to be added to the water network object.
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> for junction_name in wn.junction_name_list:
+    ...     junction = wn.get_node(junction_name)
+    ...     junction.elevation = junction_elevations[junction_name]
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> for tank_name in wn.tank_name_list:
+    ...     tank = wn.get_node(tank_name)
+    ...     tank.elevation = tank_elevations[tank_name]
+
+The sampled elevations can be plotted as follows. The 
+resulting :numref:`fig-sample-elevations` illustrates Net1 with the elevations 
+sampled from the raster file.
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+
+    >>> ax = wntr.graphics.plot_network(wn, node_attribute="elevation", link_width=1.5, 
+    ...     node_size=40, node_colorbar_label='Raster Elevation')
+
+.. doctest::
+    :skipif: gpd is None or rasterio is None
+    :hide:
+    
+    >>> bounds = ax.axis('equal')
+    >>> plt.tight_layout()
+    >>> plt.savefig('sample_elevations.png', dpi=300)
+    >>> plt.close()
+
+.. _fig-sample-elevations:
+.. figure:: figures/sample_elevations.png
+   :width: 640
+   :alt: Net1 with elevations sampled from raster.
+
+   Net1 with elevations sampled from raster.
