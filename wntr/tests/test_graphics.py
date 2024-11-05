@@ -9,6 +9,7 @@ import networkx as nx
 import matplotlib.pylab as plt
 from wntr.graphics.color import custom_colormap
 import pandas as pd
+import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
@@ -119,6 +120,67 @@ class TestGraphics(unittest.TestCase):
         plt.close()
 
         self.assertTrue(isfile(filename))
+    
+    def test_plot_network_options(self):
+        # NOTE:to compare with the old plot_network set compare=True.
+        #   this should be set to false for regular testing
+        compare = False
+        
+        inp_file = join(ex_datadir, "Net3.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        
+        random_node_values = pd.Series(
+            np.random.rand(len(wn.node_name_list)), index=wn.node_name_list)
+        random_link_values = pd.Series(
+            np.random.rand(len(wn.link_name_list)), index=wn.link_name_list)
+        random_node_dict_subset = dict(random_node_values.iloc[:10])
+        random_link_dict_subset = dict(random_link_values.iloc[:10])
+        node_list = list(wn.node_name_list[:10])
+        link_list = list(wn.link_name_list[:10])
+        
+        kwarg_list = [
+            {"node_attribute": "elevation",
+             "node_range": [0,1],
+             "node_alpha": 0.5,
+             "node_colorbar_label": "test_label"},
+            {"link_attribute": "diameter",
+             "link_range": [0,1],
+             "link_alpha": 0.5,
+             "link_colorbar_label": "test_label"},
+            {"node_labels": True,
+             "link_labels": True},
+            {"node_attribute": "elevation",
+             "add_colorbar": False},
+            {"link_attribute": "diameter",
+             "add_colorbar": False},
+            {"node_attribute": node_list},
+            {"node_attribute": random_node_values},
+            {"node_attribute": random_node_dict_subset},
+            {"link_attribute": link_list},
+            {"link_attribute": random_link_values},
+            {"link_attribute": random_link_dict_subset},
+            {"directed": True}
+        ]
+        
+        for kwargs in kwarg_list:
+            filename = abspath(join(testdir, "plot_network_options.png"))
+            if isfile(filename):
+                os.remove(filename)
+            if compare:
+                fig, ax = plt.subplots(1,2)
+                wntr.graphics.plot_network(wn, ax=ax[0], title="GIS plot_network", **kwargs)
+                wntr.graphics.plot_network_nx(wn, ax=ax[1], title="NX plot_network", **kwargs)
+                fig.savefig(filename, format="png")
+                plt.close(fig)
+            else:
+                plt.figure()
+                wntr.graphics.plot_network(wn, **kwargs)
+                plt.savefig(filename, format="png")
+                plt.close()
+                
+            self.assertTrue(isfile(filename))
+            os.remove(filename)
+            
 
     def test_plot_interactive_network1(self):
 
