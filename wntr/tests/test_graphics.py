@@ -7,6 +7,7 @@ from os.path import abspath, dirname, isfile, join
 
 import networkx as nx
 import matplotlib.pylab as plt
+import matplotlib
 from wntr.graphics.color import custom_colormap
 import pandas as pd
 import numpy as np
@@ -126,6 +127,9 @@ class TestGraphics(unittest.TestCase):
         #   this should be set to false for regular testing
         compare = False
         
+        cmap = matplotlib.colormaps['viridis']
+        
+        
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         
@@ -133,6 +137,8 @@ class TestGraphics(unittest.TestCase):
             np.random.rand(len(wn.node_name_list)), index=wn.node_name_list)
         random_link_values = pd.Series(
             np.random.rand(len(wn.link_name_list)), index=wn.link_name_list)
+        random_pipe_values = pd.Series(
+            np.random.rand(len(wn.pipe_name_list)), index=wn.pipe_name_list)
         random_node_dict_subset = dict(random_node_values.iloc[:10])
         random_link_dict_subset = dict(random_link_values.iloc[:10])
         node_list = list(wn.node_name_list[:10])
@@ -159,7 +165,13 @@ class TestGraphics(unittest.TestCase):
             {"link_attribute": link_list},
             {"link_attribute": random_link_values},
             {"link_attribute": random_link_dict_subset},
-            {"directed": True}
+            {"directed": True},
+            {"link_attribute": random_pipe_values,
+             "node_size": 0,
+             "link_cmap": cmap,
+             "link_range": [0,1],
+             "link_width": 1.5}
+            
         ]
         
         for kwargs in kwarg_list:
