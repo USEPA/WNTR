@@ -423,7 +423,7 @@ class Tank(Node):
                         "min_level",
                         "max_level", 
                         "diameter",
-                        "min_vol"
+                        "min_vol",
                         "vol_curve_name",
                         "overflow", 
                         "coordinates"]
@@ -1070,7 +1070,7 @@ class Pump(Link):
                         "end_node_name",
                         "pump_type",
                         "pump_curve_name",
-                        "power"
+                        "power",
                         "base_speed",
                         "speed_pattern_name",
                         "initial_status"]
