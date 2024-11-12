@@ -132,12 +132,12 @@ class TestGIS(unittest.TestCase):
         #assert self.gis_data.valves.shape[0] == self.wn.num_valves
         
         # Check minimal set of attributes
-        assert set(['node_type', 'elevation', 'geometry']).issubset(self.gis_data.junctions.columns)
-        assert set(['node_type', 'elevation', 'geometry']).issubset(self.gis_data.tanks.columns)
-        assert set(['node_type', 'geometry']).issubset(self.gis_data.reservoirs.columns)
-        assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pipes.columns)
-        assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pumps.columns)
-        #assert set(['link_type', 'start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.valves.columns) # Net1 has no valves
+        assert set(['elevation', 'geometry']).issubset(self.gis_data.junctions.columns)
+        assert set(['elevation', 'geometry']).issubset(self.gis_data.tanks.columns)
+        assert set(['geometry']).issubset(self.gis_data.reservoirs.columns)
+        assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pipes.columns)
+        assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pumps.columns)
+        #assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.valves.columns) # Net1 has no valves
         
     def test_gis_to_wn(self):
         
@@ -265,15 +265,17 @@ class TestGIS(unittest.TestCase):
         
     def test_add_attributes_and_write(self):
         
-        self.gis_data.add_node_attributes(self.results.node['pressure'].loc[3600,:], 'Pressure_1hr')
-        self.gis_data.add_link_attributes(self.results.link['flowrate'].loc[3600,:], 'Flowrate_1hr')
+        gis_data = self.wn.to_gis()
+        
+        gis_data.add_node_attributes(self.results.node['pressure'].loc[3600,:], 'Pressure_1hr')
+        gis_data.add_link_attributes(self.results.link['flowrate'].loc[3600,:], 'Flowrate_1hr')
        
-        assert 'Pressure_1hr' in self.gis_data.junctions.columns
-        assert 'Pressure_1hr' in self.gis_data.tanks.columns
-        assert 'Pressure_1hr' in self.gis_data.reservoirs.columns
-        assert 'Flowrate_1hr' in self.gis_data.pipes.columns
-        assert 'Flowrate_1hr' in self.gis_data.pumps.columns
-        assert 'Flowrate_1hr' not in self.gis_data.valves.columns # Net1 has no valves
+        assert 'Pressure_1hr' in gis_data.junctions.columns
+        assert 'Pressure_1hr' in gis_data.tanks.columns
+        assert 'Pressure_1hr' in gis_data.reservoirs.columns
+        assert 'Flowrate_1hr' in gis_data.pipes.columns
+        assert 'Flowrate_1hr' in gis_data.pumps.columns
+        assert 'Flowrate_1hr' not in gis_data.valves.columns # Net1 has no valves
     
     def test_write_geojson(self):
         prefix = 'temp_Net1'

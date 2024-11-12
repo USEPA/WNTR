@@ -99,14 +99,21 @@ class WaterNetworkGIS:
             Represent valves as points (True) or lines (False), by default False
         """
         
-        def _extract_geodataframe(df, crs=None, links_as_points=False):
-            # Drop any column with all NaN
+        def _extract_geodataframe(df, crs=None, valid_base_names=None, 
+                                  links_as_points=False):
+            if valid_base_names is None:
+                valid_base_names = []
+            
+            # Drop any column with all NaN, this removes excess attributes
+            # Valid base attributes that have all None values are added back 
+            # at the end of this routine
             df = df.loc[:, ~df.isna().all()]
             
+            # Define geom and drop node_type/link_type
             if df.shape[0] > 0:
-                # Define geom
                 if 'node_type' in df.columns:
                     geom = [Point((x,y)) for x,y in df['coordinates']]
+                    del df['node_type']
                 elif 'link_type' in df.columns:
                     geom = []
                     for link_name in df['name']:
@@ -120,16 +127,25 @@ class WaterNetworkGIS:
                                 ls.append(v)
                             ls.append(link.end_node.coordinates)
                             geom.append(LineString(ls))
+                    del df['link_type']
                     
-                # Drop column if not a str, float, int, or bool
+                # Drop column if not a str, float, int, or bool (or np.bool_)
+                # This drops columns like coordinates, vertices
                 # This could be extended to keep additional data type (list, 
                 # tuple, network elements like Patterns, Curves)
                 drop_cols = []
                 for col in df.columns:
-                    if not isinstance(df.iloc[0][col], (str, float, int, bool)):
+                    # Added np.bool_ to the following check
+                    # Returned by df.to_dict('records') for some network models
+                    if not isinstance(df.iloc[0][col], (str, float, int, bool, np.bool_)):
                         drop_cols.append(col) 
                 df = df.drop(columns=drop_cols)
                 
+                # Add back in valid base attributes that had all None values
+                cols = list(set(valid_base_names) - set(df.columns))
+                if len(cols) > 0:
+                    df[cols] = None
+                    
                 # Set index
                 if len(df) > 0:
                     df.set_index('name', inplace=True)
@@ -137,7 +153,7 @@ class WaterNetworkGIS:
                 df = gpd.GeoDataFrame(df, crs=crs, geometry=geom)
             else:
                 df = gpd.GeoDataFrame()
-                
+
             return df
         
         # Convert the WaterNetworkModel to a dictionary
@@ -146,29 +162,31 @@ class WaterNetworkGIS:
         df_nodes = pd.DataFrame(wn_dict['nodes'])
         df_links = pd.DataFrame(wn_dict['links'])
         
+        valid_base_names = self._valid_names(complete_list=False, truncate_names=None)
+        
         # Junctions
         df = df_nodes[df_nodes['node_type'] == 'Junction']
-        self.junctions = _extract_geodataframe(df, crs)
+        self.junctions = _extract_geodataframe(df, crs, valid_base_names['junctions'])
         
         # Tanks
         df = df_nodes[df_nodes['node_type'] == 'Tank']
-        self.tanks = _extract_geodataframe(df, crs)
+        self.tanks = _extract_geodataframe(df, crs, valid_base_names['tanks'])
             
         # Reservoirs
         df = df_nodes[df_nodes['node_type'] == 'Reservoir']
-        self.reservoirs = _extract_geodataframe(df, crs)
+        self.reservoirs = _extract_geodataframe(df, crs, valid_base_names['reservoirs'])
             
         # Pipes
         df = df_links[df_links['link_type'] == 'Pipe']
-        self.pipes = _extract_geodataframe(df, crs, False)
+        self.pipes = _extract_geodataframe(df, crs, valid_base_names['pipes'], False)
             
         # Pumps
         df = df_links[df_links['link_type'] == 'Pump']
-        self.pumps = _extract_geodataframe(df, crs, pumps_as_points)
+        self.pumps = _extract_geodataframe(df, crs, valid_base_names['pumps'], pumps_as_points)
             
         # Valves
         df = df_links[df_links['link_type'] == 'Valve']
-        self.valves = _extract_geodataframe(df, crs, valves_as_points) 
+        self.valves = _extract_geodataframe(df, crs, valid_base_names['valves'], valves_as_points) 
         
     def _create_wn(self, append=None):
         """
@@ -187,22 +205,32 @@ class WaterNetworkGIS:
         wn_dict['nodes'] = []
         wn_dict['links'] = []
 
-        for element in [self.junctions, self.tanks, self.reservoirs]:
+        # Modifications to create a WaterNetworkModel from a dict
+        # Reset index
+        # Create coordinates/vertices from geometry
+        # Add node_type/link_type 
+        for node_type, element in [('Junction', self.junctions), 
+                                   ('Tank', self.tanks), 
+                                   ('Reservoir', self.reservoirs)]:
             if element.shape[0] > 0:
                 assert (element['geometry'].geom_type).isin(['Point']).all()
                 df = element.reset_index(names="name")
                 df.rename(columns={'geometry':'coordinates'}, inplace=True)
                 df['coordinates'] = [[x,y] for x,y in zip(df['coordinates'].x, 
                                                           df['coordinates'].y)]
+                df['node_type'] = node_type
                 wn_dict['nodes'].extend(df.to_dict('records'))
 
-        for element in [self.pipes, self.pumps, self.valves]:
+        for link_type, element in [('Pipe', self.pipes), 
+                                   ('Pump', self.pumps), 
+                                   ('Valve', self.valves)]:
             if element.shape[0] > 0:
                 assert 'start_node_name' in element.columns
                 assert 'end_node_name' in element.columns
                 df = element.reset_index(names="name")
                 df['vertices'] = df.apply(lambda row: list(row.geometry.coords)[1:-1], axis=1)
                 df.drop(columns=['geometry'], inplace=True)
+                df['link_type'] = link_type
                 wn_dict['links'].extend(df.to_dict('records'))
         
         # Create WaterNetworkModel from dictionary
@@ -470,6 +498,17 @@ class WaterNetworkGIS:
         if truncate_names is not None and truncate_names > 0:
             for element, attributes in valid_names.items():
                 valid_names[element] = [attribute[:truncate_names] for attribute in attributes]
+        
+        for key, vals in valid_names.items():
+            # Remove coordinates and vertices (not used to create GeoDataFrame geometry)
+            if 'coordinates' in valid_names[key]:
+                valid_names[key].remove('coordinates')
+            if 'vertices' in valid_names[key]:
+                valid_names[key].remove('vertices')
+            
+            # Add geometry
+            if 'geometry' not in valid_names[key]:
+                valid_names[key].append('geometry')
 
         return valid_names
     
