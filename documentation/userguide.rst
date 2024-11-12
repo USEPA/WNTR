@@ -34,6 +34,7 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    framework
    units
    getting_started
+   data_requirements
    examples
 
 .. toctree::

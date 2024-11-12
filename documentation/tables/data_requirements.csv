@@ -1,0 +1,31 @@
+Component,Definition,Requirement,Attributes,Approximations
+Junctions,"Junctions are nodes that connect links (pipes, pumps, and valves)",Required to connect components,"* Location*
+
+\* Location for all components includes the X and Y position along with elevation.  X and Y can be in any coordinate system.  WNTR uses SI units for all other attributes.","The location of junctions can be inferred from link start and end location
+
+Elevation (for all components) can be determined using digital elevation maps."
+Demand points,"Demand points are junctions that also include water withdrawal
+
+Demand points can represent an individual household/building, a neighborhood, a zip code, or a census block",All models include demand,"* Location
+* Base demand rate (volume per time)
+* Demand pattern
+
+Demand patterns define how water is used throughout the day.  Different patterns can be defined for summer and winter.","Demand location and base value can be approximated in several ways, for example from open-source data on building footprints
+
+General demand patterns can be used (i.e., peak mid-day for commercial use or peak morning and evening for residential use)"
+Reservoir,"Reservoirs are nodes that define the water source, generally the water treatment plant",All models must contain at least one source,"* Location
+* Pressure",Location is generally known or can be estimated using online maps of the region. Pressure can be estimated if needed.
+Tanks,Tanks are nodes with storage capacity ,Not required,"* Location 
+* Min and max water level 
+* Diameter",Tank location and size can sometimes be approximated from satellite images
+Pipes,"Pipes are links that connect nodes (junctions, reservoirs, and tanks)",Required to connect components,"* Start and end location
+* Diameter
+* Material or roughness","Since pipes generally follow streets, the location of pipes can be approximated using open-source street data. Attributes like diameter and roughness can be estimated if needed."
+Pumps,Pumps are links that raise the hydraulic head,Not required if the system is gravity fed,"* Location and direction
+* Operational settings (pump curve)
+* Controls (pump schedule)",Pump attributes are difficult to approximate without guidance from the utility
+Valves,Valves are links that limit the pressure or flow,"While most systems include valves, they are not always included in the model","* Location and direction
+* Type (pressure reducing valve, flow control valve, etc.)
+* Operational setting (pressure or flow)
+* Status (open or closed)
+* Controls (schedule to change setting/status)",Valve attributes are difficult to approximate without guidance from the utility
