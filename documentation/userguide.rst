@@ -8,6 +8,10 @@ User Guide
 The Water Network Tool for Resilience (WNTR) is an EPANET compatible Python package 
 designed to simulate and analyze resilience of water distribution networks.
 
+:download:`WNTR overview factsheet <factsheets/WNTR_overview_factsheet.pdf>`
+ 
+:download:`WNTR case studies factsheet <factsheets/WNTR_case_studies_factsheet.pdf>`
+
 US EPA Disclaimer
 -----------------
 
@@ -34,7 +38,6 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    framework
    units
    getting_started
-   data_requirements
    examples
 
 .. toctree::

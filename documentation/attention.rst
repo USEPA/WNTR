@@ -4,10 +4,10 @@
     for more information.
 
 .. _fig-factsheet:
-.. figure:: factsheets/WNTR_factsheet.png
+.. figure:: factsheets/WNTR_overview_factsheet.png
    :width: 250
    :alt: WNTR factsheet
  
-Download the :download:`WNTR overview factsheet <factsheets/WNTR_factsheet.pdf>`
- 
-Download the :download:`WNTR case studies factsheet <factsheets/WATER INFRASTRUCTURE RESILIENCE EVALUATION USING WNTR.pdf>`
+:download:`WNTR overview factsheet <factsheets/WNTR_overview_factsheet.pdf>`
+
+:download:`WNTR case studies factsheet <factsheets/WNTR_case_studies_factsheet.pdf>`
