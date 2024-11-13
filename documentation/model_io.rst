@@ -210,7 +210,7 @@ When reading GeoJSON files into WNTR, the file should contain columns from the s
 Valid GeoJSON column names can be obtained using the :class:`~wntr.network.io.valid_gis_names` function. 
 By default, the function returns a complete set of required and optional column names. 
 A minimal list of column names containing commonly used attributes can be obtained by setting ``complete_list`` to False. 
-The minimal set correspond with attributes used in `add_junction`, `add_tank`, etc.  
+The minimal set correspond with attributes used in :class:`~wntr.network.model.WaterNetworkModel.add_junction`, :class:`~wntr.network.model.WaterNetworkModel.add_tank`, etc.  
 Columns that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
 
 The following examples return the complete and minimal lists of valid GeoJSON column names for junctions.
