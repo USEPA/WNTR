@@ -79,12 +79,12 @@ class Junction(Node):
     # base and optional attributes used to create a Junction in _from_dict
     # base attributes are used in add_junction
     _base_attributes = ["name", 
+                        "base_demand",
+                        "demand_pattern",
                         "elevation", 
-                        "coordinates"]
-    _optional_attributes = ["base_demand",
-                            "demand_pattern",
-                            "demand_category",
-                            "emitter_coefficient",
+                        "coordinates",
+                        "demand_category"]
+    _optional_attributes = ["emitter_coefficient",
                             "initial_quality", 
                             "minimum_pressure", 
                             "required_pressure", 
