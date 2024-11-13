@@ -206,29 +206,28 @@ GeoJSON files
 GeoJSON files are commonly used to store geographic data structures. 
 More information on GeoJSON files can be found at https://geojson.org.
 
-When reading GeoJSON files into WNTR, only a set of valid column names can be used.
-Valid GeoJSON column names can be obtained using the 
-:class:`~wntr.network.io.valid_gis_names` function. By default, the function
-returns all column names, both required and optional.
-The following example returns valid GeoJSON column names for junctions.
+When reading GeoJSON files into WNTR, the file should contain columns from the set of valid column names. 
+Valid GeoJSON column names can be obtained using the :class:`~wntr.network.io.valid_gis_names` function. 
+By default, the function returns a complete set of required and optional column names. 
+A minimal list of column names containing commonly used attributes can be obtained by setting ``complete_list`` to False. 
+The minimal set correspond with attributes used in :class:`~wntr.network.model.WaterNetworkModel.add_junction`, :class:`~wntr.network.model.WaterNetworkModel.add_tank`, etc.  
+Columns that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are defined using default values.
+
+The following examples return the complete and minimal lists of valid GeoJSON column names for junctions.
 
 .. doctest::
     :skipif: gpd is None
 
     >>> geojson_column_names = wntr.network.io.valid_gis_names()
     >>> print(geojson_column_names['junctions'])
-    ['name', 'elevation', 'geometry', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
-
-A minimal list of required column names can also be obtained by setting ``complete_list`` to False.
-Column names that are optional (i.e., ``initial_quality``) and not included in the GeoJSON file are 
-defined using default values.
+    ['name', 'base_demand', 'demand_pattern', 'elevation', 'demand_category', 'geometry', 'emitter_coefficient', 'initial_quality', 'minimum_pressure', 'required_pressure', 'pressure_exponent', 'tag']
 
 .. doctest::
     :skipif: gpd is None
 
     >>> geojson_column_names = wntr.network.io.valid_gis_names(complete_list=False)
     >>> print(geojson_column_names['junctions'])
-    ['name', 'elevation', 'geometry']
+    ['name', 'base_demand', 'demand_pattern', 'elevation', 'demand_category', 'geometry']
 
 Note that GeoJSON files can contain additional custom column names that are assigned to WaterNetworkModel objects.
 
@@ -301,12 +300,16 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
   node and link attribute names are often longer.  For this reason, it is
   assumed that the first 10 characters of each attribute are unique.  
   
-* To create WaterNetworkModel from Shapefiles, a set of valid field names are required.
+* When reading Shapefiles files into WNTR, the file should contain fields from the set of valid column names.
   Valid Shapefiles field names can be obtained using the 
   :class:`~wntr.network.io.valid_gis_names` function. By default, the function
-  returns all column names, both required and optional.
+  returns a complete set of required and optional field names. 
+  A minimal list of field names containing commonly used attributes can be obtained by setting ``complete_list`` to False. 
+  The minimal set correspond with attributes used in `add_junction`, `add_tank`, etc.  
+  Fields that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
+
   For Shapefiles, the `truncate_names` input parameter should be set to 10 (characters).
-  The following example returns valid Shapefile field names for junctions.
+  The following examples return the complete and minimal lists of valid Shapefile field names for junctions.
   Note that attributes like ``minimum_pressure`` are truncated to ``minimum_pr``. 
 
   .. doctest::
@@ -314,10 +317,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
 
       >>> shapefile_field_names = wntr.network.io.valid_gis_names(truncate_names=10)
       >>> print(shapefile_field_names['junctions'])
-      ['name', 'elevation', 'geometry', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
-
-  A minimal list of required field names can also be obtained by setting ``complete_list`` to False.
-  Field names that are optional (i.e., ``initial_quality``) and not included in the Shapefile are defined using default values.
+      ['name', 'base_deman', 'demand_pat', 'elevation', 'demand_cat', 'geometry', 'emitter_co', 'initial_qu', 'minimum_pr', 'required_p', 'pressure_e', 'tag']
 
   .. doctest::
       :skipif: gpd is None
@@ -325,7 +325,7 @@ To use Esri Shapefiles in WNTR, several formatting requirements are enforced:
       >>> shapefile_field_names = wntr.network.io.valid_gis_names(complete_list=False, 
       ...    truncate_names=10)
       >>> print(shapefile_field_names['junctions'])
-      ['name', 'elevation', 'geometry']
+      ['name', 'base_deman', 'demand_pat', 'elevation', 'demand_cat', 'geometry']
 	  
 * Shapefiles can contain additional custom field names that are assigned to WaterNetworkModel objects.
 

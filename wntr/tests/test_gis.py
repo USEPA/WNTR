@@ -138,6 +138,9 @@ class TestGIS(unittest.TestCase):
         assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pipes.columns)
         assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.pumps.columns)
         #assert set(['start_node_name', 'end_node_name', 'geometry']).issubset(self.gis_data.valves.columns) # Net1 has no valves
+
+        #check base_demand and demand_pattern attrivutes
+        assert set(['base_demand','demand_pattern']).issubset(self.gis_data.junctions.columns)
         
     def test_gis_to_wn(self):
         

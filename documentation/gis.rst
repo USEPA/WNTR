@@ -119,13 +119,13 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-          elevation  initial_quality                   geometry
-    name                                                       
-    10      216.408        5.000e-04  POINT (20.00000 70.00000)
-    11      216.408        5.000e-04  POINT (30.00000 70.00000)
-    12      213.360        5.000e-04  POINT (50.00000 70.00000)
-    13      211.836        5.000e-04  POINT (70.00000 70.00000)
-    21      213.360        5.000e-04  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
+    name                                                                                                   
+    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
 
 Each GeoDataFrame contains attributes and geometry:
 
@@ -341,23 +341,23 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
 	
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
     >>> print(wn_gis.junctions.head())
-          elevation  initial_quality                   geometry
-    name                                                       
-    10      216.408        5.000e-04  POINT (20.00000 70.00000)
-    11      216.408        5.000e-04  POINT (30.00000 70.00000)
-    12      213.360        5.000e-04  POINT (50.00000 70.00000)
-    13      211.836        5.000e-04  POINT (70.00000 70.00000)
-    21      213.360        5.000e-04  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
+    name                                                                                                   
+    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
 
     >>> wn_gis.to_crs('EPSG:3857')
     >>> print(wn_gis.junctions.head())
-          elevation  initial_quality                          geometry
-    name                                                              
-    10      216.408        5.000e-04  POINT (2226389.816 11068715.659)
-    11      216.408        5.000e-04  POINT (3339584.724 11068715.659)
-    12      213.360        5.000e-04  POINT (5565974.540 11068715.659)
-    13      211.836        5.000e-04  POINT (7792364.356 11068715.659)
-    21      213.360        5.000e-04   POINT (3339584.724 4865942.280)
+          base_demand demand_pattern  elevation  initial_quality demand_category                          geometry
+    name                                                                                                          
+    10          0.000              1    216.408        5.000e-04            None  POINT (2226389.816 11068715.659)
+    11          0.009              1    216.408        5.000e-04            None  POINT (3339584.724 11068715.659)
+    12          0.009              1    213.360        5.000e-04            None  POINT (5565974.540 11068715.659)
+    13          0.006              1    211.836        5.000e-04            None  POINT (7792364.356 11068715.659)
+    21          0.009              1    213.360        5.000e-04            None   POINT (3339584.724 4865942.280)
 
 Snap point geometries to the nearest point or line
 ----------------------------------------------------

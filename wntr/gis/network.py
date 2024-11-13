@@ -143,6 +143,7 @@ class WaterNetworkGIS:
                 
                 # Add back in valid base attributes that had all None values
                 cols = list(set(valid_base_names) - set(df.columns))
+                cols.sort()
                 if len(cols) > 0:
                     df[cols] = None
                     

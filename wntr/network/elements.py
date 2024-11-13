@@ -79,8 +79,11 @@ class Junction(Node):
     # base and optional attributes used to create a Junction in _from_dict
     # base attributes are used in add_junction
     _base_attributes = ["name", 
+                        "base_demand",
+                        "demand_pattern",
                         "elevation", 
-                        "coordinates"]
+                        "coordinates",
+                        "demand_category"]
     _optional_attributes = ["emitter_coefficient",
                             "initial_quality", 
                             "minimum_pressure", 
@@ -216,6 +219,32 @@ class Junction(Node):
     def base_demand(self, value):
         raise RuntimeWarning('The base_demand property is read-only. Please modify using demand_timeseries_list[0].base_value.')
 
+    @property
+    def demand_pattern(self):
+        """Get the pattern_name of the first demand in the demand_timeseries_list.
+
+        This is a read-only property.
+        """
+        if len(self.demand_timeseries_list) > 0:
+            return self.demand_timeseries_list[0].pattern_name
+        return None
+    @demand_pattern.setter
+    def demand_pattern(self, value):
+        raise RuntimeWarning('The demand_pattern property is read-only. Please modify using demand_timeseries_list[0].pattern_name')
+    
+    @property
+    def demand_category(self):
+        """Get the category of the first demand in the demand_timeseries_list.
+
+        This is a read-only property.
+        """
+        if len(self.demand_timeseries_list) > 0:
+            return self.demand_timeseries_list[0].category
+        return None
+    @demand_category.setter
+    def demand_category(self, value):
+        raise RuntimeWarning('The demand_category property is read-only. Please modify using demand_timeseries_list[0].category.')
+    
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
         Add a leak control to the water network model
