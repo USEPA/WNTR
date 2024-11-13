@@ -953,7 +953,7 @@ class TestNetworkIO_Dict(unittest.TestCase):
 
         self.wntr = wntr
 
-        inp_file = join(ex_datadir, "Net6.inp")
+        self.inp_file = join(ex_datadir, "Net3.inp")
         self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp"]]
 
     @classmethod
@@ -979,6 +979,14 @@ class TestNetworkIO_Dict(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel()
         wn.add_pattern('pat0', [0,1,0,1,0,1,0])
         self.wntr.network.write_json(wn, f'temp.json')
+        
+    def test_dict_with_leak(self):
+        # This covers a bug where writing controls to a dictionary broke if a leak was added
+        wn = wntr.network.WaterNetworkModel(self.inp_file)
+        junction_name = wn.junction_name_list[0]
+        junction = wn.get_node(junction_name)
+        junction.add_leak(wn, area=1, start_time=0, end_time=3600)
+        wn.to_dict()
 
 
 @unittest.skipIf(not has_geopandas,
