@@ -1099,7 +1099,7 @@ class Pump(Link):
 
     @property
     def efficiency(self): 
-        """float : pump efficiency"""
+        """Curve : pump efficiency"""
         return self._efficiency
     @efficiency.setter
     def efficiency(self, value):
