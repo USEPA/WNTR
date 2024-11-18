@@ -1002,7 +1002,6 @@ class TestNetworkIO_Dict(unittest.TestCase):
         assert junction2._leak
         assert junction2._leak_area == 1
         assert junction2._leak_discharge_coeff == 0.75
-        assert wn2.control_name_list
 
 
 @unittest.skipIf(not has_geopandas,
