@@ -986,7 +986,23 @@ class TestNetworkIO_Dict(unittest.TestCase):
         junction_name = wn.junction_name_list[0]
         junction = wn.get_node(junction_name)
         junction.add_leak(wn, area=1, start_time=0, end_time=3600)
-        wn.to_dict()
+        wn_dict = wn.to_dict()
+        wn2 = wntr.network.from_dict(wn_dict)
+        
+        # check leak controls and node properties
+        start_control = wn.get_control(wn.control_name_list[18])
+        start_control2 = wn2.get_control(wn2.control_name_list[18])
+        assert str(start_control) == str(start_control2)
+        
+        end_control = wn.get_control(wn.control_name_list[19])
+        end_control2 = wn2.get_control(wn2.control_name_list[19])
+        assert str(end_control) == str(end_control2)
+
+        junction2 = wn2.get_node(junction_name)
+        assert junction2._leak
+        assert junction2._leak_area == 1
+        assert junction2._leak_discharge_coeff == 0.75
+        assert wn2.control_name_list
 
 
 @unittest.skipIf(not has_geopandas,
