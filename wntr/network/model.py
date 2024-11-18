@@ -625,9 +625,16 @@ class WaterNetworkModel(AbstractModel):
         ----------
         name : string
            control object name.
-        control_object : Control or Rule
-            Control or Rule object.
+        control_object : Control/Rule object or string
+            Control object, Rule object, or string with the control. The string
+            must be written in EPANET INP file format and SI units 
+            (i.e., "LINK Pump-1 OPEN IF NODE Tank-1 BELOW 10")
         """
+        if isinstance(control_object, str):
+            line = control_object
+            flow_units = wntr.epanet.util.FlowUnits['SI']
+            control_object = wntr.epanet.io._read_control_line(line, self, flow_units, name)
+        
         if name in self._controls:
             raise ValueError(
                 "The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control."
