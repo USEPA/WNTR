@@ -10,6 +10,8 @@
     >>> import pandas as pd
     >>> pd.options.display.expand_frame_repr = False
     >>> pd.options.display.precision = 3
+    >>> pd.options.display.max_colwidth = 50
+    >>> pd.options.display.max_columns = 10
     >>> try:
     ...    import geopandas as gpd
     ... except ModuleNotFoundError:
