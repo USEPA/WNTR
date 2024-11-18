@@ -1,0 +1,58 @@
+[TITLE]
+Arsenic Oxidation/Adsorption Example
+
+[OPTIONS]
+  AREA_UNITS M2             ;Surface concentration is mass/m2
+  RATE_UNITS HR             ;Reaction rates are concentration/hour
+  SOLVER     RK5            ;5-th order Runge-Kutta integrator
+  TIMESTEP   360            ;360 sec (5 min) solution time step
+  RTOL       0.001          ;Relative concentration tolerance
+  ATOL       0.0001         ;Absolute concentration tolerance
+
+[SPECIES]
+  BULK AS3   UG             ;Dissolved arsenite
+  BULK AS5   UG             ;Dissolved arsenate
+  BULK AStot UG             ;Total dissolved arsenic
+  WALL AS5s  UG             ;Adsorbed arsenate
+  BULK NH2CL MG             ;Monochloramine
+
+[COEFFICIENTS]
+  CONSTANT Ka   10.0        ;Arsenite oxidation rate coefficient
+  CONSTANT Kb   0.1         ;Monochloramine decay rate coefficient
+  CONSTANT K1   5.0         ;Arsenate adsorption coefficient
+  CONSTANT K2   1.0         ;Arsenate desorption coefficient
+  CONSTANT Smax 50          ;Arsenate adsorption saturation limit
+
+[TERMS]
+  Ks       K1/K2            ;Equil. adsorption coeff.
+
+[PIPES]
+  ;Arsenite oxidation
+  RATE    AS3    -Ka*AS3*NH2CL
+  ;Arsenate production
+  RATE    AS5    Ka*AS3*NH2CL - Av*(K1*(Smax-AS5s)*AS5 - K2*AS5s)
+  ;Monochloramine decay
+  RATE    NH2CL  -Kb*NH2CL
+  ;Arsenate adsorption
+  EQUIL   AS5s   Ks*Smax*AS5/(1+Ks*AS5) - AS5s
+  ;Total bulk arsenic
+  FORMULA AStot  AS3 + AS5
+
+[TANKS]
+  RATE    AS3    -Ka*AS3*NH2CL
+  RATE    AS5    Ka*AS3*NH2CL
+  RATE    NH2CL  -Kb*NH2CL
+  FORMULA AStot  AS3 + AS5
+
+[QUALITY]
+  ;Initial conditions (= 0 if not specified here)
+  NODE    Source AS3   10.0
+  NODE    Source NH2CL 2.5
+
+[REPORT]
+  NODES   C   D                ;Report results for nodes C and D
+  LINKS   5                    ;Report results for pipe 5
+  SPECIES  AStot YES            ;Report results for each specie
+  SPECIES  AS5   YES
+  SPECIES  AS5s  YES
+  SPECIES  NH2CL YES
