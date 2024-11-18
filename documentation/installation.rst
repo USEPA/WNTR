@@ -272,6 +272,8 @@ The following Python packages are optional:
   https://pypi.org/project/utm/
 * geopandas :cite:p:`jvfm21`: used to work with geospatial data,
   https://geopandas.org/
+* rasterio :cite:p:`rasterio`: used to work with raster data,
+  https://rasterio.readthedocs.io/
 * rtree :cite:p:`rtree`: used for overlay operations in geopandas,
   https://rtree.readthedocs.io/
 * openpyxl :cite:p:`gacl18`: used to read/write to Microsoft® Excel® spreadsheets,

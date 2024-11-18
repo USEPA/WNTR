@@ -257,7 +257,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         d['node_type'] = self.node_type
         for k in dir(self):
             if not k.startswith('_') and \
-              k not in ['demand', 'base_demand', 'head', 'leak_area', 'leak_demand',
+              k not in ['demand', 'head', 'leak_area', 'leak_demand',
                         'leak_discharge_coeff', 'leak_status', 'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
                 try:
                     val = getattr(self, k)
