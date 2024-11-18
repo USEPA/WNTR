@@ -64,7 +64,7 @@ There are two different types of coefficients that can be used in reaction expre
 and **parameters**. Constants have a single value in every expression. Parameters have a global value
 that is used by default, but which can be modified on a per-pipe or per-tank basis. 
 
-Pre-defined hydraulic variable can be found in 
+Pre-defined hydraulic variables can be found in 
 the EPANET-MSX documentation, and are also defined in WNTR as :attr:`~wntr.msx.base.HYDRAULIC_VARIABLES`.
 
 Reactions
@@ -80,11 +80,11 @@ WNTR also contains a library of MSX models that are accessed through the
 :class:`~wntr.msx.library.ReactionLibrary`.
 This includes the following models:
 
-* `Arsenic oxidation/adsorption <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
-* `Batch chloramine decay <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
-* `Lead plumbosolvency <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ :cite:p:`bwms20`
-* `Nicotine/chlorine reaction <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
-* `Nicotine/chlorine reaction with reactive intermediate <https://github.com/dbhart/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
+* `Arsenic oxidation/adsorption <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
+* `Batch chloramine decay <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
+* `Lead plumbosolvency <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ :cite:p:`bwms20`
+* `Nicotine/chlorine reaction <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
+* `Nicotine/chlorine reaction with reactive intermediate <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
 
 The models are stored in JSON format.
 Additional models can be loaded into the library by setting a user specified path.  
