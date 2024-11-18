@@ -336,7 +336,6 @@ def sample_raster(A, filepath, bands=1):
     
     return values
 
-
 def connect_lines(lines, threshold):
     """
     Connect lines by identifying start and end nodes that are within a 
