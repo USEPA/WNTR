@@ -89,7 +89,10 @@ class Junction(Node):
                             "minimum_pressure", 
                             "required_pressure", 
                             "pressure_exponent", 
-                            "tag"]
+                            "tag",
+                            "leak",
+                            "leak_area",
+                            "leak_discharge_coeff"]
 
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
