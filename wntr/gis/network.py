@@ -114,6 +114,11 @@ class WaterNetworkGIS:
                 if 'node_type' in df.columns:
                     geom = [Point((x,y)) for x,y in df['coordinates']]
                     del df['node_type']
+                    
+                    # do not carry over leak attributes to dataframe. 
+                    del df['leak']
+                    del df['leak_area']
+                    del df['leak_discharge_coeff']
                 elif 'link_type' in df.columns:
                     geom = []
                     for link_name in df['name']:
