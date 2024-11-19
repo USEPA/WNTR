@@ -89,10 +89,7 @@ class Junction(Node):
                             "minimum_pressure", 
                             "required_pressure", 
                             "pressure_exponent", 
-                            "tag",
-                            "leak",
-                            "leak_area",
-                            "leak_discharge_coeff"]
+                            "tag"]
 
     def __init__(self, name, wn):
         super(Junction, self).__init__(wn, name)
@@ -434,10 +431,7 @@ class Tank(Node):
                             "mixing_fraction",
                             "mixing_model", 
                             "bulk_coeff", 
-                            "tag",
-                            "leak",
-                            "leak_area",
-                            "leak_discharge_coeff"]
+                            "tag"]
     
     def __init__(self, name, wn):
         super(Tank, self).__init__(wn, name)
