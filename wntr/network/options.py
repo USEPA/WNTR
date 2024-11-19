@@ -10,6 +10,7 @@ The wntr.network.options module includes simulation options.
 """
 import re
 import logging
+import warnings
 import copy
 
 logger = logging.getLogger(__name__)
@@ -406,6 +407,19 @@ class HydraulicOptions(_OptionsBase):
             value = str.upper(value)
             if value not in ['H-W', 'D-W', 'C-M']:
                 raise ValueError('headloss must be one of "H-W", "D-W", or "C-M"')
+            # If headloss is changed from ['H-W', 'C-M'] to/from 'D-W', print
+            # a warning, the units of the roughness coefficient cannot be 
+            # converted from unitless to length (0.001 ft or mm)
+            try:
+                orig_value = self.__dict__[name]
+            except:
+                orig_value = None
+            if orig_value is not None:
+                if (orig_value in ['H-W', 'C-M'] and value == 'D-W') or \
+                   (value in ['H-W', 'C-M'] and orig_value == 'D-W'):
+                   warnings.warn('Changing the headloss formula from ' +
+                                 orig_value + ' to ' + value +
+                                 ' will not change the units of the roughness coefficient.')
         elif name == 'hydraulics':
             if value is not None:
                 value = str.upper(value)
