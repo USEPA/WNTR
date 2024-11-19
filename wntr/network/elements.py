@@ -434,7 +434,10 @@ class Tank(Node):
                             "mixing_fraction",
                             "mixing_model", 
                             "bulk_coeff", 
-                            "tag"]
+                            "tag",
+                            "leak",
+                            "leak_area",
+                            "leak_discharge_coeff"]
     
     def __init__(self, name, wn):
         super(Tank, self).__init__(wn, name)
