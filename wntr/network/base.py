@@ -192,6 +192,11 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     # @leak_status.setter
     # def leak_status(self, value):
     #     self._leak_status = value
+    
+    @property
+    def leak(self):
+        """float: (read-only) the current simulation leak area at the node"""
+        return self._leak
 
     @property
     def leak_area(self):
@@ -257,8 +262,8 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         d['node_type'] = self.node_type
         for k in dir(self):
             if not k.startswith('_') and \
-              k not in ['demand', 'head', 'leak_area', 'leak_demand',
-                        'leak_discharge_coeff', 'leak_status', 'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
+              k not in ['demand', 'head', 'leak_demand', 'leak_status', 
+                        'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
                 try:
                     val = getattr(self, k)
                     if not isinstance(val, types.MethodType):
