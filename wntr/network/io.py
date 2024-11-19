@@ -137,6 +137,11 @@ def from_dict(d: dict, append=None):
                 j.pressure_exponent = node.setdefault("pressure_exponent")
                 j.required_pressure = node.setdefault("required_pressure")
                 j.tag = node.setdefault("tag")
+                
+                j._leak = node.setdefault("leak", False)
+                j._leak_area = node.setdefault("leak_area", 0.0)
+                j._leak_discharge_coeff = node.setdefault("leak_discharge_coeff", 0.0)
+                
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(j))):
                     setattr( j, attr, node[attr] )
