@@ -121,7 +121,7 @@ class TestGraphics(unittest.TestCase):
     def test_plot_network_options(self):
         # NOTE:to compare with the old plot_network set compare=True.
         #   this should be set to false for regular testing
-        compare = True
+        compare = False
         
         cmap = matplotlib.colormaps['viridis']
         
