@@ -6,6 +6,7 @@ import logging
 import math
 import networkx as nx
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 from matplotlib import animation
@@ -97,7 +98,7 @@ def plot_network(
     node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
     link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
     add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
-    directed=False, ax=None, show_plot=True, filename=None):
+    directed=False, plot_valves=False, plot_pumps=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
 	
@@ -210,20 +211,33 @@ def plot_network(
         node_range = (None, None)
         
     wn_gis = wn.to_gis()
+    # add node_type so that node assets can be plotted separately
+    wn_gis.junctions["node_type"] = "Junction"
+    wn_gis.tanks["node_type"] = "Tank"
+    wn_gis.reservoirs["node_type"] = "Reservoir"
     link_gdf = pd.concat((wn_gis.pipes, wn_gis.pumps, wn_gis.valves))
     node_gdf = pd.concat((wn_gis.junctions, wn_gis.tanks, wn_gis.reservoirs))
     
     # process link attribute
     link_kwds = _prepare_attribute(link_attribute, link_gdf)
 
+    # handle cbar/cmap
     if isinstance(link_attribute, list):
-        link_kwds["column"] = "_attribute"
         link_kwds["cmap"] = custom_colormap(2,("red", "red"))
         link_cbar = False
     elif isinstance(link_attribute, (dict, pd.Series, str)):
         link_kwds["cmap"] = link_cmap
-        link_kwds["vmin"] = link_range[0]
-        link_kwds["vmax"] = link_range[1]
+        
+        link_attribute_values = link_gdf[link_kwds["column"]]
+        if link_range[0] is None:
+            link_kwds["vmin"] = np.nanmin(link_attribute_values)
+        else:
+            link_kwds["vmin"] = link_range[0]
+        if link_range[1] is None:
+            link_kwds["vmax"] = np.nanmax(link_attribute_values)
+        else:
+            link_kwds["vmax"] = link_range[1]
+
         link_cbar = add_colorbar
     else:
         link_kwds["color"] = "black"
@@ -239,7 +253,7 @@ def plot_network(
     
     link_cbar_kwds = {}
     link_cbar_kwds["shrink"] = 0.5
-    link_cbar_kwds["pad"] = 0.0
+    link_cbar_kwds["pad"] = 0.05
     link_cbar_kwds["label"] = link_colorbar_label
     
     # process node attribute
@@ -250,8 +264,17 @@ def plot_network(
         node_cbar = False
     elif isinstance(node_attribute, (dict, pd.Series, str)):
         node_kwds["cmap"] = node_cmap
-        node_kwds["vmin"] = node_range[0]
-        node_kwds["vmax"] = node_range[1]
+        
+        node_attribute_values = node_gdf[node_kwds["column"]]
+        if node_range[0] is None:
+            node_kwds["vmin"] = np.nanmin(node_attribute_values)
+        else:
+            node_kwds["vmin"] = node_range[0]
+        if node_range[1] is None:
+            node_kwds["vmax"] = np.nanmax(node_attribute_values)
+        else:
+            node_kwds["vmax"] = node_range[1]
+            
         node_cbar = add_colorbar
     else:
         node_kwds["color"] = "black"
@@ -267,39 +290,39 @@ def plot_network(
     
     # plot nodes - each type is plotted separately to allow for different marker types
     node_gdf[node_gdf.node_type == "Junction"].plot(
-        ax=ax, aspect=aspect, zorder=3, legend=False, **node_kwds)
+        ax=ax, aspect=aspect, zorder=3, label="Junctions", legend=False, **node_kwds)
     
-    if node_cbar:
-        norm = plt.Normalize(vmin=node_kwds["vmin"], vmax=node_kwds["vmax"],)
-        sm = mpl.cm.ScalarMappable(cmap=node_kwds["cmap"], norm=norm)
-        sm.set_array([])
-
-        node_cbar = ax.figure.colorbar(sm, ax=ax, **node_cbar_kwds) 
     
     node_kwds["markersize"] = node_size * 2.0
     node_gdf[node_gdf.node_type == "Tank"].plot(
-        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, legend=False, **node_kwds)
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, label="Tanks", legend=False, **node_kwds)
     
     node_kwds["markersize"] = node_size * 3.0
     node_gdf[node_gdf.node_type == "Reservoir"].plot(
-        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, legend=False, **node_kwds)
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, label="Reservoirs", legend=False, **node_kwds)
+    
+    if node_cbar:
+        sm = mpl.cm.ScalarMappable(cmap=node_kwds["cmap"])
+        sm.set_clim(node_kwds["vmin"], node_kwds["vmax"])
+
+        node_cbar = ax.figure.colorbar(sm, ax=ax, **node_cbar_kwds)
     
     # plot links
+    # background
     link_gdf.plot(
         ax=ax, aspect=aspect, zorder=1, legend=False, **background_link_kwds)
     
+    # main plot
     link_gdf.plot(
         ax=ax, aspect=aspect, zorder=2, legend=False, **link_kwds)
     
-    # Create a ScalarMappable for the colorbar
     if link_cbar:
-        norm = plt.Normalize(vmin=link_kwds["vmin"], vmax=link_kwds["vmax"])
-        sm = mpl.cm.ScalarMappable(cmap=link_kwds["cmap"], norm=norm)
-        sm.set_array([])  # Needed to create an empty array for the colorbar
+        sm = mpl.cm.ScalarMappable(cmap=link_kwds["cmap"])
+        sm.set_clim(link_kwds["vmin"], link_kwds["vmax"])
 
-        ax.figure.colorbar(sm, ax=ax, **link_cbar_kwds)  # Adjusts size and position of colorbar
+        link_cbar = ax.figure.colorbar(sm, ax=ax, **link_cbar_kwds)
 
-    if len(wn_gis.pumps) >0:
+    if plot_pumps & (len(wn_gis.pumps) > 0):
         # wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
         wn_gis.pumps["_midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
         wn_gis.pumps["_angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
@@ -308,7 +331,7 @@ def plot_network(
             angle = row["_angle"]
             ax.scatter(x,y, color="black", s=100, marker=(3, 0, angle-90))
 
-    if len(wn_gis.valves) >0:
+    if plot_valves & (len(wn_gis.valves) > 0):
         wn_gis.valves["_midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
         wn_gis.valves["_angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
         for idx , row in wn_gis.valves.iterrows():
@@ -317,12 +340,19 @@ def plot_network(
             ax.scatter(x,y, color="black", s=200, marker=(2,0, angle))
     
     if node_labels:
-        for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
+        for x, y, label in zip(node_gdf.geometry.x, node_gdf.geometry.y, node_gdf.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
+        # for x, y, label in zip(wn_gis.tanks.geometry.x, wn_gis.tanks.geometry.y, wn_gis.tanks.index):
+        #     ax.annotate(label, xy=(x, y))
+        # for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
+        #     ax.annotate(label, xy=(x, y))
             
     if link_labels:
-        midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
-        for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
+        # midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
+        # for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
+        #     ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
+        midpoints = link_gdf.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
+        for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, link_gdf.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
             
     if directed:
@@ -331,7 +361,7 @@ def plot_network(
         for idx , row in link_gdf.iterrows():
             x,y = row["_midpoint"].x, row["_midpoint"].y
             angle = row["_angle"]
-            ax.scatter(x,y, color="black", s=200, marker=(3,0, angle-90))
+            ax.scatter(x,y, color="black", s=50, marker=(3,0, angle-90))
     
     ax.axis('off')
     
