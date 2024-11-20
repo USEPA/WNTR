@@ -27,7 +27,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(wn)
         plt.savefig(filename, format="png")
         plt.close()
@@ -42,7 +41,7 @@ class TestGraphics(unittest.TestCase):
         filename = abspath(join(testdir, "plot_network2_undirected.png"))
         if isfile(filename):
             os.remove(filename)
-        plt.figure()
+
         wntr.graphics.plot_network(
             wn, node_attribute="elevation", link_attribute="length"
         )
@@ -55,7 +54,7 @@ class TestGraphics(unittest.TestCase):
         filename = abspath(join(testdir, "plot_network2_directed.png"))
         if isfile(filename):
             os.remove(filename)
-        plt.figure()
+
         wntr.graphics.plot_network(
             wn, node_attribute="elevation", link_attribute="length", directed=True
         )
@@ -72,7 +71,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn,
             node_attribute=["11", "21"],
@@ -92,7 +90,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn,
             node_attribute={"11": 5, "21": 10},
@@ -113,7 +110,6 @@ class TestGraphics(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         pop = wntr.metrics.population(wn)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn, node_attribute=pop, node_range=[0, 500], title="Population"
         )
@@ -125,7 +121,7 @@ class TestGraphics(unittest.TestCase):
     def test_plot_network_options(self):
         # NOTE:to compare with the old plot_network set compare=True.
         #   this should be set to false for regular testing
-        compare = False
+        compare = True
         
         cmap = matplotlib.colormaps['viridis']
         
@@ -145,6 +141,10 @@ class TestGraphics(unittest.TestCase):
         link_list = list(wn.link_name_list[:10])
         
         kwarg_list = [
+            {"node_attribute": "elevation",
+             "node_range": [0,20],
+             "node_alpha": 0.5,
+             "node_colorbar_label": "test_label"},
             {"node_attribute": "elevation",
              "node_range": [0,1],
              "node_alpha": 0.5,
@@ -170,8 +170,9 @@ class TestGraphics(unittest.TestCase):
              "node_size": 0,
              "link_cmap": cmap,
              "link_range": [0,1],
-             "link_width": 1.5}
-            
+             "link_width": 1.5},
+            {"plot_pumps": True,
+             "plot_valves": False}
         ]
         
         for kwargs in kwarg_list:
@@ -185,7 +186,6 @@ class TestGraphics(unittest.TestCase):
                 fig.savefig(filename, format="png")
                 plt.close(fig)
             else:
-                plt.figure()
                 wntr.graphics.plot_network(wn, **kwargs)
                 plt.savefig(filename, format="png")
                 plt.close()
