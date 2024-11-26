@@ -98,7 +98,7 @@ def plot_network(
     node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
     link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
     add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
-    directed=False, plot_valves=False, plot_pumps=False, ax=None, show_plot=True, filename=None):
+    directed=False, show_valve_direction=False, show_pump_direction=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
 	
@@ -195,7 +195,7 @@ def plot_network(
     if title is not None:
         ax.set_title(title)
         
-    aspect = None
+    aspect = "equal"
     
     tank_marker = "D"
     reservoir_marker = "s"
@@ -223,7 +223,7 @@ def plot_network(
 
     # handle cbar/cmap
     if isinstance(link_attribute, list):
-        link_kwds["cmap"] = custom_colormap(2,("red", "red"))
+        link_kwds["cmap"] = custom_colormap(2,["red", "red"])
         link_cbar = False
     elif isinstance(link_attribute, (dict, pd.Series, str)):
         link_kwds["cmap"] = link_cmap
@@ -261,7 +261,7 @@ def plot_network(
     node_kwds = _prepare_attribute(node_attribute, node_gdf)
     
     if isinstance(node_attribute, list):
-        node_kwds["cmap"] = custom_colormap(2,("red", "red"))
+        node_kwds["cmap"] = custom_colormap(2,["red", "red"])
         node_cbar = False
     elif isinstance(node_attribute, (dict, pd.Series, str)):
         node_kwds["cmap"] = node_cmap
@@ -324,23 +324,23 @@ def plot_network(
 
         link_cbar = ax.figure.colorbar(sm, ax=ax, **link_cbar_kwds)
 
-    if plot_pumps & (len(wn_gis.pumps) > 0):
+    if show_pump_direction & (len(wn_gis.pumps) > 0):
         # wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
         wn_gis.pumps["_midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
         wn_gis.pumps["_angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
         for idx , row in wn_gis.pumps.iterrows():
             x,y = row["_midpoint"].x, row["_midpoint"].y
             angle = row["_angle"]
-            ax.scatter(x,y, color="black", s=100, marker=(3, 0, angle-90))
+            ax.scatter(x,y, color="black", s=50, marker=(3, 0, angle-90))
 
-    if plot_valves & (len(wn_gis.valves) > 0):
+    if show_valve_direction & (len(wn_gis.valves) > 0):
         wn_gis.valves["_midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
         wn_gis.valves["_angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
         for idx , row in wn_gis.valves.iterrows():
             x,y = row["_midpoint"].x, row["_midpoint"].y
             angle = row["_angle"]
-            ax.scatter(x,y, color="black", s=200, marker=(2,0, angle))
-    
+            ax.scatter(x,y, color="black", s=50, marker=(3, 0, angle-90))
+
     if node_labels:
         for x, y, label in zip(node_gdf.geometry.x, node_gdf.geometry.y, node_gdf.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
