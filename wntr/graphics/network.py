@@ -255,6 +255,7 @@ def plot_network(
     link_cbar_kwds["shrink"] = 0.5
     link_cbar_kwds["pad"] = 0.05
     link_cbar_kwds["label"] = link_colorbar_label
+    link_cbar_kwds["alpha"] = link_alpha
     
     # process node attribute
     node_kwds = _prepare_attribute(node_attribute, node_gdf)
@@ -286,6 +287,7 @@ def plot_network(
     node_cbar_kwds = {}
     node_cbar_kwds["shrink"] = 0.5
     node_cbar_kwds["pad"] = 0.0
+    node_cbar_kwds["alpha"] = node_alpha
     node_cbar_kwds["label"] = node_colorbar_label
     
     # plot nodes - each type is plotted separately to allow for different marker types
