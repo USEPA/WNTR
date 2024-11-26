@@ -581,7 +581,7 @@ class WaterNetworkModel(AbstractModel):
         ----------
         name : str
             Name of the curve.
-        curve_type : string
+        curve_type : str
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
@@ -1684,9 +1684,9 @@ class CurveRegistry(Registry):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the curve.
-        curve_type : string
+        curve_type : str
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
