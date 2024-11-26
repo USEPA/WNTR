@@ -623,7 +623,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
            control object name.
         control_object : Control or Rule
             Control or Rule object.
