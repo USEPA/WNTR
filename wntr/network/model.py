@@ -50,7 +50,7 @@ class WaterNetworkModel(AbstractModel):
 
     Parameters
     -------------------
-    inp_file_name: string (optional)
+    inp_file_name: str (optional)
         Directory and filename of EPANET inp file to load into the
         WaterNetworkModel object.
     """
