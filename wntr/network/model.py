@@ -579,7 +579,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the curve.
         curve_type : string
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
