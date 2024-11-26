@@ -171,8 +171,8 @@ class TestGraphics(unittest.TestCase):
              "link_cmap": cmap,
              "link_range": [0,1],
              "link_width": 1.5},
-            {"plot_pumps": True,
-             "plot_valves": False}
+            {"show_pump_direction": True,
+             "show_pump_direction": True}
         ]
         
         for kwargs in kwarg_list:
