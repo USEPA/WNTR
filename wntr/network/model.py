@@ -559,7 +559,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pattern.
         pattern : list of floats or Pattern
             A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
