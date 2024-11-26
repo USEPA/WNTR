@@ -334,17 +334,17 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the junction.
         base_demand : float
             Base demand at the junction.
-        demand_pattern : string or Pattern
+        demand_pattern : str or Pattern
             Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
             X-Y coordinates of the node location.
-        demand_category  : string
+        demand_category  : str
             Name of the demand category
         """
         self._node_reg.add_junction(name, base_demand, demand_pattern, elevation, coordinates, demand_category)
