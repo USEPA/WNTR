@@ -367,7 +367,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the tank.
         elevation : float
             Elevation at the tank.
@@ -385,7 +385,7 @@ class WaterNetworkModel(AbstractModel):
             Name of a volume curve
         overflow : bool
            Overflow indicator (Always False for the WNTRSimulator)
-        coordinates : tuple of floats, optional
+        coordinates : tuple of float, optional
             X-Y coordinates of the node location.
             
         """
