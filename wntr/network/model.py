@@ -399,11 +399,11 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string, optional
+        head_pattern : str, optional
             Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
