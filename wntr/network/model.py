@@ -1294,7 +1294,7 @@ class WaterNetworkModel(AbstractModel):
         demand : pandas.DataFrame
             A pandas DataFrame containing demands (index = time, columns = junction names)
 
-        pattern_prefix: string
+        pattern_prefix: str
             Pattern name prefix, default = 'ResetDemand'.  The junction name is 
             appended to the prefix to create a new pattern name.  
             If the pattern name already exists, an error is thrown and the user 
