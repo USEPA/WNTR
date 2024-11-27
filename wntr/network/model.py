@@ -508,25 +508,25 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the valve.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
         diameter : float, optional
             Diameter of the valve.
-        valve_type : string, optional
+        valve_type : str, optional
             Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        initial_setting : float or string, optional
+        initial_setting : float or str, optional
             Valve initial setting.
             Pressure setting for PRV, PSV, or PBV. 
             Flow setting for FCV. 
             Loss coefficient for TCV.
             Name of headloss curve for GPV.
-        initial_status: string or LinkStatus
+        initial_status: str or LinkStatus
             Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'.
         """
         self._link_reg.add_valve(
