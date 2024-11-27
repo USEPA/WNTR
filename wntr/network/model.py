@@ -1291,7 +1291,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        demand : pandas DataFrame
+        demand : pandas.DataFrame
             A pandas DataFrame containing demands (index = time, columns = junction names)
 
         pattern_prefix: string
