@@ -469,22 +469,22 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pump.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
-        pump_type : string, optional
+        pump_type : str, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or string
+        pump_parameter : float or str
             For a POWER pump, the pump power.
             For a HEAD pump, the head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: string
+        pattern: str
             Name of the speed pattern
-        initial_status : string or LinkStatus
+        initial_status : str or LinkStatus
             Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
