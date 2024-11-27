@@ -428,11 +428,11 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pipe.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
         length : float, optional
             Length of the pipe.
@@ -442,7 +442,7 @@ class WaterNetworkModel(AbstractModel):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        initial_status : string or LinkStatus, optional
+        initial_status : str or LinkStatus, optional
             Pipe initial status. Options are 'OPEN' or 'CLOSED'.
         check_valve : bool, optional
             True if the pipe has a check valve.
