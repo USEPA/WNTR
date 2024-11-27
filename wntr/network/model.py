@@ -594,20 +594,20 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the source
 
-        node_name: string
+        node_name: str
             Injection node.
 
-        source_type: string
+        source_type: str
             Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
 
         quality: float
             Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
             FLOWPACED, or SETPOINT
 
-        pattern: string or Pattern object
+        pattern: str or Pattern
             Pattern name or object
         """
         if pattern and isinstance(pattern, six.string_types):
