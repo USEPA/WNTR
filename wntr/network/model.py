@@ -1209,6 +1209,7 @@ class WaterNetworkModel(AbstractModel):
     def from_gis(self, gis_data):
         """
         Append the model with elements from GeoDataFrames
+        :func:`geopandas.GeoDataFrame <https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas-geodataframe>`
         
         Parameters
         ----------
