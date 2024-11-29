@@ -1213,7 +1213,7 @@ class WaterNetworkModel(AbstractModel):
         
         Parameters
         ----------
-        gis_data : WaterNetworkGIS or dict of geoPandas.GeoDataFrame
+        gis_data : WaterNetworkGIS or geopandas.GeoDataFrame dict
             GeoDataFrames containing water network attributes. If gis_data is a 
             dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
             pumps, and valves. If the pumps or valves are Points, they will be 
