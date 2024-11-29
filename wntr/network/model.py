@@ -52,7 +52,7 @@ class WaterNetworkModel(AbstractModel):
     -------------------
     inp_file_name: str (optional)
         Directory and filename of EPANET inp file to load into the
-        WaterNetworkModel object.
+        :class:`~wntr.network.model.WaterNetworkModel` object.
     """
 
     def __init__(self, inp_file_name=None):
