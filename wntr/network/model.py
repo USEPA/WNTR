@@ -342,7 +342,7 @@ class WaterNetworkModel(AbstractModel):
             Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
-        coordinates : tuple of floats
+        coordinates : tuple of float s
             X-Y coordinates of the node location.
         demand_category  : str
             Name of the demand category
