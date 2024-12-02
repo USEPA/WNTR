@@ -98,7 +98,7 @@ def plot_network(
     node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
     link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
     add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
-    directed=False, show_valve_direction=False, show_pump_direction=False, ax=None, show_plot=True, filename=None):
+    directed=False, legend=False, show_valve_direction=False, show_pump_direction=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
 	
@@ -289,19 +289,24 @@ def plot_network(
     node_cbar_kwds["pad"] = 0.0
     node_cbar_kwds["alpha"] = node_alpha
     node_cbar_kwds["label"] = node_colorbar_label
-    
+
+    # # prepare legend item list
+    # legend_items = []
+    missing_node_kwds={"color": "black", "markersize": node_size / 2} # TODO: customize per element type
+    missing_link_kwds={"color": "black", "linewidth": link_width / 2}
+
     # plot nodes - each type is plotted separately to allow for different marker types
     node_gdf[node_gdf.node_type == "Junction"].plot(
-        ax=ax, aspect=aspect, zorder=3, label="Junctions", legend=False, **node_kwds)
-    
+        ax=ax, aspect=aspect, zorder=3, label="Junctions", legend=False, missing_kwds=missing_node_kwds, **node_kwds)
+    # legend_items.append(plt.Line2D([0], [0], marker='o', color='w', label='Junctions', markerfacecolor='blue', markersize=6))
     
     node_kwds["markersize"] = node_size * 2.0
     node_gdf[node_gdf.node_type == "Tank"].plot(
-        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, label="Tanks", legend=False, **node_kwds)
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, label="Tanks", legend=False, missing_kwds=missing_node_kwds, **node_kwds)
     
     node_kwds["markersize"] = node_size * 3.0
     node_gdf[node_gdf.node_type == "Reservoir"].plot(
-        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, label="Reservoirs", legend=False, **node_kwds)
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, label="Reservoirs", legend=False, missing_kwds=missing_node_kwds,**node_kwds)
     
     if node_cbar:
         sm = mpl.cm.ScalarMappable(cmap=node_kwds["cmap"])
@@ -316,7 +321,7 @@ def plot_network(
     
     # main plot
     link_gdf.plot(
-        ax=ax, aspect=aspect, zorder=2, legend=False, **link_kwds)
+        ax=ax, aspect=aspect, zorder=2, legend=False, missing_kwds=missing_link_kwds, **link_kwds)
     
     if link_cbar:
         sm = mpl.cm.ScalarMappable(cmap=link_kwds["cmap"])
@@ -364,6 +369,14 @@ def plot_network(
             x,y = row["_midpoint"].x, row["_midpoint"].y
             angle = row["_angle"]
             ax.scatter(x,y, color="black", s=50, marker=(3,0, angle-90))
+
+    # NOTE: The coloring on the symbols will change based on the colors of the underlying object.
+    #   If this isn't desired behavior, handles and labels can be build manually using:
+    #   handle = plt.Line2D([0], [0], marker='o', color='w', label='Junctions', markerfacecolor='black', markersize=6)
+    if legend:
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles, labels, loc='upper right', title="Legend")
+
     
     ax.axis('off')
     
