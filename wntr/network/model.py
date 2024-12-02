@@ -1254,10 +1254,7 @@ class WaterNetworkModel(AbstractModel):
         Convert a :class:`~wntr.network.model.WaterNetworkModel` into a networkx MultiDiGraph
         
         .. deprecated:: 0.5.0
-        Use :ref:`to_graph() <wntr.network.model.to_graph>` instead
-        
-        Use :meth:`the to_graph() <model.WaterNetworkModel.to_graph>` instead
-        :meth:`~wntr.network.model.WaterNetworkModel.to_graph`
+        Use :meth:`~wntr.network.model.WaterNetworkModel.to_graph` instead
         
         Parameters
         ----------
