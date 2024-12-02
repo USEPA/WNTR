@@ -1255,9 +1255,8 @@ class WaterNetworkModel(AbstractModel):
         
         .. deprecated:: 0.5.0
         Use :ref:`to_graph() <wntr.network.model.to_graph>` instead
-        :meth:`to_graph() <wntr.network.model.to_graph>`
-        :def:`to_graph() <wntr.network.model.to_graph>`
-        :funct:`to_graph() <wntr.network.model.to_graph>`
+        
+        Use :meth:`the to_graph() <model.WaterNetworkModel.to_graph>` instead
         
         Parameters
         ----------
