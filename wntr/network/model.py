@@ -1251,19 +1251,19 @@ class WaterNetworkModel(AbstractModel):
                                
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
-        Convert a WaterNetworkModel into a networkx MultiDiGraph
+        Convert a :class:`~wntr.network.model.WaterNetworkModel` into a networkx MultiDiGraph
         
         .. deprecated:: 0.5.0
-        Use ``to_graph()`` instead
+        Use :ref:`to_graph() <wntr.network.model.to_graph>` instead
         
         Parameters
         ----------
-        node_weight :  dict or pandas Series (optional)
+        node_weight :  dict or pandas.Series (optional)
             Node weights
-        link_weight : dict or pandas Series (optional)
+        link_weight : dict or pandas.Series (optional)
             Link weights.  
         modify_direction : bool (optional)
-            If True, than if the link weight is negative, the link start and 
+            If True, then if the link weight is negative, the link start and 
             end node are switched and the abs(weight) is assigned to the link
             (this is useful when weighting graphs by flowrate). If False, link 
             direction and weight are not changed.
