@@ -143,7 +143,6 @@ class TestGraphics(unittest.TestCase):
         
         cmap = matplotlib.colormaps['viridis']
         
-        
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         
@@ -163,14 +162,12 @@ class TestGraphics(unittest.TestCase):
              "node_range": [0,20],
              "node_alpha": 0.5,
              "node_colorbar_label": "test_label"},
-            {"node_attribute": "elevation",
-             "node_range": [0,1],
-             "node_alpha": 0.5,
-             "node_colorbar_label": "test_label"},
             {"link_attribute": "diameter",
-             "link_range": [0,1],
+             "link_range": [0,None],
              "link_alpha": 0.5,
              "link_colorbar_label": "test_label"},
+            {"link_attribute": "diameter",
+            "node_attribute": "elevation"},
             {"node_labels": True,
              "link_labels": True},
             {"node_attribute": "elevation",
@@ -198,7 +195,7 @@ class TestGraphics(unittest.TestCase):
             if compare:
                 fig, ax = plt.subplots(1,2)
                 wntr.graphics.plot_network(wn, ax=ax[0], title="GIS plot_network", **kwargs)
-                wntr.graphics.plot_network_nx(wn, ax=ax[1], title="NX plot_network", **kwargs)
+                plot_network_nx(wn, ax=ax[1], title="NX plot_network", **kwargs)
                 fig.savefig(filename, format="png")
                 plt.close(fig)
             else:
