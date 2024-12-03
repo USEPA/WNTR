@@ -6,7 +6,6 @@ import logging
 import math
 import networkx as nx
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 from matplotlib import animation
@@ -97,8 +96,8 @@ def plot_network(
     wn, node_attribute=None, link_attribute=None, title=None,
     node_size=20, node_range=None, node_alpha=1, node_cmap=None, node_labels=False,
     link_width=1, link_range=None, link_alpha=1, link_cmap=None, link_labels=False,
-    add_colorbar=True, node_colorbar_label="", link_colorbar_label="", 
-    directed=False, legend=False, show_valve_direction=False, show_pump_direction=False, ax=None, show_plot=True, filename=None):
+    add_colorbar=True, node_colorbar_label=None, link_colorbar_label=None, 
+    directed=False, legend=False, ax=None, show_plot=True, filename=None):
     """
     Plot network graphic
 	
@@ -194,7 +193,7 @@ def plot_network(
         
     if title is not None:
         ax.set_title(title)
-        
+    
     aspect = "equal"
     
     tank_marker = "D"
@@ -209,6 +208,13 @@ def plot_network(
         link_range = (None, None)
     if node_range is None:
         node_range = (None, None)
+    
+    # use attribute name if no other label is provided
+    if node_colorbar_label is None and isinstance(node_attribute, str):
+        node_colorbar_label = node_attribute
+    if link_colorbar_label is None and isinstance(link_attribute, str):
+        link_colorbar_label = link_attribute
+        
         
     wn_gis = wn.to_gis()
     # add node_type so that node assets can be plotted separately
@@ -219,7 +225,17 @@ def plot_network(
     node_gdf = pd.concat((wn_gis.junctions, wn_gis.tanks, wn_gis.reservoirs))
     
     # process link attribute
+    # link_kwds = {}
     link_kwds = _prepare_attribute(link_attribute, link_gdf)
+    # Node attribute
+    # if node_attribute is not None:
+    #     if isinstance(node_attribute, list):
+    #         node_cmap = 'Reds'
+    #         add_colorbar = False
+    #     node_attribute = _format_node_attribute(node_attribute, wn)
+    # else:
+    #     add_colorbar = False
+    # link_
 
     # handle cbar/cmap
     if isinstance(link_attribute, list):
@@ -292,21 +308,21 @@ def plot_network(
 
     # # prepare legend item list
     # legend_items = []
-    missing_node_kwds={"color": "black", "markersize": node_size / 2} # TODO: customize per element type
+    missing_node_kwds={"color": "black"}
     missing_link_kwds={"color": "black", "linewidth": link_width / 2}
 
     # plot nodes - each type is plotted separately to allow for different marker types
     node_gdf[node_gdf.node_type == "Junction"].plot(
-        ax=ax, aspect=aspect, zorder=3, label="Junctions", legend=False, missing_kwds=missing_node_kwds, **node_kwds)
+        ax=ax, aspect=aspect, zorder=3, legend=False, label="Junction", missing_kwds=missing_node_kwds, **node_kwds)
     # legend_items.append(plt.Line2D([0], [0], marker='o', color='w', label='Junctions', markerfacecolor='blue', markersize=6))
     
     node_kwds["markersize"] = node_size * 2.0
     node_gdf[node_gdf.node_type == "Tank"].plot(
-        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, label="Tanks", legend=False, missing_kwds=missing_node_kwds, **node_kwds)
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, legend=False, label="Tank", missing_kwds=missing_node_kwds, **node_kwds)
     
     node_kwds["markersize"] = node_size * 3.0
     node_gdf[node_gdf.node_type == "Reservoir"].plot(
-        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, label="Reservoirs", legend=False, missing_kwds=missing_node_kwds,**node_kwds)
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, legend=False, label="Reservoir", missing_kwds=missing_node_kwds,**node_kwds)
     
     if node_cbar:
         sm = mpl.cm.ScalarMappable(cmap=node_kwds["cmap"])
@@ -329,35 +345,11 @@ def plot_network(
 
         link_cbar = ax.figure.colorbar(sm, ax=ax, **link_cbar_kwds)
 
-    if show_pump_direction & (len(wn_gis.pumps) > 0):
-        # wn_gis.pumps.plot(ax=ax, color="purple", aspect=aspect)
-        wn_gis.pumps["_midpoint"] = wn_gis.pumps.geometry.interpolate(0.5, normalized=True)
-        wn_gis.pumps["_angle"] = wn_gis.pumps.apply(lambda row: _get_angle(row.geometry), axis=1)
-        for idx , row in wn_gis.pumps.iterrows():
-            x,y = row["_midpoint"].x, row["_midpoint"].y
-            angle = row["_angle"]
-            ax.scatter(x,y, color="black", s=50, marker=(3, 0, angle-90))
-
-    if show_valve_direction & (len(wn_gis.valves) > 0):
-        wn_gis.valves["_midpoint"] = wn_gis.valves.geometry.interpolate(0.5, normalized=True)
-        wn_gis.valves["_angle"] = wn_gis.valves.apply(lambda row: _get_angle(row.geometry), axis=1)
-        for idx , row in wn_gis.valves.iterrows():
-            x,y = row["_midpoint"].x, row["_midpoint"].y
-            angle = row["_angle"]
-            ax.scatter(x,y, color="black", s=50, marker=(3, 0, angle-90))
-
     if node_labels:
         for x, y, label in zip(node_gdf.geometry.x, node_gdf.geometry.y, node_gdf.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
-        # for x, y, label in zip(wn_gis.tanks.geometry.x, wn_gis.tanks.geometry.y, wn_gis.tanks.index):
-        #     ax.annotate(label, xy=(x, y))
-        # for x, y, label in zip(wn_gis.junctions.geometry.x, wn_gis.junctions.geometry.y, wn_gis.junctions.index):
-        #     ax.annotate(label, xy=(x, y))
             
     if link_labels:
-        # midpoints = wn_gis.pipes.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
-        # for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, wn_gis.pipes.index):
-        #     ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points")
         midpoints = link_gdf.geometry.apply(lambda x: x.interpolate(0.5, normalized=True))
         for x, y, label in zip(midpoints.geometry.x, midpoints.geometry.y, link_gdf.index):
             ax.annotate(label, xy=(x, y))#, xytext=(3, 3),)# textcoords="offset points") 
@@ -375,221 +367,8 @@ def plot_network(
     #   handle = plt.Line2D([0], [0], marker='o', color='w', label='Junctions', markerfacecolor='black', markersize=6)
     if legend:
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles, labels, loc='upper right', title="Legend")
-
+        leg = ax.legend(handles, labels, loc='upper right', title="Legend")
     
-    ax.axis('off')
-    
-    if filename:
-        plt.savefig(filename)
-    
-    if show_plot is True:
-        plt.show(block=False)
-    
-    return ax
-    
-        
-def plot_network_nx(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
-               link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
-               directed=False, ax=None, show_plot=True, filename=None):
-    """
-    Plot network graphic
-	
-    Parameters
-    ----------
-    wn : wntr WaterNetworkModel
-        A WaterNetworkModel object
-		
-    node_attribute : None, str, list, pd.Series, or dict, optional
-	
-        - If node_attribute is a string, then a node attribute dictionary is
-          created using node_attribute = wn.query_node_attribute(str)
-        - If node_attribute is a list, then each node in the list is given a 
-          value of 1.
-        - If node_attribute is a pd.Series, then it should be in the format
-          {nodeid: x} where nodeid is a string and x is a float. 
-        - If node_attribute is a dict, then it should be in the format
-          {nodeid: x} where nodeid is a string and x is a float
-    
-	link_attribute : None, str, list, pd.Series, or dict, optional
-	
-        - If link_attribute is a string, then a link attribute dictionary is
-          created using edge_attribute = wn.query_link_attribute(str)
-        - If link_attribute is a list, then each link in the list is given a 
-          value of 1.
-        - If link_attribute is a pd.Series, then it should be in the format
-          {linkid: x} where linkid is a string and x is a float. 
-        - If link_attribute is a dict, then it should be in the format
-          {linkid: x} where linkid is a string and x is a float.
-		  
-    title: str, optional
-        Plot title 
-
-    node_size: int, optional
-        Node size 
-
-    node_range: list, optional
-        Node color range ([None,None] indicates autoscale)
-        
-    node_alpha: int, optional
-        Node transparency
-        
-    node_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
-        Node colormap 
-        
-    node_labels: bool, optional
-        If True, the graph will include each node labelled with its name. 
-        
-    link_width: int, optional
-        Link width
-		
-    link_range : list, optional
-        Link color range ([None,None] indicates autoscale)
-		
-    link_alpha : int, optional
-        Link transparency
-    
-    link_cmap: matplotlib.pyplot.cm colormap or list of named colors, optional
-        Link colormap
-        
-    link_labels: bool, optional
-        If True, the graph will include each link labelled with its name.
-        
-    add_colorbar: bool, optional
-        Add colorbar
-
-    node_colorbar_label: str, optional
-        Node colorbar label
-        
-    link_colorbar_label: str, optional
-        Link colorbar label
-        
-    directed: bool, optional
-        If True, plot the directed graph
-    
-    ax: matplotlib axes object, optional
-        Axes for plotting (None indicates that a new figure with a single 
-        axes will be used)
-    
-    show_plot: bool, optional
-        If True, show plot with plt.show()
-    
-    filename : str, optional
-        Filename used to save the figure
-        
-    Returns
-    -------
-    ax : matplotlib axes object  
-    """
-
-    if ax is None: # create a new figure
-        plt.figure(facecolor='w', edgecolor='k')
-        ax = plt.gca()
-        
-    # Graph
-    G = wn.to_graph()
-    if not directed:
-        G = G.to_undirected()
-
-    # Position
-    pos = nx.get_node_attributes(G,'pos')
-    if len(pos) == 0:
-        pos = None
-
-    # Define node properties
-    add_node_colorbar = add_colorbar
-    if node_attribute is not None:
-        
-        if isinstance(node_attribute, list):
-            if node_cmap is None:
-                node_cmap = ['red', 'red']
-            add_node_colorbar = False
-        
-        if node_cmap is None:
-            node_cmap = plt.get_cmap('Spectral_r')
-        elif isinstance(node_cmap, list):
-            if len(node_cmap) == 1:
-                node_cmap = node_cmap*2
-            node_cmap = custom_colormap(len(node_cmap), node_cmap)  
-         
-        node_attribute = _format_node_attribute(node_attribute, wn)
-        nodelist,nodecolor = zip(*node_attribute.items())
-
-    else:
-        nodelist = None
-        nodecolor = 'k'
-    
-    add_link_colorbar = add_colorbar
-    if link_attribute is not None:
-        
-        if isinstance(link_attribute, list):
-            if link_cmap is None:
-                link_cmap = ['red', 'red']
-            add_link_colorbar = False
-
-        if link_cmap is None:
-            link_cmap = plt.get_cmap('Spectral_r')
-        elif isinstance(link_cmap, list):
-            if len(link_cmap) == 1:
-                link_cmap = link_cmap*2
-            link_cmap = custom_colormap(len(link_cmap), link_cmap)  
-            
-        link_attribute = _format_link_attribute(link_attribute, wn)
-        
-        # Replace link_attribute dictionary defined as
-        # {link_name: attr} with {(start_node, end_node, link_name): attr}
-        attr = {}
-        for link_name, value in link_attribute.items():
-            link = wn.get_link(link_name)
-            attr[(link.start_node_name, link.end_node_name, link_name)] = value
-        link_attribute = attr
-        
-        linklist,linkcolor = zip(*link_attribute.items())
-    else:
-        linklist = None
-        linkcolor = 'k'
-    
-    if title is not None:
-        ax.set_title(title)
-        
-    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
-                                             width=0.5, ax=ax)
-    
-    nodes = nx.draw_networkx_nodes(G, pos, 
-            nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
-            alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
-            linewidths=0, ax=ax)
-    edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, arrows=directed,
-            edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
-            edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
-    if node_labels:
-        labels = dict(zip(wn.node_name_list, wn.node_name_list))
-        nx.draw_networkx_labels(G, pos, labels, font_size=7, ax=ax)
-    if link_labels:
-        labels = {}
-        for link_name in wn.link_name_list:
-            link = wn.get_link(link_name)
-            labels[(link.start_node_name, link.end_node_name)] = link_name
-        nx.draw_networkx_edge_labels(G, pos, labels, font_size=7, ax=ax)
-    if add_node_colorbar and node_attribute:
-        clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
-        clb.ax.set_title(node_colorbar_label, fontsize=10)
-    if add_link_colorbar and link_attribute:
-        if link_range[0] is None:
-            vmin = min(link_attribute.values())
-        else:
-            vmin = link_range[0]
-        if link_range[1] is None:
-            vmax = max(link_attribute.values())
-        else:
-            vmax = link_range[1]
-        sm = plt.cm.ScalarMappable(cmap=link_cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
-        sm.set_array([])
-        clb = plt.colorbar(sm, shrink=0.5, pad=0.05, ax=ax)
-        clb.ax.set_title(link_colorbar_label, fontsize=10)
-        
     ax.axis('off')
     
     if filename:
