@@ -119,36 +119,8 @@ class TestGraphics(unittest.TestCase):
         self.assertTrue(isfile(filename))
 
     def test_plot_network6(self):
-        # pumps/valves
-        filename = abspath(join(testdir, "plot_network6.png"))
-        if isfile(filename):
-            os.remove(filename)
-
-        inp_file = join(ex_datadir, "Net6.inp")
-        wn = wntr.network.WaterNetworkModel(inp_file)
-
-        # verify that direction points away from start node
-        start_nodes = []
-        for link_name in wn.pump_name_list+wn.valve_name_list:
-            link = wn.get_link(link_name)
-            start_nodes.append(link.start_node_name)
-        
-        # pump=0, valve=1
-        link_type = pd.Series(0, index=wn.pump_name_list+wn.valve_name_list)
-        link_type[wn.valve_name_list] = 1
-
-        wntr.graphics.plot_network(
-            wn, node_attribute=start_nodes, link_attribute=link_type,
-            show_pump_direction=True, show_valve_direction=True
-        )
-        plt.savefig(filename, format="png")
-        plt.close()
-
-        self.assertTrue(isfile(filename))
-
-    def test_plot_network7(self):
         # legend
-        filename = abspath(join(testdir, "plot_network7.png"))
+        filename = abspath(join(testdir, "plot_network6.png"))
         if isfile(filename):
             os.remove(filename)
 
@@ -217,8 +189,6 @@ class TestGraphics(unittest.TestCase):
              "link_cmap": cmap,
              "link_range": [0,1],
              "link_width": 1.5},
-            # {"show_pump_direction": True,
-            #  "show_pump_direction": True}
         ]
         
         for kwargs in kwarg_list:
