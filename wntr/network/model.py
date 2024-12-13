@@ -1434,6 +1434,13 @@ class WaterNetworkModel(AbstractModel):
             :py:func:`numpy.core.defchararray.greater`
             :py:data:'reference/generated/numpy.greater.html'
             :py:func:'reference/generated/numpy.greater'
+            :std:doc:'reference/generated/numpy.greater.html'
+            :std:doc:'numpy.greater'
+            :py:data:'numpy.greater'
+            :py:data:'numpy.greater'
+            :py:func:'numpy.greater'
+            :py:function:'numpy.greater'
+            :py:data:'numpy.greater'
             
             np.greater_equal,
             np.less,
