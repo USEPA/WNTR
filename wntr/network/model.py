@@ -1324,10 +1324,10 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        node_name : string
+        node_name : str
             Name of the node.
 
-        flag : string
+        flag : str
             Options are 'ALL', 'INLET', 'OUTLET'.
             'ALL' returns all links connected to the node.
             'INLET' returns links that have the specified node as an end node.
