@@ -1430,8 +1430,8 @@ class WaterNetworkModel(AbstractModel):
         operation: numpy operator
             Numpy operator, options include
             numpy.greater,
-            :func:`numpy.greater`
-            :obj:'numpy.core.defchararray.greater'
+            :py:function:`numpy.core.defchararray.greater`
+            :py:func:`numpy.core.defchararray.greater`
             np.greater_equal,
             np.less,
             np.less_equal,
