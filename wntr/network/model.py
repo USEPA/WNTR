@@ -1428,31 +1428,13 @@ class WaterNetworkModel(AbstractModel):
             Link attribute
 
         operation: numpy operator
-            Numpy operator, options include
+            Numpy operator, options include the following: 
             numpy.greater,
-            
-            :py:function:`numpy.core.defchararray.greater`
-            :py:function:'numpy.greater'
-
-            :py:func:'reference/generated/numpy.greater'
-            :py:func:'numpy.greater'
-            :py:func:`numpy.core.defchararray.greater`
-            
-            :py:data:'reference/generated/numpy.greater.html'
-            :py:data:'numpy.greater'
-            :py:data:'numpy.greater'
-            
-            :std:doc:'reference/generated/numpy.greater.html'
-            :std:doc:'numpy.greater'
-            
-            :np:func:`numpy.greater`
-            :np:function:`numpy.greater`
-            
-            np.greater_equal,
-            np.less,
-            np.less_equal,
-            np.equal,
-            np.not_equal.
+            numpy.greater_equal,
+            numpy.less,
+            numpy.less_equal,
+            numpy.equal,
+            numpy.not_equal.
 
         value: float or int
             Threshold
@@ -1467,7 +1449,7 @@ class WaterNetworkModel(AbstractModel):
 
         Returns
         -------
-        A pandas Series that contains the attribute that satisfies the
+        A pandas.Series that contains the attribute that satisfies the
         operation threshold for a given link_type.
 
         Notes
