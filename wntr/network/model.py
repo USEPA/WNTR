@@ -1429,7 +1429,7 @@ class WaterNetworkModel(AbstractModel):
 
         operation: numpy operator
             Numpy operator, options include
-            np.greater,
+            numpy.greater,
             np.greater_equal,
             np.less,
             np.less_equal,
