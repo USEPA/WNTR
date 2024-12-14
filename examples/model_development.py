@@ -4,7 +4,7 @@ import wntr
 
 plt.close('all')
 
-crs = "EPSG:3089" # ft
+crs = "EPSG:3547" # ft
 
 hidden=True
 distance_threshold = 100.0
@@ -107,7 +107,7 @@ wntr.graphics.plot_network(wn, node_attribute=pressure,
 # Missing junctions (no start and end node names or locations)
 # Pipe endpoints are not aligned
 if hidden:
-    diconnected_pipes = gpd.read_file("data/ky4_pipes_broken.geojson")
+    diconnected_pipes = gpd.read_file("data/ky4_disconnected_pipes.geojson")
     #pipes.set_index('index', inplace=True)
     #del pipes['start_node']
     #del pipes['end_node_n']
@@ -122,11 +122,10 @@ if hidden:
 # TODO rename the file 'ky4_diconnected_pipes.geojson'
 # TODO rename 'index' to 'name'
 # TODO same crs as above
-diconnected_pipes = gpd.read_file("data/ky4_pipes_broken.geojson", crs=crs)
+diconnected_pipes = gpd.read_file("data/ky4_disconnected_pipes.geojson", crs=crs)
 if hidden:
     diconnected_pipes.set_index('index', inplace=True)
-    del diconnected_pipes['start_node']
-    del diconnected_pipes['end_node_n']
+
 pipes, junctions = wntr.gis.geospatial.connect_lines(diconnected_pipes, distance_threshold)
 
 fig, ax = plt.subplots()
@@ -174,6 +173,7 @@ wn = wntr.network.from_gis(gis_data) # TODO this won't work until PR 452 is merg
 
 # Add demands, estimated from building size
 buildings = gpd.read_file("data/ky4_buildings.geojson", crs=crs)
+buildings.to_crs(crs, inplace=True)
 buildings['area'] = buildings.area
 buildings['base_demand'] = buildings['area']/0.00001
 
