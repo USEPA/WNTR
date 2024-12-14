@@ -33,14 +33,14 @@ if os.name in ["nt", "dos"]:
     libmsx = resource_filename(__name__, "../libepanet/windows-x64/epanetmsx.dll")
 elif sys.platform in ["darwin"]:
     if 'arm' in platform.platform().lower():
-        libepanet = resource_filename(__name__, "../libepanet/darwin-arm/libepanet.dylib")
+        libepanet = resource_filename(__name__, "../libepanet/darwin-arm/libepanet2.dylib")
         libmsx = resource_filename(__name__, "../libepanet/darwin-arm/libepanetmsx.dylib")
     else:
-        libepanet = resource_filename(__name__, "../libepanet/darwin-x64/libepanet.dylib")
+        libepanet = resource_filename(__name__, "../libepanet/darwin-x64/libepanet2.dylib")
         libmsx = resource_filename(__name__, "../libepanet/darwin-x64/libepanetmsx.dylib")
 else:
     libepanet = resource_filename(__name__, "../libepanet/linux-x64/libepanet2.so")
-    libmsx = resource_filename(__name__, "../libepanet/linux-x64/epanetmsx.dll")
+    libmsx = resource_filename(__name__, "../libepanet/linux-x64/libepanetmsx.so")
 
 dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
 if dylib_dir != '':
