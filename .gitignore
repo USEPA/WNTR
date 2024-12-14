@@ -82,6 +82,7 @@ temp*
 
 examples/*.inp
 wntr/tests/*.png
+wntr/tests/*.tif
 
 # Documentation build files
 documentation/_build

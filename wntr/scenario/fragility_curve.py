@@ -123,7 +123,7 @@ class State(object):
         """
         Parameters
         -----------
-        name : string
+        name : str
             Name of the damage state
             
         priority : int

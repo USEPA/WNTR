@@ -121,18 +121,18 @@ def from_dict(d: dict, append=None):
                 if dl is not None and len(dl) > 0:
                     base_demand = dl[0].setdefault("base_val", 0.0)
                     pattern_name = dl[0].setdefault("pattern_name")
-                    category = dl[0].setdefault("category")
+                    demand_category = dl[0].setdefault("category")
                 else:
-                    base_demand = 0.0
-                    pattern_name = None
-                    category = None
+                    base_demand = node.setdefault('base_demand',0.0)
+                    pattern_name = node.setdefault('pattern_name')
+                    demand_category = node.setdefault('demand_category')
                 wn.add_junction(
                     name=name,
                     base_demand=base_demand,
                     demand_pattern=pattern_name,
                     elevation=node.setdefault("elevation"),
                     coordinates=node.setdefault("coordinates", list()),
-                    demand_category=category,
+                    demand_category=demand_category,
                 )
                 j = wn.get_node(name)
                 j.emitter_coefficient = node.setdefault("emitter_coefficient")
@@ -141,6 +141,11 @@ def from_dict(d: dict, append=None):
                 j.pressure_exponent = node.setdefault("pressure_exponent")
                 j.required_pressure = node.setdefault("required_pressure")
                 j.tag = node.setdefault("tag")
+                
+                j._leak = node.setdefault("leak", False)
+                j._leak_area = node.setdefault("leak_area", 0.0)
+                j._leak_discharge_coeff = node.setdefault("leak_discharge_coeff", 0.0)
+                
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(j))):
                     setattr( j, attr, node[attr] )
@@ -648,12 +653,13 @@ def valid_gis_names(complete_list=True, truncate_names=None):
     Valid column/field names for GeoJSON or Shapefiles
     
     Note that Shapefile field names are truncated to 10 characters 
-    (set truncate=10)
+    (set truncate_names=10)
     
     Parameters
     ----------
     complete_list : bool
-        Include a complete list of column/field names (beyond basic attributes)
+        When true, returns both optional and required column/field names.
+        When false, only returns required column/field names.
     truncate_names : None or int
         Truncate column/field names to specified number of characters, 
         set truncate=10 for Shapefiles.  None indicates no truncation.

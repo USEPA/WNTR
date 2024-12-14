@@ -575,7 +575,7 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.RoughnessCoeff] and darcy_weisbach:
             if flow_units.is_traditional:
-                data = data * (1000.0 * 0.3048)  # 1e-3 ft to m
+                data = data * (0.001 * 0.3048)  # 1e-3 ft to m
             elif flow_units.is_metric:
                 data = data * 0.001  # mm to m
 
@@ -672,7 +672,7 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.RoughnessCoeff] and darcy_weisbach:
             if flow_units.is_traditional:
-                data = data / (1000.0 * 0.3048)  # 1e-3 ft from m
+                data = data / (0.001 * 0.3048)  # 1e-3 ft from m
             elif flow_units.is_metric:
                 data = data / 0.001  # mm from m
 

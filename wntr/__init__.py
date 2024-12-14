@@ -9,7 +9,7 @@ from wntr import gis
 from wntr import utils
 from wntr import msx
 
-__version__ = '1.2.0'
+__version__ = '1.3.0rc2'
 
 __copyright__ = """Copyright 2023 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 
