@@ -104,37 +104,15 @@ class ENepanet:
         self.rptfile = rptfile
         self.binfile = binfile
 
-        if float(version) == 2.0:
-            libnames = ["epanet2_x86", "epanet2", "epanet"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet2_amd64")
-        elif float(version) == 2.2:
-            libnames = ["epanet22", "epanet22_win32"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet22_amd64")
-        for lib in libnames:
-            try:
-                if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
-                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                else:
-                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                return
-            except Exception as E1:
-                if lib == libnames[-1]:
-                    raise E1
-                pass
-            finally:
-                if version >= 2.2 and "32" not in lib:
-                    self._project = ctypes.c_uint64()
-                elif version >= 2.2:
-                    self._project = ctypes.c_uint32()
-                else:
-                    self._project = None
+        try:
+            if os.name in ["nt", "dos"]:
+                self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+            else:
+                self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+        except:
+            raise
+        finally:
+            self._project = None
         return
 
     def isOpen(self):

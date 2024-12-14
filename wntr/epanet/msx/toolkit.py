@@ -54,11 +54,6 @@ if dylib_dir != '':
 class MSXepanet(ENepanet):
     def __init__(self, inpfile="", rptfile="", binfile="", msxfile=""):
 
-        if 'WNTR_PATH_TO_EPANETMSX' in os.environ:
-            msx_toolkit = os.environ['WNTR_PATH_TO_EPANETMSX']
-        else:
-            msx_toolkit = None
-
         self.ENlib = None
         self.errcode = 0
         self.errcodelist = []
@@ -73,47 +68,15 @@ class MSXepanet(ENepanet):
         self.binfile = binfile
         self.msxfile = msxfile
 
-        libnames = ["epanetmsx"]
-        if "64" in platform.machine():
-            libnames.insert(0, "epanetmsx")
-        if msx_toolkit:
-            for lib in libnames:
-                try:
-                    if os.name in ["nt", "dos"]:
-                        libepanet = os.path.join(msx_toolkit, "%s.dll" % lib)
-                        self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                    elif sys.platform in ["darwin"]:
-                        libepanet = os.path.join(msx_toolkit, "lib%s.dylib" % lib)
-                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    else:
-                        libepanet = os.path.join(msx_toolkit, "lib%s.so" % lib)
-                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    return
-                except Exception as E1:
-                    if lib == libnames[-1]:
-                        raise E1
-                    pass
-                finally:
-                    self._project = None
-        else:
-            for lib in libnames:
-                try:
-                    if os.name in ["nt", "dos"]:
-                        libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
-                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    elif sys.platform in ["darwin"]:
-                        libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
-                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    else:
-                        libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
-                        self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                    return
-                except Exception as E1:
-                    if lib == libnames[-1]:
-                        raise E1
-                    pass
-                finally:
-                    self._project = None
+        try:
+            if os.name in ["nt", "dos"]:
+                self.ENlib = ctypes.windll.LoadLibrary(libmsx)
+            else:
+                self.ENlib = ctypes.cdll.LoadLibrary(libmsx)
+        except:
+            raise
+        finally:
+            self._project = None
         return
 
     def _error(self, *args):
