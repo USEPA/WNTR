@@ -23,9 +23,9 @@ if os.name in ["nt", "dos"]:
     libepanet = resource_filename(__name__, "libepanet/windows-x64/epanet2.dll")
 elif sys.platform in ["darwin"]:
     if 'arm' in platform.platform().lower():
-        libepanet = resource_filename(__name__, "libepanet/darwin-arm/libepanet.dylib")
+        libepanet = resource_filename(__name__, "libepanet/darwin-arm/libepanet2.dylib")
     else:
-        libepanet = resource_filename(__name__, "libepanet/darwin-x64/libepanet.dylib")
+        libepanet = resource_filename(__name__, "libepanet/darwin-x64/libepanet2.dylib")
 else:
     libepanet = resource_filename(__name__, "libepanet/linux-x64/libepanet2.so")
 
