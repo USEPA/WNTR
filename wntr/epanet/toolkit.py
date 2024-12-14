@@ -20,11 +20,14 @@ logger = logging.getLogger(__name__)
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "Windows/epanet2.dll")
+    libepanet = resource_filename(__name__, "libepanet/windows-x64/epanet2.dll")
 elif sys.platform in ["darwin"]:
-    libepanet = resource_filename(__name__, "Darwin/libepanet.dylib")
+    if 'arm' in platform.platform().lower():
+        libepanet = resource_filename(__name__, "libepanet/darwin-arm/libepanet.dylib")
+    else:
+        libepanet = resource_filename(__name__, "libepanet/darwin-x64/libepanet.dylib")
 else:
-    libepanet = resource_filename(__name__, "Linux/libepanet2.so")
+    libepanet = resource_filename(__name__, "libepanet/linux-x64/libepanet2.so")
 
 
 def ENgetwarning(code, sec=-1):
