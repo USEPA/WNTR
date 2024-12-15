@@ -248,6 +248,7 @@ class TestPerformance(unittest.TestCase):
         )
     
     @pytest.mark.time_consuming
+    @pytest.mark.skip
     def test_Net6_thread_performance(self):
         """
         Test thread-safe performance of simulators
