@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "libepanet/windows-x64/epanet2.dll")
+    libepanet = "libepanet/windows-x64/epanet22.dll"
 elif sys.platform in ["darwin"]:
     if 'arm' in platform.platform().lower():
-        libepanet = resource_filename(__name__, "libepanet/darwin-arm/libepanet2.dylib")
+        libepanet = "libepanet/darwin-arm/libepanet2.dylib"
     else:
-        libepanet = resource_filename(__name__, "libepanet/darwin-x64/libepanet2.dylib")
+        libepanet = "libepanet/darwin-x64/libepanet22.dylib"
 else:
-    libepanet = resource_filename(__name__, "libepanet/linux-x64/libepanet2.so")
+    libepanet = "libepanet/linux-x64/libepanet22.so"
 
 
 def ENgetwarning(code, sec=-1):
@@ -105,10 +105,17 @@ class ENepanet:
         self.binfile = binfile
 
         try:
-            if os.name in ["nt", "dos"]:
-                self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+            if float(version) == 2.0:
+                libname = libepanet.replace('epanet22.','epanet20.')
+                if 'arm' in platform.platform():
+                    raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
             else:
-                self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                libname = libepanet
+            libname = resource_filename(__name__, libname)
+            if os.name in ["nt", "dos"]:
+                self.ENlib = ctypes.windll.LoadLibrary(libname)
+            else:
+                self.ENlib = ctypes.cdll.LoadLibrary(libname)
         except:
             raise
         finally:
