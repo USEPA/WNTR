@@ -1429,18 +1429,13 @@ class WaterNetworkModel(AbstractModel):
 
         operation: numpy operator
             Numpy operator, options include the following: 
-            numpy.greater,
-            numpy.greater_equal,
-            numpy.less,
-            numpy.less_equal,
-            numpy.equal,
-            numpy.not_equal.
-
-            :py:function:`numpy.core.defchararray.greater`
-            :py:data:`numpy.greater`
-            :obj:`numpy.greater`
-            
-
+            :obj:`numpy.greater`,
+            :obj:`numpy.greater_equal`,
+            :obj:`numpy.less`,
+            :obj:'numpy.less_equal',
+            :obj:`numpy.equal`,
+            :obj:`numpy.not_equal`.
+`
         value: float or int
             Threshold
 
