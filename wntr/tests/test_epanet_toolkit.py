@@ -1,7 +1,13 @@
 import unittest
 from os.path import abspath, dirname, join, exists
+import sys, platform
 
 import wntr.epanet.toolkit
+
+if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
+    skip_v2_tests_on_arm = True
+else:
+    skip_v2_tests_on_arm = False
 
 testdir = dirname(abspath(__file__))
 datadir = join(testdir, "..", "..", "examples", "networks")
@@ -11,6 +17,8 @@ class TestEpanetToolkit(unittest.TestCase):
     
     def test_isOpen(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             self.assertEqual(0, enData.isOpen())
@@ -19,6 +27,8 @@ class TestEpanetToolkit(unittest.TestCase):
 
     def test_ENgetcount(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
@@ -30,6 +40,8 @@ class TestEpanetToolkit(unittest.TestCase):
     
     def test_ENgetflowunits(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
@@ -39,6 +51,8 @@ class TestEpanetToolkit(unittest.TestCase):
         
     def test_EN_timeparam(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
@@ -51,6 +65,8 @@ class TestEpanetToolkit(unittest.TestCase):
         
     def test_ENgetindex_ENgetvalue(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
@@ -74,6 +90,8 @@ class TestEpanetToolkit(unittest.TestCase):
         
     def test_ENsaveinpfile(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
@@ -94,6 +112,8 @@ class TestEpanetToolkit(unittest.TestCase):
         
     def test_runepanet_step(self):
         for version in [2.0, 2.2,]:
+            if version == 2.0 and skip_v2_tests_on_arm:
+                continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp_runepanet_step.rpt", "temp_runepanet_step.bin")
