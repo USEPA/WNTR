@@ -1446,11 +1446,7 @@ class WaterNetworkModel(AbstractModel):
             :class:`~wntr.network.elements.Pump`,
             :class:`~wntr.network.elements.Valve`, or None. Default = None.
             Note None and :class:'wntr.network.base.Link' produce the same results.
-
-            , 
-     and
     
-
         Returns
         -------
         A pandas.Series that contains the attribute that satisfies the
