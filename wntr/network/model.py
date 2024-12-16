@@ -1435,7 +1435,7 @@ class WaterNetworkModel(AbstractModel):
             :obj:`numpy.less_equal`,
             :obj:`numpy.equal`,
             :obj:`numpy.not_equal`.
-`
+
         value: float or int
             Threshold
 
@@ -1446,8 +1446,6 @@ class WaterNetworkModel(AbstractModel):
             :class:`~wntr.network.elements.Pump`,
             :class:`~wntr.network.elements.Valve`, or None. Default = None.
             Note None and :class:`~wntr.network.base.Link` produce the same results.
-
-            
     
         Returns
         -------
