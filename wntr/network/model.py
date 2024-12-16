@@ -1436,6 +1436,11 @@ class WaterNetworkModel(AbstractModel):
             numpy.equal,
             numpy.not_equal.
 
+            :py:function:`numpy.core.defchararray.greater`
+            :py:data:`numpy.greater`
+            :obj:`numpy.greater`
+            
+
         value: float or int
             Threshold
 
