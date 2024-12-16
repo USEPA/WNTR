@@ -1453,7 +1453,7 @@ class WaterNetworkModel(AbstractModel):
     
         Returns
         -------
-        A :meth:'pandas.Series' that contains the attribute that satisfies the operation threshold for a given link_type.
+        :class:'pandas.Series' that contains the attribute that satisfies the operation threshold for a given link_type.
 
         Notes
         -----
