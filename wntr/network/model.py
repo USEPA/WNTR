@@ -1450,6 +1450,8 @@ class WaterNetworkModel(AbstractModel):
             :meth:`apply <pandas:pandas.DataFrame.apply>`
             :meth:`pandas:pandas.DataFrame.apply`
             :meth:`pandas.DataFrame.apply`
+            :meth:'pandas: pandas.Series'
+            :class:`pandas.Series`
     
         Returns
         -------
