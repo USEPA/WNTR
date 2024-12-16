@@ -91,10 +91,19 @@ jobs:
         pip install -r requirements.txt
         python -m pip install -e .
     - name: Run Tests
+      if: ${{ matrix.os != 'macos-latest' }}
       run: | 
         coverage erase
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Run Tests (ARM-processor)
+      if: ${{ matrix.os == 'macos-latest'}}
+      # doctests are not flexible enough to skip EPANET=v2.0 errors on ARM processor, so do not run doctests on ARM system
+      run: | 
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
