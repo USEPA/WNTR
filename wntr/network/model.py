@@ -1424,7 +1424,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        attribute: string
+        attribute: str
             Link attribute
 
         operation: numpy operator
@@ -1441,11 +1441,15 @@ class WaterNetworkModel(AbstractModel):
 
         link_type: Link type
             Link type, options include
-            wntr.network.model.Link,
-            wntr.network.model.Pipe,
-            wntr.network.model.Pump,
-            wntr.network.model.Valve, or None. Default = None.
-            Note None and wntr.network.model.Link produce the same results.
+            :class:'wntr.network.base.Link',
+            :class:`~wntr.network.elements.Pipe`,
+            :class:`~wntr.network.elements.Pump`,
+            :class:`~wntr.network.elements.Valve`, or None. Default = None.
+            Note None and :class:'wntr.network.base.Link' produce the same results.
+
+            , 
+     and
+    
 
         Returns
         -------
@@ -1454,7 +1458,7 @@ class WaterNetworkModel(AbstractModel):
 
         Notes
         -----
-        If operation and value are both None, the Series will contain the attributes
+        If operation and value are both None, the pandas.Series will contain the attributes
         for all links with the specified attribute.
 
         """
