@@ -74,6 +74,7 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_mass_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
