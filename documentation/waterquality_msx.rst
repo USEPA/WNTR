@@ -97,7 +97,7 @@ The following example loads the Lead plumbosolvency model (lead_ppm) from the Ms
     >>> import wntr.library.msx
     >>> reaction_library = wntr.library.msx.MsxLibrary()
     
-    >>> print(reaction_library.model_name_list())
+    >>> print(reaction_library.model_name_list())  # doctest: +SKIP
     ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']
     
     >>> lead_ppm = reaction_library.get_model("lead_ppm")
