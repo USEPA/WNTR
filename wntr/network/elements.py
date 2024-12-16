@@ -888,7 +888,8 @@ class Pipe(Link):
                         "minor_loss",
                         "initial_status",
                         "check_valve"]
-    _optional_attributes = ["bulk_coeff",
+    _optional_attributes = ["initial_quality",
+                            "bulk_coeff",
                             "wall_coeff",
                             "vertices",
                             "tag"]
@@ -1044,6 +1045,7 @@ class Pump(Link):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         efficiency
         energy_price
         energy_pattern
@@ -1074,7 +1076,8 @@ class Pump(Link):
                         "base_speed",
                         "speed_pattern_name",
                         "initial_status"]
-    _optional_attributes = ["initial_setting",
+    _optional_attributes = ["initial_quality",
+                            "initial_setting",
                             "efficiency",
                             "energy_pattern",
                             "energy_price",
@@ -1256,6 +1259,7 @@ class HeadPump(Pump):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         pump_type
         pump_curve_name
         efficiency
@@ -1476,6 +1480,7 @@ class PowerPump(Pump):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         pump_type
         power
         efficiency
@@ -1566,6 +1571,7 @@ class Valve(Link):
         valve_type
         initial_status
         initial_setting
+        initial_quality
         vertices
         tag
 
@@ -1592,7 +1598,8 @@ class Valve(Link):
                         "minor_loss",
                         "initial_setting",
                         "initial_status"]
-    _optional_attributes = ["vertices",
+    _optional_attributes = ["initial_quality",
+                            "vertices",
                             "tag"]
         
     def __init__(self, name, start_node_name, end_node_name, wn):

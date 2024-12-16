@@ -321,6 +321,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         end_node_name
         initial_status
         initial_setting
+        initial_quality
         tag
         vertices
 

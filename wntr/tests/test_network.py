@@ -1128,6 +1128,7 @@ class TestNetworkIO_GIS(unittest.TestCase):
             data_columns.append(data.index.name)
             
             # Check that all data columns are valid
+            print(set(data_columns)-set(valid_columns))
             assert len(set(data_columns)-set(valid_columns)) == 0
             # Check that all required columns are in the data
             assert len(set(required_columns)-set(data_columns)) == 0
