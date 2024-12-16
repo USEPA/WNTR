@@ -1371,37 +1371,36 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        attribute: string
-            Node attribute.
+        attribute: str
+            :class:`~wntr.network.base.Node` attribute.
 
         operation: numpy operator
             Numpy operator, options include
-            np.greater,
-            np.greater_equal,
-            np.less,
-            np.less_equal,
-            np.equal,
-            np.not_equal.
+            :obj:`numpy.greater`,
+            :obj:`numpy.greater_equal`,
+            :obj:`numpy.less`,
+            :obj:`numpy.less_equal`,
+            :obj:`numpy.equal`,
+            :obj:`numpy.not_equal`.
 
         value: float or int
             Threshold
 
         node_type: Node type
-            Node type, options include
-            wntr.network.model.Node,
-            wntr.network.model.Junction,
-            wntr.network.model.Reservoir,
-            wntr.network.model.Tank, or None. Default = None.
-            Note None and wntr.network.model.Node produce the same results.
+            :class:`~wntr.network.base.Node` type, options include
+            :class:`~wntr.network.base.Node`,
+            :class:`~wntr.network.elements.Junction`,
+            :class:`~wntr.network.elements.Reservoir`,
+            :class:`~wntr.network.elements.Tank`, or None. Default = None.
+            Note None and :class:`~wntr.network.base.Node` produce the same results.
 
         Returns
         -------
-        A pandas Series that contains the attribute that satisfies the
-        operation threshold for a given node_type.
+        :class:`pandas.Series` that contains the attribute that satisfies the operation threshold for a given node_type.
 
         Notes
         -----
-        If operation and value are both None, the Series will contain the attributes
+        If operation and value are both None, the :class:`pandas.Series` will contain the attributes
         for all nodes with the specified attribute.
 
         """
@@ -1425,7 +1424,7 @@ class WaterNetworkModel(AbstractModel):
         Parameters
         ----------
         attribute: str
-            Link attribute
+            :class:`~wntr.network.base.Link` attribute
 
         operation: numpy operator
             Numpy operator, options include the following: 
@@ -1440,7 +1439,7 @@ class WaterNetworkModel(AbstractModel):
             Threshold
 
         link_type: Link type
-            Link type, options include
+            :class:`~wntr.network.base.Link` type, options include
             :class:`~wntr.network.base.Link`,
             :class:`~wntr.network.elements.Pipe`,
             :class:`~wntr.network.elements.Pump`,
