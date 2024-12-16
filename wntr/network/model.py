@@ -1441,20 +1441,19 @@ class WaterNetworkModel(AbstractModel):
 
         link_type: Link type
             Link type, options include
-            :class:'wntr.network.base.Link',
+            :class:'~wntr.network.base.Link',
             :class:`~wntr.network.elements.Pipe`,
             :class:`~wntr.network.elements.Pump`,
             :class:`~wntr.network.elements.Valve`, or None. Default = None.
-            Note None and :class:'wntr.network.base.Link' produce the same results.
+            Note None and :class:'~wntr.network.base.Link' produce the same results.
     
         Returns
         -------
-        A pandas.Series that contains the attribute that satisfies the
-        operation threshold for a given link_type.
+        A :meth:'pandas.Series' that contains the attribute that satisfies the operation threshold for a given link_type.
 
         Notes
         -----
-        If operation and value are both None, the pandas.Series will contain the attributes
+        If operation and value are both None, the :meth:'pandas.Series' will contain the attributes
         for all links with the specified attribute.
 
         """
