@@ -131,11 +131,11 @@ In the example below, the strength of the source is changed from 1000 to 1500.
 
     >>> source = wn.get_source('Source')
     >>> print(source)                                                                                           
-    <Source: 'Source', '121', 'SETPOINT', 1000, SourcePattern>
+    <Source: 'Source', '121', 'SETPOINT', 1000, SourcePattern, None>
 
     >>> source.strength_timeseries.base_value = 1500
     >>> print(source)
-    <Source: 'Source', '121', 'SETPOINT', 1500, SourcePattern>
+    <Source: 'Source', '121', 'SETPOINT', 1500, SourcePattern, None>
 
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer representing the number of sources in the INP file.
