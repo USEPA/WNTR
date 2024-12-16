@@ -77,7 +77,7 @@ Examples that illustrate how to build MSX models in WNTR are included in :ref:`a
 Reaction library
 -----------------
 WNTR also contains a library of MSX models that are accessed through the 
-:class:`~wntr.msx.library.ReactionLibrary`.
+:class:`~wntr.library.msx.MsxLibrary`.
 This includes the following models:
 
 * `Arsenic oxidation/adsorption <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
@@ -90,11 +90,12 @@ The models are stored in JSON format.
 Additional models can be loaded into the library by setting a user specified path.  
 Additional models could also be added directly to the WNTR Reactions library.
 
-The following example loads the Lead plumbosolvency model (lead_ppm) from the ReactionLibrary.
+The following example loads the Lead plumbosolvency model (lead_ppm) from the MsxLibrary.
 
 .. doctest::
 
-    >>> reaction_library = wntr.msx.library.ReactionLibrary()
+    >>> import wntr.library.msx
+    >>> reaction_library = wntr.library.msx.MsxLibrary()
     
     >>> print(reaction_library.model_name_list())
     ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']

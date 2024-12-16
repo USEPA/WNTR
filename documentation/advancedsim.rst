@@ -318,14 +318,15 @@ This method adds the new species to the model and also return a copy of the new 
 .. doctest::
 
     >>> msx.add_species(name="PB2", species_type='bulk', units="ug", note="dissolved lead (Pb)")
-    Species(name='PB2', species_type=<SpeciesType.BULK: 1>, units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
+    Species(name='PB2', species_type='BULK', units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
+
 
 The new species can be accessed by using the item's name and indexing on the model's 
 :attr:`~wntr.msx.model.MsxModel.reaction_system` attribute.
 
     >>> PB2 = msx.reaction_system['PB2']
     >>> PB2
-    Species(name='PB2', species_type=<SpeciesType.BULK: 1>, units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
+    Species(name='PB2', species_type='BULK', units='ug', atol=None, rtol=None, note='dissolved lead (Pb)')
 
 The model also includes two constants and one parameter.
 
@@ -345,8 +346,11 @@ methods.
 .. doctest::
 
     >>> msx.add_constant("M", value=0.117, note="Desorption rate (ug/m^2/s)", units="ug * m^(-2) * s^(-1)")
+    Constant(name='M', value=0.117, units='ug * m^(-2) * s^(-1)', note='Desorption rate (ug/m^2/s)')
     >>> msx.add_constant("E", value=140.0, note="saturation/plumbosolvency level (ug/L)", units="ug/L")
+    Constant(name='E', value=140.0, units='ug/L', note='saturation/plumbosolvency level (ug/L)')
     >>> msx.add_parameter("F", global_value=0, note="determines which pipes are made of lead")
+    Parameter(name='F', global_value=0.0, note='determines which pipes are made of lead')
 
 If the value of one of these needs to be modified, then it can be accessed and modified as an object
 in the same manner as other WNTR objects.
@@ -387,6 +391,7 @@ method.
 .. doctest::
 
     >>> msx.add_reaction("PB2", "pipe", "RATE", expression="F * Av * M * (E - PB2) / E")
+    Reaction(species_name='PB2', expression_type='RATE', expression='F * Av * M * (E - PB2) / E')
 
 
 If the species is saved as an object, as was done above, then it can be passed instead of the species name.
@@ -394,6 +399,7 @@ If the species is saved as an object, as was done above, then it can be passed i
 .. doctest::
 
     >>> msx.add_reaction(PB2, "tank", "rate", expression="0")
+    Reaction(species_name='PB2', expression_type='RATE', expression='0')
 
 
 Arsenic oxidation and adsorption
@@ -586,7 +592,6 @@ The model is created in WTNR as shown below.
     >>> msx = wntr.msx.MsxModel()
     >>> msx.name = "arsenic_chloramine"
     >>> msx.title = "Arsenic Oxidation/Adsorption Example"
-    >>> msx.references.append(wntr.msx.library.cite_msx())
 
     >>> AS3 = msx.add_species(name="AS3", species_type="BULK", units="UG", note="Dissolved arsenite")
     >>> AS5 = msx.add_species(name="AS5", species_type="BULK", units="UG", note="Dissolved arsenate")
