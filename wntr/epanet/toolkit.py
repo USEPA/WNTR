@@ -119,7 +119,10 @@ class ENepanet:
         except:
             raise
         finally:
-            self._project = None
+            if version >= 2.2:
+                self._project = ctypes.c_uint64()
+            else:
+                self._project = None
         return
 
     def isOpen(self):
