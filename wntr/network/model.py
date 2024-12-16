@@ -1432,7 +1432,7 @@ class WaterNetworkModel(AbstractModel):
             :obj:`numpy.greater`,
             :obj:`numpy.greater_equal`,
             :obj:`numpy.less`,
-            :obj:'numpy.less_equal',
+            :obj:`numpy.less_equal`,
             :obj:`numpy.equal`,
             :obj:`numpy.not_equal`.
 `
