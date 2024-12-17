@@ -20,11 +20,14 @@ logger = logging.getLogger(__name__)
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "Windows/epanet2.dll")
+    libepanet = "libepanet/windows-x64/epanet22.dll"
 elif sys.platform in ["darwin"]:
-    libepanet = resource_filename(__name__, "Darwin/libepanet.dylib")
+    if 'arm' in platform.platform().lower():
+        libepanet = "libepanet/darwin-arm/libepanet2.dylib"
+    else:
+        libepanet = "libepanet/darwin-x64/libepanet22.dylib"
 else:
-    libepanet = resource_filename(__name__, "Linux/libepanet2.so")
+    libepanet = "libepanet/linux-x64/libepanet22.so"
 
 
 def ENgetwarning(code, sec=-1):
@@ -101,37 +104,25 @@ class ENepanet:
         self.rptfile = rptfile
         self.binfile = binfile
 
-        if float(version) == 2.0:
-            libnames = ["epanet2_x86", "epanet2", "epanet"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet2_amd64")
-        elif float(version) == 2.2:
-            libnames = ["epanet22", "epanet22_win32"]
-            if "64" in platform.machine():
-                libnames.insert(0, "epanet22_amd64")
-        for lib in libnames:
-            try:
-                if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
-                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                elif sys.platform in ["darwin"]:
-                    libepanet = resource_filename(epanet_toolkit, "Darwin/lib%s.dylib" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                else:
-                    libepanet = resource_filename(epanet_toolkit, "Linux/lib%s.so" % lib)
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                return
-            except Exception as E1:
-                if lib == libnames[-1]:
-                    raise E1
-                pass
-            finally:
-                if version >= 2.2 and "32" not in lib:
-                    self._project = ctypes.c_uint64()
-                elif version >= 2.2:
-                    self._project = ctypes.c_uint32()
-                else:
-                    self._project = None
+        try:
+            if float(version) == 2.0:
+                libname = libepanet.replace('epanet22.','epanet20.')
+                if 'arm' in platform.platform():
+                    raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
+            else:
+                libname = libepanet
+            libname = resource_filename(__name__, libname)
+            if os.name in ["nt", "dos"]:
+                self.ENlib = ctypes.windll.LoadLibrary(libname)
+            else:
+                self.ENlib = ctypes.cdll.LoadLibrary(libname)
+        except:
+            raise
+        finally:
+            if version >= 2.2:
+                self._project = ctypes.c_uint64()
+            else:
+                self._project = None
         return
 
     def isOpen(self):

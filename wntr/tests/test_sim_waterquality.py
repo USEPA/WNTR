@@ -1,7 +1,12 @@
 import unittest
 from os.path import abspath, dirname, join
-
+import sys, platform
 import wntr
+
+if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
+    skip_v2_tests_on_arm = True
+else:
+    skip_v2_tests_on_arm = False
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "..", "..", "examples", "networks")
@@ -18,6 +23,7 @@ River        CONCEN        100000   mg/L
 class TestWaterQualitySimulations(unittest.TestCase):
     def test_setpoint_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -43,6 +49,7 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_flowpaced_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -67,6 +74,7 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_mass_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -91,6 +99,7 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_conc_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -116,6 +125,7 @@ class TestWaterQualitySimulations(unittest.TestCase):
     def test_age_waterquality_simulation(self):
 
         inp_file = join(datadir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -139,7 +149,8 @@ class TestWaterQualitySimulations(unittest.TestCase):
 
     def test_trace_waterquality_simulation(self):
         inp_file = join(datadir, "Net3.inp")
-        
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
+
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
         wn.options.time.quality_timestep = 15*60

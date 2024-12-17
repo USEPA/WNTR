@@ -1,7 +1,13 @@
 import unittest
 from os.path import abspath, dirname, join
+import sys, platform
 
 import wntr
+
+if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
+    skip_v2_tests_on_arm = True
+else:
+    skip_v2_tests_on_arm = False
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "networks_for_testing")
@@ -16,6 +22,7 @@ class TestHealthImpactsMetric(unittest.TestCase):
 
     def test_mass_consumed(self):
         inp_file = join(netdir, "Net3.inp")
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         wn = wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.hydraulic_timestep = 15*60
@@ -53,6 +60,7 @@ class TestHealthImpactsMetric(unittest.TestCase):
         self.assertLess(error, 0.01)  # 1% error
 
     def test_volume_consumed(self):
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         inp_file = join(netdir, "Net3.inp")
 
@@ -92,6 +100,7 @@ class TestHealthImpactsMetric(unittest.TestCase):
         self.assertLess(error, 0.01)  # 1% error
 
     def test_extent_contaminated(self):
+        if skip_v2_tests_on_arm: self.skipTest('skipped test due to skip_tests_flag')
 
         inp_file = join(netdir, "Net3.inp")
 
