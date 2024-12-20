@@ -50,9 +50,9 @@ class WaterNetworkModel(AbstractModel):
 
     Parameters
     -------------------
-    inp_file_name: string (optional)
+    inp_file_name: str (optional)
         Directory and filename of EPANET inp file to load into the
-        WaterNetworkModel object.
+        :class:`~wntr.network.model.WaterNetworkModel` object.
     """
 
     def __init__(self, inp_file_name=None):
@@ -334,17 +334,17 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the junction.
         base_demand : float
             Base demand at the junction.
-        demand_pattern : string or Pattern
+        demand_pattern : str or Pattern
             Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
             X-Y coordinates of the node location.
-        demand_category  : string
+        demand_category  : str
             Name of the demand category
         """
         self._node_reg.add_junction(name, base_demand, demand_pattern, elevation, coordinates, demand_category)
@@ -367,7 +367,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the tank.
         elevation : float
             Elevation at the tank.
@@ -385,7 +385,7 @@ class WaterNetworkModel(AbstractModel):
             Name of a volume curve
         overflow : bool
            Overflow indicator (Always False for the WNTRSimulator)
-        coordinates : tuple of floats, optional
+        coordinates : tuple of float, optional
             X-Y coordinates of the node location.
             
         """
@@ -399,11 +399,11 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string, optional
+        head_pattern : str, optional
             Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
@@ -428,11 +428,11 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pipe.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
         length : float, optional
             Length of the pipe.
@@ -442,7 +442,7 @@ class WaterNetworkModel(AbstractModel):
             Pipe roughness coefficient.
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        initial_status : string or LinkStatus, optional
+        initial_status : str or LinkStatus, optional
             Pipe initial status. Options are 'OPEN' or 'CLOSED'.
         check_valve : bool, optional
             True if the pipe has a check valve.
@@ -469,22 +469,22 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pump.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
-        pump_type : string, optional
+        pump_type : str, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        pump_parameter : float or string
+        pump_parameter : float or str
             For a POWER pump, the pump power.
             For a HEAD pump, the head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: string
+        pattern: str
             Name of the speed pattern
-        initial_status : string or LinkStatus
+        initial_status : str or LinkStatus
             Pump initial status. Options are 'OPEN' or 'CLOSED'.
         
         """
@@ -508,25 +508,25 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the valve.
-        start_node_name : string
+        start_node_name : str
              Name of the start node.
-        end_node_name : string
+        end_node_name : str
              Name of the end node.
         diameter : float, optional
             Diameter of the valve.
-        valve_type : string, optional
+        valve_type : str, optional
             Type of valve. Options are 'PRV', 'PSV', 'PBV', 'FCV', 'TCV', and 'GPV'
         minor_loss : float, optional
             Pipe minor loss coefficient.
-        initial_setting : float or string, optional
+        initial_setting : float or str, optional
             Valve initial setting.
             Pressure setting for PRV, PSV, or PBV. 
             Flow setting for FCV. 
             Loss coefficient for TCV.
             Name of headloss curve for GPV.
-        initial_status: string or LinkStatus
+        initial_status: str or LinkStatus
             Valve initial status. Options are 'OPEN',  'CLOSED', or 'ACTIVE'.
         """
         self._link_reg.add_valve(
@@ -559,7 +559,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the pattern.
         pattern : list of floats or Pattern
             A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
@@ -579,9 +579,9 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the curve.
-        curve_type : string
+        curve_type : str
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
@@ -594,20 +594,20 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the source
 
-        node_name: string
+        node_name: str
             Injection node.
 
-        source_type: string
+        source_type: str
             Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
 
         quality: float
             Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
             FLOWPACED, or SETPOINT
 
-        pattern: string or Pattern object
+        pattern: str or Pattern
             Pattern name or object
         """
         if pattern and isinstance(pattern, six.string_types):
@@ -623,7 +623,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
            control object name.
         control_object : Control or Rule
             Control or Rule object.
@@ -701,7 +701,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
            The name of the source object to be removed
         """
         logger.warning(
@@ -1212,7 +1212,7 @@ class WaterNetworkModel(AbstractModel):
         
         Parameters
         ----------
-        gis_data : WaterNetworkGIS or dictionary of GeoDataFrames
+        gis_data : WaterNetworkGIS or dict of GeoDataFrame
             GeoDataFrames containing water network attributes. If gis_data is a 
             dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
             pumps, and valves. If the pumps or valves are Points, they will be 
@@ -1251,19 +1251,19 @@ class WaterNetworkModel(AbstractModel):
                                
     def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
-        Convert a WaterNetworkModel into a networkx MultiDiGraph
+        Convert a :class:`~wntr.network.model.WaterNetworkModel` into a networkx MultiDiGraph
         
         .. deprecated:: 0.5.0
-        Use ``to_graph()`` instead
+        Use :meth:`~wntr.network.model.WaterNetworkModel.to_graph` instead
         
         Parameters
         ----------
-        node_weight :  dict or pandas Series (optional)
+        node_weight :  dict or pandas.Series (optional)
             Node weights
-        link_weight : dict or pandas Series (optional)
+        link_weight : dict or pandas.Series (optional)
             Link weights.  
         modify_direction : bool (optional)
-            If True, than if the link weight is negative, the link start and 
+            If True, then if the link weight is negative, the link start and 
             end node are switched and the abs(weight) is assigned to the link
             (this is useful when weighting graphs by flowrate). If False, link 
             direction and weight are not changed.
@@ -1291,10 +1291,10 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        demand : pandas DataFrame
+        demand : pandas.DataFrame
             A pandas DataFrame containing demands (index = time, columns = junction names)
 
-        pattern_prefix: string
+        pattern_prefix: str
             Pattern name prefix, default = 'ResetDemand'.  The junction name is 
             appended to the prefix to create a new pattern name.  
             If the pattern name already exists, an error is thrown and the user 
@@ -1324,10 +1324,10 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        node_name : string
+        node_name : str
             Name of the node.
 
-        flag : string
+        flag : str
             Options are 'ALL', 'INLET', 'OUTLET'.
             'ALL' returns all links connected to the node.
             'INLET' returns links that have the specified node as an end node.
@@ -1371,37 +1371,36 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        attribute: string
-            Node attribute.
+        attribute: str
+            :class:`~wntr.network.base.Node` attribute.
 
         operation: numpy operator
             Numpy operator, options include
-            np.greater,
-            np.greater_equal,
-            np.less,
-            np.less_equal,
-            np.equal,
-            np.not_equal.
+            :obj:`numpy.greater`,
+            :obj:`numpy.greater_equal`,
+            :obj:`numpy.less`,
+            :obj:`numpy.less_equal`,
+            :obj:`numpy.equal`,
+            :obj:`numpy.not_equal`.
 
         value: float or int
             Threshold
 
         node_type: Node type
-            Node type, options include
-            wntr.network.model.Node,
-            wntr.network.model.Junction,
-            wntr.network.model.Reservoir,
-            wntr.network.model.Tank, or None. Default = None.
-            Note None and wntr.network.model.Node produce the same results.
+            :class:`~wntr.network.base.Node` type, options include
+            :class:`~wntr.network.base.Node`,
+            :class:`~wntr.network.elements.Junction`,
+            :class:`~wntr.network.elements.Reservoir`,
+            :class:`~wntr.network.elements.Tank`, or None. Default = None.
+            Note None and :class:`~wntr.network.base.Node` produce the same results.
 
         Returns
         -------
-        A pandas Series that contains the attribute that satisfies the
-        operation threshold for a given node_type.
+        :class:`pandas.Series` that contains the attribute that satisfies the operation threshold for a given node_type.
 
         Notes
         -----
-        If operation and value are both None, the Series will contain the attributes
+        If operation and value are both None, the :class:`pandas.Series` will contain the attributes
         for all nodes with the specified attribute.
 
         """
@@ -1424,37 +1423,36 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        attribute: string
-            Link attribute
+        attribute: str
+            :class:`~wntr.network.base.Link` attribute
 
         operation: numpy operator
-            Numpy operator, options include
-            np.greater,
-            np.greater_equal,
-            np.less,
-            np.less_equal,
-            np.equal,
-            np.not_equal.
+            Numpy operator, options include the following: 
+            :obj:`numpy.greater`,
+            :obj:`numpy.greater_equal`,
+            :obj:`numpy.less`,
+            :obj:`numpy.less_equal`,
+            :obj:`numpy.equal`,
+            :obj:`numpy.not_equal`.
 
         value: float or int
             Threshold
 
         link_type: Link type
-            Link type, options include
-            wntr.network.model.Link,
-            wntr.network.model.Pipe,
-            wntr.network.model.Pump,
-            wntr.network.model.Valve, or None. Default = None.
-            Note None and wntr.network.model.Link produce the same results.
-
+            :class:`~wntr.network.base.Link` type, options include
+            :class:`~wntr.network.base.Link`,
+            :class:`~wntr.network.elements.Pipe`,
+            :class:`~wntr.network.elements.Pump`,
+            :class:`~wntr.network.elements.Valve`, or None. Default = None.
+            Note None and :class:`~wntr.network.base.Link` produce the same results.
+    
         Returns
         -------
-        A pandas Series that contains the attribute that satisfies the
-        operation threshold for a given link_type.
+        :class:`pandas.Series` that contains the attribute that satisfies the operation threshold for a given link_type.
 
         Notes
         -----
-        If operation and value are both None, the Series will contain the attributes
+        If operation and value are both None, the :class:`pandas.Series` will contain the attributes
         for all links with the specified attribute.
 
         """
@@ -1684,9 +1682,9 @@ class CurveRegistry(Registry):
 
         Parameters
         ----------
-        name : string
+        name : str
             Name of the curve.
-        curve_type : string
+        curve_type : str
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
