@@ -701,7 +701,7 @@ class WaterNetworkModel(AbstractModel):
 
         Parameters
         ----------
-        name : string
+        name : str
            The name of the source object to be removed
         """
         logger.warning(
