@@ -1,0 +1,98 @@
+{
+    "wntr-version": "",
+    "name": "lead_ppm",
+    "title": "Lead Plumbosolvency Model (from Burkhardt et al 2020)",
+    "description": "Parameters for EPA HPS Simulator Model",
+    "references": [
+        "J. B. Burkhardt, et al. (2020) \"Framework for Modeling Lead in Premise Plumbing Systems Using EPANET\". J Water Resour Plan Manag. 146(12). https://doi.org/10.1061/(asce)wr.1943-5452.0001304 PMID:33627937"
+    ],
+    "reaction_system": {
+        "species": [
+            {
+                "name": "PB2",
+                "species_type": "bulk",
+                "units": "ug",
+                "atol": null,
+                "rtol": null,
+                "note": "dissolved lead (Pb)"
+            }
+        ],
+        "constants": [
+            {
+                "name": "M",
+                "value": 0.117,
+                "units": "ug * m^(-2) * s^(-1)",
+                "note": "Desorption rate (ug/m^2/s)"
+            },
+            {
+                "name": "E",
+                "value": 140.0,
+                "units": "ug/L",
+                "note": "saturation/plumbosolvency level (ug/L)"
+            }
+        ],
+        "parameters": [
+            {
+                "name": "F",
+                "global_value": 0.0,
+                "note": "determines which pipes have reactions"
+            }
+        ],
+        "terms": [],
+        "pipe_reactions": [
+            {
+                "species_name": "PB2",
+                "expression_type": "rate",
+                "expression": "F * Av * M * (E - PB2) / E"
+            }
+        ],
+        "tank_reactions": [
+            {
+                "species_name": "PB2",
+                "expression_type": "rate",
+                "expression": "0"
+            }
+        ]
+    },
+    "network_data": {
+        "initial_quality": {
+            "PB2": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            }
+        },
+        "parameter_values": {
+            "F": {
+                "pipe_values": {},
+                "tank_values": {}
+            }
+        },
+        "sources": {},
+        "patterns": {}
+    },
+    "options": {
+        "timestep": 1,
+        "area_units": "M2",
+        "rate_units": "SEC",
+        "solver": "RK5",
+        "coupling": "NONE",
+        "rtol": 1e-08,
+        "atol": 1e-08,
+        "compiler": "NONE",
+        "segments": 5000,
+        "peclet": 1000,
+        "report": {
+            "pagesize": null,
+            "report_filename": null,
+            "species": {
+                "PB2": "YES"
+            },
+            "species_precision": {
+                "PB2": 5
+            },
+            "nodes": "all",
+            "links": "all"
+        }
+    }
+}
