@@ -10,3 +10,4 @@ include wntr/sim/network_isolation/numpy.i
 include wntr/tests/networks_for_testing/*.inp
 include wntr/library/msx/*.json
 include wntr/library/msx/*.msx
+include wntr/epanet/libepanet/darwin-formula/libomp.rb

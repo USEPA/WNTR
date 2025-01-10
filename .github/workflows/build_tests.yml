@@ -83,7 +83,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
       run: |
-        brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
+        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
     - name: Install dependencies
       run: |
         python --version
