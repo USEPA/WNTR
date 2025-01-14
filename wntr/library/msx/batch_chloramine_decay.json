@@ -1,0 +1,415 @@
+{
+    "wntr-version": "",
+    "name": "batch_chloramine_decay",
+    "title": "Batch chloramine decay example",
+    "description": null,
+    "references": [],
+    "reaction_system": {
+        "species": [
+            {
+                "name": "HOCL",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "hypochlorous acid"
+            },
+            {
+                "name": "NH3",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "ammonia"
+            },
+            {
+                "name": "NH2CL",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "monochloramine"
+            },
+            {
+                "name": "NHCL2",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "dichloramine"
+            },
+            {
+                "name": "I",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "unknown intermediate"
+            },
+            {
+                "name": "OCL",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "hypochlorite ion"
+            },
+            {
+                "name": "NH4",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "ammonium ion"
+            },
+            {
+                "name": "ALK",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "total alkalinity"
+            },
+            {
+                "name": "H",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "hydrogen ion"
+            },
+            {
+                "name": "OH",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "hydroxide ion"
+            },
+            {
+                "name": "CO3",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "carbonate ion"
+            },
+            {
+                "name": "HCO3",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "bicarbonate ion"
+            },
+            {
+                "name": "H2CO3",
+                "species_type": "bulk",
+                "units": "mol",
+                "atol": null,
+                "rtol": null,
+                "note": "dissolved carbon dioxide"
+            },
+            {
+                "name": "chloramine",
+                "species_type": "bulk",
+                "units": "mmol",
+                "atol": null,
+                "rtol": null,
+                "note": "monochloramine in mmol/L"
+            }
+        ],
+        "constants": [],
+        "parameters": [
+            {
+                "name": "k1",
+                "global_value": 15000000000.0
+            },
+            {
+                "name": "k2",
+                "global_value": 0.076
+            },
+            {
+                "name": "k3",
+                "global_value": 1000000.0
+            },
+            {
+                "name": "k4",
+                "global_value": 0.0023
+            },
+            {
+                "name": "k6",
+                "global_value": 220000000.0
+            },
+            {
+                "name": "k7",
+                "global_value": 400000.0
+            },
+            {
+                "name": "k8",
+                "global_value": 100000000.0
+            },
+            {
+                "name": "k9",
+                "global_value": 30000000.0
+            },
+            {
+                "name": "k10",
+                "global_value": 55.0
+            }
+        ],
+        "terms": [
+            {
+                "name": "k5",
+                "expression": "(2.5e7*H) + (4.0e4*H2CO3) + (800*HCO3)"
+            },
+            {
+                "name": "a1",
+                "expression": "k1 * HOCL * NH3"
+            },
+            {
+                "name": "a2",
+                "expression": "k2 * NH2CL"
+            },
+            {
+                "name": "a3",
+                "expression": "k3 * HOCL * NH2CL"
+            },
+            {
+                "name": "a4",
+                "expression": "k4 * NHCL2"
+            },
+            {
+                "name": "a5",
+                "expression": "k5 * NH2CL * NH2CL"
+            },
+            {
+                "name": "a6",
+                "expression": "k6 * NHCL2 * NH3 * H"
+            },
+            {
+                "name": "a7",
+                "expression": "k7 * NHCL2 * OH"
+            },
+            {
+                "name": "a8",
+                "expression": "k8 * I * NHCL2"
+            },
+            {
+                "name": "a9",
+                "expression": "k9 * I * NH2CL"
+            },
+            {
+                "name": "a10",
+                "expression": "k10 * NH2CL * NHCL2"
+            }
+        ],
+        "pipe_reactions": [
+            {
+                "species_name": "HOCL",
+                "expression_type": "rate",
+                "expression": "-a1 + a2 - a3 + a4 + a8"
+            },
+            {
+                "species_name": "NH3",
+                "expression_type": "rate",
+                "expression": "-a1 + a2 + a5 - a6"
+            },
+            {
+                "species_name": "NH2CL",
+                "expression_type": "rate",
+                "expression": "a1 - a2 - a3 + a4 - a5 + a6 - a9 - a10"
+            },
+            {
+                "species_name": "NHCL2",
+                "expression_type": "rate",
+                "expression": "a3 - a4 + a5 - a6 - a7 - a8 - a10"
+            },
+            {
+                "species_name": "I",
+                "expression_type": "rate",
+                "expression": "a7 - a8 - a9"
+            },
+            {
+                "species_name": "H",
+                "expression_type": "rate",
+                "expression": "0"
+            },
+            {
+                "species_name": "ALK",
+                "expression_type": "rate",
+                "expression": "0"
+            },
+            {
+                "species_name": "OCL",
+                "expression_type": "equil",
+                "expression": "H * OCL - 3.16E-8 * HOCL"
+            },
+            {
+                "species_name": "NH4",
+                "expression_type": "equil",
+                "expression": "H * NH3 - 5.01e-10 * NH4"
+            },
+            {
+                "species_name": "CO3",
+                "expression_type": "equil",
+                "expression": "H * CO3 - 5.01e-11 * HCO3"
+            },
+            {
+                "species_name": "H2CO3",
+                "expression_type": "equil",
+                "expression": "H * HCO3 - 5.01e-7 * H2CO3"
+            },
+            {
+                "species_name": "HCO3",
+                "expression_type": "equil",
+                "expression": "ALK - HC03 - 2*CO3 - OH + H"
+            },
+            {
+                "species_name": "OH",
+                "expression_type": "equil",
+                "expression": "H * OH - 1.0e-14"
+            },
+            {
+                "species_name": "chloramine",
+                "expression_type": "formula",
+                "expression": "1000 * NH2CL"
+            }
+        ],
+        "tank_reactions": []
+    },
+    "network_data": {
+        "initial_quality": {
+            "HOCL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NH3": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NH2CL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NHCL2": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "I": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "OCL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NH4": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "ALK": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "H": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "OH": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "CO3": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "HCO3": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "H2CO3": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "chloramine": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            }
+        },
+        "parameter_values": {
+            "k1": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k2": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k3": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k4": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k6": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k7": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k8": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k9": {
+                "pipe_values": {},
+                "tank_values": {}
+            },
+            "k10": {
+                "pipe_values": {},
+                "tank_values": {}
+            }
+        },
+        "sources": {},
+        "patterns": {}
+    },
+    "options": {
+        "timestep": 360,
+        "area_units": "ft2",
+        "rate_units": "hr",
+        "solver": "RK5",
+        "coupling": "NONE",
+        "rtol": 0.0001,
+        "atol": 0.0001,
+        "compiler": "NONE",
+        "segments": 5000,
+        "peclet": 1000,
+        "report": {
+            "pagesize": null,
+            "report_filename": null,
+            "species": {},
+            "species_precision": {},
+            "nodes": null,
+            "links": null
+        }
+    }
+}
