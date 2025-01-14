@@ -12,7 +12,7 @@ def demand_var(m, wn, index_over=None):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.sim.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     index_over: list of str
         list of junction names
