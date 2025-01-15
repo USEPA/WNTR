@@ -40,7 +40,7 @@ def expected_demand_param(m, wn):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.sim.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     """
     demand_multiplier = wn.options.hydraulic.demand_multiplier
