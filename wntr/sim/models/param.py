@@ -17,7 +17,7 @@ def source_head_param(m, wn):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.sim.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     """
     if not hasattr(m, 'source_head'):
