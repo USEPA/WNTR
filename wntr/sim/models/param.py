@@ -136,7 +136,7 @@ class leak_coeff_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
