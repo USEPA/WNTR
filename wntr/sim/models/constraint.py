@@ -159,7 +159,7 @@ class approx_hazen_williams_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
