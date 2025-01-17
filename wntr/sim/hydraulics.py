@@ -152,7 +152,7 @@ def update_network_previous_values(wn):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     """
     wn._prev_sim_time = wn.sim_time
     for link_name, link in wn.valves():
