@@ -125,9 +125,9 @@ def update_model_for_isolated_junctions_and_links(m, wn, model_updater, prev_iso
 
     Parameters
     ----------
-    m: wntr.aml.Model
-    wn: wntr.network.WaterNetworkModel
-    model_updater: wntr.models.utils.ModelUpdater
+    m: wntr.sim.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    model_updater: wntr.sim.models.utils.ModelUpdater
     prev_isolated_junctions: set
     prev_isolated_links: set
     isolated_junctions: set
