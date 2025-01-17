@@ -109,9 +109,9 @@ def update_model_for_controls(m, wn, model_updater, change_tracker):
 
     Parameters
     ----------
-    m: wntr.aml.Model
-    wn: wntr.network.WaterNetworkModel
-    model_updater: wntr.models.utils.ModelUpdater
+    m: wntr.sim.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    model_updater: wntr.sim.models.utils.ModelUpdater
     change_tracker: wntr.network.controls.ControlChangeTracker
     """
     for obj, attr in change_tracker.get_changes(ref_point='model'):
