@@ -164,7 +164,7 @@ def update_tank_heads(wn):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     """
     dt = wn.sim_time - wn._prev_sim_time   
 
