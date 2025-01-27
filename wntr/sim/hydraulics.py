@@ -226,9 +226,9 @@ def save_results(wn, node_res, link_res):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
-    node_res: OrderedDict
-    link_res: OrderedDict
+    wn: wntr.network.model.WaterNetworkModel
+    node_res: collections.OrderedDict
+    link_res: collections.OrderedDict
     """
     for name, node in wn.junctions():
         node_res['head'][name].append(node.head)
