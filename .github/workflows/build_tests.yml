@@ -32,6 +32,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel
         pip install -r requirements.txt
+    - name: Conditionally set env var
+      if: runner.os == 'macOS' && matrix.os == 'macos-13'
+      run: |
+        echo "Setting MACOSX_DEPLOYMENT_TARGET to 13.0"
+        echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+
     - name: Build wheel
       run: |
         if [[ "${{ matrix.os }}" == "macos-13" ]]; then
