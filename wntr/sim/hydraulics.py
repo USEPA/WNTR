@@ -343,8 +343,8 @@ def store_results_in_network(wn, m):
 
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
-    m: wntr.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    m: wntr.sim.aml.aml.Model
 
     """
     mode = wn.options.hydraulic.demand_model
