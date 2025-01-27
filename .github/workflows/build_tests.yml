@@ -35,8 +35,8 @@ jobs:
     - name: Conditionally set env var
       if: runner.os == 'macOS' && matrix.os == 'macos-13'
       run: |
-        echo "Setting MACOSX_DEPLOYMENT_TARGET to 13.0"
-        echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+        echo "Setting MACOSX_DEPLOYMENT_TARGET to 14.0"
+        echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
 
     - name: Build wheel
       run: |
