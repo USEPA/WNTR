@@ -40,7 +40,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-        path: dist/wntr*
+        path: dist/wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
 
   install_import:
     needs: build
