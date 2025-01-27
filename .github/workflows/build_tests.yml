@@ -40,8 +40,6 @@ jobs:
 
     - name: Build wheel
       run: |
-        if [[ "${{ matrix.os }}" == "macos-13" ]]; then
-          export MACOSX_DEPLOYMENT_TARGET="13.0"
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
