@@ -38,11 +38,14 @@ jobs:
         python3 -c "import sysconfig; print(sysconfig.get_platform())"
         python3 -c "from distutils.util import get_platform; print(get_platform())"
         echo $MACOSX_DEPLOYMENT_TARGET
+        export MACOSX_DEPLOYMENT_TARGET=13.0
+        echo $MACOSX_DEPLOYMENT_TARGET
+        xcodebuild -version
 
     - name: Build wheel
       run: |
         # Hammer to use if all else fails for macos-13 case: python setup.py bdist_wheel --plat-name macosx-13.0-universal2
-        python setup.py bdist_wheel 
+        python setup.py bdist_wheel --verbose
         ls dist/*
     - name: Save wheel
       uses: actions/upload-artifact@v4
