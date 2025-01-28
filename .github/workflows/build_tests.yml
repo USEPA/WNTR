@@ -37,13 +37,14 @@ jobs:
         python3 -c "import platform; print(platform.mac_ver())"
         python3 -c "import sysconfig; print(sysconfig.get_platform())"
         python3 -c "from distutils.util import get_platform; print(get_platform())"
+
+    - name: Macos debug
+      if: runner.os == 'macOS'
+      run: |
+        xcodebuild -version
         echo $MACOSX_DEPLOYMENT_TARGET
         export MACOSX_DEPLOYMENT_TARGET=13.0
         echo $MACOSX_DEPLOYMENT_TARGET
-
-    - name: Run xcodebuild version (macos only)
-      if: runner.os == 'macOS'
-      run: xcodebuild -version
 
     - name: Build wheel
       run: |
