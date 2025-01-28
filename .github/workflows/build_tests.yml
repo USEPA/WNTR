@@ -40,7 +40,10 @@ jobs:
         echo $MACOSX_DEPLOYMENT_TARGET
         export MACOSX_DEPLOYMENT_TARGET=13.0
         echo $MACOSX_DEPLOYMENT_TARGET
-        xcodebuild -version
+
+    - name: Run xcodebuild version (macos only)
+      if: runner.os == 'macOS'
+      run: xcodebuild -version
 
     - name: Build wheel
       run: |
