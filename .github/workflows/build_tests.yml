@@ -21,11 +21,6 @@ jobs:
         os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Macos debug
       if: runner.os == 'macOS'
       run: |
@@ -33,6 +28,11 @@ jobs:
         echo $MACOSX_DEPLOYMENT_TARGET
         export MACOSX_DEPLOYMENT_TARGET=13.0
         echo $MACOSX_DEPLOYMENT_TARGET
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python --version
