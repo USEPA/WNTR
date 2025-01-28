@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Macos debug
-      if: runner.os == 'macOS'
+      if: runner.os == 'macOS-13'
       run: |
         xcodebuild -version
         echo $MACOSX_DEPLOYMENT_TARGET
