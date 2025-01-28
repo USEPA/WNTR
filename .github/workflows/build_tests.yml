@@ -40,6 +40,15 @@ jobs:
         pip install wheel
         pip install -r requirements.txt
 
+    - name: Build wheel (macOS-13 specific plat-name override)
+      run: |
+        if [[ "$RUNNER_OS" == "macOS-13"]]; then
+          python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
+        else
+          python setup.py bdist_wheel --verbose
+        fi
+        ls dist/*
+
     - name: Build wheel
       run: |
         # Hammer to use if all else fails for macos-13 case: python setup.py bdist_wheel --plat-name macosx-13.0-universal2
