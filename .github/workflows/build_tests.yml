@@ -21,8 +21,8 @@ jobs:
         os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
       fail-fast: false
     steps:
-    - name: Macos debug
-      if: runner.os == 'macOS-13'
+    - name: Macos debug and set deployment target variable
+      if: ${{ matrix.os == 'macOS-13'}}
       run: |
         xcodebuild -version
         echo $MACOSX_DEPLOYMENT_TARGET
@@ -38,10 +38,8 @@ jobs:
         python --version
         python -m pip install --upgrade pip
         pip install wheel
-        pip install -r requirements.txt
-
-        
-    - name: Build macos-13
+        pip install -r requirements.txt  
+    - name: Build macOS-13 # Special case due to unresolved wheel naming bug.
       if: ${{ matrix.os == 'macOS-13'}}
       run: |
         python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
@@ -79,9 +77,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel "numpy>=1.2.1,<2.0" scipy networkx pandas matplotlib setuptools
         pip install --no-index --pre --find-links=. wntr
+        pip install pytest
     - name: Usage of wntr
       run: |
         python -c "import wntr"
+        pytest --pyargs wntr.tests
 
   pytest_coverage:
     runs-on: ${{ matrix.os }}
