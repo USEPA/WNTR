@@ -85,11 +85,13 @@ jobs:
       with:
         sparse-checkout: |
           requirements.txt
+          wntr/tests/
+        sparse-checkout-cone-mode: false
         fetch-depth: 1
     - name: Test wntr
       run: |
         pip install -r requirements.txt
-        pytest --pyargs wntr.tests.test_sim_results
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
