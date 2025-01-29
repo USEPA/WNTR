@@ -90,7 +90,7 @@ jobs:
     - name: Test wntr
       run: |
         pip install -r requirements.txt
-        pytest --pyargs wntr.tests.test_sim_results
+        pytest --rootdir=$(python -c "import wntr; print(wntr.__path__[0] + '/tests')") --pyargs wntr.tests.test_sim_results
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
