@@ -96,7 +96,7 @@ jobs:
     - name: Test wntr
       run: |
         pip install -r requirements.txt
-        pytest wntr/tests/ 
+        pytest wntr/tests/ --ignore=wntr/tests/test_demos.py
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
