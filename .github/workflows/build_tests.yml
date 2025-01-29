@@ -89,7 +89,7 @@ jobs:
     - name: Test wntr
       run: |
         pip install -r requirements.txt
-        pytest --pyargs wntr.tests
+        pytest --pyargs wntr.tests.test_sim_results
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
