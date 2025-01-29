@@ -80,13 +80,6 @@ jobs:
     - name: Import wntr
       run: |
         python -c "import wntr"
-    - name: Checkout requirements.txt
-      uses: actions/checkout@v4
-    - name: Test wntr
-      run: |
-        pip install -r requirements.txt
-        python -c "import wntr; print(wntr.__file__)"
-        pytest wntr/tests/
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
