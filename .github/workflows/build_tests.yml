@@ -86,7 +86,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         python -c "import wntr; print(wntr.__file__)"
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
+        pytest wntr/tests/
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
