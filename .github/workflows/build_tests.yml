@@ -87,8 +87,12 @@ jobs:
           requirements.txt
           wntr/tests/
           examples/
+          wntr/epanet/libepanet/darwin-formula/libomp.rb
         sparse-checkout-cone-mode: false
         fetch-depth: 1
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+      run: |
+        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
     - name: Test wntr
       run: |
         pip install -r requirements.txt
