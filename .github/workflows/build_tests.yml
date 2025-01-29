@@ -77,12 +77,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel "numpy>=1.2.1,<2.0" scipy networkx pandas matplotlib setuptools
         pip install --no-index --pre --find-links=. wntr
-        pip install pytest
-    - name: Usage of wntr
+    - name: Import wntr
       run: |
         python -c "import wntr"
+    - name: Checkout requirements.txt
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          requirements.txt
+        fetch-depth: 1
+    - name: Test wntr
+      run: |
+        pip install -r requirements.txt
         pytest --pyargs wntr.tests
-
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
