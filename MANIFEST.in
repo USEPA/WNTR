@@ -1,8 +1,10 @@
 include README.md
 include LICENSE.md
-include wntr/epanet/Darwin/*
-include wntr/epanet/Linux/*
-include wntr/epanet/Windows/*
+include wntr/epanet/libepanet/darwin-arm/*
+include wntr/epanet/libepanet/darwin-formula/*
+include wntr/epanet/libepanet/darwin-x64/*
+include wntr/epanet/libepanet/linux-x64/*
+include wntr/epanet/libepanet/windows-x64/*
 include wntr/sim/aml/evaluator*
 include wntr/sim/aml/numpy.i
 include wntr/sim/network_isolation/network_isolation*
@@ -10,4 +12,3 @@ include wntr/sim/network_isolation/numpy.i
 include wntr/tests/networks_for_testing/*.inp
 include wntr/library/msx/*.json
 include wntr/library/msx/*.msx
-include wntr/epanet/libepanet/darwin-formula/libomp.rb

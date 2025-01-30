@@ -7,7 +7,7 @@ matplotlib
 setuptools
 
 # Optional
-plotly
+plotly<6.0
 folium
 utm
 openpyxl
