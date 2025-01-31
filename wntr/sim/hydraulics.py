@@ -200,7 +200,7 @@ def initialize_results_dict(wn):
     """
     Parameters
     ----------
-    wn: 
+    wn: wntr.network.model.WaterNetworkModel
 
     Returns
     -------
