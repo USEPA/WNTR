@@ -21,6 +21,13 @@ jobs:
         os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
       fail-fast: false
     steps:
+    - name: Macos debug and set deployment target variable
+      if: ${{ matrix.os == 'macOS-13'}}
+      run: |
+        xcodebuild -version
+        echo $MACOSX_DEPLOYMENT_TARGET
+        export MACOSX_DEPLOYMENT_TARGET=13.0
+        echo $MACOSX_DEPLOYMENT_TARGET
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -31,10 +38,16 @@ jobs:
         python --version
         python -m pip install --upgrade pip
         pip install wheel
-        pip install -r requirements.txt
-    - name: Build wheel
+        pip install -r requirements.txt  
+    - name: Build macOS-13 # Special case due to unresolved wheel naming bug.
+      if: ${{ matrix.os == 'macOS-13'}}
       run: |
-        python setup.py bdist_wheel
+        python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
+        ls dist/*
+    - name: Build all other OS
+      if: ${{ matrix.os != 'macOS-13'}}
+      run: |
+        python setup.py bdist_wheel --verbose
         ls dist/*
     - name: Save wheel
       uses: actions/upload-artifact@v4
@@ -64,10 +77,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install wheel "numpy>=1.2.1,<2.0" scipy networkx pandas matplotlib setuptools
         pip install --no-index --pre --find-links=. wntr
-    - name: Usage of wntr
+    - name: Import wntr
       run: |
         python -c "import wntr"
-
+    - name: Checkout requirements.txt
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          requirements.txt
+          wntr/tests/
+          examples/
+          wntr/epanet/libepanet/darwin-formula/libomp.rb
+        sparse-checkout-cone-mode: false
+        fetch-depth: 1
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+      run: |
+        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
+    - name: Test wntr
+      run: |
+        pip install -r requirements.txt
+        pytest wntr/tests/ --ignore=wntr/tests/test_demos.py --ignore=wntr/tests/test_examples.py
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:

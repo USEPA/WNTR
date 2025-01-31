@@ -243,7 +243,7 @@ WNTR to add attributes to the water network model and analysis. Examples of thes
   These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
 * **LineString or MultiLineString geometries** that could contain street layout or earthquake fault lines.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
-* **Polygon geometries** that could contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
+* **Polygon geometries** that could contain elevation, building footprints, zoning, land cover, hazard maps, census data, or demographics.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
 
 The snap and intersect examples below used additional GIS data stored in the 
@@ -537,7 +537,7 @@ Find the intersect between geometries
 
 The :class:`~wntr.gis.geospatial.intersect`  function is used to find the intersection between geometries.
 This functionality can be used to identify faults, landslides, or other hazards that intersect pipes,
-or assign community resilience indicators (e.g., population characteristics, economic), future climate projections, hazards/risks, or other data to network components.
+or assign community resilience indicators (e.g., population characteristics, economic), hazards/risks, or other data to network components.
 
 When finding the intersection of GeoDataFrame A with GeoDataFrame B (where A and B can contain points, lines, or polygons),
 the function returns the following information (one entry for each geometry in A):
@@ -740,7 +740,7 @@ Assign demographic data to pipes and junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GIS data that includes community resilience indicators (e.g., population characteristics, economic data), 
-future climate projections, hazards/risks, or other data can be used to identify 
+hazards/risks, or other data can be used to identify 
 the effects of disasters to different portions of the community, which can help utilities to improve equitable resilience. 
 The following example highlights the process to assign demographic data to pipes and junctions. The demographic example dataset 
 is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Polygon`` geometries along with 
@@ -835,7 +835,7 @@ Sample raster at points geometries
 
 The :class:`~wntr.gis.sample_raster` function can be used to sample a raster file at point geometries,
 such as the nodes of a water network. A common use case for this function is to assign elevation to the 
-nodes of a water network model, however other geospatial information such as climate or hazard data could be sampled 
+nodes of a water network model, however other geospatial information such as hazard data could be sampled 
 using this function.
 
 The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 
