@@ -91,7 +91,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             Will save hydraulics to ``file_prefix + '.hyd'`` or to file specified in `hydfile_name`
         hydfile : str
             Optionally specify a filename for the hydraulics file other than the `file_prefix`
-        version : float, {2.0, **2.2**}
+        version : float (2.0, **2.2**)
             Optionally change the version of the EPANET toolkit libraries. Valid choices are
             either 2.2 (the default if no argument provided) or 2.0.
         convergence_error: bool (optional)
