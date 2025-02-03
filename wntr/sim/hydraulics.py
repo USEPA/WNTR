@@ -293,10 +293,10 @@ def get_results(wn, results, node_res, link_res):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     results: wntr.sim.results.SimulationResults
-    node_res: OrderedDict
-    link_res: OrderedDict
+    node_res: collections.OrderedDict
+    link_res: collections.OrderedDict
     """
     ntimes = len(results.time)
     nnodes = wn.num_nodes
