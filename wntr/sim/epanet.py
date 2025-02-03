@@ -54,7 +54,8 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     .. seealso::
 
-        wntr.epanet.io.BinFile
+        # wntr.epanet.io.BinFile
+        Binfile
 
     """
     def __init__(self, wn, reader=None, result_types=None):
