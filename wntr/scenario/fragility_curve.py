@@ -94,7 +94,7 @@ class FragilityCurve(object):
         
         Parameters
         -----------
-        Pr : pd.Dataframe
+        Pr : pandas.Dataframe
             Probability of exceeding a damage state
             
         seed : int or None
@@ -102,7 +102,7 @@ class FragilityCurve(object):
         
         Returns
         -------
-        damage_state : pd.Series
+        damage_state : pandas.Series
             The damage state of each element
         """
         if seed is not None:
