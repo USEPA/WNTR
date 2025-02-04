@@ -1,11 +1,13 @@
 # This workflow will install Python dependencies, run tests and lint with all currently supported python versions on all major plattforms
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: build
+name: GitHub CI
 
 on:
   push:
     branches: [ main, dev, release ]
+    tags:
+      - '*'
   pull_request:
     branches: [ main, dev, release ]
   schedule:
@@ -13,49 +15,64 @@ on:
 
 jobs:
   build:
+    name: Build wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
       fail-fast: false
-    steps:
-    - name: Macos debug and set deployment target variable
-      if: ${{ matrix.os == 'macOS-13'}}
-      run: |
-        xcodebuild -version
-        echo $MACOSX_DEPLOYMENT_TARGET
-        export MACOSX_DEPLOYMENT_TARGET=13.0
-        echo $MACOSX_DEPLOYMENT_TARGET
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python --version
-        python -m pip install --upgrade pip
-        pip install wheel
-        pip install -r requirements.txt  
-    - name: Build macOS-13 # Special case due to unresolved wheel naming bug.
-      if: ${{ matrix.os == 'macOS-13'}}
-      run: |
-        python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
-        ls dist/*
-    - name: Build all other OS
-      if: ${{ matrix.os != 'macOS-13'}}
-      run: |
-        python setup.py bdist_wheel --verbose
-        ls dist/*
-    - name: Save wheel
-      uses: actions/upload-artifact@v4
-      with:
-        name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-        # name: wheels
-        path: dist/wntr*
 
-  install_import:
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set deployment target for macOS-13 builds
+      - name: Set macOS deployment target
+        if: matrix.os == 'macOS-13'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+      # # Run cibuildwheel using the PyPA action
+      # - name: Build wheels
+      #   uses: pypa/cibuildwheel@v2
+      #   with:
+      #     output-dir: dist
+      #   env:
+      #     CIBW_SKIP: "pp* cp36-*  cp37-* cp38-*"
+      #     CIBW_ARCHS: "auto"
+      #     CIBW_BEFORE_BUILD: "python -m pip install --upgrade pip && pip install wheel && pip install -r requirements.txt"
+      # - name: Upload built wheels
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: wheels_${{ matrix.os }}
+      #     path: dist/*
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          pip install wheel
+      - name: Build macOS-13 wheel
+        if: ${{ matrix.os == 'macOS-13'}}
+        run: |
+          python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
+          ls dist/*
+      - name: Build other OS wheels
+        if: ${{ matrix.os != 'macOS-13'}}
+        run: |
+          python setup.py bdist_wheel --verbose
+          ls dist/*
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
+          # name: wheels
+          path: dist/wntr*
+
+  test_wheels:
+    name: Test wheels
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -226,12 +243,13 @@ jobs:
           pattern: wntr_*
           path: dist
           merge-multiple: true
-
+      - run: tree
       - name: Download SDist artifact
         uses: actions/download-artifact@v4
         with:
           name: sdist
           path: dist
+      - run: tree
 
       # - uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
       #   with:
