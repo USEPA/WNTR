@@ -53,6 +53,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip
+          pip install -r requirements.txt
           pip install wheel
       - name: Build macOS-13 wheel
         if: ${{ matrix.os == 'macOS-13'}}
