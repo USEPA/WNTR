@@ -94,7 +94,7 @@ class FragilityCurve(object):
         
         Parameters
         -----------
-        Pr : pandas.Dataframe
+        Pr : pandas.DataFrame
             Probability of exceeding a damage state
             
         seed : int or None
