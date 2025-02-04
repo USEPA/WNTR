@@ -22,29 +22,12 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
       fail-fast: false
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # Set deployment target for macOS-13 builds
       - name: Set macOS deployment target
         if: matrix.os == 'macOS-13'
         run: echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
-      # # Run cibuildwheel using the PyPA action
-      # - name: Build wheels
-      #   uses: pypa/cibuildwheel@v2
-      #   with:
-      #     output-dir: dist
-      #   env:
-      #     CIBW_SKIP: "pp* cp36-*  cp37-* cp38-*"
-      #     CIBW_ARCHS: "auto"
-      #     CIBW_BEFORE_BUILD: "python -m pip install --upgrade pip && pip install wheel && pip install -r requirements.txt"
-      # - name: Upload built wheels
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: wheels_${{ matrix.os }}
-      #     path: dist/*
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -69,7 +52,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-          # name: wheels
           path: dist/wntr*
 
   test_wheels:
