@@ -12,7 +12,6 @@ on:
     - cron: '0 0 1 * *'
 
 jobs:
-
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -53,6 +52,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
+        # name: wheels
         path: dist/wntr*
 
   install_import:
@@ -97,6 +97,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         pytest wntr/tests/ --ignore=wntr/tests/test_demos.py --ignore=wntr/tests/test_examples.py
+  
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -143,6 +144,7 @@ jobs:
         include-hidden-files: true
 
   combine_reports:
+    name: Combine coverage reports
     needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
@@ -190,3 +192,53 @@ jobs:
       run: coveralls --service=github --rcfile=.coveragerc
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  source:
+    name: Make SDist artifact 📦
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build SDist
+        run: pipx run build --sdist
+    
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    needs: [build, source]
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      id-token: write
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - name: Download wheel artifacts from build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wntr_*
+          path: dist
+          merge-multiple: true
+
+      - name: Download SDist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+      # - uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
+
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
