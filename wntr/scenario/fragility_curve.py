@@ -65,12 +65,12 @@ class FragilityCurve(object):
         
         Parameters
         -----------
-        x : pd.Series
+        x : pandas.Series
             Control variable for each element
             
         Returns
         --------
-        Pr : pd.Dataframe
+        Pr : pandas.Dataframe
             Probability of exceeding a damage state
         
         """
