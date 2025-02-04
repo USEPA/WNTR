@@ -1,61 +1,79 @@
 # This workflow will install Python dependencies, run tests and lint with all currently supported python versions on all major plattforms
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: build
+name: GitHub CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, release-no-cibuildwheel ]
+    tags:
+      - '*'
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, release-no-cibuildwheel ]
   schedule:
     - cron: '0 0 1 * *'
 
 jobs:
-
   build:
+    name: Build wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
       fail-fast: false
-    steps:
-    - name: Macos debug and set deployment target variable
-      if: ${{ matrix.os == 'macOS-13'}}
-      run: |
-        xcodebuild -version
-        echo $MACOSX_DEPLOYMENT_TARGET
-        export MACOSX_DEPLOYMENT_TARGET=13.0
-        echo $MACOSX_DEPLOYMENT_TARGET
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python --version
-        python -m pip install --upgrade pip
-        pip install wheel
-        pip install -r requirements.txt  
-    - name: Build macOS-13 # Special case due to unresolved wheel naming bug.
-      if: ${{ matrix.os == 'macOS-13'}}
-      run: |
-        python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
-        ls dist/*
-    - name: Build all other OS
-      if: ${{ matrix.os != 'macOS-13'}}
-      run: |
-        python setup.py bdist_wheel --verbose
-        ls dist/*
-    - name: Save wheel
-      uses: actions/upload-artifact@v4
-      with:
-        name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-        path: dist/wntr*
 
-  install_import:
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set deployment target for macOS-13 builds
+      - name: Set macOS deployment target
+        if: matrix.os == 'macOS-13'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+      # # Run cibuildwheel using the PyPA action
+      # - name: Build wheels
+      #   uses: pypa/cibuildwheel@v2
+      #   with:
+      #     output-dir: dist
+      #   env:
+      #     CIBW_SKIP: "pp* cp36-*  cp37-* cp38-*"
+      #     CIBW_ARCHS: "auto"
+      #     CIBW_BEFORE_BUILD: "python -m pip install --upgrade pip && pip install wheel && pip install -r requirements.txt"
+      # - name: Upload built wheels
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: wheels_${{ matrix.os }}
+      #     path: dist/*
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install wheel
+      - name: Build macOS-13 wheel
+        if: ${{ matrix.os == 'macOS-13'}}
+        run: |
+          python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
+          ls dist/*
+      - name: Build other OS wheels
+        if: ${{ matrix.os != 'macOS-13'}}
+        run: |
+          python setup.py bdist_wheel --verbose
+          ls dist/*
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
+          # name: wheels
+          path: dist/wntr*
+
+  test_wheels:
+    name: Test wheels
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -97,6 +115,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         pytest wntr/tests/ --ignore=wntr/tests/test_demos.py --ignore=wntr/tests/test_examples.py
+  
   pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -143,6 +162,7 @@ jobs:
         include-hidden-files: true
 
   combine_reports:
+    name: Combine coverage reports
     needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
@@ -190,3 +210,54 @@ jobs:
       run: coveralls --service=github --rcfile=.coveragerc
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  source:
+    name: Make SDist artifact 📦
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build SDist
+        run: pipx run build --sdist
+    
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    needs: [build, source]
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      id-token: write
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - name: Download wheel artifacts from build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wntr_*
+          path: dist
+          merge-multiple: true
+      - run: tree
+      - name: Download SDist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - run: tree
+
+      # - uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
+
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
