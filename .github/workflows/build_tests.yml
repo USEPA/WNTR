@@ -35,7 +35,8 @@ jobs:
         CIBW_ENVIRONMENT: BUILD_WNTR_EXTENSIONS='true'
         CIBW_BUILD: cp39-* cp310-* cp311-* cp312-*
         CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-        CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
+        # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
+        CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
         # CIBW_ARCHS_MACOS: "universal2"
     - name: Debug
       run: tree
