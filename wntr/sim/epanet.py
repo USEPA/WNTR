@@ -44,9 +44,7 @@ class EpanetSimulator(WaterNetworkSimulator):
     ----------
     wn : WaterNetworkModel
         Water network model
-    reader : Binfile
-        wntr.epanet.io.BinFile 
-        derived object
+    reader : :class:`~wntr.epanet.io.BinFile` (derived object)
         Defaults to None, which will create a new wntr.epanet.io.BinFile object with
         the results_types specified as an init option. Otherwise, a fully
     result_types : dict
@@ -56,8 +54,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     .. seealso::
 
-        # wntr.epanet.io.BinFile
-        Binfile
+        :class:`~wntr.epanet.io.BinFile`
 
     """
     def __init__(self, wn, reader=None, result_types=None):
