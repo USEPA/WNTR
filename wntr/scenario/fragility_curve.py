@@ -70,7 +70,7 @@ class FragilityCurve(object):
             
         Returns
         --------
-        Pr : pandas.Dataframe
+        Pr : pandas.DataFrame
             Probability of exceeding a damage state
         
         """
