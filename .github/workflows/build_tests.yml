@@ -20,57 +20,32 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
       fail-fast: false
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Set deployment target for macOS-13 builds
-      - name: Set macOS deployment target
-        if: matrix.os == 'macOS-13'
-        run: echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
-      # # Run cibuildwheel using the PyPA action
-      # - name: Build wheels
-      #   uses: pypa/cibuildwheel@v2
-      #   with:
-      #     output-dir: dist
-      #   env:
-      #     CIBW_SKIP: "pp* cp36-*  cp37-* cp38-*"
-      #     CIBW_ARCHS: "auto"
-      #     CIBW_BEFORE_BUILD: "python -m pip install --upgrade pip && pip install wheel && pip install -r requirements.txt"
-      # - name: Upload built wheels
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: wheels_${{ matrix.os }}
-      #     path: dist/*
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python --version
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install wheel
-      - name: Build macOS-13 wheel
-        if: ${{ matrix.os == 'macOS-13'}}
-        run: |
-          python setup.py bdist_wheel --plat-name macosx-13.0-universal2 --verbose
-          ls dist/*
-      - name: Build other OS wheels
-        if: ${{ matrix.os != 'macOS-13'}}
-        run: |
-          python setup.py bdist_wheel --verbose
-          ls dist/*
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.whl
-          # name: wheels
-          path: dist/wntr*
+    - name: Set env variables to handle macOS-13
+      if: ${{ matrix.os == 'macOS-13'}}
+      run: |
+        echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+        echo "PLAT=macosx-13.0-universal2" >> $GITHUB_ENV
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Build wheels
+      uses: pypa/cibuildwheel@79b0dd328794e1180a7268444d46cdf12e1abd01 # v2.21.0
+      env:
+        CIBW_ENVIRONMENT: BUILD_WNTR_EXTENSIONS='true'
+        CIBW_BUILD: cp39-* cp310-* cp311-* cp312-*
+        CIBW_SKIP: "pp* cp36-*  cp37-* cp38-* *-win32 *-manylinux_i686 *-musllinux*"
+        # CIBW_ARCHS_MACOS: "universal2"
+    - name: Debug
+      run: tree
+    - name: Upload wheels
+      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      with:
+        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+        path: ./wheelhouse/*.whl
+    - name: Debug
+      run: tree
+  
 
   test_wheels:
     name: Test wheels
