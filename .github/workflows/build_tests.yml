@@ -40,7 +40,7 @@ jobs:
         CIBW_BUILD: cp39-* cp310-* cp311-* cp312-*
         CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
         # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
-        CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/repository/pypa/manylinux_2_34_x86_64"
+        CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_34_x86_64:latest"
         # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "echo 'Skipping auditwheel repair'"  # Disable manylinux
         CIBW_BEFORE_BUILD_MACOS: |
           # install_name_tool -change @rpath/libepanet2.dylib @loader_path/libepanet2.dylib wntr/epanet/libepanet/darwin-x64/libepanetmsx.dylib
