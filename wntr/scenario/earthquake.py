@@ -114,7 +114,7 @@ class Earthquake(object):
 
         Returns
         --------
-        A pandas.Series with peak ground velocity (m/s)
+        A :class:`pandas.Series` with peak ground velocity (m/s)
         """
         R = R/1000 # convert m to km
 
