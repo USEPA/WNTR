@@ -42,6 +42,8 @@ jobs:
         # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
         CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_34_x86_64:latest"
         # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "echo 'Skipping auditwheel repair'"  # Disable manylinux
+        env:
+        CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/home/runner/work/WNTR/WNTR/wntr/epanet/libepanet/linux-x64"
         CIBW_BEFORE_BUILD_MACOS: |
           # install_name_tool -change @rpath/libepanet2.dylib @loader_path/libepanet2.dylib wntr/epanet/libepanet/darwin-x64/libepanetmsx.dylib
           brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
