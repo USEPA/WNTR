@@ -43,7 +43,8 @@ jobs:
         CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_35"
         # CIBW_REPAIR_WHEEL_COMMAND_LINUX: "echo 'Skipping auditwheel repair'"  # Disable manylinux
         CIBW_BEFORE_BUILD_MACOS: |
-          install_name_tool -change @rpath/libepanet2.dylib @loader_path/libepanet2.dylib wntr/epanet/libepanet/darwin-x64/libepanetmsx.dylib
+          # install_name_tool -change @rpath/libepanet2.dylib @loader_path/libepanet2.dylib wntr/epanet/libepanet/darwin-x64/libepanetmsx.dylib
+          brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
         # CIBW_ARCHS_MACOS: "universal2"
     - name: Debug
       run: tree
