@@ -148,7 +148,7 @@ class Earthquake(object):
             
         Returns
         --------
-        A class:`pandas.Series` with the correction factor
+        A :class:`pandas.Series` with the correction factor
         """
 
         # Make sure the values are strings
