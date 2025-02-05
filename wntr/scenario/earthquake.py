@@ -140,7 +140,7 @@ class Earthquake(object):
         
         Parameters
         -----------
-        pipe_characteristics : pd.DataFrame
+        pipe_characteristics : pandas.DataFrame
             Pipe characteristics which includes diameter, material, topography, and liquifaction
         
         diameter_weight, material_weight, topography_weight, liquifaction_weight: dict
