@@ -105,7 +105,7 @@ class Earthquake(object):
 
         Parameters
         -----------
-        R : pd.Series
+        R : pandas.Series
             Distance to epicenter (m)
 
         method : int (optional, default = None, average)
@@ -114,7 +114,7 @@ class Earthquake(object):
 
         Returns
         --------
-        A pandas Series with peak ground velocity (m/s)
+        A pandas.Series with peak ground velocity (m/s)
         """
         R = R/1000 # convert m to km
 
