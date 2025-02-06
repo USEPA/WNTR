@@ -5,11 +5,11 @@ name: GitHub CI
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, release-no-cibuildwheel ]
     tags:
       - '*'
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, dev, release-no-cibuildwheel ]
   schedule:
     - cron: '0 0 1 * *'
 
