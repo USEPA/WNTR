@@ -51,6 +51,7 @@ jobs:
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
+          name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.zip
           path: dist/wntr*
 
   test_wheels:
@@ -70,8 +71,7 @@ jobs:
     - name: Download wheel
       uses: actions/download-artifact@v4
       with:
-        pattern: "*.whl"
-        path: dist/
+        name: wntr_${{ matrix.python-version }}_${{ matrix.os }}.zip
     - name: Install wntr
       run: |
         python -m pip install --upgrade pip
@@ -224,18 +224,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: wntr_*
-          path: dist
+          path: dist/
           merge-multiple: true
       - run: tree
       - name: Download SDist artifact
         uses: actions/download-artifact@v4
         with:
           name: sdist
-          path: dist
+          path: dist/
       - run: tree
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
