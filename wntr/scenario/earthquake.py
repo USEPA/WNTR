@@ -182,10 +182,10 @@ class Earthquake(object):
 
         Parameters
         ------------
-        PGV : pd.Series
+        PGV : pandas.Series
             Peak ground velocity (m/s)
 
-        K : pd.Series
+        K : pandas.Series
             Correction factor
 
         method : int (default = 1)
@@ -194,7 +194,7 @@ class Earthquake(object):
 
         Returns
         -------
-        A pandas Series with repair rate (number of repairs per m)
+        A :class:`pandas.Series` with repair rate (number of repairs per m)
         """
         PGV = (100*PGV)/2.54 # in/s
 
