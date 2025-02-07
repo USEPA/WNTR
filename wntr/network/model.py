@@ -563,7 +563,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_pattern(self, name, pattern=None):
         """
-        Adds a pattern to the water network model
+        Adds a pattern to the water network model TESTY TEST
         
         The pattern can be either a list of values (list, numpy array, etc.) or a 
         :class:`~wntr.network.elements.Pattern` object. The Pattern class has options to automatically
