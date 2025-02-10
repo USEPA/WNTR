@@ -221,10 +221,10 @@ class GraphicsOptions(_OptionsBase):
     offset : 2-tuple or list
         Offset for the network in order (X, Y), by default ``None`` (no offset).
 
-    image_filename : string
+    image_filename : str
         Filename where image is located, by default ``None``.
 
-    map_filename : string
+    map_filename : str
         Filename used to store node coordinates in (node, x, y) format. This option is
         from the EPANET "[OPTIONS]" section. See note below.
     
