@@ -416,6 +416,9 @@ def connect_lines(lines, threshold):
     lines['start_node_name'] = map_node_to_supernode[lines['start_node_name']].values
     lines['end_node_name'] = map_node_to_supernode[lines['end_node_name']].values
     
+    # Remove lines with the same start and end node name
+    lines = lines.loc[~(lines['start_node_name'] == lines['end_node_name']),:]
+    
     # Update nodes GeoDataFrame to only include unique supernodes
     unique_supernodes = nodes['supernode'].unique()
     nodes = nodes[['Node', 'geometry']]
