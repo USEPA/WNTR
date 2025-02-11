@@ -1952,11 +1952,11 @@ class NodeRegistry(Registry):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the junction.
         base_demand : float
             Base demand at the junction.
-        demand_pattern : string or Pattern
+        demand_pattern : str or Pattern
             Name of the demand pattern or the Pattern object
         elevation : float
             Elevation of the junction.
