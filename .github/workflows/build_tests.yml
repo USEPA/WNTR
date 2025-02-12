@@ -54,9 +54,6 @@ jobs:
       with:
         name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
         path: ./wheelhouse/*.whl
-    - name: Debug
-      run: tree
-  
 
   test_wheels:
     name: Test wheels
