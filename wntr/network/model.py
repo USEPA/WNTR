@@ -2014,7 +2014,7 @@ class NodeRegistry(Registry):
 
         Parameters
         -------------------
-        name : string
+        name : str
             Name of the tank.
         elevation : float
             Elevation at the tank.
@@ -2029,7 +2029,7 @@ class NodeRegistry(Registry):
             curve is None)
         min_vol : float
             Minimum tank volume (only used when the volume curve is None)
-        vol_curve : string, optional
+        vol_curve : str, optional
             Name of a volume curve. The volume curve overrides the tank diameter
             and minimum volume.
         overflow : bool, optional
