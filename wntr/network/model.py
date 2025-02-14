@@ -1236,11 +1236,11 @@ class WaterNetworkModel(AbstractModel):
     
     def from_gis(self, gis_data):
         """
-        Append the model with elements from GeoDataFrames
+        Append the model with elements from :class:`geopandas.GeoDataFrames`
         
         Parameters
         ----------
-        gis_data : WaterNetworkGIS or dict of GeoDataFrame
+        gis_data : WaterNetworkGIS or dict of geopandas.GeoDataFrame
             GeoDataFrames containing water network attributes. If gis_data is a 
             dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
             pumps, and valves. If the pumps or valves are Points, they will be 
