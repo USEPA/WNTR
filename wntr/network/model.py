@@ -611,7 +611,7 @@ class WaterNetworkModel(AbstractModel):
             Name of the curve.
         curve_type : str
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
-        xy_tuples_list : list of (x, y) tuples
+        xy_tuples_list : list of (x, y) tuple
             List of X-Y coordinate tuples on the curve.
         """
         self._curve_reg.add_curve(name, curve_type, xy_tuples_list)
