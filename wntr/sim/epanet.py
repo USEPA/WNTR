@@ -44,7 +44,7 @@ class EpanetSimulator(WaterNetworkSimulator):
     ----------
     wn : WaterNetworkModel
         Water network model
-    reader : wntr.epanet.io.BinFile derived object
+    reader : wntr.epanet.io.BinFile (derived object)
         Defaults to None, which will create a new wntr.epanet.io.BinFile object with
         the results_types specified as an init option. Otherwise, a fully
     result_types : dict
@@ -54,7 +54,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     .. seealso::
 
-        wntr.epanet.io.BinFile
+        :class:`~wntr.epanet.io.BinFile`
 
     """
     def __init__(self, wn, reader=None, result_types=None):
@@ -91,8 +91,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             Will save hydraulics to ``file_prefix + '.hyd'`` or to file specified in `hydfile_name`
         hydfile : str
             Optionally specify a filename for the hydraulics file other than the `file_prefix`
-        version : float, {2.0, **2.2**}
-            Optionally change the version of the EPANET toolkit libraries. Valid choices are
+        version : float
+            {2.0, **2.2**} Optionally change the version of the EPANET toolkit libraries. Valid choices are
             either 2.2 (the default if no argument provided) or 2.0.
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the

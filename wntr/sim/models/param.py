@@ -17,7 +17,7 @@ def source_head_param(m, wn):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.sim.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     """
     if not hasattr(m, 'source_head'):
@@ -40,7 +40,7 @@ def expected_demand_param(m, wn):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.sim.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     """
     demand_multiplier = wn.options.hydraulic.demand_multiplier
@@ -64,7 +64,7 @@ class pmin_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -99,7 +99,7 @@ class pnom_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -136,7 +136,7 @@ class leak_coeff_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -166,7 +166,7 @@ class leak_area_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -196,7 +196,7 @@ class pdd_poly_coeffs_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -270,7 +270,7 @@ class leak_poly_coeffs_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -317,7 +317,7 @@ class elevation_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -347,7 +347,7 @@ class hw_resistance_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -380,7 +380,7 @@ class minor_loss_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -412,7 +412,7 @@ class tcv_resistance_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -444,7 +444,7 @@ class pump_power_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -475,7 +475,7 @@ class valve_setting_param(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
