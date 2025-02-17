@@ -52,7 +52,7 @@ jobs:
     - name: fix macos13 wheel names
       if: ${{ matrix.os == 'macOS-13'}}
       run: |
-        for file in *.whl; do
+        for file in ./wheelhouse/*.whl; do
           new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_13_0/')
           mv "$file" "$new_name"
         done
