@@ -250,7 +250,8 @@ jobs:
       #     user: __token__
       #     password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
 
-      - name: Publish distribution 📦 to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
+      - name: Publish to TestPyPI
+        env:
+          TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: |
+          python -m twine upload --repository testpypi dist/* -u __token__ -p $TEST_PYPI_API_TOKEN
