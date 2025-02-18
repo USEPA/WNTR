@@ -724,6 +724,11 @@ class StormWaterNetworkModel(object):
         coordinates = pd.DataFrame(pos).T
         coordinates.rename(columns={0: 'X', 1: 'Y'}, inplace=True)
         
+        # Rescale coordinates to be between [0,1]
+        coordinates = coordinates - coordinates.min()
+        coordinates = coordinates/coordinates.max()
+        coordinates.X = -coordinates.X + 1 # Flip along the Y axis
+        
         if update_model:
             self.coordinates = coordinates
             self.vertices.drop(self.vertices.index, inplace=True)
