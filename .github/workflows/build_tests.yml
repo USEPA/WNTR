@@ -109,100 +109,70 @@ jobs:
         pip install -r requirements.txt
         pytest wntr/tests/ --ignore=wntr/tests/test_demos.py --ignore=wntr/tests/test_examples.py
   
-  # pytest_coverage:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       python-version: ['3.9', '3.10', '3.11', '3.12']
-  #       os: [windows-latest, macOS-13, ubuntu-latest, macos-latest]
-  #     fail-fast: false
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
-  #     run: |
-  #       brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
-  #   - name: Install dependencies
-  #     run: |
-  #       python --version
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       python -m pip install -e .
-  #   - name: Run Tests
-  #     if: ${{ matrix.os != 'macos-latest' }}
-  #     run: | 
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Run Tests (ARM-processor)
-  #     if: ${{ matrix.os == 'macos-latest'}}
-  #     # doctests are not flexible enough to skip EPANET=v2.0 errors on ARM processor, so do not run doctests on ARM system
-  #     run: | 
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Save coverage
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #       path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #       include-hidden-files: true
+  pytest_coverage:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        os: [windows-latest, macOS-13, ubuntu-latest, macos-latest]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+      run: |
+        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m pip install -e .
 
-  # combine_reports:
-  #   name: Combine coverage reports
-  #   needs: [ pytest_coverage ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Set up Python 
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: 3.11
-  #   - uses: actions/checkout@v4
-  #   - name: Install coverage
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       python -m pip install -e .
-  #       pip install coveralls
-  #   - name: Download coverage artifacts from test matrix
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
-  #   - name: Setup coverage and combine reports
-  #     run: coverage combine .coverage.*.ubuntu-latest
-  #   - name: Create coverage report
-  #     run: |
-  #       echo "[paths]" > .coveragerc
-  #       echo "source = " >> .coveragerc
-  #       echo "    wntr/" >> .coveragerc
-  #       echo "    wntr\\" >> .coveragerc
-  #       echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
-  #       echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-  #       echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-  #       echo "    ${{ github.workspace }}/wntr" >> .coveragerc
-  #       coverage report
-  #       coverage json --pretty-print
-  #       coverage html --show-contexts
-  #   - name: Save coverage JSON
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: coverage-json
-  #       path: coverage.json
-  #   - name: Save coverage html
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: coverage-html
-  #       path: htmlcov
-  #   - name: Push to coveralls
-  #     run: coveralls --service=github --rcfile=.coveragerc
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Run tests with coverage (parallel mode)
+      run: |
+        coverage run --parallel-mode -m pytest
+
+    - name: Generate coverage XML
+      run: |
+        coverage xml -o coverage_${{ matrix.os }}_${{ matrix.python-version }}.xml
+
+    - name: Upload coverage artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          .coverage.*       # Coverage data files
+          coverage_*.xml    # The XML report
+
+  combine_reports:
+    runs-on: ubuntu-latest
+    needs: pytest_coverage
+    steps:
+      - name: Download all artifacts
+        uses: svenstaro/download-all-artifacts@v2
+        with:
+          path: coverage_artifacts
+
+      - name: Install coverage & coveralls
+        run: pip install coverage coveralls
+
+      - name: Merge coverage
+        run: |
+          # Move all .coverage.* from coverage_artifacts subfolders into the workspace
+          find coverage_artifacts -name ".coverage.*" -exec cp {} . \;
+          coverage combine
+          coverage xml -o coverage_merged.xml
+          coverage report
+
+      - name: Upload to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: coveralls
   
   source:
     name: Make SDist artifact 📦
@@ -212,52 +182,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Build SDist
         run: pipx run build --sdist
-    
       - uses: actions/upload-artifact@v4
         with:
           name: sdist
           path: dist/*.tar.gz
 
-  publish-to-pypi:
-    name: Publish Python 🐍 distribution 📦 to PyPI
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [build, source]
     runs-on: ubuntu-latest
     environment:
-      name: release
-    permissions:
-      id-token: write
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: Install build dependencies
-        run: python -m pip install --upgrade pip twine
-      - name: Publish to TestPyPI
-        env:
-          TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        run: |
-          python -m twine upload --repository testpypi dist/* -u __token__ -p $TEST_PYPI_API_TOKEN
-
-
-
-  publish-to-testpypi:
-    name: Publish Python 🐍 distribution 📦 to TestPyPI
-    needs:
-    - build
-    runs-on: ubuntu-latest
-
-    environment:
       name: testpypi
       url: https://test.pypi.org/p/kbonney-wntr
-
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
+      id-token: write
     steps:
     - name: Download wheel artifacts from build
       uses: actions/download-artifact@v4
@@ -265,13 +206,11 @@ jobs:
         pattern: wntr_*
         path: dist
         merge-multiple: true
-    - run: tree
     - name: Download SDist artifact
       uses: actions/download-artifact@v4
       with:
         name: sdist
         path: dist
-    - run: tree
     - name: Publish distribution 📦 to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
