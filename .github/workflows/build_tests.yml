@@ -134,7 +134,9 @@ jobs:
 
     - name: Run tests with coverage (parallel mode)
       run: |
-        coverage run --parallel-mode -m pytest
+        # coverage run --parallel-mode -m pytest
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
 
     - name: Generate coverage XML
       run: |
