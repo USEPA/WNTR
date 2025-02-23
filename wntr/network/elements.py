@@ -10,7 +10,7 @@ import math
 import six
 import copy
 from scipy.optimize import curve_fit, OptimizeWarning
-
+from warnings import warn
 from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
