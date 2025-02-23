@@ -857,7 +857,7 @@ class Pipe(Link):
         roughness
         minor_loss
         initial_status
-        cv
+        check_valve
         bulk_coeff
         wall_coeff
         vertices
@@ -900,7 +900,7 @@ class Pipe(Link):
         self._diameter = 0.3048
         self._roughness = 100
         self._minor_loss = 0.0
-        self._cv = False
+        self._check_valve = False
         self._bulk_coeff = None
         self._wall_coeff = None
         self._velocity = None
@@ -963,13 +963,22 @@ class Pipe(Link):
         self._minor_loss = value
 
     @property
-    def cv(self):
+    def check_valve(self):
         """bool : does this pipe have a check valve"""
-        return self._cv
+        return self._check_valve
+    @check_valve.setter
+    def check_valve(self, value): 
+        self._check_valve = value
+
+    @property
+    def cv(self):
+        warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
+        return self._check_valve
     @cv.setter
     def cv(self, value): 
-        self._cv = value
-        
+        warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
+        self._check_valve = value
+
     @property
     def bulk_coeff(self):
         """float or None : if not None, then a pipe specific bulk reaction coefficient"""
