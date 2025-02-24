@@ -974,7 +974,7 @@ class Pipe(Link):
     def cv(self):
         """bool : alias of ``check_valve``
         
-        Deprecated - use ``check_valve`` instead"""
+        Deprecated - use ``check_valve`` instead."""
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
         return self._check_valve
     @cv.setter
