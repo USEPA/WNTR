@@ -47,6 +47,15 @@ jobs:
           new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_13_0/')
           mv "$file" "$new_name"
         done
+    - name: Fix linux wheel names # This is a bit dishonest, since the wheels are not properly repaired to be manylinux compatible. This is a (hopefully) temporary hack to get our wheels onto pypi. 
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        for file in ./wheelhouse/*.whl; do
+          [ -e "$file" ] || continue
+          new_file="${file/linux/manylinux2014}"
+          mv "$file" "$new_file"
+          echo "Renamed: $file -> $new_file"
+        done
     - name: Upload wheels
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
       with:
