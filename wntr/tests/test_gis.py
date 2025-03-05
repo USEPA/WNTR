@@ -323,6 +323,56 @@ class TestGIS(unittest.TestCase):
         
         assert_frame_equal(pd.DataFrame(snapped_points), expected, check_dtype=False)
 
+
+@unittest.skipIf(not has_geopandas,
+                 "Cannot test GIS capabilities: geopandas is missing")
+class TestConnectLines(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+
+        inp_file = join(ex_datadir, "Net1.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        wn_gis = wn.to_gis(crs="EPSG:2236") # ft, https://epsg.io/2236, NAD83 / Florida East (ftUS)
+        original_pipes = wn_gis.pipes
+        
+        # Create imperfect pipe data
+        disconnected_pipes = original_pipes.copy()
+        for i, line in disconnected_pipes.iterrows():
+            angle = np.random.uniform(-5,5,1)
+            geom = gpd.GeoSeries(line['geometry'])
+            geom = geom.rotate(angle)
+            geom = geom.scale(0.95, 0.95)
+            disconnected_pipes.loc[i,'geometry'] = geom[0]
+        
+        self.original_pipes = wn_gis.pipes
+        self.disconnected_pipes = disconnected_pipes
+ 
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_connect_lines(self):
+        distance_threshold = 5 # same units as crs (ft)
+        pipes, junctions = wntr.gis.connect_lines(self.disconnected_pipes, 
+                                                  distance_threshold)
+
+        gis_data = wntr.gis.WaterNetworkGIS({"junctions": junctions,
+                                             "pipes": pipes})
+        wn = wntr.network.from_gis(gis_data)
+        G = wn.to_graph()
+        
+        # Plot
+        ax = self.original_pipes.plot(color='b')
+        ax = self.disconnected_pipes.plot(ax=ax, color='r')
+        ax = pipes.plot(ax=ax, color='y')
+        ax = junctions.plot(ax=ax, color='y')
+        wntr.graphics.plot_network(wn, link_width=10, link_alpha =0.5, ax=ax)
+        
+        uG = G.to_undirected()
+        assert nx.is_connected(uG)
+        assert nx.number_connected_components(uG) == 1
+
+
 @unittest.skipIf(not has_rasterio,
                  "Cannot test raster capabilities: rasterio is missing")
 class TestRaster(unittest.TestCase):
