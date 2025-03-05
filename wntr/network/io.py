@@ -126,7 +126,7 @@ def from_dict(d: dict, append=None):
                     name=name,
                     base_demand=base_demand,
                     demand_pattern=pattern_name,
-                    elevation=node.setdefault("elevation"),
+                    elevation=node.setdefault("elevation", 0.0),
                     coordinates=node.setdefault("coordinates", list()),
                     demand_category=demand_category,
                 )
