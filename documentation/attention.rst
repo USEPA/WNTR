@@ -10,4 +10,8 @@
  
 :download:`WNTR overview factsheet <factsheets/WNTR_overview_factsheet.pdf>`
 
+:download:`WNTR data requirement factsheet <factsheets/WNTR_data_factsheet.pdf>`
+
+:download:`WNTR tutorials factsheet <factsheets/WNTR_tutorials_factsheet.pdf>`
+
 :download:`WNTR case studies factsheet <factsheets/WNTR_case_studies_factsheet.pdf>`
