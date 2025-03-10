@@ -17,7 +17,7 @@ class Constraint(object):
 
         Parameters
         ----------
-        expr: wntr.aml.expr.ExpressionBase
+        expr: wntr.sim.aml.expr.ExpressionBase
         """
         self._expr = expr
         self.name = None

@@ -1,0 +1,9 @@
+Version 1.3.2 (March 7, 2025)
+---------------------------------------------------
+WNTR version 1.3.2 includes the following updates:
+
+* Updated API documentation by @wDushanin in https://github.com/USEPA/WNTR/pull/478 and https://github.com/USEPA/WNTR/pull/477
+* Fixed release workflow by @kbonney in https://github.com/USEPA/WNTR/pull/481
+* Fixed broken links in PULL_REQUEST_TEMPLATE.md by @kbonney in https://github.com/USEPA/WNTR/pull/480
+* Fixed check valve syntax by @angusmcb in https://github.com/USEPA/WNTR/pull/482
+* Update wheel building to rename linux wheels by @kbonney in https://github.com/USEPA/WNTR/pull/484

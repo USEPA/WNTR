@@ -1,5 +1,5 @@
 .. attention:: 
-    Version 1.2.0 is now available.  
+    Version 1.3.2 is now available.  
     See `release notes <https://usepa.github.io/WNTR/whatsnew.html>`_
     for more information.
 
@@ -15,3 +15,4 @@
 :download:`WNTR tutorials factsheet <factsheets/WNTR_tutorials_factsheet.pdf>`
 
 :download:`WNTR case studies factsheet <factsheets/WNTR_case_studies_factsheet.pdf>`
+
