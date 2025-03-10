@@ -161,6 +161,20 @@ Step 2: Install WNTR
 	     during the setup process. This requires that the user has a C++ compiler (e.g., Visual Studio C++, GNU C++, MinGW) on their path.
 	     No compiler is needed when installing WNTR through PyPI (Option 1) or conda (Option 2). 
    
+
+.. note:: Mac builds and EPANETMSX
+
+   The builds of EPANETMSX for Mac require the OpenMP package be installed. This is easiest to do using
+   homebrew. A brew recipe is provided with WNTR that will obtain the appropriate libraries. To use it,
+   download the https://github.com/USEPA/WNTR/tree/main/wntr/epanet/libepanet/darwin-formula/libomp.rb 
+   formula directly and brew it, or use the command below.
+   This should install the necessary libraries onto your machine to be able to run WNTR with EPANETMSX extensions.
+
+   .. code:: bash
+	  
+	  brew reinstall --build-from-source --formula https://github.com/USEPA/WNTR/tree/main/wntr/epanet/libepanet/darwin-formula/libomp.rb
+	 
+
 Step 3: Test installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

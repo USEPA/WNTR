@@ -3053,36 +3053,50 @@ def _read_control_line(line, wn, flow_units, control_name):
     current = line.split()
     if current == []:
         return
-    link_name = current[1]
-    link = wn.get_link(link_name)
+    
+    element_name = current[1]
+
+    # For the case of leak demands
+    if current[0] == 'JUNCTION':
+        element = wn.get_node(element_name)
+    else:
+        element = wn.get_link(element_name)
+
     if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
         node_name = current[5]
     current = [i.upper() for i in current]
-    current[1] = link_name # don't capitalize the link name
+    current[1] = element_name # don't capitalize the link name
 
     # Create the control action object
 
     status = current[2].upper()
     if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
         setting = LinkStatus[status].value
-        action_obj = wntr.network.ControlAction(link, 'status', setting)
+        action_obj = wntr.network.ControlAction(element, 'status', setting)
     else:
-        if isinstance(link, wntr.network.Pump):
-            action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
-        elif isinstance(link, wntr.network.Valve):
-            if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
+        if isinstance(element, wntr.network.Pump):
+            action_obj = wntr.network.ControlAction(element, 'base_speed', float(current[2]))
+        elif isinstance(element, wntr.network.Valve):
+            if element.valve_type == 'PRV' or element.valve_type == 'PSV' or element.valve_type == 'PBV':
                 setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
-            elif link.valve_type == 'FCV':
+            elif element.valve_type == 'FCV':
                 setting = to_si(flow_units, float(current[2]), HydParam.Flow)
-            elif link.valve_type == 'TCV':
+            elif element.valve_type == 'TCV':
                 setting = float(current[2])
-            elif link.valve_type == 'GPV':
+            elif element.valve_type == 'GPV':
                 setting = current[2]
             else:
-                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
-            action_obj = wntr.network.ControlAction(link, 'setting', setting)
+                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(element.valve_type, line))
+            action_obj = wntr.network.ControlAction(element, 'setting', setting)
+        elif isinstance(element, wntr.network.Node):
+            if status=="TRUE":
+                setting = True
+            elif status=="FALSE":
+                setting = False
+            action_obj = wntr.network.ControlAction(element, 'leak_status', setting)
+
         else:
-            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
+            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(element))+
                                 'the link status. Control: {0}'.format(line)))
 
     # Create the control object

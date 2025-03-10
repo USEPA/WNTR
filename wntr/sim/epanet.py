@@ -3,7 +3,7 @@
 
 from wntr.sim.core import WaterNetworkSimulator
 from wntr.network.io import write_inpfile
-import wntr.epanet.io
+import wntr.epanet
 import warnings
 import logging
 
@@ -44,7 +44,7 @@ class EpanetSimulator(WaterNetworkSimulator):
     ----------
     wn : WaterNetworkModel
         Water network model
-    reader : wntr.epanet.io.BinFile derived object
+    reader : wntr.epanet.io.BinFile (derived object)
         Defaults to None, which will create a new wntr.epanet.io.BinFile object with
         the results_types specified as an init option. Otherwise, a fully
     result_types : dict
@@ -54,7 +54,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     .. seealso::
 
-        wntr.epanet.io.BinFile
+        :class:`~wntr.epanet.io.BinFile`
 
     """
     def __init__(self, wn, reader=None, result_types=None):
@@ -91,8 +91,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             Will save hydraulics to ``file_prefix + '.hyd'`` or to file specified in `hydfile_name`
         hydfile : str
             Optionally specify a filename for the hydraulics file other than the `file_prefix`
-        version : float, {2.0, **2.2**}
-            Optionally change the version of the EPANET toolkit libraries. Valid choices are
+        version : float
+            {2.0, **2.2**} Optionally change the version of the EPANET toolkit libraries. Valid choices are
             either 2.2 (the default if no argument provided) or 2.0.
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the
@@ -105,9 +105,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         inpfile = file_prefix + '.inp'
         write_inpfile(self._wn, inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         enData = wntr.epanet.toolkit.ENepanet(version=version)
+        self.enData = enData
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
-        
+        if self._wn._msx is not None:
+            save_hyd = True
         if hydfile is None:
             hydfile = file_prefix + '.hyd'
         enData.ENopen(inpfile, rptfile, outfile)
@@ -129,6 +131,27 @@ class EpanetSimulator(WaterNetworkSimulator):
         #os.sys.stderr.write('Finished Closing\n')
         
         results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+
+        if self._wn._msx is not None:
+            # Attributed to Matthew's package
+            msxfile = file_prefix + '.msx'
+            rptfile = file_prefix + '.msx-rpt'
+            binfile = file_prefix + '.msx-bin'
+            msxfile2 = file_prefix + '.check.msx'
+            wntr.epanet.msx.io.MsxFile.write(msxfile, self._wn._msx)
+            msx = wntr.epanet.msx.MSXepanet(inpfile, rptfile, outfile, msxfile)
+            msx.ENopen(inpfile, rptfile, outfile)
+            msx.MSXopen(msxfile)
+            msx.MSXusehydfile(hydfile)
+            msx.MSXinit()
+            msx.MSXsolveH()
+            msx.MSXsolveQ()
+            msx.MSXreport()
+            msx.MSXsaveoutfile(binfile)
+            msx.MSXsavemsxfile(msxfile2)
+            msx.MSXclose()
+            msx.ENclose()
+            results = wntr.epanet.msx.io.MsxBinFile(binfile, self._wn, results)
 
         return results
 
