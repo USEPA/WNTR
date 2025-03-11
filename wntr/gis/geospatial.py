@@ -5,7 +5,10 @@ intersects with polygons.
 
 import pandas as pd
 import numpy as np
-
+import matplotlib.pylab as plt
+from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, squareform
+from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
 
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
@@ -337,7 +340,7 @@ def sample_raster(A, filepath, bands=1):
     return values
 
 
-def connect_lines(lines, threshold):
+def connect_lines(lines, threshold, plot=True):
     """
     Connect lines by identifying start and end nodes that are within a 
     threshold distance
@@ -349,7 +352,9 @@ def connect_lines(lines, threshold):
     tolerance : float
         Maximum distance between line endpoints, used to define connecting 
         Point geometry
-
+    plot : bool
+        Boolean indicating if a plot is created for the dendogram, and original and connected lines
+        
     Returns
     -------
     Tuple[line GeoDataFrame, node GeoDataFrame]
@@ -359,7 +364,8 @@ def connect_lines(lines, threshold):
     """
     if not has_shapely or not has_geopandas:
         raise ModuleNotFoundError('shapley and geopandas are required')
-        
+    
+    original_lines = lines
     lines = lines.copy()
 
     # Create start and end node name and Point geometry for each line
@@ -387,29 +393,55 @@ def connect_lines(lines, threshold):
             
     nodes = gpd.GeoDataFrame(nodes, geometry=geometry)
     nodes.set_crs(lines.crs, inplace=True)
-        
-    # Group nodes into "supernodes"
-    # supernode is composed of all nodes within certain radius 
-    nodes_buffer = nodes.copy()
-    nodes_buffer.geometry = nodes_buffer.buffer(threshold) #how big is the buffer, to connect lines 
-    intersect_nodes = intersect(nodes, nodes_buffer)
-    intersect_nodes.sort_values(by=['n'], ascending=False, inplace=True) # sort high to low
     
-    intersect_nodes['visited'] = False #new column
-    nodes['supernode'] = None
-    # Walk through each node, and assign supernodes
-    # If node has already been visited, don't need to assign to supernode again
-    # The solution is dependent on node order
-    for i in intersect_nodes.index:
-        if intersect_nodes.loc[i,'visited'] == True:
-            continue
-        for j in intersect_nodes.loc[i,'intersections']: # list of intersecting vertices
-            if intersect_nodes.loc[j,'visited'] == True: # maybe see which point is closer, the current one of the new one
+    use_dendogram = True
+    if use_dendogram:
+        # Create a distance matrix
+        points = nodes['geometry']
+        coords = points.apply(lambda geom: (geom.x, geom.y)).tolist()
+        condensed = pdist(coords)
+        D = squareform(condensed)
+        D = pd.DataFrame(D, index=nodes.index, columns=nodes.index)
+        
+        # Compute a linkage model
+        Z = linkage(condensed, method='single', metric='euclidean', optimal_ordering=False)
+        
+        # Form clusters
+        clusters = fcluster(Z, threshold, criterion='distance')
+        #clusters = fcluster(Z, threshold, criterion='inconsistent', depth=2)
+        clusters = pd.Series(clusters, index=nodes.index)
+        nodes['supernode'] = clusters.copy()
+        
+        if plot:
+            plt.figure(figsize=(10, 5))
+            dendrogram(Z)
+            plt.title('Hierarchical Cluster Dendrogram')
+            plt.xlabel('Data Point Indexes')
+            plt.ylabel('Distance')
+            
+    else:
+        # Group nodes into "supernodes"
+        # supernode is composed of all nodes within certain radius 
+        nodes_buffer = nodes.copy()
+        nodes_buffer.geometry = nodes_buffer.buffer(threshold) #how big is the buffer, to connect lines 
+        intersect_nodes = intersect(nodes, nodes_buffer)
+        intersect_nodes.sort_values(by=['n'], ascending=False, inplace=True) # sort high to low
+        
+        intersect_nodes['visited'] = False #new column
+        nodes['supernode'] = None
+        # Walk through each node, and assign supernodes
+        # If node has already been visited, don't need to assign to supernode again
+        # The solution is dependent on node order
+        for i in intersect_nodes.index:
+            if intersect_nodes.loc[i,'visited'] == True:
                 continue
-            nodes.loc[j, 'supernode'] = i
-            intersect_nodes.loc[j,'visited'] = True
-
-    assert intersect_nodes['visited'].all()
+            for j in intersect_nodes.loc[i,'intersections']: # list of intersecting vertices
+                if intersect_nodes.loc[j,'visited'] == True: # maybe see which point is closer, the current one of the new one
+                    continue
+                nodes.loc[j, 'supernode'] = i
+                intersect_nodes.loc[j,'visited'] = True
+    
+        assert intersect_nodes['visited'].all()
 
     # Update lines GeoDataFrame with start and end supernode names
     map_node_to_supernode = nodes['supernode']
@@ -419,16 +451,45 @@ def connect_lines(lines, threshold):
     # Remove lines with the same start and end node name
     lines = lines.loc[~(lines['start_node_name'] == lines['end_node_name']),:]
     
-    # Update nodes GeoDataFrame to only include unique supernodes
-    unique_supernodes = nodes['supernode'].unique()
-    nodes = nodes[['Node', 'geometry']]
+    # Create a nodes GeoDataFrame with centroid of each supernode
+    supernode_name = []
+    supernode_geom = []
+    for name, group in nodes.groupby('supernode'):
+        supernode_name.append(name)
+        supernode_geom.append(group.dissolve().centroid[0])
+    nodes = gpd.GeoDataFrame({'Node': supernode_name}, geometry=supernode_geom)
     nodes.set_index('Node', inplace=True)
-    nodes = nodes.loc[unique_supernodes,:]
     nodes.index.name = None
     nodes.crs = lines.crs
     
+    # Convert names to string
     nodes.index = nodes.index.astype(str)
     lines['start_node_name'] = lines['start_node_name'].astype(str)
     lines['end_node_name'] = lines['end_node_name'].astype(str)
+    
+    # Add start and end node Points to LineStrings
+    start_coords = nodes.loc[lines['start_node_name']]
+    end_coords = nodes.loc[lines['end_node_name']]
+    for i, (line_name, row) in enumerate(lines.iterrows()):
+        line = row['geometry']
+        l_coords = list(line.coords)
+        start_point = nodes.loc[row['start_node_name'], 'geometry']
+        end_point = nodes.loc[row['end_node_name'], 'geometry']
+        if start_point.coords[0] != l_coords[0]:
+            l_coords.insert(0, start_point.coords[0])
+        if end_point.coords[0] != l_coords[-1]:
+            l_coords.append(end_point.coords[0])
+        lines.loc[line_name, 'geometry'] = LineString(l_coords)
+    
+    if plot:
+        plt.figure()
+        ax = plt.gca()
+        ax = original_lines.plot(ax=ax, color='r', label='Disconnected lines')
+        ax = lines.plot(ax=ax, color='k', linewidth=6, alpha=0.35, label='Connected lines')
+        ax = nodes.plot(ax=ax, color='k', label='Connected nodes')
+        ax.legend()
+        bounds = ax.axis('equal')
+        plt.tight_layout()
+        plt.axis('off')
     
     return lines, nodes
