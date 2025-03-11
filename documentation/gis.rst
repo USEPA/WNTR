@@ -927,3 +927,87 @@ sampled from the raster file.
    :alt: Net1 with elevations sampled from raster.
 
    Net1 with elevations sampled from raster.
+
+Connect lines
+--------------------------------------
+
+The :class:`~wntr.gis.connect_lines` function can be used connect line geometries that do not connect.
+This is useful, for example, when utility pipe data does not perfectly connect at line endpoints and junction coordinates are unknown.
+The :class:`~wntr.gis.connect_lines` function takes a GeoDataFrame with LineString geometries and a distance threshold and returns
+a line GeoDataFrame with connected LineStrings and 
+a node GeoDataFrame with Point coordinates.
+
+Connect pipe data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A WaterNetworkModel requires pipe data with `start_node_name` and `end_node_name` attributes.  
+These node names refer to Junctions, Tanks, or Reservoirs.
+When this connectivity information is not known (i.e., the pipe data has no `start_node_name` and `end_node_name`), the 
+:class:`~wntr.gis.connect_lines` function can be used to connect line end points with a user specified distance threshold.
+
+The following example creates disconnected pipe data using Net1, and then generates the data needed to create a 
+connected WaterNetworkModel.  This assumes that all start and end nodes are Junctions.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:2236')
+    >>> original_pipes = wn_gis.pipes
+
+.. doctest::
+    :skipif: gpd is None
+    :hide:
+	
+    >>> np.random.seed(123)
+    >>> disconnected_pipes = original_pipes[['diameter', 'length', 'geometry']]
+    >>> for i, line in disconnected_pipes.iterrows():
+    ...     angle = np.random.uniform(-5,5,1)
+    ...     geom = gpd.GeoSeries(line['geometry'])
+    ...     geom = geom.rotate(angle)
+    ...     geom = geom.scale(0.9, 0.9)
+    ...     disconnected_pipes.loc[i,'geometry'] = geom[0]
+
+To create the disconnected pipe data in this example, the original pipes were rotated (+/- 5 degrees) and scaled (90% in the x and y direction).
+The disconnected pipe data is missing start and end node names, and end points do not connect.
+
+Connect the disconnected pipes using a distance threshold of 5 ft (same distance units as the CRS)
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> distance_threshold = 5 # ft
+    >>> pipes, junctions = wntr.gis.connect_lines(disconnected_pipes, distance_threshold)
+
+:numref:`fig-connect-lines` illustrates the original pipe data, the disconnected pipe data, 
+and the connected pipe and junction data.
+
+    >>> ax = disconnected_pipes.plot(ax=ax, color='r', label='Disconnected pipe data')
+    >>> ax = pipes.plot(ax=ax, color='k', linewidth=6, alpha=0.35, label='Connected pipe data')
+    >>> ax = junctions.plot(ax=ax, color='k', label='Connected junctions')
+    >>> legend = ax.legend()
+
+.. doctest::
+    :skipif: gpd is None
+    :hide:
+    
+    >>> bounds = ax.axis('equal')
+    >>> plt.tight_layout()
+    >>> temp = plt.axis('off')
+    >>> plt.savefig('connect_lines.png', dpi=300)
+    >>> plt.close()
+
+.. _fig-connect-lines:
+.. figure:: figures/connect_lines.png
+   :width: 640
+   :alt: Connected pipes and junctions from a disconnected dataset.
+
+   Connected pipes and junctions from a disconnected dataset
+   
+Use the junction and pipe data to create a basic WaterNetworkModel (without tanks, reservoirs, pumps, or valves).
+
+.. doctest::
+    :skipif: gpd is None
+    
+    >>> gis_data = wntr.gis.WaterNetworkGIS({"junctions": junctions, "pipes": pipes})
+    >>> wn = wntr.network.from_gis(gis_data)
+	
