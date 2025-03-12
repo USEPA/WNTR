@@ -225,7 +225,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             background[B_value] = background_value
         B = pd.concat([B, background])
     
-    B = B.copy(deep=False)
+    B = B.copy()
     B.index.name = None
 
     intersects = gpd.sjoin(A, B, predicate='intersects')
