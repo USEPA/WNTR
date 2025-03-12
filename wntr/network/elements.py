@@ -968,9 +968,9 @@ class Pipe(Link):
         return self._check_valve
     @check_valve.setter
     def check_valve(self, value): 
-        if value == True or value == 'True':
+        if value == True or value == 'True' or value == '1':
             self._check_valve = True
-        elif value == False or value== 'False':
+        elif value == False or value == 'False' or value == '0':
             self._check_valve = False
         else:
             msg=f'check_valve must be True or False. Received {value} of type {type(value)}'
