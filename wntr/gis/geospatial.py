@@ -394,55 +394,28 @@ def connect_lines(lines, threshold, plot=True):
     nodes = gpd.GeoDataFrame(nodes, geometry=geometry)
     nodes.set_crs(lines.crs, inplace=True)
     
-    use_dendogram = True
-    if use_dendogram:
-        # Create a distance matrix
-        points = nodes['geometry']
-        coords = points.apply(lambda geom: (geom.x, geom.y)).tolist()
-        condensed = pdist(coords)
-        D = squareform(condensed)
-        D = pd.DataFrame(D, index=nodes.index, columns=nodes.index)
-        
-        # Compute a linkage model
-        Z = linkage(condensed, method='single', metric='euclidean', optimal_ordering=False)
-        
-        # Form clusters
-        clusters = fcluster(Z, threshold, criterion='distance')
-        #clusters = fcluster(Z, threshold, criterion='inconsistent', depth=2)
-        clusters = pd.Series(clusters, index=nodes.index)
-        nodes['supernode'] = clusters.copy()
-        
-        if plot:
-            plt.figure(figsize=(10, 5))
-            dendrogram(Z)
-            plt.title('Hierarchical Cluster Dendrogram')
-            plt.xlabel('Data Point Indexes')
-            plt.ylabel('Distance')
-            
-    else:
-        # Group nodes into "supernodes"
-        # supernode is composed of all nodes within certain radius 
-        nodes_buffer = nodes.copy()
-        nodes_buffer.geometry = nodes_buffer.buffer(threshold) #how big is the buffer, to connect lines 
-        intersect_nodes = intersect(nodes, nodes_buffer)
-        intersect_nodes.sort_values(by=['n'], ascending=False, inplace=True) # sort high to low
-        
-        intersect_nodes['visited'] = False #new column
-        nodes['supernode'] = None
-        # Walk through each node, and assign supernodes
-        # If node has already been visited, don't need to assign to supernode again
-        # The solution is dependent on node order
-        for i in intersect_nodes.index:
-            if intersect_nodes.loc[i,'visited'] == True:
-                continue
-            for j in intersect_nodes.loc[i,'intersections']: # list of intersecting vertices
-                if intersect_nodes.loc[j,'visited'] == True: # maybe see which point is closer, the current one of the new one
-                    continue
-                nodes.loc[j, 'supernode'] = i
-                intersect_nodes.loc[j,'visited'] = True
+    # Create a distance matrix
+    points = nodes['geometry']
+    coords = points.apply(lambda geom: (geom.x, geom.y)).tolist()
+    condensed = pdist(coords)
+    D = squareform(condensed)
+    D = pd.DataFrame(D, index=nodes.index, columns=nodes.index)
     
-        assert intersect_nodes['visited'].all()
-
+    # Several options exist for linkage and fcluster below 
+    # currently using ward/euclidean/distance
+    
+    # Compute a linkage model
+    Z = linkage(condensed, method='ward', metric='euclidean', optimal_ordering=True)
+    
+    # Form clusters
+    #clusters = fcluster(Z, threshold, criterion='inconsistent', depth=2)
+    clusters = fcluster(Z, threshold, criterion='distance')
+    #clusters = fcluster(Z, threshold, criterion='monocrit')
+    #clusters = fcluster(Z, threshold, criterion='maxclust')
+    #clusters = fcluster(Z, threshold, criterion='maxclust_monocrit')
+    clusters = pd.Series(clusters, index=nodes.index)
+    nodes['supernode'] = clusters.copy()
+    
     # Update lines GeoDataFrame with start and end supernode names
     map_node_to_supernode = nodes['supernode']
     lines['start_node_name'] = map_node_to_supernode[lines['start_node_name']].values
@@ -482,6 +455,19 @@ def connect_lines(lines, threshold, plot=True):
         lines.loc[line_name, 'geometry'] = LineString(l_coords)
     
     if plot:
+  
+        plt.figure(figsize=(10, 5))
+        dendro = dendrogram(Z)
+
+        #unique_clusters = np.unique(clusters)
+        #colors = plt.cm.get_cmap('tab10', len(unique_clusters))  # Use a colormap with enough colors
+        #color_dict = {cluster: colors(i) for i, cluster in enumerate(unique_clusters)}
+        #dendro = dendrogram(Z, color_threshold=threshold, link_color_func=lambda k: color_dict[k])
+
+        plt.title('Hierarchical Cluster Dendrogram')
+        plt.xlabel('Data Point Indexes')
+        plt.ylabel('Distance')
+        
         plt.figure()
         ax = plt.gca()
         ax = original_lines.plot(ax=ax, color='r', label='Disconnected lines')

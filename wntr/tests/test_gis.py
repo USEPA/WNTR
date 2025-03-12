@@ -357,7 +357,7 @@ class TestConnectLines(unittest.TestCase):
         distance_threshold = 5 # same units as crs (ft)
         pipes, junctions = wntr.gis.connect_lines(self.disconnected_pipes, 
                                                   distance_threshold)
-
+        
         gis_data = wntr.gis.WaterNetworkGIS({"junctions": junctions,
                                              "pipes": pipes})
         wn = wntr.network.from_gis(gis_data)
