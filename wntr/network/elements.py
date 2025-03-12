@@ -973,7 +973,8 @@ class Pipe(Link):
         elif value == False or value== 'False':
             self._check_valve = False
         else:
-            raise ValueError('check_valve must be True or False')
+            msg=f'check_valve must be True or False. Received {value} of type {type(value)}'
+            raise ValueError(msg)
 
 
     @property
