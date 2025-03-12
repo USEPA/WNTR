@@ -968,7 +968,13 @@ class Pipe(Link):
         return self._check_valve
     @check_valve.setter
     def check_valve(self, value): 
-        self._check_valve = value
+        if value == True or value == 'True':
+            self._check_valve = True
+        elif value == False or value== 'False':
+            self._check_valve = False
+        else:
+            raise ValueError('check_valve must be True or False')
+
 
     @property
     def cv(self):
@@ -976,11 +982,11 @@ class Pipe(Link):
         
         Deprecated - use ``check_valve`` instead."""
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        return self._check_valve
+        return self.check_valve
     @cv.setter
     def cv(self, value): 
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        self._check_valve = value
+        self.check_valve = value
 
     @property
     def bulk_coeff(self):
