@@ -119,7 +119,7 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
+          base_demand demand_pattern  elevation  initial_quality demand_category       geometry
     name                                                                                                   
     10          0.000              1    216.408        5.000e-04            None  POINT (20 70)
     11          0.009              1    216.408        5.000e-04            None  POINT (30 70)
