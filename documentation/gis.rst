@@ -121,11 +121,11 @@ For example, the junctions GeoDataFrame contains the following information:
     >>> print(wn_gis.junctions.head())
           base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
     name                                                                                                   
-    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
-    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
-    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
-    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
-    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
+    10          0.000              1    216.408        5.000e-04            None  POINT (20 70)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30 70)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50 70)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70 70)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30 40)
 
 Each GeoDataFrame contains attributes and geometry:
 
