@@ -225,7 +225,8 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
             background[B_value] = background_value
         B = pd.concat([B, background])
     
-    B = gpd.GeoDataFrame(B, copy=True)
+    B = B.copy(deep=False)
+    B.index.name = None
 
     intersects = gpd.sjoin(A, B, predicate='intersects')
     intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
