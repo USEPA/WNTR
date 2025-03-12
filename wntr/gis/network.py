@@ -413,7 +413,7 @@ class WaterNetworkGIS:
         
         if driver is None or driver == "":
             extension = ""
-            driver = "shp"
+            driver = "ESRI Shapefile"
         else:
             extension = "." + driver.lower()
         
