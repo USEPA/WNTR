@@ -339,7 +339,7 @@ The Shapefiles can be loaded into GIS platforms for further analysis and visuali
 	
     >>> wntr.network.write_shapefile(wn, 'Net3')
 	
-This creates the following Shapefile directories for junctions, tanks, reservoirs, pipes, and pumps:
+This creates the following Shapefiles for junctions, tanks, reservoirs, pipes, and pumps:
 
 * Net3_junctions
 * Net3_tanks
@@ -358,12 +358,12 @@ The function can also be used to append information from Shapefiles into an exis
 .. doctest::
     :skipif: gpd is None
 
-    >>> shapefile_dirs = {'junctions': 'Net3_junctions',
-    ...                   'tanks': 'Net3_tanks',
-    ...                   'reservoirs': 'Net3_reservoirs',
-    ...                   'pipes': 'Net3_pipes',
-    ...                   'pumps': 'Net3_pumps'}
-    >>> wn2 = wntr.network.read_shapefile(shapefile_dirs)
+    >>> shapefile_files = {'junctions': 'Net3_junctions.shp',
+    ...                   'tanks': 'Net3_tanks.shp',
+    ...                   'reservoirs': 'Net3_reservoirs.shp',
+    ...                   'pipes': 'Net3_pipes.shp',
+    ...                   'pumps': 'Net3_pumps.shp'}
+    >>> wn2 = wntr.network.read_shapefile(shapefile_files)
 
 .. note:: 
    :class:`~wntr.gis.network.WaterNetworkGIS.write_shapefile` and

@@ -412,7 +412,7 @@ class WaterNetworkGIS:
         """
         
         if driver is None or driver == "":
-            extension = ""
+            extension = ".shp"
         else:
             extension = "." + driver.lower()
         

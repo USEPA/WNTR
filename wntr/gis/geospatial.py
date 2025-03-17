@@ -224,7 +224,10 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         if B_value is not None:
             background[B_value] = background_value
         B = pd.concat([B, background])
-        
+    
+    B = B.copy()
+    B.index.name = None
+
     intersects = gpd.sjoin(A, B, predicate='intersects')
     intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
