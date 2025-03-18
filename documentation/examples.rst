@@ -24,7 +24,7 @@ WNTR includes several Jupyter Notebooks examples.
 A Jupyter Notebook, an open-sourced web-based application, can be accessed through Anaconda or by installing the 
 associated software available at https://jupyter.org. These demonstrations include the following: 
 
-* `Getting started demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/getting_started_demo.ipynb>`_: 
+* `Getting started demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/getting_started.ipynb>`_: 
   This example generates a water network model, simulates hydraulics, and plots simulation results.
 * `Basic demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/basic_demo.ipynb>`_: 
   This demonstration runs through several operations in WNTR, including 
