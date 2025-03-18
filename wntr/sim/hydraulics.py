@@ -109,9 +109,9 @@ def update_model_for_controls(m, wn, model_updater, change_tracker):
 
     Parameters
     ----------
-    m: wntr.aml.Model
-    wn: wntr.network.WaterNetworkModel
-    model_updater: wntr.models.utils.ModelUpdater
+    m: wntr.sim.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    model_updater: wntr.sim.models.utils.ModelUpdater
     change_tracker: wntr.network.controls.ControlChangeTracker
     """
     for obj, attr in change_tracker.get_changes(ref_point='model'):
@@ -125,9 +125,9 @@ def update_model_for_isolated_junctions_and_links(m, wn, model_updater, prev_iso
 
     Parameters
     ----------
-    m: wntr.aml.Model
-    wn: wntr.network.WaterNetworkModel
-    model_updater: wntr.models.utils.ModelUpdater
+    m: wntr.sim.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    model_updater: wntr.sim.models.utils.ModelUpdater
     prev_isolated_junctions: set
     prev_isolated_links: set
     isolated_junctions: set
@@ -152,7 +152,7 @@ def update_network_previous_values(wn):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     """
     wn._prev_sim_time = wn.sim_time
     for link_name, link in wn.valves():
@@ -164,7 +164,7 @@ def update_tank_heads(wn):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     """
     dt = wn.sim_time - wn._prev_sim_time   
 
@@ -200,7 +200,7 @@ def initialize_results_dict(wn):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
 
     Returns
     -------
@@ -226,9 +226,9 @@ def save_results(wn, node_res, link_res):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
-    node_res: OrderedDict
-    link_res: OrderedDict
+    wn: wntr.network.model.WaterNetworkModel
+    node_res: collections.OrderedDict
+    link_res: collections.OrderedDict
     """
     for name, node in wn.junctions():
         node_res['head'][name].append(node.head)
@@ -293,10 +293,10 @@ def get_results(wn, results, node_res, link_res):
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntr.network.model.WaterNetworkModel
     results: wntr.sim.results.SimulationResults
-    node_res: OrderedDict
-    link_res: OrderedDict
+    node_res: collections.OrderedDict
+    link_res: collections.OrderedDict
     """
     ntimes = len(results.time)
     nnodes = wn.num_nodes
@@ -343,8 +343,8 @@ def store_results_in_network(wn, m):
 
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
-    m: wntr.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    m: wntr.sim.aml.aml.Model
 
     """
     mode = wn.options.hydraulic.demand_model

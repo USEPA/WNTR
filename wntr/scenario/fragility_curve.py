@@ -21,7 +21,7 @@ class FragilityCurve(object):
         
         Parameters
         ----------
-        name : string
+        name : str
             Name of the damage state
         
         priority : int
@@ -65,12 +65,12 @@ class FragilityCurve(object):
         
         Parameters
         -----------
-        x : pd.Series
+        x : pandas.Series
             Control variable for each element
             
         Returns
         --------
-        Pr : pd.Dataframe
+        Pr : pandas.DataFrame
             Probability of exceeding a damage state
         
         """
@@ -94,7 +94,7 @@ class FragilityCurve(object):
         
         Parameters
         -----------
-        Pr : pd.Dataframe
+        Pr : pandas.DataFrame
             Probability of exceeding a damage state
             
         seed : int or None
@@ -102,7 +102,7 @@ class FragilityCurve(object):
         
         Returns
         -------
-        damage_state : pd.Series
+        damage_state : pandas.Series
             The damage state of each element
         """
         if seed is not None:
