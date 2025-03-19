@@ -50,6 +50,8 @@ associated software available at https://jupyter.org. These demonstrations inclu
   service availability and population impacted by low pressure conditions.
 * `Geospatial demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/geospatial_demo.ipynb>`_: 
   This demonstration uses GIS data to quantify potential water service disruptions from pipes damaged in a landslide.
+* `Salt water intrusion demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/salt_water_intrusion_demo.ipynb>`: This demonstration uses storm surge raster data to estimate salt intrusion 
+  into a system after a hurricane.
   
 To open a Jupyter Notebook example (in this case, the basic demo), run the following command::
 	
