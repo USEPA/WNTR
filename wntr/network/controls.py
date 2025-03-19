@@ -12,7 +12,7 @@ from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict
-from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
+from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe, Link
 from wntr.utils.doc_inheritor import DocInheritor
 import warnings
 from typing import Hashable, Dict, Any, Tuple, MutableSet, Iterable
@@ -1753,7 +1753,9 @@ class ControlAction(BaseControlAction):
         return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj), str(self._attribute), str(self._repr_value()))
 
     def __str__(self):
-        return "{} {} {} IS {}".format(self._target_obj.link_type.upper(),
+        target_obj_type = (self._target_obj.link_type if isinstance(self._target_obj, Link) else 
+                           self._target_obj.node_type)
+        return "{} {} {} IS {}".format(target_obj_type.upper(),
                                        self._target_obj.name,
                                        self._attribute.upper(),
                                        self._repr_value())

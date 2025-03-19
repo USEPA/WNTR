@@ -119,13 +119,13 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-         node_type  elevation  initial_quality                   geometry
-    name                                                                 
-    10    Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
-    11    Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
-    12    Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
-    13    Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
-    21    Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
+    name                                                                                                   
+    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
 
 Each GeoDataFrame contains attributes and geometry:
 
@@ -243,7 +243,7 @@ WNTR to add attributes to the water network model and analysis. Examples of thes
   These geometries can be associated with points and lines in a water network model by snapping the point to the nearest component.
 * **LineString or MultiLineString geometries** that could contain street layout or earthquake fault lines.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
-* **Polygon geometries** that could contain elevation, building footprints, zoning, land cover, hazard maps, census data, demographics, or social vulnerability.
+* **Polygon geometries** that could contain elevation, building footprints, zoning, land cover, hazard maps, census data, or demographics.
   These geometries can be associated with points and lines in a water network model by finding the intersection.
 
 The snap and intersect examples below used additional GIS data stored in the 
@@ -341,23 +341,23 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
 	
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
     >>> print(wn_gis.junctions.head())
-         node_type  elevation  initial_quality                   geometry
-    name                                                                 
-    10    Junction    216.408        5.000e-04  POINT (20.00000 70.00000)
-    11    Junction    216.408        5.000e-04  POINT (30.00000 70.00000)
-    12    Junction    213.360        5.000e-04  POINT (50.00000 70.00000)
-    13    Junction    211.836        5.000e-04  POINT (70.00000 70.00000)
-    21    Junction    213.360        5.000e-04  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
+    name                                                                                                   
+    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
 
     >>> wn_gis.to_crs('EPSG:3857')
     >>> print(wn_gis.junctions.head())
-         node_type  elevation  initial_quality                          geometry
-    name                                                                        
-    10    Junction    216.408        5.000e-04  POINT (2226389.816 11068715.659)
-    11    Junction    216.408        5.000e-04  POINT (3339584.724 11068715.659)
-    12    Junction    213.360        5.000e-04  POINT (5565974.540 11068715.659)
-    13    Junction    211.836        5.000e-04  POINT (7792364.356 11068715.659)
-    21    Junction    213.360        5.000e-04   POINT (3339584.724 4865942.280)
+          base_demand demand_pattern  elevation  initial_quality demand_category                          geometry
+    name                                                                                                          
+    10          0.000              1    216.408        5.000e-04            None  POINT (2226389.816 11068715.659)
+    11          0.009              1    216.408        5.000e-04            None  POINT (3339584.724 11068715.659)
+    12          0.009              1    213.360        5.000e-04            None  POINT (5565974.540 11068715.659)
+    13          0.006              1    211.836        5.000e-04            None  POINT (7792364.356 11068715.659)
+    21          0.009              1    213.360        5.000e-04            None   POINT (3339584.724 4865942.280)
 
 Snap point geometries to the nearest point or line
 ----------------------------------------------------
@@ -537,7 +537,7 @@ Find the intersect between geometries
 
 The :class:`~wntr.gis.geospatial.intersect`  function is used to find the intersection between geometries.
 This functionality can be used to identify faults, landslides, or other hazards that intersect pipes,
-or assign community resilience indicators (e.g., population characteristics, economic), future climate projections, hazards/risks, or other data to network components.
+or assign community resilience indicators (e.g., population characteristics, economic), hazards/risks, or other data to network components.
 
 When finding the intersection of GeoDataFrame A with GeoDataFrame B (where A and B can contain points, lines, or polygons),
 the function returns the following information (one entry for each geometry in A):
@@ -740,7 +740,7 @@ Assign demographic data to pipes and junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GIS data that includes community resilience indicators (e.g., population characteristics, economic data), 
-future climate projections, hazards/risks, or other data can be used to identify 
+hazards/risks, or other data can be used to identify 
 the effects of disasters to different portions of the community, which can help utilities to improve equitable resilience. 
 The following example highlights the process to assign demographic data to pipes and junctions. The demographic example dataset 
 is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Polygon`` geometries along with 
@@ -835,7 +835,7 @@ Sample raster at points geometries
 
 The :class:`~wntr.gis.sample_raster` function can be used to sample a raster file at point geometries,
 such as the nodes of a water network. A common use case for this function is to assign elevation to the 
-nodes of a water network model, however other geospatial information such as climate or hazard data could be sampled 
+nodes of a water network model, however other geospatial information such as hazard data could be sampled 
 using this function.
 
 The network file, Net1.inp, in EPSG:4326 CRS is used in the example below. 

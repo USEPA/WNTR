@@ -55,6 +55,7 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
 
    hydraulics
    waterquality
+   waterquality_msx
    resultsobject
 
 .. toctree::

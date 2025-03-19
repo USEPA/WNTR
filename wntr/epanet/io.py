@@ -674,6 +674,8 @@ class InpFile(object):
         f.write('\n'.encode(sys_default_enc))
 
     def _read_pipes(self):
+        darcy_weisbach = self.wn.options.hydraulic.headloss == "D-W"
+        
         for lnum, line in self.sections['[PIPES]']:
             line = line.split(';')[0]
             current = line.split()
@@ -701,7 +703,8 @@ class InpFile(object):
                         current[2],
                         to_si(self.flow_units, float(current[3]), HydParam.Length),
                         to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                        float(current[5]),
+                        to_si(self.flow_units, float(current[5]), HydParam.RoughnessCoeff, 
+                              darcy_weisbach=darcy_weisbach),
                         minor_loss,
                         link_status,
                         check_valve)
@@ -711,6 +714,8 @@ class InpFile(object):
                 raise ENValueError(211, str(e.args[0]), line_num=lnum) from e
 
     def _write_pipes(self, f, wn):
+        darcy_weisbach = wn.options.hydraulic.headloss == "D-W"
+        
         f.write('[PIPES]\n'.encode(sys_default_enc))
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                    'Roughness', 'Minor Loss', 'Status').encode(sys_default_enc))
@@ -723,7 +728,9 @@ class InpFile(object):
                  'node2': pipe.end_node_name,
                  'len': from_si(self.flow_units, pipe.length, HydParam.Length),
                  'diam': from_si(self.flow_units, pipe.diameter, HydParam.PipeDiameter),
-                 'rough': pipe.roughness,
+                 'rough': from_si(self.flow_units, pipe.roughness, 
+                                  HydParam.RoughnessCoeff, 
+                                  darcy_weisbach=darcy_weisbach),
                  'mloss': pipe.minor_loss,
                  'status': str(pipe.initial_status),
                  'com': ';'}
@@ -3046,36 +3053,50 @@ def _read_control_line(line, wn, flow_units, control_name):
     current = line.split()
     if current == []:
         return
-    link_name = current[1]
-    link = wn.get_link(link_name)
+    
+    element_name = current[1]
+
+    # For the case of leak demands
+    if current[0] == 'JUNCTION':
+        element = wn.get_node(element_name)
+    else:
+        element = wn.get_link(element_name)
+
     if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
         node_name = current[5]
     current = [i.upper() for i in current]
-    current[1] = link_name # don't capitalize the link name
+    current[1] = element_name # don't capitalize the link name
 
     # Create the control action object
 
     status = current[2].upper()
     if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
         setting = LinkStatus[status].value
-        action_obj = wntr.network.ControlAction(link, 'status', setting)
+        action_obj = wntr.network.ControlAction(element, 'status', setting)
     else:
-        if isinstance(link, wntr.network.Pump):
-            action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
-        elif isinstance(link, wntr.network.Valve):
-            if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
+        if isinstance(element, wntr.network.Pump):
+            action_obj = wntr.network.ControlAction(element, 'base_speed', float(current[2]))
+        elif isinstance(element, wntr.network.Valve):
+            if element.valve_type == 'PRV' or element.valve_type == 'PSV' or element.valve_type == 'PBV':
                 setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
-            elif link.valve_type == 'FCV':
+            elif element.valve_type == 'FCV':
                 setting = to_si(flow_units, float(current[2]), HydParam.Flow)
-            elif link.valve_type == 'TCV':
+            elif element.valve_type == 'TCV':
                 setting = float(current[2])
-            elif link.valve_type == 'GPV':
+            elif element.valve_type == 'GPV':
                 setting = current[2]
             else:
-                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
-            action_obj = wntr.network.ControlAction(link, 'setting', setting)
+                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(element.valve_type, line))
+            action_obj = wntr.network.ControlAction(element, 'setting', setting)
+        elif isinstance(element, wntr.network.Node):
+            if status=="TRUE":
+                setting = True
+            elif status=="FALSE":
+                setting = False
+            action_obj = wntr.network.ControlAction(element, 'leak_status', setting)
+
         else:
-            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
+            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(element))+
                                 'the link status. Control: {0}'.format(line)))
 
     # Create the control object

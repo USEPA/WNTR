@@ -19,7 +19,7 @@ class mass_balance_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -58,7 +58,7 @@ class pdd_mass_balance_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -97,7 +97,7 @@ class piecewise_hazen_williams_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -159,7 +159,7 @@ class approx_hazen_williams_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -214,7 +214,7 @@ class pdd_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -276,7 +276,7 @@ class head_pump_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -342,7 +342,7 @@ class power_pump_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -393,7 +393,7 @@ class prv_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -503,7 +503,7 @@ class fcv_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -561,7 +561,7 @@ class tcv_headloss_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.aml.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str
@@ -622,7 +622,7 @@ class leak_constraint(Definition):
 
         Parameters
         ----------
-        m: wntr.aml.Model
+        m: wntr.sim.aml.aml.Model
         wn: wntr.network.model.WaterNetworkModel
         updater: ModelUpdater
         index_over: list of str

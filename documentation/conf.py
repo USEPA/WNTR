@@ -108,7 +108,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'WNTR'
-copyright = u'2023 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
+copyright = u'2024 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
 
 bibtex_bibfiles = ['references.bib', 'citations.bib']
@@ -136,6 +136,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", (None, "_local/matplotlib-objects.inv")),
     "numpy": ("https://numpy.org/doc/stable/", (None, "_local/numpy-objects.inv")),
     "pandas": ("https://pandas.pydata.org/docs/", (None, "_local/pandas-objects.inv")),
+    "geopandas": ("https://geopandas.org/en/stable/", (None, "_local/geopandas-objects.inv")),
 }
 
 # There are two options for replacing |today|: either, you set today to some
