@@ -953,7 +953,7 @@ class TestNetworkIO_Dict(unittest.TestCase):
 
         self.wntr = wntr
 
-        inp_file = join(ex_datadir, "Net6.inp")
+        self.inp_file = join(ex_datadir, "Net3.inp")
         self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp"]]
 
     @classmethod
@@ -979,6 +979,29 @@ class TestNetworkIO_Dict(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel()
         wn.add_pattern('pat0', [0,1,0,1,0,1,0])
         self.wntr.network.write_json(wn, f'temp.json')
+        
+    def test_dict_with_leak(self):
+        # This covers a bug where writing controls to a dictionary broke if a leak was added
+        wn = wntr.network.WaterNetworkModel(self.inp_file)
+        junction_name = wn.junction_name_list[0]
+        junction = wn.get_node(junction_name)
+        junction.add_leak(wn, area=1, start_time=0, end_time=3600)
+        wn_dict = wn.to_dict()
+        wn2 = wntr.network.from_dict(wn_dict)
+        
+        # check leak controls and node properties
+        start_control = wn.get_control(wn.control_name_list[18])
+        start_control2 = wn2.get_control(wn2.control_name_list[18])
+        assert str(start_control) == str(start_control2)
+        
+        end_control = wn.get_control(wn.control_name_list[19])
+        end_control2 = wn2.get_control(wn2.control_name_list[19])
+        assert str(end_control) == str(end_control2)
+
+        junction2 = wn2.get_node(junction_name)
+        assert junction2._leak
+        assert junction2._leak_area == 1
+        assert junction2._leak_discharge_coeff == 0.75
 
 
 @unittest.skipIf(not has_geopandas,
@@ -1087,6 +1110,30 @@ class TestNetworkIO_GIS(unittest.TestCase):
                 files['valves'] = 'temp_valves'
             B = self.wntr.network.read_shapefile(files)
             assert(wn._compare(B, level=0))
-
+    
+    def test_valid_gis_names(self):
+        
+        required_names = wntr.network.io.valid_gis_names(complete_list=False, truncate_names=None)
+        valid_names = wntr.network.io.valid_gis_names(complete_list=True, truncate_names=None)
+        
+        wn = self.wntr.network.WaterNetworkModel(join(ex_datadir, "Net6.inp"))
+        gis_data = wn.to_gis()
+        
+        for component in required_names.keys():
+            required_columns = required_names[component]
+            valid_columns = valid_names[component]
+            
+            data = getattr(gis_data, component)
+            data_columns = list(data.columns)
+            data_columns.append(data.index.name)
+            
+            # Check that all data columns are valid
+            assert len(set(data_columns)-set(valid_columns)) == 0
+            # Check that all required columns are in the data
+            assert len(set(required_columns)-set(data_columns)) == 0
+            # Assert that node_type and link_type are not in data columns
+            assert 'node_type' not in data_columns
+            assert 'link_type' not in data_columns
+            
 if __name__ == "__main__":
     unittest.main()

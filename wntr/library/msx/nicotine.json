@@ -1,0 +1,108 @@
+{
+    "wntr-version": "",
+    "name": "nicotine",
+    "title": "Nicotine - Chlorine reaction",
+    "description": null,
+    "references": [],
+    "reaction_system": {
+        "species": [
+            {
+                "name": "Nx",
+                "species_type": "bulk",
+                "units": "mg",
+                "atol": null,
+                "rtol": null,
+                "note": "Nicotine"
+            },
+            {
+                "name": "HOCL",
+                "species_type": "bulk",
+                "units": "mg",
+                "atol": null,
+                "rtol": null,
+                "note": "Free chlorine"
+            }
+        ],
+        "constants": [
+            {
+                "name": "kd",
+                "value": 0.00233,
+                "units": "min^(-1)",
+                "note": "decay rate"
+            },
+            {
+                "name": "K1",
+                "value": 0.0592,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for chlorine as function of mass(Nic)"
+            },
+            {
+                "name": "K2",
+                "value": 0.184,
+                "units": "L * min^(-1) * mg^(-1)",
+                "note": "decay constant for nicotine as function of mass(Cl)"
+            }
+        ],
+        "parameters": [],
+        "terms": [
+            {
+                "name": "RxCl",
+                "expression": "kd * HOCL + K1 * Nx * HOCL"
+            },
+            {
+                "name": "RxN",
+                "expression": "K2 * Nx * HOCL"
+            }
+        ],
+        "pipe_reactions": [
+            {
+                "species_name": "Nx",
+                "expression_type": "rate",
+                "expression": "-RxN"
+            },
+            {
+                "species_name": "HOCL",
+                "expression_type": "rate",
+                "expression": "-RxCl"
+            }
+        ],
+        "tank_reactions": []
+    },
+    "network_data": {
+        "initial_quality": {
+            "Nx": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "HOCL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            }
+        },
+        "parameter_values": {},
+        "sources": {},
+        "patterns": {}
+    },
+    "options": {
+        "timestep": 1,
+        "area_units": "m2",
+        "rate_units": "min",
+        "solver": "RK5",
+        "coupling": "NONE",
+        "rtol": 0.0001,
+        "atol": 0.0001,
+        "compiler": "NONE",
+        "segments": 5000,
+        "peclet": 1000,
+        "report": {
+            "pagesize": null,
+            "report_filename": null,
+            "species": {},
+            "species_precision": {},
+            "nodes": null,
+            "links": null
+        }
+    }
+}

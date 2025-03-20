@@ -1,9 +1,13 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
 """
+from __future__ import annotations
+
+import dataclasses
 import enum
 import logging
-
+from dataclasses import dataclass, field
+from typing import List, Optional, Union, TypedDict
 import numpy as np
 import pandas as pd
 
@@ -33,8 +37,8 @@ __all__ = [
 
 class SizeLimits(enum.Enum):
     """
-        Limits on the size of character arrays used to store ID names
-        and text messages.
+    Limits on the size of character arrays used to store ID names
+    and text messages.
     """
     # // ! < Max.  # characters in ID name
     EN_MAX_ID = 31
@@ -44,9 +48,9 @@ class SizeLimits(enum.Enum):
 
 class InitHydOption(enum.Enum):
     """
-        Hydraulic initialization options.
-        These options are used to initialize a new hydraulic analysis
-        when EN_initH is called.
+    Hydraulic initialization options.
+    These options are used to initialize a new hydraulic analysis
+    when EN_initH is called.
     """
     # !< Don't save hydraulics; don't re-initialize flows
     EN_NOSAVE = 0
@@ -571,7 +575,7 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.RoughnessCoeff] and darcy_weisbach:
             if flow_units.is_traditional:
-                data = data * (1000.0 * 0.3048)  # 1e-3 ft to m
+                data = data * (0.001 * 0.3048)  # 1e-3 ft to m
             elif flow_units.is_metric:
                 data = data * 0.001  # mm to m
 
@@ -668,7 +672,7 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.RoughnessCoeff] and darcy_weisbach:
             if flow_units.is_traditional:
-                data = data / (1000.0 * 0.3048)  # 1e-3 ft from m
+                data = data / (0.001 * 0.3048)  # 1e-3 ft from m
             elif flow_units.is_metric:
                 data = data / 0.001  # mm from m
 
@@ -1384,3 +1388,39 @@ def from_si(
         return param._from_si(to_units, data, mass_units, reaction_order)
     else:
         raise RuntimeError("Invalid parameter: %s" % param)
+
+
+@dataclass
+class ENcomment:
+    """A class for storing EPANET configuration file comments with objects.
+    
+    Attributes
+    ----------
+    pre : list of str
+        a list of comments to put before the output of a configuration line
+    post : str
+        a single comment that is attached to the end of the line
+    """
+    pre: List[str] = field(default_factory=list)
+    post: str = None
+
+    def wrap_msx_string(self, string) -> str:
+        if self.pre is None or len(self.pre) == 0:
+            if self.post is None:
+                return '  ' + string
+            else:
+                return '  ' + string + ' ; ' + self.post
+        elif self.post is None:
+            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string
+        else:
+            return '\n; ' + '\n\n; '.join(self.pre) + '\n\n  ' + string + ' ; ' + self.post
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
+
+NoteType = Union[str, dict, ENcomment]
+"""An object that stores EPANET compatible annotation data.
+
+A note (or comment) can be a string, a dictionary of the form :code:`{'pre': List[str], 'post': str}`,
+or an :class:`wntr.epanet.util.ENcomment` object.
+"""

@@ -7,12 +7,13 @@ matplotlib
 setuptools
 
 # Optional
-plotly
+plotly<6.0
 folium
 utm
 openpyxl
 geopandas<1.0
 fiona<1.10
+rasterio
 rtree
 
 # Documentation

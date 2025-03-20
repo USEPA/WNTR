@@ -22,6 +22,7 @@ API documentation
         wntr.library
         wntr.metrics
         wntr.morph
+        wntr.msx
         wntr.network
         wntr.scenario
         wntr.sim
