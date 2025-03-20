@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3547" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "T-1", "elevation": 196.940424, "initial_quality": 0.0, "diameter": 17.6784, "init_level": 25.563576, "max_level": 31.659576, "min_level": 24.039576, "min_vol": 0.0, "overflow": "0", "vol_curve_name": null }, "geometry": { "type": "Point", "coordinates": [ 4959474.0, 3897659.0 ] } },
+{ "type": "Feature", "properties": { "name": "T-2", "elevation": 207.43922952, "initial_quality": 0.0, "diameter": 14.0208, "init_level": 25.732773528000003, "max_level": 31.82877048, "min_level": 25.732773528000003, "min_vol": 0.0, "overflow": "0", "vol_curve_name": null }, "geometry": { "type": "Point", "coordinates": [ 4972993.0, 3900300.0 ] } },
+{ "type": "Feature", "properties": { "name": "T-3", "elevation": 217.7030952, "initial_quality": 0.0, "diameter": 13.4112, "init_level": 30.7089048, "max_level": 33.7569048, "min_level": 27.051298704000001, "min_vol": 0.0, "overflow": "0", "vol_curve_name": null }, "geometry": { "type": "Point", "coordinates": [ 4980614.0, 3906672.0 ] } },
+{ "type": "Feature", "properties": { "name": "T-4", "elevation": 220.58034624000001, "initial_quality": 0.0, "diameter": 21.336, "init_level": 29.355659856000003, "max_level": 32.40365376, "min_level": 21.735659856000002, "min_vol": 0.0, "overflow": "0", "vol_curve_name": null }, "geometry": { "type": "Point", "coordinates": [ 4988798.0, 3907639.0 ] } }
+]
+}
