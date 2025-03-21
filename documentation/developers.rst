@@ -59,13 +59,26 @@ New content is marked `Draft`.
 Python documentation string formatting can be found at
 https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 
-To build the documentation locally, run the following command in a 
-command line/PowerShell prompt from the documentation directory::
+* To build the HTML documentation locally, run the following command in a 
+  command line/PowerShell prompt from the documentation directory::
 
-	make html
+	  make html
 
-HTML files are created in the ``documentation/_build/html`` directory.
-Open ``index.html`` to view the documentation.
+  HTML files are created in the ``documentation/_build/html`` directory.
+  Open ``index.html`` to view the documentation.
+
+* To build a PDF of the documentation, run the following command in a 
+  command line/PowerShell prompt from the documentation directory::
+
+	  make latex
+
+  LaTeX files are created in the ``documentation/_build/latex`` directory.
+  Copy the files into Overleaf (or other LaTeX editor) and compile wntr.tex.
+
+* To run the document tests, run the following command in a 
+  command line/PowerShell prompt from the documentation directory::
+  
+     pytest --doctest-glob="*.rst" .
 
 Examples
 ---------------------
