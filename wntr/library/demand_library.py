@@ -532,8 +532,6 @@ class DemandPatternLibrary(object):
             Time of day (in seconds from midnight) at which pattern begins
         wrap : bool
             Indicates if the sequence of pattern values repeats
-        invert : bool
-            Indicates if the on/off values should be switched
         normalize : bool
             Indicates if the pattern should be normalized
             
@@ -558,7 +556,6 @@ class DemandPatternLibrary(object):
         assert isinstance(pattern_timestep, int)
         assert isinstance(start_clocktime, int)
         assert isinstance(wrap, bool)
-        assert isinstance(invert, bool)
         assert isinstance(normalize, bool)
         
         t = start_clocktime
@@ -732,8 +729,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(names, list)
-        assert isinstance(duration, int)
-        assert isinstance(ax, plt.axes)
+        assert isinstance(duration, (int, NoneType))
         
         if names is None:
             names = self.pattern_name_list

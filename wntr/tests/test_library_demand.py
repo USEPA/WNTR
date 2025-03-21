@@ -51,42 +51,82 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert_series_equal(series, expected, check_dtype=False)
 
     def test_add_pulse_pattern(self):
-        self.DPL.add_pulse_pattern('Pulse', [3*3600,6*3600,14*3600,20*3600], 
-                                   normalize=True)
+        # Pulse: on between 3:00 and 6:00 (3), 14:00 and 20:00 (6) 
+        self.DPL.add_pulse_pattern('Pulse', [3*3600,6*3600,14*3600,20*3600])
         self.DPL.add_pulse_pattern('Pulse_invert', [3*3600,6*3600,14*3600,20*3600], 
-                                   invert=True, normalize=True)
-        pass
+                                   invert=True)
+        
+        pulse = self.DPL.to_Series('Pulse')
+        assert pulse.mean() == 9/24
+        
+        pulse_inverse = self.DPL.to_Series('Pulse_invert')
+        assert pulse_inverse.mean() == 15/24
+        
+        self.DPL.add_combined_pattern('Combined_pulse', 
+                                      ['Pulse', 'Pulse_invert'], 
+                                      combine='Overlap', 
+                                      weights=None, 
+                                      durations=[7*24*3600], 
+                                      pattern_timestep=3600, 
+                                      start_clocktime=0,
+                                      wrap=True, normalize=False)
+        combined_pulse = self.DPL.to_Series('Combined_pulse')
+        #self.DPL.plot_patterns(names=['Pulse', 'Pulse_invert', 'Combined_pulse'])
+        
+        assert combined_pulse.mean() == 1
+        assert combined_pulse.std() == 0
     
     def test_add_gaussian_pattern(self):
-        self.DPL.add_gaussian_pattern('Gaussian2', 24*3600, 12*3600)
-        pass
+        self.DPL.add_gaussian_pattern('Gaussian2', 3.5*24*3600, 12*3600, duration=7*24*3600)
+        gaussian = self.DPL.to_Series('Gaussian2')
+        
+        assert gaussian.idxmax() == 3.5*24*3600
     
     def test_add_triangular_pattern(self):
         self.DPL.add_triangular_pattern('Triangular', 2*3600, 12*3600, 18*3600, 
                                         normalize=True)
-        pass
+        triangle = self.DPL.to_Series('Triangular')
+        
+        assert triangle.idxmax() == 12*3600
+        assert np.all(np.diff(triangle.loc[0:12*3600]) >= 0) # is monotonically increasing
+        assert np.all(np.diff(triangle.loc[12*3600::]) <= 0) # is monotonically decreasing
     
     def test_add_combined_pattern_overlap(self):
         self.DPL.add_combined_pattern('Combined_overlap', 
-                                      ['Net1_1', 'Net2_1', 'Net3_1'], 
+                                      ['Net1_1', 'Net3_1'], 
                                       combine='Overlap', 
                                       weights=None, 
-                                      durations=[9*3600*24], 
+                                      durations=[7*24*3600], 
                                       pattern_timestep=3600, 
                                       start_clocktime=0,
                                       wrap=True, normalize=False)
-        self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1', 'Combined_overlap'])
-    
+        #self.DPL.plot_patterns(names=['Net1_1', 'Net3_1', 'Combined_overlap'])
+        
+        net1 = self.DPL.to_Pattern('Net1_1')
+        net3 = self.DPL.to_Pattern('Net3_1')
+        combined = self.DPL.to_Pattern('Combined_overlap')
+        
+        assert len(combined.multipliers) == 168
+        self.assertAlmostEquals(combined.at(24*3600), net1.at(24*3600) + net3.at(24*3600), 3)
+        
     def test_add_combined_pattern_sequential(self):
         self.DPL.add_combined_pattern('Combined_sequential', 
-                                      ['Net1_1', 'Net2_1', 'Net3_1'], 
+                                      ['Net1_1', 'Net3_1'], 
                                       combine='Sequential', 
                                       weights=None, 
-                                      durations=[2*3600*24, 3*3600*24, 4*3600*24], 
+                                      durations=[3.5*3600*24, 3.5*3600*24], 
                                       pattern_timestep=3600, 
                                       start_clocktime=0,
                                       wrap=True, normalize=False)
-        self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1', 'Combined_sequential'])
+        #self.DPL.plot_patterns(names=['Net1_1', 'Net3_1', 'Combined_sequential'])
+        
+        net1 = self.DPL.to_Pattern('Net1_1')
+        net3 = self.DPL.to_Pattern('Net3_1')
+        combined = self.DPL.to_Pattern('Combined_sequential')
+        
+        assert len(combined.multipliers) == 168
+        self.assertAlmostEquals(combined.at(2*24*3600), net1.at(2*24*3600), 3)
+        self.assertAlmostEquals(combined.at(5*24*3600), net3.at(5*24*3600), 3)
     
     def test_remove_pattern(self):
         pattern_name = "Constant"
@@ -128,7 +168,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         
     def test_normalize(self):
         pattern_name = 'Net3_1'
-        self.DPL.plot_patterns(names=[pattern_name])
+
         multipliers = self.DPL.get_pattern(pattern_name)['multipliers']
         mean_val = np.mean(multipliers)
         std_val = np.std(multipliers)
