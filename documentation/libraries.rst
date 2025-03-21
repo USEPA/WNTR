@@ -81,7 +81,8 @@ A sample entry from the default demand pattern library is shown below::
 			1.5, 1.35, 1.0, 0.8, 0.7, 0.6]
 	}
 
-The following example illustrates functionality of the demand pattern library.
+The following example illustrates functionality of the demand pattern library. 
+Note, methods that add or modify patterns return a pandas Series of the pattern.  This can be helpful when developing new patterns.
 
 Load the default demand pattern library, print names of the library entries, and plot patterns.
 
@@ -111,8 +112,8 @@ Add a pulse and gaussian pattern.
 
 .. doctest::
 
-    >>> demand_library.add_pulse_pattern(on_off_sequence=[3*3600,6*3600,14*3600,20*3600], name='Pulse')
-    >>> demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, duration=24*3600, pattern_timestep=3600, 
+    >>> series = demand_library.add_pulse_pattern(on_off_sequence=[3*3600,6*3600,14*3600,20*3600], name='Pulse')
+    >>> series = demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, duration=24*3600, pattern_timestep=3600, 
     ...     start_clocktime=0, normalize=True, name='Gaussian')
 
 Add noise to a pattern.
@@ -120,7 +121,7 @@ Add noise to a pattern.
 .. doctest::
 
     >>> demand_library.copy_pattern('Gaussian', 'Gaussian_with_noise')
-    >>> multipliers = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True, seed=123)
+    >>> series = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True, seed=123)
     >>> ax = demand_library.plot_patterns(names=['Gaussian', 'Gaussian_with_noise'])
 
 .. doctest::
@@ -165,7 +166,7 @@ can be resampled so it can be used in Net1, which has a start clocktime of 0 sec
 .. doctest::
 
     >>> demand_library.copy_pattern('Net2_1', 'Net2_1_resampled')
-    >>> multipliers = demand_library.resample_multipliers('Net2_1_resampled', duration=3*24*3600,
+    >>> series = demand_library.resample_multipliers('Net2_1_resampled', duration=3*24*3600,
     ...     pattern_timestep=7200, start_clocktime=0)
     >>> ax = demand_library.plot_patterns(names=['Net2_1', 'Net2_1_resampled'])
 
@@ -210,7 +211,7 @@ Load an existing demand pattern library for use in subsequent projects.
 
     >>> custom_demand_library = DemandPatternLibrary("Custom_demand_pattern_library.json")
     >>> print(custom_demand_library.pattern_name_list)
-    ['Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5', 'Pulse', 'Gaussian', 'Gaussian_with_noise', 'Net2_1_resampled']
+    ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5', 'Pulse', 'Gaussian', 'Gaussian_with_noise', 'Net2_1_resampled']
 
 Multispecies model library
 ---------------------------

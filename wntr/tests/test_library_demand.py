@@ -13,11 +13,13 @@ testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
 ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
+plt.close('all')
+
 class TestDemandPatternLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         DPL = DemandPatternLibrary()
-        DPL.add_gaussian_pattern(12*3600, 5*3600, normalize=True, name='Gaussian')
+        DPL.add_gaussian_pattern('Gaussian', 12*3600, 5*3600, normalize=True)
 
         self.DPL = DPL
         
@@ -49,27 +51,42 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert_series_equal(series, expected, check_dtype=False)
 
     def test_add_pulse_pattern(self):
-        self.DPL.add_pulse_pattern([3*3600,6*3600,14*3600,20*3600], 
-                                   normalize=True, name='Pulse')
-        self.DPL.add_pulse_pattern([3*3600,6*3600,14*3600,20*3600], 
-                                   invert=True, normalize=True, name='Pulse_invert')
+        self.DPL.add_pulse_pattern('Pulse', [3*3600,6*3600,14*3600,20*3600], 
+                                   normalize=True)
+        self.DPL.add_pulse_pattern('Pulse_invert', [3*3600,6*3600,14*3600,20*3600], 
+                                   invert=True, normalize=True)
         pass
     
     def test_add_gaussian_pattern(self):
+        self.DPL.add_gaussian_pattern('Gaussian2', 24*3600, 12*3600)
         pass
     
     def test_add_triangular_pattern(self):
-        self.DPL.add_triangular_pattern(2*3600, 12*3600, 18*3600, 
-                                        normalize=True, name='Triangular')
+        self.DPL.add_triangular_pattern('Triangular', 2*3600, 12*3600, 18*3600, 
+                                        normalize=True)
         pass
     
-    def test_add_combined_pattern(self):
-        self.DPL.add_combined_pattern(['Net1_1', 'Net2_1', 'Net3_1'], 
-                                      normalize=True, name='Combined')
-        pass
+    def test_add_combined_pattern_overlap(self):
+        self.DPL.add_combined_pattern('Combined_overlap', 
+                                      ['Net1_1', 'Net2_1', 'Net3_1'], 
+                                      combine='Overlap', 
+                                      weights=None, 
+                                      durations=[9*3600*24], 
+                                      pattern_timestep=3600, 
+                                      start_clocktime=0,
+                                      wrap=True, normalize=False)
+        self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1', 'Combined_overlap'])
     
-    def test_add_sequential_pattern(self):
-        pass
+    def test_add_combined_pattern_sequential(self):
+        self.DPL.add_combined_pattern('Combined_sequential', 
+                                      ['Net1_1', 'Net2_1', 'Net3_1'], 
+                                      combine='Sequential', 
+                                      weights=None, 
+                                      durations=[2*3600*24, 3*3600*24, 4*3600*24], 
+                                      pattern_timestep=3600, 
+                                      start_clocktime=0,
+                                      wrap=True, normalize=False)
+        self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1', 'Combined_sequential'])
     
     def test_remove_pattern(self):
         pattern_name = "Constant"
