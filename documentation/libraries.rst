@@ -21,7 +21,7 @@ WNTR includes the following libraries to help create water network models.
 Libraries reside in the :class:`wntr.library` module.
 
 * Demand pattern library
-* Multispecies water quality library (coming soon)
+* Multispecies model library
 
 Demand pattern library
 ----------------------
@@ -142,11 +142,11 @@ Return a Pandas Series of the pattern.
 
     >>> series = demand_library.to_Series('Gaussian_with_noise', duration=48*3600)
     >>> print(series.head())
-    0        0.000747
-    3600     0.267610
-    7200     0.286198
-    10800    0.230225
-    14400    0.474233
+    0        7.474e-04
+    3600     2.676e-01
+    7200     2.862e-01
+    10800    2.302e-01
+    14400    4.742e-01
     dtype: float64
 
 Create a library of only commercial patterns.
@@ -211,4 +211,36 @@ Load an existing demand pattern library for use in subsequent projects.
     >>> custom_demand_library = DemandPatternLibrary("Custom_demand_pattern_library.json")
     >>> print(custom_demand_library.pattern_name_list)
     ['Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5', 'Pulse', 'Gaussian', 'Gaussian_with_noise', 'Net2_1_resampled']
-	
+
+Multispecies model library
+---------------------------
+
+WNTR also contains a library of MSX models that are accessed through the 
+:class:`~wntr.library.msx.MsxLibrary`.
+See :ref:`msx_water_quality` for more information on simulating multispecies reactions in WNTR.
+
+The multispecies model library includes the following models:
+
+* `Arsenic oxidation/adsorption <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
+* `Batch chloramine decay <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
+* `Lead plumbosolvency <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ :cite:p:`bwms20`
+* `Nicotine/chlorine reaction <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
+* `Nicotine/chlorine reaction with reactive intermediate <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
+
+The models are stored in JSON format.
+Additional models can be loaded into the library by setting a user specified path.  
+Additional models could also be added directly to the WNTR Reactions library.
+
+The following example loads the Lead plumbosolvency model (lead_ppm) from the MsxLibrary.
+
+.. doctest::
+
+    >>> import wntr.library.msx
+    >>> reaction_library = wntr.library.msx.MsxLibrary()
+    
+    >>> print(reaction_library.model_name_list())  # doctest: +SKIP
+    ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']
+    
+    >>> lead_ppm = reaction_library.get_model("lead_ppm")
+    >>> print(lead_ppm)
+    MsxModel(name='lead_ppm')

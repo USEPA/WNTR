@@ -73,33 +73,3 @@ All species must have two reactions defined for the model to be run successfully
 One is a **pipe reaction**, the other is a **tank reaction**. 
 
 Examples that illustrate how to build MSX models in WNTR are included in :ref:`advanced_simulation`.
-
-Reaction library
------------------
-WNTR also contains a library of MSX models that are accessed through the 
-:class:`~wntr.library.msx.MsxLibrary`.
-This includes the following models:
-
-* `Arsenic oxidation/adsorption <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
-* `Batch chloramine decay <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
-* `Lead plumbosolvency <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/lead_ppm.json>`_ :cite:p:`bwms20`
-* `Nicotine/chlorine reaction <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine.json>`_ 
-* `Nicotine/chlorine reaction with reactive intermediate <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/nicotine_ri.json>`_ 
-
-The models are stored in JSON format.
-Additional models can be loaded into the library by setting a user specified path.  
-Additional models could also be added directly to the WNTR Reactions library.
-
-The following example loads the Lead plumbosolvency model (lead_ppm) from the MsxLibrary.
-
-.. doctest::
-
-    >>> import wntr.library.msx
-    >>> reaction_library = wntr.library.msx.MsxLibrary()
-    
-    >>> print(reaction_library.model_name_list())  # doctest: +SKIP
-    ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']
-    
-    >>> lead_ppm = reaction_library.get_model("lead_ppm")
-    >>> print(lead_ppm)
-    MsxModel(name='lead_ppm')
