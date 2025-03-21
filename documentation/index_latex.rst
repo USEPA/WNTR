@@ -15,17 +15,19 @@ WNTR documentation
    framework
    units
    getting_started
+   examples
    waternetworkmodel
-   model_io	   
+   model_io
    controls
    networkxgraph
    layers
-   options	  
+   options
    hydraulics
    waterquality
+   waterquality_msx
    resultsobject
    disaster_models
-   criticality	  
+   criticality
    resilience
    fragility
    morph
