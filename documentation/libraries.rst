@@ -91,7 +91,7 @@ Load the default demand pattern library, print names of the library entries, and
 	
     >>> demand_library = DemandPatternLibrary()
     >>> print(demand_library.pattern_name_list)
-    ['Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
+    ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
     >>> ax = demand_library.plot_patterns()
 	
 .. doctest::
