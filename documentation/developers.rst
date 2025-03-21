@@ -48,7 +48,7 @@ WNTR is also tested on private servers using several large water utility network
 	
 Documentation
 ---------------------
-WNTR includes a user manual that is built using the Read the Docs service.
+WNTR includes a user manual that is built using GitHub Actions.
 The user manual is automatically rebuilt each time changes are made to the code.
 The documentation is publicly available at https://usepa.github.io/WNTR/.
 The user manual includes an overview, installation instructions, simple examples, 
