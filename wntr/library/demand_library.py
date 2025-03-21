@@ -728,7 +728,7 @@ class DemandPatternLibrary(object):
         matplotlib axes object  
         """
         
-        assert isinstance(names, list)
+        assert isinstance(names, (list, NoneType))
         assert isinstance(duration, (int, NoneType))
         
         if names is None:
