@@ -20,6 +20,7 @@ Multi-species water quality simulation
 
 The EpanetSimulator can use EPANET-MSX 2.0 :cite:p:`shang2023` to run 
 multi-species water quality simulations.
+WNTR also includes a library of MSX models, see :ref:`msx_library` for more information.
 Additional multi-species simulation options are discussed in :ref:`advanced_simulation`.
 
 A multi-species analysis is run if a :class:`~wntr.msx.model.MsxModel` is added to the 

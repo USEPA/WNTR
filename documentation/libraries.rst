@@ -20,8 +20,10 @@ Libraries
 WNTR includes the following libraries to help create water network models. 
 Libraries reside in the :class:`wntr.library` module.
 
-* Demand pattern library
-* Multispecies model library
+* :ref:`demand_pattern_library`
+* :ref:`msx_library`
+
+.. _demand_pattern_library:
 
 Demand pattern library
 ----------------------
@@ -112,8 +114,10 @@ Add a pulse and gaussian pattern.
 
 .. doctest::
 
-    >>> series = demand_library.add_pulse_pattern(on_off_sequence=[3*3600,6*3600,14*3600,20*3600], name='Pulse')
-    >>> series = demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, duration=24*3600, pattern_timestep=3600, 
+    >>> on_off_sequence=[3*3600,6*3600,14*3600,20*3600]
+    >>> series = demand_library.add_pulse_pattern(on_off_sequence, name='Pulse')
+    >>> series = demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, 
+    ...     duration=24*3600, pattern_timestep=3600, 
     ...     start_clocktime=0, normalize=True, name='Gaussian')
 
 Add noise to a pattern.
@@ -121,7 +125,8 @@ Add noise to a pattern.
 .. doctest::
 
     >>> demand_library.copy_pattern('Gaussian', 'Gaussian_with_noise')
-    >>> series = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True, seed=123)
+    >>> series = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True
+    ...     seed=123)
     >>> ax = demand_library.plot_patterns(names=['Gaussian', 'Gaussian_with_noise'])
 
 .. doctest::
@@ -213,11 +218,13 @@ Load an existing demand pattern library for use in subsequent projects.
     >>> print(custom_demand_library.pattern_name_list)
     ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5', 'Pulse', 'Gaussian', 'Gaussian_with_noise', 'Net2_1_resampled']
 
+.. _msx_library:
+
 Multispecies model library
 ---------------------------
 
-WNTR also contains a library of MSX models that are accessed through the 
-:class:`~wntr.library.msx.MsxLibrary`.
+The :class:`~wntr.library.msx.MsxLibrary` class contains a library of MSX models that can be used in
+multispecies reaction simulations.
 See :ref:`msx_water_quality` for more information on simulating multispecies reactions in WNTR.
 
 The multispecies model library includes the following models:
