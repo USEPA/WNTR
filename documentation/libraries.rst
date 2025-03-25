@@ -115,17 +115,17 @@ Add a pulse and gaussian pattern.
 .. doctest::
 
     >>> on_off_sequence=[3*3600,6*3600,14*3600,20*3600]
-    >>> series = demand_library.add_pulse_pattern(on_off_sequence, name='Pulse')
-    >>> series = demand_library.add_gaussian_pattern(mean=12*3600, std=5*3600, 
-    ...     duration=24*3600, pattern_timestep=3600, 
-    ...     start_clocktime=0, normalize=True, name='Gaussian')
+    >>> series = demand_library.add_pulse_pattern('Pulse', on_off_sequence)
+    >>> series = demand_library.add_gaussian_pattern('Gaussian', mean=12*3600, 
+    ...     std=5*3600, duration=24*3600, pattern_timestep=3600, 
+    ...     start_clocktime=0, normalize=True)
 
 Add noise to a pattern.
 
 .. doctest::
 
     >>> demand_library.copy_pattern('Gaussian', 'Gaussian_with_noise')
-    >>> series = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True
+    >>> series = demand_library.apply_noise('Gaussian_with_noise', 0.1, normalize=True,
     ...     seed=123)
     >>> ax = demand_library.plot_patterns(names=['Gaussian', 'Gaussian_with_noise'])
 
