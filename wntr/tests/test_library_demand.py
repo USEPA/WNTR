@@ -128,7 +128,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         combined = self.DPL.to_Pattern('Combined_overlap')
         
         assert len(combined.multipliers) == 168
-        self.assertAlmostEquals(combined.at(24*3600), net1.at(24*3600) + net3.at(24*3600), 3)
+        self.assertAlmostEqual(combined.at(24*3600), net1.at(24*3600) + net3.at(24*3600), 3)
         
     def test_add_combined_pattern_sequential(self):
         self.DPL.add_combined_pattern('Combined_sequential', 
@@ -146,8 +146,8 @@ class TestDemandPatternLibrary(unittest.TestCase):
         combined = self.DPL.to_Pattern('Combined_sequential')
         
         assert len(combined.multipliers) == 168
-        self.assertAlmostEquals(combined.at(2*24*3600), net1.at(2*24*3600), 3)
-        self.assertAlmostEquals(combined.at(5*24*3600), net3.at(5*24*3600), 3)
+        self.assertAlmostEqual(combined.at(2*24*3600), net1.at(2*24*3600), 3)
+        self.assertAlmostEqual(combined.at(5*24*3600), net3.at(5*24*3600), 3)
     
     def test_remove_pattern(self):
         pattern_name = "Constant"
@@ -202,7 +202,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         mean_val_norm = np.mean(multipliers)
         std_val_norm = np.std(multipliers)
 
-        self.assertAlmostEquals(mean_val_norm, 1, 3)
+        self.assertAlmostEqual(mean_val_norm, 1, 3)
         
     def test_resample_add_noise(self):
         val = 0.25
@@ -232,8 +232,8 @@ class TestDemandPatternLibrary(unittest.TestCase):
         mean_diff = np.mean(diff)
         std_diff = np.std(diff)
         
-        self.assertAlmostEquals(mean_diff, 0, 2)
-        self.assertAlmostEquals(std_diff, val, 2)
+        self.assertAlmostEqual(mean_diff, 0, 2)
+        self.assertAlmostEqual(std_diff, val, 2)
         
     def test_to_Pattern(self):
         pattern_name = 'Net3_1'
@@ -245,7 +245,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         MEA = np.mean(np.abs(pattern.multipliers -  np.array(mult)))
         
         assert pattern.name == pattern_name
-        self.assertAlmostEquals(MEA, 0, 6)
+        self.assertAlmostEqual(MEA, 0, 6)
         
     def test_to_Series(self):
         pattern_name = 'Net3_1'
@@ -258,7 +258,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         
         MEA = np.mean(np.abs(series1.values -  np.array(mult)))
         
-        self.assertAlmostEquals(MEA, 0, 6)
+        self.assertAlmostEqual(MEA, 0, 6)
         assert series2.shape[0] == 4*24
         
     def test_add_to_wn(self):
