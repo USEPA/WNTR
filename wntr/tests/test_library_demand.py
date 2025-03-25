@@ -18,10 +18,7 @@ plt.close('all')
 class TestDemandPatternLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        DPL = DemandPatternLibrary()
-        DPL.add_gaussian_pattern('Gaussian', 12*3600, 5*3600, normalize=True)
-
-        self.DPL = DPL
+        self.DPL = DemandPatternLibrary()
         
     @classmethod
     def tearDownClass(self):
@@ -49,6 +46,9 @@ class TestDemandPatternLibrary(unittest.TestCase):
         
         expected = pd.Series(data=np.arange(0,25,1), index=np.arange(0,86401,3600))
         assert_series_equal(series, expected, check_dtype=False)
+        
+        # Try adding the pattern again (AssertionError, name already exists)
+        self.assertRaises(AssertionError, self.DPL.add_pattern, pattern_name, entry)
 
     def test_add_pulse_pattern(self):
         # Pulse: on between 3:00 and 6:00 (3), 14:00 and 20:00 (6) 
@@ -76,9 +76,30 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert combined_pulse.mean() == 1
         assert combined_pulse.std() == 0
     
+    def test_binary_pattern(self):
+        """
+        Pattern.binary_pattern and DPL.add_pulse_pattern share functionality.
+        TODO Pattern.binary_pattern should be deprecated
+        """
+        wn = wntr.network.WaterNetworkModel(ex_datadir+'/Net3.inp')
+        duration = 24*3600
+        pattern_timestep = wn.options.time.pattern_timestep
+        
+        binary_pattern = wntr.network.elements.Pattern.binary_pattern(
+            "binary_pattern", 3*3600, 6*3600, pattern_timestep, duration)
+        wn.add_pattern(binary_pattern.name, binary_pattern)
+        
+        self.DPL.add_pulse_pattern('pulse_pattern', [3*3600,6*3600], 
+                                   duration, pattern_timestep)
+        pulse_pattern = self.DPL.to_Pattern('pulse_pattern')
+        wn.add_pattern(pulse_pattern.name, pulse_pattern)
+        
+        assert all(binary_pattern.multipliers == pulse_pattern.multipliers)
+        
     def test_add_gaussian_pattern(self):
-        self.DPL.add_gaussian_pattern('Gaussian2', 3.5*24*3600, 12*3600, duration=7*24*3600)
-        gaussian = self.DPL.to_Series('Gaussian2')
+        self.DPL.add_gaussian_pattern('Gauss', 3.5*24*3600, 12*3600, 
+                                      duration=7*24*3600)
+        gaussian = self.DPL.to_Series('Gauss')
         
         assert gaussian.idxmax() == 3.5*24*3600
     
@@ -130,14 +151,14 @@ class TestDemandPatternLibrary(unittest.TestCase):
     
     def test_remove_pattern(self):
         pattern_name = "Constant"
-        
-        pattern_names = self.DPL.pattern_name_list
-        assert pattern_name in set(pattern_names)
-        
+
         self.DPL.remove_pattern(pattern_name)
         
         pattern_names = self.DPL.pattern_name_list
         assert pattern_name not in set(pattern_names)
+        
+        # Try removing the pattern again (AssertionError, name does not exists)
+        self.assertRaises(AssertionError, self.DPL.remove_pattern, pattern_name)
     
     def test_copy_pattern(self):
         # Copy pattern
@@ -185,6 +206,8 @@ class TestDemandPatternLibrary(unittest.TestCase):
         
     def test_resample_add_noise(self):
         val = 0.25
+        
+        self.DPL.add_gaussian_pattern('Gaussian', 12*3600, 5*3600, normalize=True)
         
         pat = self.DPL.get_pattern('Gaussian')
         length = len(pat['multipliers'])
@@ -239,16 +262,24 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert series2.shape[0] == 4*24
         
     def test_add_to_wn(self):
+        
         # Create a water network model
         wn = wntr.network.WaterNetworkModel(ex_datadir+'/Net1.inp')
-
+        wn.options.hydraulic.demand_model='PDD'
+        wn.options.hydraulic.required_pressure = 20
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim()
+        demand0 = results.node['demand']
+        expected_demand0 = wntr.metrics.expected_demand(wn)
+        
         # Get demands associated with a junction
         junction = wn.get_node('11')
-        print(junction.demand_timeseries_list)
+        assert wn.num_patterns == 1
+        assert len(junction.demand_timeseries_list) == 1
 
         # Modify the base value and pattern of the original demand
-        junction.demand_timeseries_list[0].base_value = 6e-5
-        junction.demand_timeseries_list[0].pattern_name = '1'
+        #junction.demand_timeseries_list[0].base_value = 6e-5
+        #junction.demand_timeseries_list[0].pattern_name = '1'
         junction.demand_timeseries_list[0].category = 'A'
         
         # Resample Net2_1 pattern to pattern timestep from Net1
@@ -256,32 +287,43 @@ class TestDemandPatternLibrary(unittest.TestCase):
         pattern_timestep = self.DPL.get_pattern('Net2_1')['pattern_timestep']
         assert wn_pattern_timestep != pattern_timestep
         self.DPL.copy_pattern('Net2_1', 'Net2_1_resampled')
-        multipliers = self.DPL.resample_multipliers('Net2_1_resampled', duration=3*24*3600,
-                                               pattern_timestep=wn_pattern_timestep, start_clocktime=0)
+        multipliers = self.DPL.resample_multipliers('Net2_1_resampled', 
+                                                    duration=3*24*3600,
+                                                    pattern_timestep=wn_pattern_timestep, 
+                                                    start_clocktime=0)
+        self.DPL.normalize_pattern('Net2_1_resampled')
         #self.DPL.plot_patterns(names=['Net2_1_resampled', 'Net2_1'])
     
         # Add a new pattern from the pattern library, then add a demand
-        print(wn.options.time.pattern_timestep, wn.options.time.start_clocktime)
         pattern = self.DPL.to_Pattern('Net2_1_resampled', wn.options.time)
         wn.add_pattern('Net2_1_resample', pattern)
-        junction.add_demand(base=5e-5, pattern_name='Net2_1_resample', category='B')
-        print(junction.demand_timeseries_list)
+        junction.add_demand(base=5e-3, pattern_name='Net2_1_resample', category='B')
+        assert pattern.name == 'Net2_1_resampled'
+        assert wn.num_patterns == 2
+        assert len(junction.demand_timeseries_list) == 2
 
         # Add another pattern from a list, then add a demand
-        wn.add_pattern('New', [1,1,1,0,0,0,1,0,0.5,0.5,0.5,1])
-        junction.add_demand(base=2e-5, pattern_name='New', category='C')
-        print(junction.demand_timeseries_list)
-
-        # Simulate hydraulics
+        wn.add_pattern('New', [2,2,2,0,0,0,2,0,1,1,1,2])
+        junction.add_demand(base=2e-3, pattern_name='New', category='C')
+        assert wn.num_patterns == 3
+        assert len(junction.demand_timeseries_list) == 3
+        
+        expected_demand1 = wntr.metrics.expected_demand(wn)
+        
         sim = wntr.sim.EpanetSimulator(wn)
         results = sim.run_sim()
-
-        # Plot results on the network
-        pressure_at_5hr = results.node['pressure'].loc[5*3600, :]
-        wntr.graphics.plot_network(wn, node_attribute=pressure_at_5hr, node_size=30, 
-                                title='Pressure at 5 hours')
-
-        print(wn.pattern_name_list)
+        demand1 = results.node['demand']
+        expected_demand1 = wntr.metrics.expected_demand(wn)
+        
+        #fig, ax = plt.subplots()
+        #expected_demand0['11'].plot(ax=ax)
+        #expected_demand1['11'].plot(ax=ax)
+        #demand0['11'].plot(ax=ax)
+        #demand1['11'].plot(ax=ax)
+        
+        # Test that demand1 is greater than demand0
+        assert all(expected_demand1['11'] > expected_demand0['11'])
+        assert all(demand1['11'] > demand0['11'])
         
     def test_plot_pattern(self):
         filename = abspath(join(testdir, "plot_pattern.png"))

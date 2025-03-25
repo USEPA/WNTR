@@ -81,6 +81,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(name, str)
+        assert name in set(self.pattern_name_list)
         
         del self.library[name]
     
@@ -211,7 +212,7 @@ class DemandPatternLibrary(object):
         ----------
         name : str
             Pattern name
-        duration : int
+        duration : int or float
             Duration (in seconds) of the resampled pattern
         pattern_timestep : int
             Timestep (in seconds) of the resampled pattern
@@ -228,7 +229,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(name, str)
-        assert isinstance(duration, int)
+        assert isinstance(duration, (int, float))
         assert isinstance(pattern_timestep, int)
         assert isinstance(start_clocktime, int)
         assert isinstance(wrap, bool)
@@ -283,6 +284,7 @@ class DemandPatternLibrary(object):
 
         assert isinstance(name, str)
         assert isinstance(entry, dict)
+        assert name not in set(self.pattern_name_list)
         
         required_keys = ['name', 
                          'start_clocktime', 
@@ -302,13 +304,18 @@ class DemandPatternLibrary(object):
         """
         Add a pulse pattern to the library using a sequence of on/off times
         
+        Pulse patterns can be used to model sudden changes in water demand, 
+        for example, from a fire hydrant.
+        
+        This pattern replicates functionality in Pattern.binary_pattern
+        
         Parameters
         ----------
         name : str
             Pattern name
         on_off_sequence : list
             A list of times to turn the pattern on/off (starting with on)
-        duration : int
+        duration : int or float
             Duration (in seconds) of the resampled pattern
         pattern_timestep : int
             Timestep (in seconds) of the resampled pattern
@@ -329,7 +336,7 @@ class DemandPatternLibrary(object):
         assert isinstance(name, str)
         assert isinstance(on_off_sequence, list)
         assert np.all(np.diff(on_off_sequence) > 0) # is monotonically increasing
-        assert isinstance(duration, int)
+        assert isinstance(duration, (int, float))
         assert isinstance(pattern_timestep, int)
         assert isinstance(start_clocktime, int)
         assert isinstance(wrap, bool)
@@ -371,6 +378,9 @@ class DemandPatternLibrary(object):
         Add a Guassian pattern to the library defined by a mean and standard
         deviation
         
+        Gaussian patterns can be used to model water demand that gradually 
+        increases to a max water use, followed by gradual decline.
+        
         Parameters
         ----------
         name : str
@@ -379,7 +389,7 @@ class DemandPatternLibrary(object):
             Mean of the Guassian distribution
         std : int or float
             Standard deviation of the Guassian distribution
-        duration : int
+        duration : int or float
             Duration (in seconds) of the pattern
         pattern_timestep : int
             Timestep (in seconds) of the pattern
@@ -400,7 +410,7 @@ class DemandPatternLibrary(object):
         assert isinstance(name, str)
         assert isinstance(mean, (int, float))
         assert isinstance(std, (int, float))
-        assert isinstance(duration, int)
+        assert isinstance(duration, (int, float))
         assert isinstance(pattern_timestep, int)
         assert isinstance(start_clocktime, int)
         assert isinstance(wrap, bool)
@@ -437,6 +447,9 @@ class DemandPatternLibrary(object):
         Add a triangular pattern to the library defined by a start time,
         peak time, and end time
         
+        Triangular patterns can be used to model water demand that uniformly 
+        increases to a max water use, followed by uniform decline.
+        
         Parameters
         ----------
         name : str
@@ -447,7 +460,7 @@ class DemandPatternLibrary(object):
             Peak time (in seconds) of the triangular distribution
         end : int or float
             End time (in seconds) of the triangular distribution
-        duration : int
+        duration : int or float
             Duration (in seconds) of the pattern
         pattern_timestep : int
             Timestep (in seconds) of the pattern
@@ -469,7 +482,7 @@ class DemandPatternLibrary(object):
         assert isinstance(start, (int, float))
         assert isinstance(peak, (int, float))
         assert isinstance(end, (int, float))
-        assert isinstance(duration, int)
+        assert isinstance(duration, (int, float))
         assert isinstance(pattern_timestep, int)
         assert isinstance(start_clocktime, int)
         assert isinstance(wrap, bool)
@@ -521,7 +534,7 @@ class DemandPatternLibrary(object):
             List of weight applied to each pattern.  
             If no weights are provided (None), then the patterns are equally 
             weighted.
-        durations : list of ints
+        durations : list of ints or floats
             If combine method is Overlap, the list contains only one entry 
             which is the total duration of the pattern (in seconds).
             If combine method is Sequential, the list contains one duration 
@@ -660,7 +673,7 @@ class DemandPatternLibrary(object):
         ----------
         name : str
             Pattern name
-        duration : int or None
+        duration : int, float, or None
             Pattern duration (in seconds).  If None, then the duration from 
             the pattern entry is used.
         
@@ -670,7 +683,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(name, str)
-        assert isinstance(duration, (int, NoneType))
+        assert isinstance(duration, (int, float, NoneType))
         
         entry = self.get_pattern(name)
 
@@ -719,7 +732,7 @@ class DemandPatternLibrary(object):
         ----------
         names : list of str
             Pattern names, if None then all patterns are plotted
-        duration : int
+        duration : int or float
             Pattern duration (in seconds).  If None, then the duration from 
             the pattern entry is used.
         
@@ -729,7 +742,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(names, (list, NoneType))
-        assert isinstance(duration, (int, NoneType))
+        assert isinstance(duration, (int, float, NoneType))
         
         if names is None:
             names = self.pattern_name_list
