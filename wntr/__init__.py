@@ -6,6 +6,7 @@ from wntr import sim
 from wntr import scenario
 from wntr import graphics
 from wntr import gis
+from wntr import library
 from wntr import utils
 from wntr import msx
 
