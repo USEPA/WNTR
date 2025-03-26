@@ -8,51 +8,24 @@ Examples
 ========
 
 The `examples folder <https://github.com/USEPA/WNTR/blob/main/examples>`_ in the WNTR repository includes 
-Python file examples,
-Jupyter Notebook examples, and
+Jupyter Notebook examples, 
+Python file examples, and
 EPANET INP files that can be used to run analysis in WNTR.
 
 .. note:: 
 	   If WNTR is installed using PyPI or Anaconda, the examples folder is not included with the Python package. 
 	   The examples can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store the example files in a folder. 
-	   
-Python file examples
---------------------
-WNTR comes with Python code examples that illustrate several use cases, including:
-
-* `Getting started example <https://github.com/USEPA/WNTR/blob/main/examples/getting_started.py>`_: 
-  This example generates a water network model, simulates hydraulics, and plots simulation results.
-* `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_: 
-  This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.
-* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_: 
-  This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
-* `Fire flow example <https://github.com/USEPA/WNTR/blob/main/examples/fire_flow.py>`_: 
-  This example runs hydraulic simulations with and without fire fighting flow demand.
-* `Sensor placement example <https://github.com/sandialabs/chama/blob/main/examples/water_network_example.py>`_: 
-  This example is hosted in Chama repository (https://github.com/sandialabs/chama) and uses WNTR to optimize the placement of sensors that minimizes detection time. 
-  Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.
-
-Example files can be run as follows:
-
-* Open a command line or PowerShell prompt and run the example file using Python in interactive mode.  
-  This will keep Python open so that graphics can be viewed.  Use ``exit()`` to close Python when done.  
-  For example, the getting started example can be run as follows::
-  
-      python -i getting_started.py
-      
-* Open a Python console in script mode (no -i) and copy/paste lines of code into the Python console. 
-  Use ``exit()`` to close Python when done.
-
-* Open the example file within an IDE like Spyder and run or step through the file. 
 
 Jupyter Notebook examples
 -------------------------
 
-WNTR also includes several Jupyter Notebooks examples.
+WNTR includes several Jupyter Notebooks examples.
 A Jupyter Notebook, an open-sourced web-based application, can be accessed through Anaconda or by installing the 
 associated software available at https://jupyter.org. These demonstrations include the following: 
 
+* `Getting started demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/getting_started.ipynb>`_: 
+  This example generates a water network model, simulates hydraulics, and plots simulation results.
 * `Basic demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/basic_demo.ipynb>`_: 
   This demonstration runs through several operations in WNTR, including 
   building and modifying a water network model, 
@@ -87,7 +60,37 @@ Additional information on Jupyter Notebooks is available at https://jupyter.org.
 
 For more details about the steps in the pipe break and fire flow demonstrations, review Chapter 12: Water network tool for resilience in 
 `Embracing Analytics in the Drinking Water Industry <https://iwaponline.com/ebooks/book/849/Embracing-Analytics-in-the-Drinking-Water-Industry>`_. 
+
+	   
+Python file examples
+--------------------
+WNTR also comes with Python code examples that illustrate several use cases, including:
+
+* `Getting started example <https://github.com/USEPA/WNTR/blob/main/examples/getting_started.py>`_: 
+  This example generates a water network model, simulates hydraulics, and plots simulation results.
+* `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/main/examples/stochastic_simulation.py>`_: 
+  This example runs multiple hydraulic simulations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+* `Pipe criticality example <https://github.com/USEPA/WNTR/blob/main/examples/pipe_criticality.py>`_: 
+  This example runs multiple hydraulic simulations to compute the impact that individual pipe closures have on water pressure.  
+* `Fire flow example <https://github.com/USEPA/WNTR/blob/main/examples/fire_flow.py>`_: 
+  This example runs hydraulic simulations with and without fire fighting flow demand.
+* `Sensor placement example <https://github.com/sandialabs/chama/blob/main/examples/water_network_example.py>`_: 
+  This example is hosted in Chama repository (https://github.com/sandialabs/chama) and uses WNTR to optimize the placement of sensors that minimizes detection time. 
+  Note that Chama requires Pyomo and a MIP solver, see Chama installation instructions for more details.
+
+Example files can be run as follows:
+
+* Open a command line or PowerShell prompt and run the example file using Python in interactive mode.  
+  This will keep Python open so that graphics can be viewed.  Use ``exit()`` to close Python when done.  
+  For example, the getting started example can be run as follows::
   
+      python -i getting_started.py
+      
+* Open a Python console in script mode (no -i) and copy/paste lines of code into the Python console. 
+  Use ``exit()`` to close Python when done.
+
+* Open the example file within an IDE like Spyder and run or step through the file. 
+
 EPANET INP files
 -------------------
 

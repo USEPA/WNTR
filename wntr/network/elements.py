@@ -10,7 +10,7 @@ import math
 import six
 import copy
 from scipy.optimize import curve_fit, OptimizeWarning
-
+from warnings import warn
 from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
@@ -79,8 +79,11 @@ class Junction(Node):
     # base and optional attributes used to create a Junction in _from_dict
     # base attributes are used in add_junction
     _base_attributes = ["name", 
+                        "base_demand",
+                        "demand_pattern",
                         "elevation", 
-                        "coordinates"]
+                        "coordinates",
+                        "demand_category"]
     _optional_attributes = ["emitter_coefficient",
                             "initial_quality", 
                             "minimum_pressure", 
@@ -216,6 +219,32 @@ class Junction(Node):
     def base_demand(self, value):
         raise RuntimeWarning('The base_demand property is read-only. Please modify using demand_timeseries_list[0].base_value.')
 
+    @property
+    def demand_pattern(self):
+        """Get the pattern_name of the first demand in the demand_timeseries_list.
+
+        This is a read-only property.
+        """
+        if len(self.demand_timeseries_list) > 0:
+            return self.demand_timeseries_list[0].pattern_name
+        return None
+    @demand_pattern.setter
+    def demand_pattern(self, value):
+        raise RuntimeWarning('The demand_pattern property is read-only. Please modify using demand_timeseries_list[0].pattern_name')
+    
+    @property
+    def demand_category(self):
+        """Get the category of the first demand in the demand_timeseries_list.
+
+        This is a read-only property.
+        """
+        if len(self.demand_timeseries_list) > 0:
+            return self.demand_timeseries_list[0].category
+        return None
+    @demand_category.setter
+    def demand_category(self, value):
+        raise RuntimeWarning('The demand_category property is read-only. Please modify using demand_timeseries_list[0].category.')
+    
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
         Add a leak control to the water network model
@@ -394,7 +423,7 @@ class Tank(Node):
                         "min_level",
                         "max_level", 
                         "diameter",
-                        "min_vol"
+                        "min_vol",
                         "vol_curve_name",
                         "overflow", 
                         "coordinates"]
@@ -828,7 +857,7 @@ class Pipe(Link):
         roughness
         minor_loss
         initial_status
-        cv
+        check_valve
         bulk_coeff
         wall_coeff
         vertices
@@ -859,7 +888,8 @@ class Pipe(Link):
                         "minor_loss",
                         "initial_status",
                         "check_valve"]
-    _optional_attributes = ["bulk_coeff",
+    _optional_attributes = ["initial_quality",
+                            "bulk_coeff",
                             "wall_coeff",
                             "vertices",
                             "tag"]
@@ -870,7 +900,7 @@ class Pipe(Link):
         self._diameter = 0.3048
         self._roughness = 100
         self._minor_loss = 0.0
-        self._cv = False
+        self._check_valve = False
         self._bulk_coeff = None
         self._wall_coeff = None
         self._velocity = None
@@ -933,13 +963,25 @@ class Pipe(Link):
         self._minor_loss = value
 
     @property
-    def cv(self):
+    def check_valve(self):
         """bool : does this pipe have a check valve"""
-        return self._cv
+        return self._check_valve
+    @check_valve.setter
+    def check_valve(self, value): 
+        self._check_valve = value
+
+    @property
+    def cv(self):
+        """bool : alias of ``check_valve``
+        
+        Deprecated - use ``check_valve`` instead."""
+        warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
+        return self._check_valve
     @cv.setter
     def cv(self, value): 
-        self._cv = value
-        
+        warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
+        self._check_valve = value
+
     @property
     def bulk_coeff(self):
         """float or None : if not None, then a pipe specific bulk reaction coefficient"""
@@ -1015,6 +1057,7 @@ class Pump(Link):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         efficiency
         energy_price
         energy_pattern
@@ -1041,11 +1084,12 @@ class Pump(Link):
                         "end_node_name",
                         "pump_type",
                         "pump_curve_name",
-                        "power"
+                        "power",
                         "base_speed",
                         "speed_pattern_name",
                         "initial_status"]
-    _optional_attributes = ["initial_setting",
+    _optional_attributes = ["initial_quality",
+                            "initial_setting",
                             "efficiency",
                             "energy_pattern",
                             "energy_price",
@@ -1070,7 +1114,7 @@ class Pump(Link):
 
     @property
     def efficiency(self): 
-        """float : pump efficiency"""
+        """Curve : pump efficiency"""
         return self._efficiency
     @efficiency.setter
     def efficiency(self, value):
@@ -1227,6 +1271,7 @@ class HeadPump(Pump):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         pump_type
         pump_curve_name
         efficiency
@@ -1447,6 +1492,7 @@ class PowerPump(Pump):
         speed_timeseries
         initial_status
         initial_setting
+        initial_quality
         pump_type
         power
         efficiency
@@ -1537,6 +1583,7 @@ class Valve(Link):
         valve_type
         initial_status
         initial_setting
+        initial_quality
         vertices
         tag
 
@@ -1563,7 +1610,8 @@ class Valve(Link):
                         "minor_loss",
                         "initial_setting",
                         "initial_status"]
-    _optional_attributes = ["vertices",
+    _optional_attributes = ["initial_quality",
+                            "vertices",
                             "tag"]
         
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -2599,7 +2647,7 @@ class Source(object):
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):
-    def __init__(self, model, name, node_name, source_type, strength, pattern=None):
+    def __init__(self, model, name, node_name, source_type, strength, pattern=None, species=None):
         self._strength_timeseries = TimeSeries(model._pattern_reg, strength, pattern, name)
         self._pattern_reg = model._pattern_reg
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
@@ -2608,6 +2656,7 @@ class Source(object):
         self._name = name
         self._node_name = node_name
         self._source_type = source_type
+        self._species = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2619,8 +2668,8 @@ class Source(object):
         return False
 
     def __repr__(self):
-        fmt = "<Source: '{}', '{}', '{}', {}, {}>"
-        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name)
+        fmt = "<Source: '{}', '{}', '{}', {}, {}, {}>"
+        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name, repr(self._species))
 
     @property
     def strength_timeseries(self): 
@@ -2651,6 +2700,13 @@ class Source(object):
     def source_type(self, value):
         self._source_type = value
 
+    @property
+    def species(self):
+        """str : species name for multispecies reactions, by default None"""
+    @species.setter
+    def species(self, value):
+        self._species = str(value)
+
     def to_dict(self):
         ret = dict()
         ret['name'] = self.name
@@ -2658,4 +2714,6 @@ class Source(object):
         ret['source_type'] = self.source_type
         ret['strength'] = self.strength_timeseries.base_value
         ret['pattern'] = self.strength_timeseries.pattern_name
+        if self.species:
+            ret['species'] = self.species
         return ret

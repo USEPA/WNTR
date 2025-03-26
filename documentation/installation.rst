@@ -161,6 +161,20 @@ Step 2: Install WNTR
 	     during the setup process. This requires that the user has a C++ compiler (e.g., Visual Studio C++, GNU C++, MinGW) on their path.
 	     No compiler is needed when installing WNTR through PyPI (Option 1) or conda (Option 2). 
    
+
+.. note:: Mac builds and EPANETMSX
+
+   The builds of EPANETMSX for Mac require the OpenMP package be installed. This is easiest to do using
+   homebrew. A brew recipe is provided with WNTR that will obtain the appropriate libraries. To use it,
+   download the https://github.com/USEPA/WNTR/tree/main/wntr/epanet/libepanet/darwin-formula/libomp.rb 
+   formula directly and brew it, or use the command below.
+   This should install the necessary libraries onto your machine to be able to run WNTR with EPANETMSX extensions.
+
+   .. code:: bash
+	  
+	  brew reinstall --build-from-source --formula https://github.com/USEPA/WNTR/tree/main/wntr/epanet/libepanet/darwin-formula/libomp.rb
+	 
+
 Step 3: Test installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -272,6 +286,8 @@ The following Python packages are optional:
   https://pypi.org/project/utm/
 * geopandas :cite:p:`jvfm21`: used to work with geospatial data,
   https://geopandas.org/
+* rasterio :cite:p:`rasterio`: used to work with raster data,
+  https://rasterio.readthedocs.io/
 * rtree :cite:p:`rtree`: used for overlay operations in geopandas,
   https://rtree.readthedocs.io/
 * openpyxl :cite:p:`gacl18`: used to read/write to Microsoft® Excel® spreadsheets,

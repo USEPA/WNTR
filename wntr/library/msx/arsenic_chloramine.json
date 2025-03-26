@@ -1,0 +1,203 @@
+{
+    "wntr-version": "",
+    "name": "arsenic_chloramine",
+    "title": "Arsenic Oxidation/Adsorption Example",
+    "description": "This example models monochloramine oxidation of arsenite/arsenate and wall adsoption/desorption, as given in section 3 of the EPANET-MSX user manual",
+    "references": [
+        "Shang, F., Rossman, L. A., and Uber, J.G. (2023). EPANET-MSX 2.0 User Manual. U.S. Environmental Protection Agency, Cincinnati, OH. EPA/600/R-22/199."
+    ],
+    "reaction_system": {
+        "species": [
+            {
+                "name": "AS3",
+                "species_type": "bulk",
+                "units": "UG",
+                "atol": null,
+                "rtol": null,
+                "note": "Dissolved arsenite"
+            },
+            {
+                "name": "AS5",
+                "species_type": "bulk",
+                "units": "UG",
+                "atol": null,
+                "rtol": null,
+                "note": "Dissolved arsenate"
+            },
+            {
+                "name": "AStot",
+                "species_type": "bulk",
+                "units": "UG",
+                "atol": null,
+                "rtol": null,
+                "note": "Total dissolved arsenic"
+            },
+            {
+                "name": "AS5s",
+                "species_type": "wall",
+                "units": "UG",
+                "atol": null,
+                "rtol": null,
+                "note": "Adsorbed arsenate"
+            },
+            {
+                "name": "NH2CL",
+                "species_type": "bulk",
+                "units": "MG",
+                "atol": null,
+                "rtol": null,
+                "note": "Monochloramine"
+            }
+        ],
+        "constants": [
+            {
+                "name": "Ka",
+                "value": 10.0,
+                "units": "1 / (MG * HR)",
+                "note": "Arsenite oxidation rate coefficient"
+            },
+            {
+                "name": "Kb",
+                "value": 0.1,
+                "units": "1 / HR",
+                "note": "Monochloramine decay rate coefficient"
+            },
+            {
+                "name": "K1",
+                "value": 5.0,
+                "units": "M^3 / (UG * HR)",
+                "note": "Arsenate adsorption coefficient"
+            },
+            {
+                "name": "K2",
+                "value": 1.0,
+                "units": "1 / HR",
+                "note": "Arsenate desorption coefficient"
+            },
+            {
+                "name": "Smax",
+                "value": 50.0,
+                "units": "UG / M^2",
+                "note": "Arsenate adsorption limit"
+            }
+        ],
+        "parameters": [],
+        "terms": [
+            {
+                "name": "Ks",
+                "expression": "K1/K2",
+                "note": "Equil. adsorption coeff."
+            }
+        ],
+        "pipe_reactions": [
+            {
+                "species_name": "AS3",
+                "expression_type": "rate",
+                "expression": "-Ka*AS3*NH2CL",
+                "note": "Arsenite oxidation"
+            },
+            {
+                "species_name": "AS5",
+                "expression_type": "rate",
+                "expression": "Ka*AS3*NH2CL - Av*(K1*(Smax-AS5s)*AS5 - K2*AS5s)",
+                "note": "Arsenate production less adsorption"
+            },
+            {
+                "species_name": "NH2CL",
+                "expression_type": "rate",
+                "expression": "-Kb*NH2CL",
+                "note": "Monochloramine decay"
+            },
+            {
+                "species_name": "AS5s",
+                "expression_type": "equil",
+                "expression": "Ks*Smax*AS5/(1+Ks*AS5) - AS5s",
+                "note": "Arsenate adsorption"
+            },
+            {
+                "species_name": "AStot",
+                "expression_type": "formula",
+                "expression": "AS3 + AS5",
+                "note": "Total arsenic"
+            }
+        ],
+        "tank_reactions": [
+            {
+                "species_name": "AS3",
+                "expression_type": "rate",
+                "expression": "-Ka*AS3*NH2CL",
+                "note": "Arsenite oxidation"
+            },
+            {
+                "species_name": "AS5",
+                "expression_type": "rate",
+                "expression": "Ka*AS3*NH2CL",
+                "note": "Arsenate production"
+            },
+            {
+                "species_name": "NH2CL",
+                "expression_type": "rate",
+                "expression": "-Kb*NH2CL",
+                "note": "Monochloramine decay"
+            },
+            {
+                "species_name": "AStot",
+                "expression_type": "formula",
+                "expression": "AS3 + AS5",
+                "note": "Total arsenic"
+            }
+        ]
+    },
+    "network_data": {
+        "initial_quality": {
+            "AS3": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "AS5": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "AStot": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "AS5s": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            },
+            "NH2CL": {
+                "global_value": 0.0,
+                "node_values": {},
+                "link_values": {}
+            }
+        },
+        "parameter_values": {},
+        "sources": {},
+        "patterns": {}
+    },
+    "options": {
+        "timestep": 360,
+        "area_units": "M2",
+        "rate_units": "HR",
+        "solver": "RK5",
+        "coupling": "NONE",
+        "rtol": 0.001,
+        "atol": 0.0001,
+        "compiler": "NONE",
+        "segments": 5000,
+        "peclet": 1000,
+        "report": {
+            "pagesize": null,
+            "report_filename": null,
+            "species": {},
+            "species_precision": {},
+            "nodes": null,
+            "links": null
+        }
+    }
+}

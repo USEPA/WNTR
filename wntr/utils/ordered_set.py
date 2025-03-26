@@ -15,7 +15,7 @@ class OrderedSet(MutableSet):
         Parameters
         ----------
         iterable: Iterable
-            An iterable with wich to initialize the set.
+            An iterable with which to initialize the set.
         """
         self._data = OrderedDict()
         if iterable is not None:
