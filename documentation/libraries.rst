@@ -34,21 +34,21 @@ The demand pattern library can be used to add or modify patterns in a :class:`~w
 
 The demand pattern library includes the following capabilities:
 
-* Load a library of patterns from a JSON file
-* Add a pattern to the library
-* Create a pulse pattern (on/off sequence)
-* Create a pattern that follows a gaussian or triangular distribution
-* Combine patterns
-* Create a copy of a pattern
-* Modify the pattern timestep or start clocktime
-* Add gaussian random noise to a pattern
-* Normalize the pattern to have a mean of 1
-* Filter patterns by category
-* Create a :class:`~wntr.network.elements.Pattern` object to add the pattern to a :class:`~wntr.network.model.WaterNetworkModel`
-* Create a Pandas Series (pattern indexed by time in seconds) to easily analyze or further modify the pattern
-* Plot patterns
-* Save and load custom libraries for use in subsequent projects
-
+* Load a library of patterns from a JSON file - :meth:`~wntr.library.demand_library.DemandPatternLibrary.__init__`
+* Add a pattern to the library - :meth:`~wntr.library.demand_library.DemandPatternLibrary.add_pattern`
+* Create a pulse pattern (on/off sequence) - :meth:`~wntr.library.demand_library.DemandPatternLibrary.add_pulse_pattern`
+* Create a pattern that follows a gaussian distribution - :meth:`~wntr.library.demand_library.DemandPatternLibrary.add_gaussian_pattern`
+* Create a pattern that follows a triangular distribution - :meth:`~wntr.library.demand_library.DemandPatternLibrary.add_triangular_pattern`
+* Combine patterns - :meth:`~wntr.library.demand_library.DemandPatternLibrary.add_combined_pattern`
+* Create a copy of a pattern - :meth:`~wntr.library.demand_library.DemandPatternLibrary.copy_pattern`
+* Modify the pattern timestep or start clocktime - :meth:`~wntr.library.demand_library.DemandPatternLibrary.resample_multipliers`
+* Add gaussian random noise to a pattern - :meth:`~wntr.library.demand_library.DemandPatternLibrary.apply_noise`
+* Normalize the pattern to have a mean of 1 - :meth:`~wntr.library.demand_library.DemandPatternLibrary.normalize_pattern`
+* Filter patterns by category - :meth:`~wntr.library.demand_library.DemandPatternLibrary.filter_by_category`
+* Create a :class:`~wntr.network.elements.Pattern` object to add the pattern to a :class:`~wntr.network.model.WaterNetworkModel` - :meth:`~wntr.library.demand_library.DemandPatternLibrary.to_Pattern`
+* Create a Pandas Series (pattern indexed by time in seconds) to easily analyze or further modify the pattern - :meth:`~wntr.library.demand_library.DemandPatternLibrary.to_Series`
+* Plot patterns - :meth:`~wntr.library.demand_library.DemandPatternLibrary.plot_patterns`
+* Save and load custom libraries for use in subsequent projects - :meth:`~wntr.library.demand_library.DemandPatternLibrary.write_json`
 Each library entry is defined as a dictionary with the following keys:
 
 * **name**: Pattern name (string)
@@ -64,8 +64,8 @@ Note that the pattern duration is not explicitly defined.  Duration is inferred 
 Several methods include duration as a optional input argument to change how long multipliers are repeated.  
 If wrap = False, the pattern values are set to 0 after the final multiplier value.
 
-A default demand pattern library loads a JSON file that contains patterns from Net1, Net2, Net3, and Micropolis water network models.  
-Additional patterns could be added to the default library.
+The default demand pattern library contains patterns from Net1, Net2, Net3, and Micropolis water network models.  
+Additional patterns can be added to the default library to be accessed in later sessions.
 A sample entry from the default demand pattern library is shown below:: 
 
 	{
@@ -83,8 +83,8 @@ A sample entry from the default demand pattern library is shown below::
 			1.5, 1.35, 1.0, 0.8, 0.7, 0.6]
 	}
 
-The following example illustrates functionality of the demand pattern library. 
-Note, methods that add or modify patterns return a pandas Series of the pattern.  This can be helpful when developing new patterns.
+The following examples illustrate the functionality of the demand pattern library, including creation, modification, and combination of patterns. 
+Note, methods that add or modify patterns return a pandas Series of the pattern.
 
 Load the default demand pattern library, print names of the library entries, and plot patterns.
 
