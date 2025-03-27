@@ -3,13 +3,13 @@ The wntr.network.base module includes base classes for network elements and
 the network model.
 """
 import logging
-import six
-from six import string_types
 import types
+from dataclasses import dataclass
 from wntr.utils.ordered_set import OrderedSet
+from typing import Literal
 
 import enum
-import sys
+from abc import ABC
 from collections.abc import MutableSequence, MutableMapping
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
@@ -19,14 +19,14 @@ import abc
 logger = logging.getLogger(__name__)
 
 
-class AbstractModel(object):
+class AbstractModel():
     """
     Base class for water network models.
     """
     pass
 
 
-class Subject(object):
+class Subject():
     """
     Base class for the subject in an observer design pattern.
     """
@@ -44,7 +44,7 @@ class Subject(object):
             o.update(self)
 
 
-class Observer(six.with_metaclass(abc.ABCMeta, object)):
+class Observer(ABC):
     """
     Base class for the observer in an observer design pattern.
     """
@@ -53,7 +53,60 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class Node(six.with_metaclass(abc.ABCMeta, object)):
+@dataclass
+class Geometry():
+    geometry_type: Literal['Point','LineString','Polygon']
+    coordinates: tuple[int,int] | list[tuple[int,int]] | list[list[tuple[int,int]]]
+
+    @property
+    def __geo_interface__(self):
+        return {
+            "type": self.geometry_type,
+            "coordinates": self.coordinates,
+        }
+
+
+class PhysicalElement(ABC):
+    def __init__(self, wn, name):
+        self._options = wn._options
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
+
+        self._name = name
+
+    def __str__(self):
+        return self._name
+
+    @property
+    def name(self):
+        """str: The name of the node (read only)"""
+        return self._name
+
+    @property
+    @abc.abstractmethod
+    def geometry(self) -> Geometry:
+        """Contains the geometry of the object"""
+        pass
+
+    @abc.abstractmethod
+    def to_dict(self) -> dict:
+        return {}
+
+    @property
+    def __geo_interface__(self) -> dict:
+        return {
+            "type": "Feature",
+            "properties": self.to_dict(),
+            "geometry": self.geometry.__geo_interface__,
+        }
+    
+    def to_ref(self):
+        return self._name
+
+class Node(PhysicalElement):
     """Base class for nodes.
     
     For details about the different subclasses, see one of the following:
@@ -101,7 +154,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     """
     def __init__(self, wn, name):
-        self._name = name
+        super().__init__(wn, name)
         self._head = None
         self._demand = None
         self._pressure = None
@@ -113,13 +166,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._leak_status = False
         self._leak_area = 0.0
         self._leak_discharge_coeff = 0.0
-        self._options = wn._options
-        self._node_reg = wn._node_reg
-        self._link_reg = wn._link_reg
-        self._controls = wn._controls
-        self._pattern_reg = wn._pattern_reg
-        self._curve_reg = wn._curve_reg
-        self._coordinates = [0,0]
+        self._coordinates = (0, 0)
         self._source = None
         self._is_isolated = False
 
@@ -144,9 +191,6 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
            self.tag == other.tag:
                return True
         return False
-
-    def __str__(self):
-        return self._name
 
     def __repr__(self):
         return "<Node '{}'>".format(self._name)
@@ -220,11 +264,6 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         return 'Node'
     
     @property
-    def name(self):
-        """str: The name of the node (read only)"""
-        return self._name
-    
-    @property
     def tag(self):
         """str: A tag or label for the node"""
         return self._tag
@@ -255,6 +294,10 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
             self._coordinates = tuple(coordinates)
         else:
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
+    
+    @property
+    def geometry(self) -> Geometry:
+        return Geometry("Point", self.coordinates)
 
     def to_dict(self):
         """Dictionary representation of the node"""
@@ -264,7 +307,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         for k in dir(self):
             if not k.startswith('_') and \
               k not in ['demand', 'head', 'leak_demand', 'leak_status', 
-                        'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries']:
+                        'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries', 'geometry']:
                 try:
                     val = getattr(self, k)
                     if not isinstance(val, types.MethodType):
@@ -281,11 +324,11 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
                 except DeprecationWarning: pass
         return d
 
-    def to_ref(self):
-        return self._name
 
 
-class Link(six.with_metaclass(abc.ABCMeta, object)):
+
+
+class Link(PhysicalElement):
     """Base class for links.
 
     For details about the different subclasses, see one of the following:
@@ -340,15 +383,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     """
     def __init__(self, wn, link_name, start_node_name, end_node_name):
-        # Set the registries
-        self._options = wn._options
-        self._node_reg = wn._node_reg
-        self._link_reg = wn._link_reg
-        self._controls = wn._controls
-        self._pattern_reg = wn._pattern_reg
-        self._curve_reg = wn._curve_reg
-        # Set the link name
-        self._link_name = link_name
+        super().__init__(wn, link_name)
+
         # Set and register the starting node
         self._start_node = self._node_reg[start_node_name]
         self._node_reg.add_usage(start_node_name, (link_name, self.link_type))
@@ -401,11 +437,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             return False
         return True
     
-    def __str__(self):
-        return self._link_name
-
     def __repr__(self):
-        return "<Link '{}'>".format(self._link_name)
+        return "<Link '{}'>".format(self._name)
 
     @property
     def link_type(self):
@@ -439,8 +472,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._start_node
     @start_node.setter
     def start_node(self, node):
-        self._node_reg.remove_usage(self.start_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.start_node_name, (self._name, self.link_type))
+        self._node_reg.add_usage(node.name, (self._name, self.link_type))
         self._start_node = self._node_reg[node.name]
 
     @property
@@ -449,8 +482,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._end_node
     @end_node.setter
     def end_node(self, node):
-        self._node_reg.remove_usage(self.end_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.end_node_name, (self._name, self.link_type))
+        self._node_reg.add_usage(node.name, (self._name, self.link_type))
         self._end_node = self._node_reg[node.name]
 
     @property
@@ -463,10 +496,6 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         """str: The name of the end node (read only)"""
         return self._end_node.name
 
-    @property
-    def name(self):
-        """str: The link name (read-only)"""
-        return self._link_name
 
     @property
     def flow(self):
@@ -548,6 +577,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
                 raise ValueError('vertices must be a list of 2-tuples')
         self._vertices = points
     
+    @property
+    def geometry(self) -> Geometry:
+        return Geometry("LineString",[self.start_node.coordinates, *self.vertices, self.end_node.coordinates])
+
     def to_dict(self):
         """Dictionary representation of the link"""
         d = {}
@@ -562,7 +595,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         for k in dir(self):
             if not k.startswith('_') and k not in [
                 'flow', 'cv', 'friction_factor', 'headloss',
-                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries',
+                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries', 'geometry'
             ]:
                 val = getattr(self, k)
                 if not isinstance(val, types.MethodType):
@@ -580,8 +613,6 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
                         d[k] = val
         return d
 
-    def to_ref(self):
-        return self._name
 
 
 class Registry(MutableMapping):
@@ -623,7 +654,7 @@ class Registry(MutableMapping):
             
 
     def __setitem__(self, key, value):
-        if not isinstance(key, string_types):
+        if not isinstance(key, str):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
     
@@ -641,8 +672,9 @@ class Registry(MutableMapping):
             # Do not raise an exception if there is no key of that name
             return
     
-    def __iter__(self):
+    def __iter__(self):    
         return self._data.__iter__()
+        
     
     def __len__(self):
         return len(self._data)
@@ -757,6 +789,13 @@ class Registry(MutableMapping):
         for k, v in self._data.items():
             l.append(v.to_dict())
         return l
+
+    @property
+    def __geo_interface__(self):
+        return {
+            'type': 'FeatureCollection',
+            'features': [v.__geo_interface__ for v in self._data.values()]
+        }
 
 
 class NodeType(enum.IntEnum):

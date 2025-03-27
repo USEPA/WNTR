@@ -908,7 +908,7 @@ class Pipe(Link):
         self._reaction_rate = None
         
     def __repr__(self):
-        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
+        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._name,
                        self.start_node, self.end_node, self.length, self.diameter, 
                        self.roughness, self.minor_loss, self.check_valve, str(self.status))
     
@@ -1302,7 +1302,7 @@ class HeadPump(Pump):
 #                                         # the _curve_coeffs were calculated
 
     def __repr__(self):
-        return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._name,
                    self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
                    self.speed_timeseries, str(self.status))
     
@@ -1325,8 +1325,8 @@ class HeadPump(Pump):
         return self._pump_curve_name
     @pump_curve_name.setter
     def pump_curve_name(self, name):
-        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
-        self._curve_reg.add_usage(name, (self._link_name, 'Pump'))
+        self._curve_reg.remove_usage(self._pump_curve_name, (self._name, 'Pump'))
+        self._curve_reg.add_usage(name, (self._name, 'Pump'))
         self._curve_reg.set_curve_type(name, 'HEAD')
         self._pump_curve_name = name
         # delete the pump curve coefficients because they have to be recaulcated 
@@ -1515,7 +1515,7 @@ class PowerPump(Pump):
     """
 
     def __repr__(self):
-        return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._name,
                    self.start_node, self.end_node, 'POWER', self._base_power, 
                    self.speed_timeseries, str(self.status))
     
@@ -1538,7 +1538,7 @@ class PowerPump(Pump):
         return self._base_power
     @power.setter
     def power(self, value):
-        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
+        self._curve_reg.remove_usage(self._pump_curve_name, (self._name, 'Pump'))
         self._base_power = value
 
 
@@ -1625,7 +1625,7 @@ class Valve(Link):
 
     def __repr__(self):
         fmt = "<Valve '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
-        return fmt.format(self._link_name,
+        return fmt.format(self._name,
                           self.start_node, self.end_node, self.__class__.__name__,
                           self.diameter, 
                           self.minor_loss, self.setting, str(self.status))
@@ -2037,8 +2037,8 @@ class GPValve(Valve):
         return self._headloss_curve_name
     @headloss_curve_name.setter
     def headloss_curve_name(self, name):
-        self._curve_reg.remove_usage(self._headloss_curve_name, (self._link_name, 'Valve'))
-        self._curve_reg.add_usage(name, (self._link_name, 'Valve'))
+        self._curve_reg.remove_usage(self._headloss_curve_name, (self._name, 'Valve'))
+        self._curve_reg.add_usage(name, (self._name, 'Valve'))
         self._curve_reg.set_curve_type(name, 'HEADLOSS')
         self._headloss_curve_name = name
     
