@@ -2,6 +2,8 @@
 The wntr.network.base module includes base classes for network elements and 
 the network model.
 """
+from __future__ import annotations
+
 import logging
 import types
 from dataclasses import dataclass
@@ -10,9 +12,8 @@ from typing import Literal
 
 import enum
 from abc import ABC
-from collections.abc import MutableSequence, MutableMapping
+from collections.abc import  MutableMapping
 from collections import OrderedDict
-from wntr.utils.ordered_set import OrderedSet
 
 import abc
 
@@ -305,7 +306,7 @@ class Node(PhysicalElement):
         d['name'] = self.name
         d['node_type'] = self.node_type
         for k in dir(self):
-            if not k.startswith('_') and \
+            if not k[0]==('_') and \
               k not in ['demand', 'head', 'leak_demand', 'leak_status', 
                         'level', 'pressure', 'quality', 'vol_curve', 'head_timeseries', 'geometry']:
                 try:
@@ -593,7 +594,7 @@ class Link(PhysicalElement):
         if hasattr(self, 'valve_type'):
             d['valve_type'] = self.valve_type
         for k in dir(self):
-            if not k.startswith('_') and k not in [
+            if not k[0]==('_') and k not in [
                 'flow', 'cv', 'friction_factor', 'headloss',
                 'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries', 'geometry'
             ]:
