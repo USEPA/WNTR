@@ -4,13 +4,13 @@ model.
 """
 import logging
 from collections import OrderedDict
+from collections.abc import Mapping
 from typing import List, Union
 from warnings import warn
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-import six
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.ordered_set import OrderedSet
@@ -638,7 +638,7 @@ class WaterNetworkModel(AbstractModel):
         pattern: str or Pattern
             Pattern name or object
         """
-        if pattern and isinstance(pattern, six.string_types):
+        if pattern and isinstance(pattern, str):
             pattern = self.get_pattern(pattern)
         source = Source(self, name, node_name, source_type, quality, pattern)
         self._sources[source.name] = source
@@ -1678,7 +1678,7 @@ class CurveRegistry(Registry):
         self._curve_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if value is not None:
@@ -1854,6 +1854,37 @@ class SourceRegistry(Registry):
             return
 
 
+
+class PhysicalRegistryView(Mapping):
+    def __init__(self, names: OrderedSet, registry:Registry):
+         self._names=names
+         self._registry=registry
+
+    def __iter__(self):
+        return self._names.__iter__()
+
+    def __getitem__(self, key):
+        if key in self._names:
+            return self._registry[key]
+        else:
+            raise KeyError
+
+    def __len__(self):
+        return len(self._names)
+
+    def __call__(self):
+        for name in self._names:
+            yield name, self[name]
+    
+    @property
+    def __geo_interface__(self):
+        return {
+            'type': 'FeatureCollection',
+            'features': [self[name].__geo_interface__ for name in self._names]
+        }
+
+
+
 class NodeRegistry(Registry):
     """A registry for nodes."""
 
@@ -1863,12 +1894,16 @@ class NodeRegistry(Registry):
         self._reservoirs = OrderedSet()
         self._tanks = OrderedSet()
 
+        self.junctions = PhysicalRegistryView(self._junctions, self)
+        self.tanks = PhysicalRegistryView(self._tanks,self)
+        self.reservoirs = PhysicalRegistryView(self._reservoirs, self)
+
     def _finalize_(self, model):
         super()._finalize_(model)
         self._node_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if isinstance(value, Junction):
@@ -2062,7 +2097,7 @@ class NodeRegistry(Registry):
         if init_level > max_level:
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
         if vol_curve is not None and vol_curve != "*":
-            if not isinstance(vol_curve, six.string_types):
+            if not isinstance(vol_curve, str):
                 raise ValueError("Volume curve name must be a string")
             elif not vol_curve in self._curve_reg.volume_curve_names:
                 raise ValueError(
@@ -2158,47 +2193,48 @@ class NodeRegistry(Registry):
         """List of names of all junctions"""
         return self._reservoirs
 
-    def junctions(self):
-        """Generator to get all junctions
-        
-        Yields
-        ------
-        name : str
-            The name of the junction
-        node : Junction
-            The junction object    
-            
-        """
-        for node_name in self._junctions:
-            yield node_name, self._data[node_name]
 
-    def tanks(self):
-        """Generator to get all tanks
+    # def junctions(self):
+    #     """Generator to get all junctions
         
-        Yields
-        ------
-        name : str
-            The name of the tank
-        node : Tank
-            The tank object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the junction
+    #     node : Junction
+    #         The junction object    
             
-        """
-        for node_name in self._tanks:
-            yield node_name, self._data[node_name]
+    #     """
+    #     for node_name in self._junctions:
+    #         yield node_name, self._data[node_name]
 
-    def reservoirs(self):
-        """Generator to get all reservoirs
+    # def tanks(self):
+    #     """Generator to get all tanks
         
-        Yields
-        ------
-        name : str
-            The name of the reservoir
-        node : Reservoir
-            The reservoir object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the tank
+    #     node : Tank
+    #         The tank object    
             
-        """
-        for node_name in self._reservoirs:
-            yield node_name, self._data[node_name]
+    #     """
+    #     for node_name in self._tanks:
+    #         yield node_name, self._data[node_name]
+
+    # def reservoirs(self):
+    #     """Generator to get all reservoirs
+        
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the reservoir
+    #     node : Reservoir
+    #         The reservoir object    
+            
+    #     """
+    #     for node_name in self._reservoirs:
+    #         yield node_name, self._data[node_name]
 
 
 class LinkRegistry(Registry):
@@ -2232,12 +2268,24 @@ class LinkRegistry(Registry):
         self._gpvs = OrderedSet()
         self._valves = OrderedSet()
 
+        self.pipes = PhysicalRegistryView(self._pipes, self)
+        self.pumps = PhysicalRegistryView(self._pumps, self)
+        self.head_pumps = PhysicalRegistryView(self._head_pumps, self)
+        self.power_pumps = PhysicalRegistryView(self._power_pumps, self)
+        self.prvs = PhysicalRegistryView(self._prvs, self)
+        self.psvs = PhysicalRegistryView(self._psvs, self)
+        self.pbvs = PhysicalRegistryView(self._pbvs, self)
+        self.tcvs = PhysicalRegistryView(self._tcvs, self) 
+        self.fcvs = PhysicalRegistryView(self._fcvs, self)
+        self.gpvs = PhysicalRegistryView(self._gpvs, self)
+        self.valves = PhysicalRegistryView(self._valves, self)
+
     def _finalize_(self, model):
         super()._finalize_(model)
         self._link_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if isinstance(value, Pipe):
@@ -2639,157 +2687,157 @@ class LinkRegistry(Registry):
         """A list of all gpv names"""
         return self._gpvs
 
-    def pipes(self):
-        """Generator to get all pipes
+    # def pipes(self):
+    #     """Generator to get all pipes
         
-        Yields
-        ------
-        name : str
-            The name of the pipe
-        link : Pipe
-            The pipe object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the pipe
+    #     link : Pipe
+    #         The pipe object    
             
-        """
-        for name in self._pipes:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._pipes:
+    #         yield name, self._data[name]
 
-    def pumps(self):
-        """Generator to get all pumps
+    # def pumps(self):
+    #     """Generator to get all pumps
         
-        Yields
-        ------
-        name : str
-            The name of the pump
-        link : Pump
-            The pump object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the pump
+    #     link : Pump
+    #         The pump object    
             
-        """
-        for name in self._pumps:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._pumps:
+    #         yield name, self._data[name]
 
-    def valves(self):
-        """Generator to get all valves
+    # def valves(self):
+    #     """Generator to get all valves
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : Valve
-            The valve object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : Valve
+    #         The valve object    
             
-        """
-        for name in self._valves:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._valves:
+    #         yield name, self._data[name]
 
-    def head_pumps(self):
-        """Generator to get all head pumps
+    # def head_pumps(self):
+    #     """Generator to get all head pumps
         
-        Yields
-        ------
-        name : str
-            The name of the pump
-        link : HeadPump
-            The pump object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the pump
+    #     link : HeadPump
+    #         The pump object    
             
-        """
-        for name in self._head_pumps:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._head_pumps:
+    #         yield name, self._data[name]
 
-    def power_pumps(self):
-        """Generator to get all power pumps
+    # def power_pumps(self):
+    #     """Generator to get all power pumps
         
-        Yields
-        ------
-        name : str
-            The name of the pump
-        link : PowerPump
-            The pump object    
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the pump
+    #     link : PowerPump
+    #         The pump object    
             
-        """
-        for name in self._power_pumps:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._power_pumps:
+    #         yield name, self._data[name]
 
-    def prvs(self):
-        """Generator to get all PRVs
+    # def prvs(self):
+    #     """Generator to get all PRVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : PRValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : PRValve
+    #         The valve object
             
-        """
-        for name in self._prvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._prvs:
+    #         yield name, self._data[name]
 
-    def psvs(self):
-        """Generator to get all PSVs
+    # def psvs(self):
+    #     """Generator to get all PSVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : PSValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : PSValve
+    #         The valve object
             
-        """
-        for name in self._psvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._psvs:
+    #         yield name, self._data[name]
 
-    def pbvs(self):
-        """Generator to get all PBVs
+    # def pbvs(self):
+    #     """Generator to get all PBVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : PBValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : PBValve
+    #         The valve object
             
-        """
-        for name in self._pbvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._pbvs:
+    #         yield name, self._data[name]
 
-    def tcvs(self):
-        """Generator to get all TCVs
+    # def tcvs(self):
+    #     """Generator to get all TCVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : TCValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : TCValve
+    #         The valve object
             
-        """
-        for name in self._tcvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._tcvs:
+    #         yield name, self._data[name]
 
-    def fcvs(self):
-        """Generator to get all FCVs
+    # def fcvs(self):
+    #     """Generator to get all FCVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : FCValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : FCValve
+    #         The valve object
             
-        """
-        for name in self._fcvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._fcvs:
+    #         yield name, self._data[name]
 
-    def gpvs(self):
-        """Generator to get all GPVs
+    # def gpvs(self):
+    #     """Generator to get all GPVs
         
-        Yields
-        ------
-        name : str
-            The name of the valve
-        link : GPValve
-            The valve object
+    #     Yields
+    #     ------
+    #     name : str
+    #         The name of the valve
+    #     link : GPValve
+    #         The valve object
             
-        """
-        for name in self._gpvs:
-            yield name, self._data[name]
+    #     """
+    #     for name in self._gpvs:
+    #         yield name, self._data[name]
 
