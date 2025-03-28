@@ -1097,17 +1097,17 @@ class TestNetworkIO_GIS(unittest.TestCase):
             wntr.network.write_shapefile(wn, 'temp')
             files = {}
             if wn.num_junctions > 0:
-                files['junctions'] = 'temp_junctions.shp'
+                files['junctions'] = 'temp_junctions'
             if wn.num_tanks > 0:
-                files['tanks'] = 'temp_tanks.shp'
+                files['tanks'] = 'temp_tanks'
             if wn.num_reservoirs > 0:
-                files['reservoirs'] = 'temp_reservoirs.shp'
+                files['reservoirs'] = 'temp_reservoirs'
             if wn.num_tanks > 0:
-                files['pipes'] = 'temp_pipes.shp'
+                files['pipes'] = 'temp_pipes'
             if wn.num_pumps > 0:
-                files['pumps'] = 'temp_pumps.shp'
+                files['pumps'] = 'temp_pumps'
             if wn.num_valves > 0:
-                files['valves'] = 'temp_valves.shp'
+                files['valves'] = 'temp_valves'
             B = self.wntr.network.read_shapefile(files)
             assert(wn._compare(B, level=0))
     
