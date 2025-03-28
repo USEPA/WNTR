@@ -447,7 +447,10 @@ class WaterNetworkGIS:
             prefix = Path(prefix)
             name = prefix.name + '_' + elements
 
-            return str( prefix / name / ( name + ".shp"))
+            directory = prefix / name
+            directory.mkdir(parents=True, exist_ok=True)
+
+            return str( directory / ( name + ".shp"))
 
 
     def write_geojson(self, prefix: str):
