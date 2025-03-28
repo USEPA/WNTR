@@ -338,6 +338,13 @@ class WaterNetworkGIS:
     
     def _read(self, files, index_col='name'):
         
+        for layer,file in files.items():
+            p = Path(file)
+            if p.suffix:
+                continue
+            files[layer] = str(p / (p.name + ".shp"))
+
+
         if 'junctions' in files.keys():
             data = gpd.read_file(files['junctions']).set_index(index_col)
             self.junctions = pd.concat([self.junctions, data])
@@ -445,12 +452,11 @@ class WaterNetworkGIS:
 
         else:
             prefix = Path(prefix)
-            name = prefix.name + '_' + elements
 
-            directory = prefix / name
+            directory = Path(str(prefix) + '_' + elements)
             directory.mkdir(parents=True, exist_ok=True)
 
-            return str( directory / ( name + ".shp"))
+            return str( directory / ( prefix.name + '_' + elements + ".shp"))
 
 
     def write_geojson(self, prefix: str):
