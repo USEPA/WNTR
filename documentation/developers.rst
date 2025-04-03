@@ -117,10 +117,11 @@ Pull requests must meet the following minimum requirements to be included in WNT
 
 Software release
 ------------------
-The software release process requires administrative privileges and creates wheels that are available on PyPI and conda-forge.
+The software release process requires administrative privileges and knowledge about the external services used in the release process.
+The release creates wheels that are available on PyPI and conda-forge.
 A release candidate (with version number rc1, rc2, ...) should be created prior to an official release.
 Changes to WNTR (Steps 1, 2, and 12) can be completed using pull requests, or through direct edits on GitHub.
-Since the release depends on several external services, the instructions often need slight modification between release cycles.
+Since the release depends on external services, the instructions below often need slight modification between release cycles.
 
 1. **Check the version number**: The version number is defined in WNTR/wntr/__init__.py.  
    The version number is denoted <version> in the instructions below and is in X.Y.Z format, where X is the major release number, 
@@ -200,7 +201,7 @@ Since the release depends on several external services, the instructions often n
 
 10. **Render the feedstock recipe on conda-forge**: Create a pull request to https://github.com/conda-forge/wntr-feedstock. Review the checklist, 
     and have the conda-forge-admin rerender the files by adding ``@conda-forge-admin, please rerender`` to the pull request.  
-    Once all tests have passed, merge the pull request. The pull request description will include the following text:: 
+    Once all tests have passed, merge the pull request. The pull request description should include the following checks and message for the conda-forge-admin:: 
 
 	   * [x] Used a personal fork of the feedstock to propose changes
 	   * [x] Bumped the build number (if the version is unchanged)
@@ -225,7 +226,7 @@ Since the release depends on several external services, the instructions often n
 	   conda install -c conda-forge wntr
 	   python -c "import wntr; print(wntr.__version__)"
 
-12. **Add an announcement to the homepage**: Update attention.rst with an 
+12. **Add an announcement to the homepage**: If this is not a release candidate, update attention.rst with an 
     announcement for the new release (update version number).  This will update https://usepa.github.io/WNTR.
 
 Development team
