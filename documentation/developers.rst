@@ -117,8 +117,8 @@ Pull requests must meet the following minimum requirements to be included in WNT
 
 Software release
 ------------------
-The software release process for WNTR creates wheels that are available on PyPI and conda-forge.
-Create a release candidate (with version number rc1, rc2, ...) prior to an official release.
+The software release process requires administrative privileges and creates wheels that are available on PyPI and conda-forge.
+A release candidate (with version number rc1, rc2, ...) should be created prior to an official release.
 Changes to WNTR (Steps 1, 2, and 12) can be completed using pull requests, or through direct edits on GitHub.
 Since the release depends on several external services, the instructions often need slight modification between release cycles.
 
@@ -144,11 +144,9 @@ Since the release depends on several external services, the instructions often n
 4. **Push wheels to PyPI**: The new release will initiate GitHub Actions to run workflows, 
    this includes a step to push wheels to PyPI.
    
-   If the wheels are not pushed to PyPI (because of the PyPI token or some other reason) and a cannot be resolved, 
-   download the artifact from the workflow, unzip the file and use https://github.com/pypa/twine to upload the files to PyPI using the following command 
-   (requires permissions on PyPI)::
-   
-      twine upload
+   If the wheels are not pushed to PyPI (because of the PyPI token or some other reason), 
+   download the artifact from the release (the file is named wntr-<version>.zip), unzip the file and use https://github.com/pypa/twine 
+   to upload the files to PyPI. See instructions at https://twine.readthedocs.io/.
 
 5. **Create a personal fork of the conda-forge wntr-feedstock**: 
    The conda-forge wntr-feedstock is located at https://github.com/conda-forge/wntr-feedstock.
@@ -194,21 +192,21 @@ Since the release depends on several external services, the instructions often n
 	
    f. Commit changes to meta.yml::
    
-	     git commit meta.yaml -m 'update meta.yaml'
+	     git commit -m "update meta.yaml" recipe/meta.yaml
 	  
    g. Push changes to your fork/branch::
 
-	     git push -u <username> <branchname>
+	     git push <username> <branchname>
 
 10. **Render the feedstock recipe on conda-forge**: Create a pull request to https://github.com/conda-forge/wntr-feedstock. Review the checklist, 
     and have the conda-forge-admin rerender the files by adding ``@conda-forge-admin, please rerender`` to the pull request.  
     Once all tests have passed, merge the pull request. The pull request description will include the following text:: 
 
-	   -	[x] Used a personal fork of the feedstock to propose changes
-	   -	[x] Bumped the build number (if the version is unchanged)
-	   -	[x] Reset the build number to 0 (if the version changed)
-	   -	[ ] Re-rendered with the latest conda-smithy 
-	   -	[x] Ensured the license file is being packaged.
+	   * [x] Used a personal fork of the feedstock to propose changes
+	   * [x] Bumped the build number (if the version is unchanged)
+	   * [x] Reset the build number to 0 (if the version changed)
+	   * [ ] Re-rendered with the latest conda-smithy 
+	   * [x] Ensured the license file is being packaged.
 	   @conda-forge-admin, please rerender
 
 11. **Test the release (or release candidate)**: Create a new conda environment with a WNTR supported version of Python and no default packages, 
