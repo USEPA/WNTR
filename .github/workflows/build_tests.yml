@@ -97,12 +97,11 @@ jobs:
           requirements.txt
           wntr/tests/
           examples/
-          wntr/epanet/libepanet/darwin-formula/libomp.rb
         sparse-checkout-cone-mode: false
         fetch-depth: 1
     - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
       run: |
-        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
+        brew reinstall libomp
     - name: Test wntr
       run: |
         pip install -r requirements.txt
@@ -123,7 +122,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
       run: |
-        brew reinstall --build-from-source --formula wntr/epanet/libepanet/darwin-formula/libomp.rb
+        brew reinstall libomp
     - name: Install dependencies
       run: |
         python --version
