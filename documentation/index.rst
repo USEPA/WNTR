@@ -20,7 +20,7 @@ Key Features in WNTR
    :widths: 65 35
    :header-rows: 0
 
-   * - .. _fig-fragility:
+   * - .. _fig_wntr_features:
        .. figure:: figures/wntr_features.png
           :width: 750
      - .. include:: attention.rst
