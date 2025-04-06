@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3547" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "~@Pump-1", "start_node_name": "I-Pump-1", "end_node_name": "O-Pump-1", "initial_status": "Closed", "pump_type": "POWER", "base_speed": 1.0, "power": 111854.9808, "pump_curve_name": null, "speed_pattern_name": null }, "geometry": { "type": "Point", "coordinates": [ 4978752.04, 3915150.0 ] } },
+{ "type": "Feature", "properties": { "name": "~@Pump-2", "start_node_name": "I-Pump-2", "end_node_name": "O-Pump-2", "initial_status": "Open", "pump_type": "POWER", "base_speed": 1.0, "power": 37284.9936, "pump_curve_name": null, "speed_pattern_name": null }, "geometry": { "type": "Point", "coordinates": [ 4979020.21999999973923, 3915339.0 ] } }
+]
+}
