@@ -2373,8 +2373,7 @@ class LinkRegistry(Registry):
         assert isinstance(roughness, (int, float)), "roughness must be a float"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
-        assert isinstance(check_valve, (str, int, bool)), "check_valve must be a Boolean"
-        check_valve = bool(int(check_valve))
+
         
         length = float(length)
         diameter = float(diameter)

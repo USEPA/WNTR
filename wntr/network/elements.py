@@ -7,7 +7,6 @@ import numpy as np
 import sys
 import logging
 import math
-import six
 import copy
 from scipy.optimize import curve_fit, OptimizeWarning
 from warnings import warn
@@ -591,21 +590,25 @@ class Tank(Node):
         return self._overflow
     @overflow.setter
     def overflow(self, value):
-        if isinstance(value, six.string_types):
+        if value == False or value is None:
+            self._overflow = False
+            return
+        if value == True:
+            self._overflow = True
+            return
+        
+        if isinstance(value, str):
             value = value.upper()
+            if value in ["NO", "FALSE", "0"]:
+                self._overflow = False
+                return
             if value in ["YES", "TRUE", "1"]:
-                value = True
-            elif value in ["NO", "FALSE", "0"]:
-                value = False
-            else:
-                raise ValueError('The overflow entry must "YES" or "NO"')
-        elif isinstance(value, int):
-            value = bool(value)
-        elif value is None:
-            value = False
-        elif not isinstance(value, bool):
-            raise ValueError('The overflow entry must be blank, "YES"/"NO", 1/0, of True/False')
-        self._overflow = value
+                self._overflow = True
+                return
+            
+        msg = f'overflow must be a boolean; a string "YES", "NO", "1", "0", "True" or "False"; or None. Received {value} of type {type(value)}'
+        raise ValueError(msg)
+
 
     @property
     def level(self):
@@ -968,7 +971,25 @@ class Pipe(Link):
         return self._check_valve
     @check_valve.setter
     def check_valve(self, value): 
-        self._check_valve = value
+        if value == False or value is None:
+            self._check_valve = False
+            return
+        if value == True:
+            self._check_valve = True
+            return
+
+        if isinstance(value, str):
+            value = value.upper()
+            if value in ["NO", "FALSE", "0"]:
+                self._check_valve = False
+                return
+            if value in ["YES", "TRUE", "1"]:
+                self._check_valve = True
+                return
+      
+        msg = f'check_valve must be a boolean; a string "YES", "NO", "1", "0", "True" or "False"; or None. Received {value} of type {type(value)}'
+        raise ValueError(msg)
+
 
     @property
     def cv(self):
@@ -976,11 +997,11 @@ class Pipe(Link):
         
         Deprecated - use ``check_valve`` instead."""
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        return self._check_valve
+        return self.check_valve
     @cv.setter
     def cv(self, value): 
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        self._check_valve = value
+        self.check_valve = value
 
     @property
     def bulk_coeff(self):
