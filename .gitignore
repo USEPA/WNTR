@@ -79,6 +79,8 @@ temp*
 *.html
 *.pickle
 *.xlsx
+*.out
+*.rpt
 
 examples/*.inp
 wntr/tests/*.png

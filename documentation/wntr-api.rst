@@ -26,4 +26,5 @@ API documentation
         wntr.network
         wntr.scenario
         wntr.sim
+        wntr.stormwater
         wntr.utils
