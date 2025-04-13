@@ -320,7 +320,7 @@ class TestNetworkMethods(unittest.TestCase):
         valve_list.sort()
         self.assertEqual(valve_list, ["v1"])
         for name, link in wn.links():
-            self.assertEqual(name, link._link_name)
+            self.assertEqual(name, link._name)
 
     def test_1_pt_head_curve(self):
         q2 = 10.0
