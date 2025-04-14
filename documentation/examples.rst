@@ -50,6 +50,8 @@ associated software available at https://jupyter.org. These demonstrations inclu
   service availability and population impacted by low pressure conditions.
 * `Geospatial demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/geospatial_demo.ipynb>`_: 
   This demonstration uses GIS data to quantify potential water service disruptions from pipes damaged in a landslide.
+* `Model development demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/model_development.ipynb>`_: 
+  This demonstration creates a water network model using imperfect geospatial data of a water distribution system.
   
 To open a Jupyter Notebook example (in this case, the basic demo), run the following command::
 	
