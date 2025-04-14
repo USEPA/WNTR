@@ -2,9 +2,12 @@
 The wntr.gis.network module contains methods to convert between water network 
 models and GIS formatted data
 """
-
+from __future__ import annotations
 import pandas as pd
 import numpy as np
+
+from pathlib import Path
+from typing import Literal
 
 try:
     from shapely.geometry import LineString, Point
@@ -335,6 +338,13 @@ class WaterNetworkGIS:
     
     def _read(self, files, index_col='name'):
         
+        for layer,file in files.items():
+            p = Path(file)
+            if p.suffix:
+                continue
+            files[layer] = str(p / (p.name + ".shp"))
+
+
         if 'junctions' in files.keys():
             data = gpd.read_file(files['junctions']).set_index(index_col)
             self.junctions = pd.concat([self.junctions, data])
@@ -411,34 +421,43 @@ class WaterNetworkGIS:
 
         """
         
-        if driver is None or driver == "":
-            extension = ""
-        else:
-            extension = "." + driver.lower()
-        
         if len(self.junctions) > 0:
-            filename = prefix + "_junctions" + extension
+            filename = self._get_filename(driver,prefix,'junctions')
             self.junctions.to_file(filename, driver=driver)
                 
         if len(self.tanks) > 0:
-            filename = prefix + "_tanks" + extension
+            filename = self._get_filename(driver,prefix,'tanks')
             self.tanks.to_file(filename, driver=driver)
             
         if len(self.reservoirs) > 0:
-            filename = prefix + "_reservoirs" + extension
+            filename = self._get_filename(driver,prefix,'reservoirs')
             self.reservoirs.to_file(filename, driver=driver)
             
         if len(self.pipes) > 0:
-            filename = prefix + "_pipes" + extension
+            filename = self._get_filename(driver,prefix,'pipes')
             self.pipes.to_file(filename, driver=driver)
             
         if len(self.pumps) > 0:
-            filename = prefix + "_pumps" + extension
+            filename = self._get_filename(driver,prefix,'pumps')
             self.pumps.to_file(filename, driver=driver)
             
         if len(self.valves) > 0:
-            filename = prefix + "_valves" + extension
+            filename = self._get_filename(driver,prefix,'valves')
             self.valves.to_file(filename, driver=driver)
+
+    def _get_filename(self, driver: Literal['GeoJSON'|'shp']|None, prefix: str|Path, elements:str) -> str:
+        
+        if driver:
+            return str(prefix) + "_" + elements + "." + driver.lower()
+
+        else:
+            prefix = Path(prefix)
+
+            directory = Path(str(prefix) + '_' + elements)
+            directory.mkdir(parents=True, exist_ok=True)
+
+            return str( directory / ( prefix.name + '_' + elements + ".shp"))
+
 
     def write_geojson(self, prefix: str):
         """
