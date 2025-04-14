@@ -52,6 +52,8 @@ associated software available at https://jupyter.org. These demonstrations inclu
   This demonstration uses GIS data to quantify potential water service disruptions from pipes damaged in a landslide.
 * `Salt water intrusion demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/salt_water_intrusion_demo.ipynb>`: This demonstration uses storm surge raster data to estimate salt intrusion 
   into a system after a hurricane.
+* `Model development demo <https://github.com/USEPA/WNTR/blob/main/examples/demos/model_development.ipynb>`_: 
+  This demonstration creates a water network model using imperfect geospatial data of a water distribution system.
   
 To open a Jupyter Notebook example (in this case, the basic demo), run the following command::
 	
