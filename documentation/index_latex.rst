@@ -22,6 +22,7 @@ WNTR documentation
    networkxgraph
    layers
    options
+   libraries
    hydraulics
    waterquality
    waterquality_msx
