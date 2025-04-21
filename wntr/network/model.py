@@ -6,6 +6,7 @@ import logging
 from collections import OrderedDict
 from typing import List, Union
 from warnings import warn
+from types import NoneType
 
 import networkx as nx
 import numpy as np
@@ -2373,6 +2374,7 @@ class LinkRegistry(Registry):
         assert isinstance(roughness, (int, float)), "roughness must be a float"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
+        assert isinstance(check_valve, (int, str, LinkStatus, NoneType)), "initial_status must be an int, string, LinkStatus, or None type"
 
         
         length = float(length)
