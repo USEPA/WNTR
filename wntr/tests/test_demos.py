@@ -9,9 +9,9 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 kernel_name = 'python%d' % sys.version_info[0]
 testdir = dirname(abspath(str(__file__)))
-examplesdir = join(testdir, '..', '..', 'examples', 'demos')
+examplesdir = join(testdir, '..', '..', 'examples')
 
-class TestExamples(unittest.TestCase):
+class TestDemos(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         import wntr
@@ -23,7 +23,7 @@ class TestExamples(unittest.TestCase):
         pass
     
     @pytest.mark.time_consuming
-    def test_that_examples_run(self):
+    def test_that_demos_run(self):
         cwd = os.getcwd()
         os.chdir(examplesdir)
         example_files = [
@@ -60,7 +60,7 @@ class TestExamples(unittest.TestCase):
                 
         os.chdir(cwd)
         if len(failed_examples) > 0:
-            print("failed examples: {0}".format(failed_examples))
+            print("failed demos: {0}".format(failed_examples))
         self.assertEqual(flag, 0)
 
 if __name__ == "__main__":
