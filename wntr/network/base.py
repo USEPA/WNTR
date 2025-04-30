@@ -423,6 +423,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             elif isinstance(status, str): status = LinkStatus[status]
             else: status = LinkStatus(int(status))
         self._initial_status = status
+        self._user_status = status
         
     @property
     def initial_setting(self):
