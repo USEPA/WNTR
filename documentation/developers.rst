@@ -199,9 +199,9 @@ Since the release depends on external services, the instructions below often nee
 
 	     git push <username> <branchname>
 
-10. **Render the feedstock recipe on conda-forge**: Create a pull request to https://github.com/conda-forge/wntr-feedstock. Review the checklist, 
-    and have the conda-forge-admin rerender the files by adding ``@conda-forge-admin, please rerender`` to the pull request.  
-    Once all tests have passed, merge the pull request. The pull request description should include the following checks and message for the conda-forge-admin:: 
+8. **Render the feedstock recipe on conda-forge**: Create a pull request to https://github.com/conda-forge/wntr-feedstock. Review the checklist, 
+   and have the conda-forge-admin rerender the files by adding ``@conda-forge-admin, please rerender`` to the pull request.  
+   Once all tests have passed, merge the pull request. The pull request description should include the following checks and message for the conda-forge-admin:: 
 
 	   * [x] Used a personal fork of the feedstock to propose changes
 	   * [x] Bumped the build number (if the version is unchanged)
@@ -210,23 +210,23 @@ Since the release depends on external services, the instructions below often nee
 	   * [x] Ensured the license file is being packaged.
 	   @conda-forge-admin, please rerender
 
-11. **Test the release (or release candidate)**: Create a new conda environment with a WNTR supported version of Python and no default packages, 
-    and then install WNTR and then print the version number (pytest can also be run locally to further test the release).
-    To test the PyPI installation::
+9. **Test the release (or release candidate)**: Create a new conda environment with a WNTR supported version of Python and no default packages, 
+   and then install WNTR and then print the version number (pytest can also be run locally to further test the release).
+   To test the PyPI installation::
     
 	   conda create --name test1 python=3.12 --no-default-packages
 	   conda activate test1
 	   pip install wntr
 	   python -c "import wntr; print(wntr.__version__)"
     
-    To test the conda installation::
+   To test the conda installation::
     
 	   conda create --name test2 python=3.12 --no-default-packages
 	   conda activate test2
 	   conda install -c conda-forge wntr
 	   python -c "import wntr; print(wntr.__version__)"
 
-12. **Add an announcement to the homepage**: If this is not a release candidate, update attention.rst with an 
+10. **Add an announcement to the homepage**: If this is not a release candidate, update attention.rst with an 
     announcement for the new release (update version number).  This will update https://usepa.github.io/WNTR.
 
 Development team
