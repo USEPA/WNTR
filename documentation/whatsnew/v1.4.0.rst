@@ -1,0 +1,9 @@
+Version 1.4.0 (main)
+---------------------------------------------------
+WNTR version 1.4.0 includes the following updates:
+
+* Updated binaries with the lates msx build
+* Added a demand pattern library
+* Added the salt water intrusion tutorial
+* Added the landslide analysis tutorial
+* Minor revisions to Jupyter Notebooks and documentation

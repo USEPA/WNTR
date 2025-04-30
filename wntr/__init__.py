@@ -6,11 +6,12 @@ from wntr import sim
 from wntr import scenario
 from wntr import graphics
 from wntr import gis
+from wntr import library
 from wntr import utils
 from wntr import stormwater
 from wntr import msx
 
-__version__ = '1.3.2'
+__version__ = '1.4.0'
 
 __copyright__ = """Copyright 2023-2025 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 

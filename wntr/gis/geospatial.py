@@ -5,7 +5,10 @@ intersects with polygons.
 
 import pandas as pd
 import numpy as np
-
+import matplotlib.pylab as plt
+from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, squareform
+from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
 
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
@@ -224,7 +227,10 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         if B_value is not None:
             background[B_value] = background_value
         B = pd.concat([B, background])
-        
+    
+    B_original_index_name = B.index.name
+    B.index.name = None
+
     intersects = gpd.sjoin(A, B, predicate='intersects')
     intersects.index.name = '_tmp_index_name' # set a temp index name for grouping
     
@@ -288,6 +294,9 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         
     stats.index.name = None
     
+    # Restore B's index
+    B.index.name = B_original_index_name
+    
     return stats
 
 
@@ -335,3 +344,144 @@ def sample_raster(A, filepath, bands=1):
     values = pd.Series(values, index=A.index)
     
     return values
+
+
+def connect_lines(lines, threshold, plot=False):
+    """
+    Connect lines by identifying start and end nodes that are within a 
+    threshold distance
+
+    Parameters
+    ----------
+    lines : gpd.GeoDataFrame
+        GeoDataFrame with LineString geometry
+    tolerance : float
+        Maximum distance between line endpoints, used to define connecting 
+        Point geometry
+    plot : bool
+        Boolean indicating if a plot is created for the dendogram, and original and connected lines
+        
+    Returns
+    -------
+    Tuple[line GeoDataFrame, node GeoDataFrame]
+        * line GeoDataFrame contains LineString geometry, start_node_name, and 
+          end_node_name, along with original columns in lines
+        * node GeoDataFrame contains connecting Point geometry and node names
+    """
+    if not has_shapely or not has_geopandas:
+        raise ModuleNotFoundError('shapley and geopandas are required')
+    
+    original_lines = lines
+    lines = lines.copy()
+
+    # Create start and end node name and Point geometry for each line
+    nodes = []
+    geometry = []
+    lines['start_node_name'] = None #create new columns
+    lines['end_node_name'] = None
+    j = 0
+    for i, line in lines.iterrows(): # loop through every line
+        try:
+            geom = line.geometry.geoms[0]
+        except:
+            geom = line.geometry
+        
+        geometry.append(Point([geom.coords[0][0], geom.coords[0][1]])) 
+        nodes.append({'Line': i, 'Node': j}) #node list holds the line ID
+        #unique number for each start node and end node for each line 
+        lines.loc[i,'start_node_name'] = j
+        j = j+1
+            
+        geometry.append(Point([geom.coords[-1][0], geom.coords[-1][1]]))
+        nodes.append({'Line': i, 'Node': j})
+        lines.loc[i,'end_node_name'] = j
+        j = j+1
+            
+    nodes = gpd.GeoDataFrame(nodes, geometry=geometry)
+    nodes.set_crs(lines.crs, inplace=True)
+    
+    # Create a distance matrix
+    points = nodes['geometry']
+    coords = points.apply(lambda geom: (geom.x, geom.y)).tolist()
+    condensed = pdist(coords)
+    D = squareform(condensed)
+    D = pd.DataFrame(D, index=nodes.index, columns=nodes.index)
+    
+    # Several options exist for linkage and fcluster below 
+    # currently using ward/euclidean/distance
+    
+    # Compute a linkage model
+    Z = linkage(condensed, method='ward', metric='euclidean', optimal_ordering=True)
+    
+    # Form clusters
+    #clusters = fcluster(Z, threshold, criterion='inconsistent', depth=2)
+    clusters = fcluster(Z, threshold, criterion='distance')
+    #clusters = fcluster(Z, threshold, criterion='monocrit')
+    #clusters = fcluster(Z, threshold, criterion='maxclust')
+    #clusters = fcluster(Z, threshold, criterion='maxclust_monocrit')
+    clusters = pd.Series(clusters, index=nodes.index)
+    nodes['supernode'] = clusters.copy()
+    
+    # Update lines GeoDataFrame with start and end supernode names
+    map_node_to_supernode = nodes['supernode']
+    lines['start_node_name'] = map_node_to_supernode[lines['start_node_name']].values
+    lines['end_node_name'] = map_node_to_supernode[lines['end_node_name']].values
+    
+    # Remove lines with the same start and end node name
+    lines = lines.loc[~(lines['start_node_name'] == lines['end_node_name']),:]
+    
+    # Create a nodes GeoDataFrame with centroid of each supernode
+    supernode_name = []
+    supernode_geom = []
+    for name, group in nodes.groupby('supernode'):
+        supernode_name.append(name)
+        supernode_geom.append(group.dissolve().centroid[0])
+    nodes = gpd.GeoDataFrame({'Node': supernode_name}, geometry=supernode_geom)
+    nodes.set_index('Node', inplace=True)
+    nodes.index.name = None
+    nodes.crs = lines.crs
+    
+    # Convert names to string
+    nodes.index = nodes.index.astype(str)
+    lines['start_node_name'] = lines['start_node_name'].astype(str)
+    lines['end_node_name'] = lines['end_node_name'].astype(str)
+    
+    # Add start and end node Points to LineStrings
+    start_coords = nodes.loc[lines['start_node_name']]
+    end_coords = nodes.loc[lines['end_node_name']]
+    for i, (line_name, row) in enumerate(lines.iterrows()):
+        line = row['geometry']
+        l_coords = list(line.coords)
+        start_point = nodes.loc[row['start_node_name'], 'geometry']
+        end_point = nodes.loc[row['end_node_name'], 'geometry']
+        if start_point.coords[0] != l_coords[0]:
+            l_coords.insert(0, start_point.coords[0])
+        if end_point.coords[0] != l_coords[-1]:
+            l_coords.append(end_point.coords[0])
+        lines.loc[line_name, 'geometry'] = LineString(l_coords)
+    
+    if plot:
+  
+        plt.figure(figsize=(10, 5))
+        dendro = dendrogram(Z)
+
+        #unique_clusters = np.unique(clusters)
+        #colors = plt.cm.get_cmap('tab10', len(unique_clusters))  # Use a colormap with enough colors
+        #color_dict = {cluster: colors(i) for i, cluster in enumerate(unique_clusters)}
+        #dendro = dendrogram(Z, color_threshold=threshold, link_color_func=lambda k: color_dict[k])
+
+        plt.title('Hierarchical Cluster Dendrogram')
+        plt.xlabel('Data Point Indexes')
+        plt.ylabel('Distance')
+        
+        plt.figure()
+        ax = plt.gca()
+        ax = original_lines.plot(ax=ax, color='r', label='Disconnected lines')
+        ax = lines.plot(ax=ax, color='k', linewidth=6, alpha=0.35, label='Connected lines')
+        ax = nodes.plot(ax=ax, color='k', label='Connected nodes')
+        ax.legend()
+        bounds = ax.axis('equal')
+        plt.tight_layout()
+        plt.axis('off')
+    
+    return lines, nodes

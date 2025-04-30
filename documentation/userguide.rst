@@ -61,6 +61,7 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    networkxgraph
    layers
    options
+   libraries
 
 .. toctree::
    :maxdepth: 1

@@ -653,9 +653,16 @@ class WaterNetworkModel(AbstractModel):
         ----------
         name : str
            control object name.
-        control_object : Control or Rule
-            Control or Rule object.
+        control_object : Control/Rule object or string
+            Control object, Rule object, or string with the control. The string
+            must be written in EPANET INP file format and SI units 
+            (i.e., "LINK Pump-1 OPEN IF NODE Tank-1 BELOW 10")
         """
+        if isinstance(control_object, str):
+            line = control_object
+            flow_units = wntr.epanet.util.FlowUnits['SI']
+            control_object = wntr.epanet.io._read_control_line(line, self, flow_units, name)
+        
         if name in self._controls:
             raise ValueError(
                 "The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control."
@@ -2373,8 +2380,8 @@ class LinkRegistry(Registry):
         assert isinstance(roughness, (int, float)), "roughness must be a float"
         assert isinstance(minor_loss, (int, float)), "minor_loss must be a float"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
-        assert isinstance(check_valve, (str, int, bool)), "check_valve must be a Boolean"
-        check_valve = bool(int(check_valve))
+        assert isinstance(check_valve, (int, str, LinkStatus, type(None))), "initial_status must be an int, string, LinkStatus, or None type"
+
         
         length = float(length)
         diameter = float(diameter)

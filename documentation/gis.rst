@@ -121,13 +121,13 @@ For example, the junctions GeoDataFrame contains the following information:
     :skipif: gpd is None
 
     >>> print(wn_gis.junctions.head())
-          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
-    name                                                                                                   
-    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
-    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
-    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
-    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
-    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category       geometry
+    name                                                                                       
+    10          0.000              1    216.408        5.000e-04            None  POINT (20 70)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30 70)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50 70)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70 70)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30 40)
 
 Each GeoDataFrame contains attributes and geometry:
 
@@ -292,19 +292,19 @@ The following example reads a GeoJSON file and overrides the CRS to change it fr
     >>> print(hydrant_data.crs) # doctest: +SKIP
     EPSG:4326
     >>> print(hydrant_data)
-       demand                   geometry
-    0    5000  POINT (48.20000 37.20000)
-    1    1500  POINT (71.80000 68.30000)
-    2    8000  POINT (51.20000 71.10000)
+       demand           geometry
+    0    5000  POINT (48.2 37.2)
+    1    1500  POINT (71.8 68.3)
+    2    8000  POINT (51.2 71.1)
 	
     >>> hydrant_data = hydrant_data.set_crs('EPSG:3857', allow_override=True)
     >>> print(hydrant_data.crs) # doctest: +SKIP
     EPSG:3857 
     >>> print(hydrant_data)
-       demand               geometry
-    0    5000  POINT (48.200 37.200)
-    1    1500  POINT (71.800 68.300)
-    2    8000  POINT (51.200 71.100)
+       demand           geometry
+    0    5000  POINT (48.2 37.2)
+    1    1500  POINT (71.8 68.3)
+    2    8000  POINT (51.2 71.1)
 	
 .. doctest::
     :hide:
@@ -343,13 +343,13 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
 	
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
     >>> print(wn_gis.junctions.head())
-          base_demand demand_pattern  elevation  initial_quality demand_category                   geometry
-    name                                                                                                   
-    10          0.000              1    216.408        5.000e-04            None  POINT (20.00000 70.00000)
-    11          0.009              1    216.408        5.000e-04            None  POINT (30.00000 70.00000)
-    12          0.009              1    213.360        5.000e-04            None  POINT (50.00000 70.00000)
-    13          0.006              1    211.836        5.000e-04            None  POINT (70.00000 70.00000)
-    21          0.009              1    213.360        5.000e-04            None  POINT (30.00000 40.00000)
+          base_demand demand_pattern  elevation  initial_quality demand_category       geometry
+    name                                                                                       
+    10          0.000              1    216.408        5.000e-04            None  POINT (20 70)
+    11          0.009              1    216.408        5.000e-04            None  POINT (30 70)
+    12          0.009              1    213.360        5.000e-04            None  POINT (50 70)
+    13          0.006              1    211.836        5.000e-04            None  POINT (70 70)
+    21          0.009              1    213.360        5.000e-04            None  POINT (30 40)
 
     >>> wn_gis.to_crs('EPSG:3857')
     >>> print(wn_gis.junctions.head())
@@ -357,9 +357,9 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
     name                                                                                                          
     10          0.000              1    216.408        5.000e-04            None  POINT (2226389.816 11068715.659)
     11          0.009              1    216.408        5.000e-04            None  POINT (3339584.724 11068715.659)
-    12          0.009              1    213.360        5.000e-04            None  POINT (5565974.540 11068715.659)
+    12          0.009              1    213.360        5.000e-04            None   POINT (5565974.54 11068715.659)
     13          0.006              1    211.836        5.000e-04            None  POINT (7792364.356 11068715.659)
-    21          0.009              1    213.360        5.000e-04            None   POINT (3339584.724 4865942.280)
+    21          0.009              1    213.360        5.000e-04            None    POINT (3339584.724 4865942.28)
 
 Snap point geometries to the nearest point or line
 ----------------------------------------------------
@@ -404,10 +404,10 @@ The GeoPandas ``read_file`` method is used to read the GeoJSON file into a GeoDa
 	
     >>> hydrant_data = gpd.read_file('data/Net1_hydrant_data.geojson') # doctest: +SKIP
     >>> print(hydrant_data)
-       demand                   geometry
-    0    5000  POINT (48.20000 37.20000)
-    1    1500  POINT (71.80000 68.30000)
-    2    8000  POINT (51.20000 71.10000)
+       demand           geometry
+    0    5000  POINT (48.2 37.2)
+    1    1500  POINT (71.8 68.3)
+    2    8000  POINT (51.2 71.1)
 
 The following example uses the function :class:`~wntr.gis.snap` to snap hydrant locations to the nearest junction 
 within a tolerance of 5.0 units (the tolerance is in the units of the GIS coordinate system).
@@ -417,10 +417,10 @@ within a tolerance of 5.0 units (the tolerance is in the units of the GIS coordi
 
     >>> snapped_to_junctions = wntr.gis.snap(hydrant_data, wn_gis.junctions, tolerance=5.0)
     >>> print(snapped_to_junctions)
-      node  snap_distance                   geometry
-    0   22          3.329  POINT (50.00000 40.00000)
-    1   13          2.476  POINT (70.00000 70.00000)
-    2   12          1.628  POINT (50.00000 70.00000)
+      node  snap_distance       geometry
+    0   22          3.329  POINT (50 40)
+    1   13          2.476  POINT (70 70)
+    2   12          1.628  POINT (50 70)
 
 The data, water network model, and snapped points can be plotted as follows. The resulting :numref:`fig-snap-points` illustrates 
 the hydrants snapped to the junctions in Net1.
@@ -457,16 +457,16 @@ Note that the tolerance is increased to ensure all junctions are assigned a hydr
 
     >>> snapped_to_hydrants = wntr.gis.snap(wn_gis.junctions, hydrant_data, tolerance=100.0)
     >>> print(snapped_to_hydrants)
-        node  snap_distance                   geometry
-    10     2         31.219  POINT (51.20000 71.10000)
-    11     2         21.229  POINT (51.20000 71.10000)
-    12     2          1.628  POINT (51.20000 71.10000)
-    13     1          2.476  POINT (71.80000 68.30000)
-    21     0         18.414  POINT (48.20000 37.20000)
-    22     0          3.329  POINT (48.20000 37.20000)
-    23     0         21.979  POINT (48.20000 37.20000)
-    31     0         32.727  POINT (48.20000 37.20000)
-    32     0         27.259  POINT (48.20000 37.20000)
+        node  snap_distance           geometry
+    10     2         31.219  POINT (51.2 71.1)
+    11     2         21.229  POINT (51.2 71.1)
+    12     2          1.628  POINT (51.2 71.1)
+    13     1          2.476  POINT (71.8 68.3)
+    21     0         18.414  POINT (48.2 37.2)
+    22     0          3.329  POINT (48.2 37.2)
+    23     0         21.979  POINT (48.2 37.2)
+    31     0         32.727  POINT (48.2 37.2)
+    32     0         27.259  POINT (48.2 37.2)
 
 Snap valves to pipes
 ^^^^^^^^^^^^^^^^^^^^^
@@ -480,10 +480,10 @@ The example dataset of valve locations is a GeoDataFrame with a `geometry` colum
 
     >>> valve_data = gpd.read_file('data/Net1_valve_data.geojson') # doctest: +SKIP
     >>> print(valve_data)
-                        geometry
-    0  POINT (56.50000 41.50000)
-    1  POINT (32.10000 67.60000)
-    2  POINT (52.70000 86.30000)
+                geometry
+    0  POINT (56.5 41.5)
+    1  POINT (32.1 67.6)
+    2  POINT (52.7 86.3)
 	
 The following example uses the function :class:`~wntr.gis.snap` to snap valve locations to the nearest pipe 
 within a tolerance of 5.0 degrees.
@@ -493,10 +493,10 @@ within a tolerance of 5.0 degrees.
 
     >>> snapped_to_pipes = wntr.gis.snap(valve_data, wn_gis.pipes, tolerance=5.0)
     >>> print(snapped_to_pipes)
-      link node  snap_distance  line_position                   geometry
-    0   22   22            1.5          0.325  POINT (56.50000 40.00000)
-    1  111   11            2.1          0.080  POINT (30.00000 67.60000)
-    2  110    2            2.7          0.185  POINT (50.00000 86.30000)
+      link node  snap_distance  line_position         geometry
+    0   22   22            1.5          0.325  POINT (56.5 40)
+    1  111   11            2.1          0.080  POINT (30 67.6)
+    2  110    2            2.7          0.185  POINT (50 86.3)
 	
 The snapped locations can be used to define a :ref:`valvelayer` and then create network segments.
 
@@ -583,11 +583,11 @@ that contains ``shapely.geometry.LineString`` geometries and a `Pr` column which
 
     >>> earthquake_data = gpd.read_file('data/Net1_earthquake_data.geojson') # doctest: +SKIP
     >>> print(earthquake_data)
-         Pr                                           geometry
-    0  0.50  LINESTRING (36.00000 2.00000, 44.00000 44.0000...
-    1  0.75  LINESTRING (42.00000 2.00000, 45.00000 27.0000...
-    2  0.90  LINESTRING (40.00000 2.00000, 50.00000 50.0000...
-    3  0.25  LINESTRING (30.00000 2.00000, 35.00000 30.0000...
+         Pr                                geometry
+    0  0.50         LINESTRING (36 2, 44 44, 85 85)
+    1  0.75  LINESTRING (42 2, 45 27, 38 56, 30 85)
+    2  0.90         LINESTRING (40 2, 50 50, 60 85)
+    3  0.25  LINESTRING (30 2, 35 30, 40 50, 60 80)
 	
 The following example uses the function :class:`~wntr.gis.intersect` to assign earthquake probability to pipes. 
 
@@ -666,7 +666,7 @@ is a GeoDataFrame with a `geometry` column that contains ``shapely.geometry.Line
     >>> landslide_data = gpd.read_file('data/Net1_landslide_data.geojson') # doctest: +SKIP
     >>> print(landslide_data)
          Pr                                           geometry
-    0  0.50  POLYGON ((28.84615 22.23077, 28.76040 22.05079...
+    0  0.50  POLYGON ((28.84615 22.23077, 28.7604 22.05079,...
     1  0.75  POLYGON ((40.00708 1.83192, 33.00708 84.83192,...
     2  0.90  POLYGON ((58.05971 44.48507, 58.11776 44.67615...
 	
@@ -755,10 +755,10 @@ columns that store the mean income, the mean age, and the population within each
     >>> print(demographic_data)
        mean_income  mean_age  population                                           geometry
     0      63326.0      35.0      3362.0  POLYGON ((41.67813 82.75023, 41.98596 60.85779...
-    1      78245.0      31.0      5618.0  POLYGON ((23.21084 40.19160, 22.99063 27.71777...
-    2      91452.0      40.0      5650.0  POLYGON ((22.99063 27.71777, 61.93720 16.36165...
-    3      54040.0      39.0      5546.0  POLYGON ((61.93720 16.36165, 22.99063 27.71777...
-    4      26135.0      38.0      5968.0  POLYGON ((61.93720 16.36165, 64.04456 22.10119...
+    1      78245.0      31.0      5618.0  POLYGON ((23.21084 40.1916, 22.99063 27.71777,...
+    2      91452.0      40.0      5650.0  POLYGON ((22.99063 27.71777, 61.9372 16.36165,...
+    3      54040.0      39.0      5546.0  POLYGON ((61.9372 16.36165, 22.99063 27.71777,...
+    4      26135.0      38.0      5968.0  POLYGON ((61.9372 16.36165, 64.04456 22.10119,...
     5      57620.0      31.0      4315.0  POLYGON ((44.48497 87.21487, 79.81144 71.92669...
     6      44871.0      54.0      4547.0  POLYGON ((64.04456 22.10119, 51.72994 45.92347...
     7      69067.0      55.0      2541.0  POLYGON ((46.01047 99.15725, 46.40654 99.33204...
@@ -929,3 +929,87 @@ sampled from the raster file.
    :alt: Net1 with elevations sampled from raster.
 
    Net1 with elevations sampled from raster.
+
+Connect lines
+--------------------------------------
+
+The :class:`~wntr.gis.connect_lines` function can be used connect line geometries that do not connect.
+This is useful, for example, when utility pipe data does not perfectly connect at line endpoints and junction coordinates are unknown.
+The :class:`~wntr.gis.connect_lines` function takes a GeoDataFrame with LineString geometries and a distance threshold and returns
+a line GeoDataFrame with connected LineStrings and 
+a node GeoDataFrame with Point coordinates.
+
+Connect pipe data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A WaterNetworkModel requires pipe data with `start_node_name` and `end_node_name` attributes.  
+These node names refer to Junctions, Tanks, or Reservoirs.
+When this connectivity information is not known (i.e., the pipe data has no `start_node_name` and `end_node_name`), the 
+:class:`~wntr.gis.connect_lines` function can be used to connect line end points with a user specified distance threshold.
+
+The following example creates disconnected pipe data using Net1, and then generates the data needed to create a 
+connected WaterNetworkModel.  This assumes that all start and end nodes are Junctions.
+
+.. doctest::
+    :skipif: gpd is None
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:2236')
+    >>> original_pipes = wn_gis.pipes
+
+.. doctest::
+    :skipif: gpd is None
+    :hide:
+	
+    >>> np.random.seed(123)
+    >>> disconnected_pipes = original_pipes[['diameter', 'length', 'geometry']]
+    >>> for i, line in disconnected_pipes.iterrows():
+    ...     angle = np.random.uniform(-5,5,1)
+    ...     geom = gpd.GeoSeries(line['geometry'])
+    ...     geom = geom.rotate(angle)
+    ...     geom = geom.scale(0.9, 0.9)
+    ...     disconnected_pipes.loc[i,'geometry'] = geom[0]
+
+To create the disconnected pipe data in this example, the original pipes were rotated (+/- 5 degrees) and scaled (90% in the x and y direction).
+The disconnected pipe data is missing start and end node names, and end points do not connect.
+
+Connect the disconnected pipes using a distance threshold of 5 ft (same distance units as the CRS)
+
+.. doctest::
+    :skipif: gpd is None
+
+    >>> distance_threshold = 5 # ft
+    >>> pipes, junctions = wntr.gis.connect_lines(disconnected_pipes, distance_threshold)
+
+:numref:`fig-connect-lines` illustrates the original pipe data, the disconnected pipe data, 
+and the connected pipe and junction data.
+
+    >>> ax = disconnected_pipes.plot(ax=ax, color='r', label='Disconnected pipe data')
+    >>> ax = pipes.plot(ax=ax, color='k', linewidth=6, alpha=0.35, label='Connected pipe data')
+    >>> ax = junctions.plot(ax=ax, color='k', label='Connected junctions')
+    >>> legend = ax.legend()
+
+.. doctest::
+    :skipif: gpd is None
+    :hide:
+    
+    >>> bounds = ax.axis('equal')
+    >>> plt.tight_layout()
+    >>> temp = plt.axis('off')
+    >>> plt.savefig('connect_lines.png', dpi=300)
+    >>> plt.close()
+
+.. _fig-connect-lines:
+.. figure:: figures/connect_lines.png
+   :width: 640
+   :alt: Connected pipes and junctions from a disconnected dataset.
+
+   Connected pipes and junctions from a disconnected dataset
+   
+Use the junction and pipe data to create a basic WaterNetworkModel (without tanks, reservoirs, pumps, or valves).
+
+.. doctest::
+    :skipif: gpd is None
+    
+    >>> gis_data = wntr.gis.WaterNetworkGIS({"junctions": junctions, "pipes": pipes})
+    >>> wn = wntr.network.from_gis(gis_data)
+	

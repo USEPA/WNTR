@@ -253,8 +253,7 @@ Building MSX models
 -------------------
 
 The following two examples illustrate how to build :class:`~wntr.msx.model.MsxModel` objects in WNTR.
-There is also a jupyter notebook in the examples/demos source directory called multisource-cl-decay.ipynb
-that demonstrates this process with Net3.
+See :ref:`jupyter_notebooks` for an example on multispecies analysis.
 
 .. _msx_example1_lead:
 
