@@ -30,8 +30,10 @@ Key Features in WNTR
    :hidden:
 
    userguide
+   installation
    wntr-api
    users
+   S-WNTR <stormwater>
 
 .. include:: citing_wntr.rst
 
