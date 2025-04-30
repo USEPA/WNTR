@@ -208,7 +208,7 @@ Pressure differences are very small in this example.
 
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
-   :width: 640
+   :width: 535
    :alt: Skeletonization example
    
    Pressure differences between the original and skeletonized Net6.
