@@ -10,7 +10,7 @@ Installation
 
 WNTR requires 64-bit Python (tested on versions 3.9, 3.10, 3.11, and 3.12) along with several 
 Python package dependencies. 
-See :ref:`requirements` and :ref:`optional_dependencies` for more information.
+See :ref:`requirements` for more information.
 WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
@@ -47,6 +47,7 @@ following commands in a terminal, command line, or PowerShell prompt.
 .. |anaconda downloads| image:: https://anaconda.org/conda-forge/wntr/badges/downloads.svg
 .. _anaconda downloads: https://anaconda.org/conda-forge/wntr
 
+	
 .. _detailed_instructions:
 
 Detailed instructions
@@ -255,7 +256,9 @@ Requirements
 -------------
 
 Requirements for WNTR include 64-bit Python (tested on versions 3.9, 3.10, 3.11, and 3.12) along with several Python packages. 
-Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. The following Python packages are required:
+Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. 
+
+**The following Python packages are required**:
 
 * NumPy :cite:p:`vacv11`: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
@@ -269,14 +272,7 @@ Users should have experience using Python (https://www.python.org/), including t
   http://matplotlib.org/
 * Setuptools: used to install the WNTR package, https://setuptools.pypa.io/
   
-These packages are included in the Anaconda Python distribution.
- 
-.. _optional_dependencies:
-
-Optional dependencies
--------------------------
-
-The following Python packages are optional:
+**The following Python packages are optional**:
 
 * plotly :cite:p:`sphc16`: used to produce interactive scalable graphics, 
   https://plot.ly/
@@ -292,39 +288,11 @@ The following Python packages are optional:
   https://rtree.readthedocs.io/
 * openpyxl :cite:p:`gacl18`: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
+* Additional optional packages listed in `requirements.txt <https://github.com/USEPA/WNTR/blob/main/requirements.txt>`_ are used to build documentation and run tests.
 
-All of these packages **except geopandas** are included in the Anaconda Python distribution.
-To install optional dependencies, run::
+All of these packages are included in the Anaconda Python distribution.
+Version requirements are included in `requirements.txt <https://github.com/USEPA/WNTR/blob/main/requirements.txt>`_.
+ 
+To install required and optional dependencies, run::
 
 	pip install -r requirements.txt
-
-.. note:: 
-   Proper installation of geopandas requires installing several geopandas dependencies, including 
-   fiona, pyproj, and shapely.  See https://geopandas.org/en/stable/getting_started/install.html for more information.
-   On Windows, the dependencies can be installed manually, see https://geoffboeing.com/2014/09/using-geopandas-windows/ for more information.
-   
-.. The following is not shown in the UM
-   WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
-   Pyomo, Interior Point OPTimizer (Ipopt), and HSL.
-
-   * Pyomo [Hart2014]_: optimization modeling language and optimization capabilities, https://software.sandia.gov/trac/pyomo.  
-     Version 4.0.9682 is recommended.
-   * Ipopt: large scale non-linear optimization, http://www.coin-or.org/download/binary/CoinAll/.  
-   
-	* Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
-	* Download and run the executable
-
-   * HSL [HSL2013]_: solvers for Ipopt, http://www.hsl.rl.ac.uk/ipopt/.
-	
-	* Select Windows or Linux in the COIN-HSL Archive, Personal License box
-	* Select Personal License, fill out the form and accept
-	* Download the zip file from the link sent via email
-	* Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
-	  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
-	  C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.
-
-
-
-
-
-

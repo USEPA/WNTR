@@ -25,6 +25,6 @@ This example demonstrates how to:
 
 Additional examples of Python code snippets are included throughout the WNTR documentation. The examples provided in the documentation assume
 that a user has experience using EPANET (https://www.epa.gov/water-research/epanet) and Python (https://www.python.org/), 
-including the ability to install and use additional Python packages, such as those listed in :ref:`requirements` and :ref:`optional_dependencies`.
+including the ability to install and use additional Python packages, such as those listed in :ref:`requirements`.
 
 See :ref:`examples` for more information on downloading and running examples.
