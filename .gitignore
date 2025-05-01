@@ -81,6 +81,9 @@ temp*
 *.xlsx
 
 examples/*.inp
+examples/*.csv
+examples/*.json
+examples/*.geojson
 wntr/tests/*.png
 wntr/tests/*.tif
 
