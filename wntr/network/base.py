@@ -355,24 +355,26 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         # Set and register the ending node
         self._end_node = self._node_reg[end_node_name]
         self._node_reg.add_usage(end_node_name, (link_name, self.link_type))
-        # Status variables
+        # Set status variables
         self._user_status = LinkStatus.Opened # Control status, can be changed by the user
         self._initial_status = LinkStatus.Opened # Model initial status, can be changed by the user
         self._internal_status = LinkStatus.Active # Intermediate simulation status, read only
-        self._status= None # Final simulation status, read only
-        # Other metadata fields
-        self._initial_setting = None
-        self._vertices = []
-        self._tag = None
+        self._status= None # Current simulation status, read only
+        # Set setting variables
+        self._initial_setting = None # Model initial setting, can be changed by the user
+        self._prev_setting = None # Previous simulation setting, read only
+        self._setting = None # Current simulation setting, read only
         # Other model state variables
         self._initial_quality = None
-        self._prev_setting = None
-        self._setting = None
         self._flow = None
         self._velocity = None
         self._is_isolated = False
         self._quality = None
         self._headloss = None
+        # Other
+        self._vertices = []
+        self._tag = None
+        
 
     def _compare(self, other):
         """
