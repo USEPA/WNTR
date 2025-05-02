@@ -355,14 +355,16 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         # Set and register the ending node
         self._end_node = self._node_reg[end_node_name]
         self._node_reg.add_usage(end_node_name, (link_name, self.link_type))
-        # Set up other metadata fields
-        self._initial_status = LinkStatus.Opened
+        # Status variables
+        self._user_status = LinkStatus.Opened # Control status, can be changed by the user
+        self._initial_status = LinkStatus.Opened # Model initial status, can be changed by the user
+        self._internal_status = LinkStatus.Active # Intermediate simulation status, read only
+        self._status= None # Final simulation status, read only
+        # Other metadata fields
         self._initial_setting = None
         self._vertices = []
         self._tag = None
-        # Model state variables
-        self._user_status = LinkStatus.Opened
-        self._internal_status = LinkStatus.Active
+        # Other model state variables
         self._initial_quality = None
         self._prev_setting = None
         self._setting = None

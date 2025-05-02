@@ -2,6 +2,7 @@
 import unittest
 import warnings
 from os.path import abspath, dirname, join
+import copy
 
 import wntr
 
@@ -11,15 +12,24 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
 class TestValveSettingControls(unittest.TestCase):
-    def test_status_open_when_setting_changes(self):
+    @classmethod
+    def setUpClass(self):
         wn = wntr.network.WaterNetworkModel()
         wn.add_reservoir("r1", base_head=10)
         wn.add_junction("j1", base_demand=0)
         wn.add_junction("j2", base_demand=0.05)
         wn.add_pipe("p1", "r1", "j1")
-        wn.add_valve("v1", "j1", "j2", valve_type="PRV", initial_setting=2)
+        wn.add_valve("v1", "j1", "j2", valve_type="PRV", 
+                     initial_setting=2, initial_status='Active')
         wn.options.time.duration = 3600 * 5
-
+        self.wn = wn
+    
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_status_open_when_setting_changes(self):
+        wn = copy.deepcopy(self.wn)
         action = wntr.network.ControlAction(
             wn.get_link("v1"), "status", wntr.network.LinkStatus.Closed
         )
@@ -37,7 +47,43 @@ class TestValveSettingControls(unittest.TestCase):
         self.assertEqual(
             results.link["status"].at[7200, "v1"], wntr.network.LinkStatus.Active
         )
-
+    
+    def test_initial_status(self):
+        # Run simulations with open valve
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        valve.initial_status = 'Open'
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_open = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_open = sim.run_sim()
+        
+        # Check that valve is open and flow is not 0
+        assert (results_epanet_open.link['status'].loc[:,'v1'] == 1).all()
+        assert (results_wntr_open.link['status'].loc[:,'v1'] == 1).all()
+        assert (results_epanet_open.link['flowrate'].loc[:,'v1'].abs() > 0).all()
+        assert (results_wntr_open.link['flowrate'].loc[:,'v1'].abs() > 0).all()
+        
+        # Run simulations with closed valve
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        valve.initial_status = 'Closed'
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_closed = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_closed = sim.run_sim()
+        
+        # Check that valve is closed and flow is 0
+        assert (results_epanet_closed.link['status'].loc[:,'v1'] == 0).all()
+        assert (results_wntr_closed.link['status'].loc[:,'v1'] == 0).all()
+        assert (results_epanet_closed.link['flowrate'].loc[:,'v1'] == 0).all()
+        assert (results_wntr_closed.link['flowrate'].loc[:,'v1'] == 0).all()
 
 class TestPumpSettingControls(unittest.TestCase):
     def test_status_open_when_setting_changes(self):
