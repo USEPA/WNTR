@@ -105,10 +105,10 @@ class TimeOptions(_OptionsBase):
         Hydraulic timestep (seconds), by default 3600 (one hour).
 
     quality_timestep : int >= 1
-        Water quality timestep (seconds), by default 360 (five minutes).
+        Water quality timestep (seconds), by default 360 (six minutes).
 
     rule_timestep : int >= 1
-        Rule timestep (seconds), by default 360 (five minutes).
+        Rule timestep (seconds), by default 360 (six minutes).
 
     pattern_timestep : int >= 1
         Pattern timestep (seconds), by default 3600 (one hour).
