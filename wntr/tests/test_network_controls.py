@@ -61,7 +61,7 @@ class TestValveSettingControls(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results_wntr_open = sim.run_sim()
         
-        # Check that valve is open and flow is not 0
+        # Check that valve is open (1) and flow is not 0
         assert (results_epanet_open.link['status'].loc[:,'v1'] == 1).all()
         assert (results_wntr_open.link['status'].loc[:,'v1'] == 1).all()
         assert (results_epanet_open.link['flowrate'].loc[:,'v1'].abs() > 0).all()
@@ -79,12 +79,32 @@ class TestValveSettingControls(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results_wntr_closed = sim.run_sim()
         
-        # Check that valve is closed and flow is 0
+        # Check that valve is closed (0) and flow is 0
         assert (results_epanet_closed.link['status'].loc[:,'v1'] == 0).all()
         assert (results_wntr_closed.link['status'].loc[:,'v1'] == 0).all()
         assert (results_epanet_closed.link['flowrate'].loc[:,'v1'] == 0).all()
         assert (results_wntr_closed.link['flowrate'].loc[:,'v1'] == 0).all()
 
+    def test_initial_setting(self):
+        # Run simulations with valve setting of 4
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        # pressure setting on its downstream side when the upstream pressure is above the setting
+        valve.initial_setting = 4
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_open = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_open = sim.run_sim()
+        
+        # Check that valve is active (2) and the downstream pressure is 4
+        assert (results_epanet_open.link['status'].loc[:,'v1'] == 2).all()
+        assert (results_wntr_open.link['status'].loc[:,'v1'] == 2).all()
+        assert (results_epanet_open.node['pressure'].loc[:,'j2'] == 4).all()
+        assert (results_wntr_open.node['pressure'].loc[:,'j2'] == 4).all()
+        
 class TestPumpSettingControls(unittest.TestCase):
     def test_status_open_when_setting_changes(self):
         wn = wntr.network.WaterNetworkModel()

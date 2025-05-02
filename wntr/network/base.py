@@ -435,6 +435,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     def initial_setting(self, setting):
         # TODO: typechecking
         self._initial_setting = setting
+        self._setting =  setting
 
     @property
     def start_node(self):
