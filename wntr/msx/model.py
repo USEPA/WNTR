@@ -719,6 +719,65 @@ class MsxModel(QualityModelBase):
         reaction_type = ReactionType.get(reaction_type, allow_none=False)
         species_name = str(species_name)
         del self.reaction_system._rxns[reaction_type.name.lower()][species_name]
+    
+    def add_source(self, species: Union[Species, str], node: str, strength: Union[int, float]):
+        """Add a new source of a specific msx species to the msx model.
+        
+        Arguments
+        ---------
+        species : str or Species
+            Species object or name
+        node : str or Node
+            Juction, Tank or Reservoir object or name
+        strength : float or int
+            The strength of the species at the source
+        """
+        if str(species) not in self.network_data._source_dict:
+            self.network_data._source_dict[str(species)] = {}
+        self.network_data._source_dict[str(species)][str(node)] = strength
+
+    def remove_source(self, species: Union[Species, str], node: str):
+        """Delete a source node from the msx object.
+        
+        Arguments
+        ---------
+        species : str or Species
+            Species object or name
+        """
+        if str(species) not in self.network_data._source_dict:
+            return
+        if str(node) not in self.network_data._source_dict[str(species)]:
+            return
+        del self.network_data._source_dict[str(species)][str(node)]
+
+    def remove_sources_for_species(self, species: Union[Species, str]):
+        """Clear all sources for a specific species from the msx object.
+        
+        Arguments
+        ---------
+        species : str or Species
+            Species object or name        
+        """
+        if str(species) in self.network_data._source_dict:
+            del self.network_data._source_dict[str(species)]
+
+    def get_sources_for_species(self, species: Union[Species, str]):
+        """Get all sources for a specific species.
+        
+        Arguments
+        ---------
+        species : str or Species
+            Species object or name
+
+        Returns
+        -------
+        dict[str, float]
+            mapping of node name to species strength
+        """
+        if str(species) not in self.network_data._source_dict:
+            self.network_data._source_dict[str(species)] = {}
+        return self.network_data._source_dict[str(species)]
+
 
     def to_dict(self) -> dict:
         """Dictionary representation of the MsxModel"""
