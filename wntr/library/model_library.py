@@ -18,9 +18,11 @@ class ModelLibrary:
         if not os.path.isdir(directory_path):
             raise ValueError(f"Provided path '{directory_path}' is not a valid directory.")
         self.directory_path = directory_path
-        self._model_paths = {}
+        self._build_model_paths()
 
+    def _build_model_paths(self):
         # Scan directory recursively for INP files
+        self._model_paths = {}
         for root, _, files in os.walk(self.directory_path):
             for file in files:
                 if file.endswith('.inp'):
@@ -87,19 +89,20 @@ class ModelLibrary:
         file_path = os.path.join(self.directory_path, f"{name}.inp")
         wntr.network.io.write_inpfile(wn_model, file_path)
         self._model_paths[name] = file_path
+        self._build_model_paths()
 
-    def remove_model(self, name):
-        """
-        Remove a model from the library.
-        Parameters
-        ----------
-        name : str
-            Name of the model to remove.
-        """
-        if name not in self._model_paths:
-            raise KeyError(f"Model '{name}' not found in the library.")
-        os.remove(self._model_paths[name])
-        del self._model_paths[name]
+    # def remove_model(self, name):
+    #     """
+    #     Remove a model from the library.
+    #     Parameters
+    #     ----------
+    #     name : str
+    #         Name of the model to remove.
+    #     """
+    #     if name not in self._model_paths:
+    #         raise KeyError(f"Model '{name}' not found in the library.")
+    #     os.remove(self._model_paths[name])
+    #     del self._model_paths[name]
 
     def copy_model(self, source_name, target_name):
         """
@@ -121,3 +124,4 @@ class ModelLibrary:
 
         # Add the copied model with the new name
         self.add_model(target_name, source_model)
+        self._build_model_paths()
