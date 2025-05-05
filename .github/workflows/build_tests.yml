@@ -33,6 +33,15 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
       run: |
         brew reinstall libomp # EPANETMSX repo also has this line, maybe include? `brew link --force --overwrite libomp`
+    - name: Ad-hoc codesign for Apple Silicon
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        dylib_path="wntr/epanet/libepanet/darwin-arm"
+        if [ -d "$dylib_path" ]; then
+          for file in "$dylib_path"/*; do
+            [ -e "$file" ] && codesign -f -s - "$file"
+          done
+        fi
     - name: Build wheels
       uses: pypa/cibuildwheel@79b0dd328794e1180a7268444d46cdf12e1abd01 # v2.21.0
       env:
