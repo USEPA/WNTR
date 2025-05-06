@@ -146,12 +146,12 @@ def snap(A, B, tolerance):
         
     return snapped_points
 
-def _backgound(A, B):
+def _background(A, B):
     
-    hull_geom = A.unary_union.convex_hull
+    hull_geom = A.union_all().convex_hull
     hull_data = gpd.GeoDataFrame(pd.DataFrame([{'geometry': hull_geom}]), crs=A.crs)
     
-    background_geom = hull_data.overlay(B, how='difference').unary_union
+    background_geom = hull_data.overlay(B, how='difference').union_all()
    
     background = gpd.GeoDataFrame(pd.DataFrame([{'geometry': background_geom}]), crs=A.crs)
     background.index = ['BACKGROUND']
@@ -223,7 +223,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
     assert A.crs == B.crs, "A and B must have the same crs."
     
     if include_background:
-        background = _backgound(A, B)
+        background = _background(A, B)
         if B_value is not None:
             background[B_value] = background_value
         B = pd.concat([B, background])
