@@ -16,7 +16,9 @@ class ModelLibrary:
     def __init__(self, directories=None):
         if directories is None:
             directories = [join(libdir, "networks")]
-        self.directories = directories
+        self._directories = []
+        for directory in directories:
+            self.add_directory(directory)
 
     def _build_model_library(self):
         """
@@ -42,14 +44,13 @@ class ModelLibrary:
     @property
     def directories(self):
         return self._directories
-    @directories.setter
-    def directories(self, directories):
-        assert isinstance(directories, list)
+
+    def add_directory(self, directory):
+        assert isinstance(directory, str)
         
-        for directory in directories:
-            if not isdir(directory):
-                raise ValueError(f"Provided path '{directory}' is not a valid directory.")
-        self._directories = directories
+        if not isdir(directory):
+            raise ValueError(f"Provided path '{directory}' is not a valid directory.")
+        self._directories.append(abspath(directory))
         self._build_model_library()
         
     def get_filepath(self, name):
