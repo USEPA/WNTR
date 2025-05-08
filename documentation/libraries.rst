@@ -32,7 +32,7 @@ Model library
 The :class:`~wntr.library.model_library.ModelLibrary` class contains methods to define
 a dictionary mapping of model names to INP file paths.  
 The model names can then be used to build water network models.
-Additional models can be added to the library by appending file paths to the model library 
+Additional models can be added to the library by adding file paths to the library 
 directories.
 
 The model library that is used by the :class:`~wntr.network.model.WaterNetworkModel` 
@@ -44,13 +44,13 @@ Net3 to create a WaterNetworkModel.
 
 .. doctest::
 
-    >>> model_lib = wntr.library.model_library
+    >>> model_library = wntr.library.model_library
     
-    >>> print(model_lib.model_name_list)
+    >>> print(model_library.model_name_list)
     ['ky10', 'ky4', 'Net1', 'Net2', 'Net3', 'Net6']
     
-    >> print(model_lib.get_filepath('Net3')) # doctest: +SKIP
-    ...\wntr\library\networks\Net3.inp   * **Note that the full path is stored in the library**
+    >> print(model_library.get_filepath('Net3')) # doctest: +SKIP
+    ...\wntr\library\networks\Net3.inp   # Note that the absolute path is stored in the library
     
     >>> wn = wntr.network.WaterNetworkModel('Net3')
 
@@ -61,7 +61,7 @@ and then create a model from an INP file in that directory
 
 .. doctest::
 
-    >>> model_lib.add_directory('C:\\Users\username\INP_files') # doctest: +SKIP
+    >>> model_library.add_directory('C:\\Users\username\INP_files') # doctest: +SKIP
     >>> wn = wntr.network.WaterNetworkModel('MyINP') # doctest: +SKIP
 
 .. _demand_pattern_library:
@@ -132,9 +132,7 @@ Load the default demand pattern library, print names of the library entries, and
 
 .. doctest::
 
-    >>> from wntr.library import DemandPatternLibrary
-	
-    >>> demand_library = DemandPatternLibrary()
+    >>> demand_library = wntr.library.demand_library
     >>> print(demand_library.pattern_name_list)
     ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
     >>> ax = demand_library.plot_patterns()
