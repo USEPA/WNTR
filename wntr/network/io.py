@@ -226,7 +226,7 @@ def from_dict(d: dict, append=None):
                     link["start_node_name"],
                     link["end_node_name"],
                     pump_type=pump_type,
-                    pump_parameter=link.setdefault("power")
+                    pump_parameter=link.setdefault("power", 50.0)
                     if pump_type.lower() == "power"
                     else link.setdefault("pump_curve_name"),
                     speed=link.setdefault("base_speed", 1.0),
