@@ -5,6 +5,7 @@ import unittest
 from os.path import abspath, dirname, join
 from unittest import SkipTest
 
+import pytest
 import numpy as np
 import wntr
 import wntr.network.elements as elements
@@ -279,6 +280,43 @@ class TestElements(unittest.TestCase):
         self.assertTrue(
             not ("Fire_Flow" in node.demand_timeseries_list.category_list())
         )
+
+
+@pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828])
+def test_positive_non_zero_float(value):
+    assert elements._get_positive_non_zero_float(value, "test") == float(value)
+
+
+@pytest.mark.parametrize("value", [0, "0", 0.0, "not_a_number", -1, -2.71828, [-1, 2]])
+def test_positive_non_zero_float_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        elements._get_positive_non_zero_float(value, "test")
+
+
+@pytest.mark.parametrize("value", [0.0, 0, "0", 1.0, 1, "500", 0, 2.71828])
+def test_positive_or_zero_float(value):
+    assert elements._get_positive_or_zero_float(value, "test") == float(value)
+
+
+@pytest.mark.parametrize("value", ["not_a_number", -1, -2.71828, [-1, 2]])
+def test_positive_or_zero_float_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        elements._get_positive_or_zero_float(value, "test")
+
+
+@pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828, 0.0, 0, -1, -2.71828])
+def test_float_or_none_with_float(value):
+    assert elements._get_float_or_none(value, "test") == float(value)
+
+
+def test_float_or_none_with_none():
+    assert elements._get_float_or_none(None, "test") is None
+
+
+@pytest.mark.parametrize("value", ["not_a_number", [-1, 2]])
+def test_float_or_none_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        elements._get_float_or_none(value, "test")
 
 
 if __name__ == "__main__":

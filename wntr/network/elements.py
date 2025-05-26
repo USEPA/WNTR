@@ -939,7 +939,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = _get_positive_float(value, "Pipe length")
+        self._length = _get_positive_non_zero_float(value, "Pipe length")
 
     @property
     def diameter(self):
@@ -947,7 +947,7 @@ class Pipe(Link):
         return self._diameter
     @diameter.setter
     def diameter(self, value):
-        self._diameter = _get_positive_float(value, "Pipe diameter")
+        self._diameter = _get_positive_non_zero_float(value, "Pipe diameter")
 
     @property
     def roughness(self):
@@ -956,7 +956,7 @@ class Pipe(Link):
 
     @roughness.setter
     def roughness(self, value):
-        self._roughness = _get_positive_float(value, "Pipe roughness")
+        self._roughness = _get_positive_non_zero_float(value, "Pipe roughness")
 
     @property
     def minor_loss(self):
@@ -2750,7 +2750,7 @@ def _get_float(value, property_name: str) -> float:
     """
     try:
         return float(value)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         value_type = type(value).__name__
         raise ValueError(
             f"{property_name} must be a float or convertible to float. Received {value} of type {value_type}"
@@ -2771,7 +2771,7 @@ def _get_positive_or_zero_float(value, property_name: str) -> float:
     return value
 
 
-def _get_positive_float(value, property_name: str) -> float:
+def _get_positive_non_zero_float(value, property_name: str) -> float:
     """Transform a value to a float and check it is positive.
 
     Raises ValueError if the value is not a float or convertible to float,
@@ -2780,7 +2780,7 @@ def _get_positive_float(value, property_name: str) -> float:
     value = _get_float(value, property_name)
 
     if not value > 0:
-        raise ValueError(f"{property_name} must be positive")
+        raise ValueError(f"{property_name} must be greater than zero")
 
     return value
 
@@ -2796,7 +2796,7 @@ def _get_float_or_none(value, property_name: str) -> float | None:
 
     try:
         return float(value)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         value_type = type(value).__name__
         raise ValueError(
             f"{property_name} must be a float, convertible to float, or None. Received {value} of type {value_type}"
