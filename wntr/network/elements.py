@@ -3,6 +3,9 @@ The wntr.network.elements module includes elements of a water network model,
 including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
 demands, curves, and sources.
 """
+
+from __future__ import annotations
+
 import numpy as np
 import sys
 import logging
