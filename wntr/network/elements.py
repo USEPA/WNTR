@@ -1538,7 +1538,16 @@ class PowerPump(Pump):
         return self._base_power
     @power.setter
     def power(self, value):
-        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
+        try:
+            value = float(value)
+        except ValueError as e:
+            raise ValueError(
+                "Pump power value must be a float or convertible to float"
+            ) from e
+
+        if value <= 0:
+            raise ValueError("Pump power value must be positive")
+
         self._base_power = value
 
 
