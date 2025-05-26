@@ -939,7 +939,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = _get_positive_non_zero_float(value, "Pipe length")
+        self._length = _get_positive_or_zero_float(value, "Pipe length")
 
     @property
     def diameter(self):
