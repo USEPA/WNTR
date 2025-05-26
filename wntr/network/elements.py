@@ -939,7 +939,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = value
+        self._length = _get_positive_float(value, "Pipe length")
 
     @property
     def diameter(self):
@@ -947,15 +947,16 @@ class Pipe(Link):
         return self._diameter
     @diameter.setter
     def diameter(self, value):
-        self._diameter = value
+        self._diameter = _get_positive_float(value, "Pipe diameter")
 
     @property
     def roughness(self):
         """float : pipe roughness"""
-        return self._roughness 
+        return self._roughness
+
     @roughness.setter
     def roughness(self, value):
-        self._roughness = value
+        self._roughness = _get_positive_float(value, "Pipe roughness")
 
     @property
     def minor_loss(self):
@@ -963,7 +964,7 @@ class Pipe(Link):
         return self._minor_loss
     @minor_loss.setter
     def minor_loss(self, value):
-        self._minor_loss = value
+        self._minor_loss = _get_positive_or_zero_float(value, "Pipe minor loss")
 
     @property
     def check_valve(self):
@@ -1009,7 +1010,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = value
+        self._bulk_coeff = _get_float_or_none(value, "Pipe bulk reaction coefficient")
 
     @property
     def wall_coeff(self):
@@ -1017,7 +1018,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = value
+        self._wall_coeff = _get_float_or_none(value, "Pipe wall reaction coefficient")
 
     @property
     def status(self):
@@ -2740,3 +2741,63 @@ class Source(object):
         if self.species:
             ret['species'] = self.species
         return ret
+
+
+def _get_float(value, property_name: str) -> float:
+    """Transform a value to a float.
+
+    Raises ValueError if the value is not a float or convertible to float.
+    """
+    try:
+        return float(value)
+    except ValueError as e:
+        value_type = type(value).__name__
+        raise ValueError(
+            f"{property_name} must be a float or convertible to float. Received {value} of type {value_type}"
+        ) from e
+
+
+def _get_positive_or_zero_float(value, property_name: str) -> float:
+    """Transform a value to a float and check it is positive or zero.
+
+    Raises ValueError if the value is not a float or convertible to float,
+    or if the value is negative.
+    """
+    value = _get_float(value, property_name)
+
+    if value < 0:
+        raise ValueError(f"{property_name} must not be negative")
+
+    return value
+
+
+def _get_positive_float(value, property_name: str) -> float:
+    """Transform a value to a float and check it is positive.
+
+    Raises ValueError if the value is not a float or convertible to float,
+    or if the value is not positive.
+    """
+    value = _get_float(value, property_name)
+
+    if not value > 0:
+        raise ValueError(f"{property_name} must be positive")
+
+    return value
+
+
+def _get_float_or_none(value, property_name: str) -> float | None:
+    """Transform a value to a float, unless it is None in which case return None.
+
+    Raises ValueError if the value is not a float or convertible to float,
+    and is not None.
+    """
+    if value is None:
+        return None
+
+    try:
+        return float(value)
+    except ValueError as e:
+        value_type = type(value).__name__
+        raise ValueError(
+            f"{property_name} must be a float, convertible to float, or None. Received {value} of type {value_type}"
+        ) from e
