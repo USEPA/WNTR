@@ -540,18 +540,18 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         
     @property
     def vertices(self):
-        """A list of curve points, in the direction of start node to end node.
+        """A list of interior vertex points for network links, in the direction of start node to end node.
         
-        The vertices should be listed as a list of (x,y) tuples when setting.
+        The vertices should be listed as a list of (x,y) tuples/lists when setting.
         """
         return self._vertices
     @vertices.setter
     def vertices(self, points):
         if not isinstance(points, list):
-            raise ValueError('vertices must be a list of 2-tuples')
+            raise ValueError('vertices must be a list')
         for pt in points:
-            if not isinstance(pt, tuple) or len(pt) != 2:
-                raise ValueError('vertices must be a list of 2-tuples')
+            if not isinstance(pt, (tuple, list)) or len(pt) != 2:
+                raise ValueError('vertex points must be a tuple or list with two values')
         self._vertices = points
     
     def to_dict(self):
