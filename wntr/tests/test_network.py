@@ -954,7 +954,7 @@ class TestNetworkIO_Dict(unittest.TestCase):
         self.wntr = wntr
 
         self.inp_file = join(ex_datadir, "Net3.inp")
-        self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp"]]
+        self.inp_files = [join(ex_datadir, f) for f in ["Net1.inp", "Net2.inp", "Net3.inp", "Net6.inp", "ky10.inp"]]
 
     @classmethod
     def tearDownClass(self):

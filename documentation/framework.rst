@@ -26,6 +26,7 @@ run simulations are described in more detail below, followed by a list of softwa
    
 .. _table-wntr-subpackage:
 .. table:: WNTR Subpackages
+   :widths: 20 80
    
    =================================================  =============================================================================================================================================================================================================================================================================
    Subpackage                                         Description
@@ -33,6 +34,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.network`	                          Contains classes and methods to define a water network model, network controls, model options, and graph representation of the network.
    :class:`~wntr.scenario`                            Contains classes and methods to define disaster scenarios and fragility/survival curves.
    :class:`~wntr.sim`		                          Contains classes and methods to run hydraulic and water quality simulations using the water network model.
+   :class:`~wntr.library`	                          Contains classes and methods to help build water network models.
    :class:`~wntr.metrics`	                          Contains functions to compute resilience, including topographic, hydraulic, water quality, water security, and economic metrics.
    :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
    :class:`~wntr.gis`	                              Contains geospatial capabilities, including a function to convert the water network model to GeoDataFrames.
@@ -50,7 +52,8 @@ Additionally, EPANET INP files can be generated from water network models.
 
 .. _table-network-subpackage:
 .. table:: Network Classes
-
+   :widths: 20 80
+   
    ==================================================  =============================================================================================================================================================================================================================================================================
    Class                                               Description
    ==================================================  =============================================================================================================================================================================================================================================================================
@@ -78,7 +81,8 @@ These classes are listed in :numref:`table-sim-subpackage`.
 
 .. _table-sim-subpackage:
 .. table:: Simulator Classes
-
+   :widths: 20 80
+   
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================

@@ -97,7 +97,7 @@ The earthquake properties can be plotted on the network using the following exam
 
 .. _fig-network:
 .. figure:: figures/network_pga.png
-   :width: 640
+   :width: 535
    :alt: Peak ground acceleration
    
    Peak ground acceleration.
