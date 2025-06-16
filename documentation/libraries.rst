@@ -50,7 +50,9 @@ Net3 to create a WaterNetworkModel.
     ['ky10', 'ky4', 'Net1', 'Net2', 'Net3', 'Net6']
     
     >>> print(model_library.get_filepath('Net3')) # doctest: +SKIP
-    ...\wntr\library\networks\Net3.inp   # Note that the absolute path is stored in the library
+    '...\wntr\library\networks\Net3.inp'
+
+    # Note that the absolute path is stored in the library
     
     >>> wn = wntr.network.WaterNetworkModel('Net3')
 
@@ -132,6 +134,7 @@ Load the default demand pattern library, print names of the library entries, and
 
 .. doctest::
 
+    >>> from wntr.library.demand_library import DemandPatternLibrary
     >>> demand_library = wntr.library.demand_library
     >>> print(demand_library.pattern_name_list)
     ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
@@ -188,17 +191,18 @@ Return a Pandas Series of the pattern.
 
     >>> series = demand_library.to_Series('Gaussian_with_noise', duration=48*3600)
     >>> print(series.head())
-    0        7.474e-04
-    3600     2.676e-01
-    7200     2.862e-01
-    10800    2.302e-01
-    14400    4.742e-01
+    0        0.000747
+    3600     0.267610
+    7200     0.286198
+    10800    0.230225
+    14400    0.474233
     dtype: float64
 
 Create a library of only commercial patterns.
 
 .. doctest::
 
+    >>> from wntr.library.demand_library import DemandPatternLibrary
     >>> commercial_patterns = demand_library.filter_by_category('Commercial')
     >>> commercial_demand_library = DemandPatternLibrary(commercial_patterns)
     >>> print(commercial_demand_library.pattern_name_list)
@@ -233,7 +237,7 @@ Add the new pattern to a :class:`~wntr.network.model.WaterNetworkModel` of Net1.
 .. doctest::
 
     >>> import wntr
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('examples/networks/Net1.inp')
     >>> junction = wn.get_node('11')
 	
     >>> pattern = demand_library.to_Pattern('Net2_1_resampled')
