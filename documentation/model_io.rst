@@ -47,6 +47,13 @@ The function can also be used to append information from an EPANET INP file into
    .. doctest::
        
 	   >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+	   
+   INP files can also be accessed using the model library, see :ref:`model_library` for more details.  
+   This allows the user to create a WaterNetworkModel from a model name.
+ 
+   .. doctest::
+       
+	  >>> wn = wntr.network.WaterNetworkModel('Net3')
 
 The :class:`~wntr.network.io.write_inpfile` function creates an EPANET INP file from a WaterNetworkModel.
 By default, files are written in the LPS (liter per second) EPANET unit convention.
