@@ -20,8 +20,49 @@ Libraries
 WNTR includes the following libraries to help create water network models. 
 Libraries reside in the :class:`wntr.library` module.
 
+* :ref:`model_library`
 * :ref:`demand_pattern_library`
 * :ref:`msx_library`
+
+.. _model_library:
+
+Model library
+----------------------
+
+The :class:`~wntr.library.model_library.ModelLibrary` class contains methods to define
+a dictionary mapping of model names to INP file paths.  
+The model names can then be used to build water network models.
+Additional models can be added to the library by adding file paths to the library 
+directories.
+
+The model library that is used by the :class:`~wntr.network.model.WaterNetworkModel` 
+is stored in ``wntr.library.model_library``.  The library includes INP files that 
+are distributed with WNTR.
+
+The following example prints model names in the model library and then uses 
+Net3 to create a WaterNetworkModel.
+
+.. doctest::
+
+    >>> model_library = wntr.library.model_library
+    
+    >>> print(model_library.model_name_list)
+    ['ky10', 'ky4', 'Net1', 'Net2', 'Net3', 'Net6']
+    
+    >> print(model_library.get_filepath('Net3')) # doctest: +SKIP
+    ...\wntr\library\networks\Net3.inp   # Note that the absolute path is stored in the library
+    
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
+
+The following notional example illustrates how to add INP files that reside in a user specified directory, 
+(in this case, C:\\Users\username\INP_files), 
+and then create a model from an INP file in that directory 
+(in this case, MyINP.inp).
+
+.. doctest::
+
+    >>> model_library.add_directory('C:\\Users\username\INP_files') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('MyINP') # doctest: +SKIP
 
 .. _demand_pattern_library:
 
@@ -31,6 +72,26 @@ Demand pattern library
 The :class:`~wntr.library.demand_library.DemandPatternLibrary` class contains demand patterns 
 and methods to help create and modify patterns.  
 The demand pattern library can be used to add or modify patterns in a :class:`~wntr.network.model.WaterNetworkModel`.
+
+An instance of the demand pattern library is stored in ``wntr.library.demand_library``.
+The default demand pattern library contains patterns from Net1, Net2, Net3, and Micropolis water network models.  
+Additional patterns can be added to the default library to be accessed in later sessions.
+A sample entry from the default demand pattern library is shown below:: 
+
+	{
+		"name": "Micropolis_2",
+		"category": "Residential",
+		"description": "Residential",
+		"citation": "Brumbelow, Kelly, 02 Micropolis (2021). Synthetic Systems. 4. https://uknowledge.uky.edu/wdst_synthetic/4",
+		"start_clocktime": 0,
+		"pattern_timestep": 3600,
+		"wrap": true,
+		"multipliers": [
+			0.55, 0.55, 0.58, 0.67, 0.85, 1.05,
+			1.16, 1.12, 1.15, 1.1, 1.02, 1.0,
+			1.02, 1.1, 1.2, 1.35, 1.45, 1.5,
+			1.5, 1.35, 1.0, 0.8, 0.7, 0.6]
+	}
 
 The demand pattern library includes the following capabilities:
 
@@ -64,25 +125,6 @@ Note that the pattern duration is not explicitly defined.  Duration is inferred 
 Several methods include duration as a optional input argument to change how long multipliers are repeated.  
 If wrap = False, the pattern values are set to 0 after the final multiplier value.
 
-The default demand pattern library contains patterns from Net1, Net2, Net3, and Micropolis water network models.  
-Additional patterns can be added to the default library to be accessed in later sessions.
-A sample entry from the default demand pattern library is shown below:: 
-
-	{
-		"name": "Micropolis_2",
-		"category": "Residential",
-		"description": "Residential",
-		"citation": "Brumbelow, Kelly, 02 Micropolis (2021). Synthetic Systems. 4. https://uknowledge.uky.edu/wdst_synthetic/4",
-		"start_clocktime": 0,
-		"pattern_timestep": 3600,
-		"wrap": true,
-		"multipliers": [
-			0.55, 0.55, 0.58, 0.67, 0.85, 1.05,
-			1.16, 1.12, 1.15, 1.1, 1.02, 1.0,
-			1.02, 1.1, 1.2, 1.35, 1.45, 1.5,
-			1.5, 1.35, 1.0, 0.8, 0.7, 0.6]
-	}
-
 The following examples illustrate the functionality of the demand pattern library, including creation, modification, and combination of patterns. 
 Note, methods that add or modify patterns return a pandas Series of the pattern.
 
@@ -90,9 +132,7 @@ Load the default demand pattern library, print names of the library entries, and
 
 .. doctest::
 
-    >>> from wntr.library import DemandPatternLibrary
-	
-    >>> demand_library = DemandPatternLibrary()
+    >>> demand_library = wntr.library.demand_library
     >>> print(demand_library.pattern_name_list)
     ['Null', 'Constant', 'Net1_1', 'Net2_1', 'Net3_1', 'KY_1', 'Micropolis_1', 'Micropolis_2', 'Micropolis_3', 'Micropolis_4', 'Micropolis_5']
     >>> ax = demand_library.plot_patterns()
@@ -227,7 +267,8 @@ The :class:`~wntr.library.msx.MsxLibrary` class contains a library of MSX models
 multispecies reaction simulations.
 See :ref:`msx_water_quality` for more information on simulating multispecies reactions in WNTR.
 
-The multispecies model library includes the following models:
+An instance of the multispecies model library is stored in ``wntr.library.reaction_library``.
+The library includes the following models:
 
 * `Arsenic oxidation/adsorption <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/arsenic_chloramine.json>`_ :cite:p:`shang2023`
 * `Batch chloramine decay <https://github.com/USEPA/WNTR/blob/msx/wntr/msx/_library_data/batch_chloramine_decay.json>`_ 
@@ -243,8 +284,7 @@ The following example loads the Lead plumbosolvency model (lead_ppm) from the Ms
 
 .. doctest::
 
-    >>> import wntr.library.msx
-    >>> reaction_library = wntr.library.msx.MsxLibrary()
+    >>> reaction_library = wntr.library.reaction_library
     
     >>> print(reaction_library.model_name_list())  # doctest: +SKIP
     ['arsenic_chloramine', 'batch_chloramine_decay', 'lead_ppm', 'nicotine', 'nicotine_ri']

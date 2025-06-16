@@ -775,11 +775,11 @@ class MsxFile(object):
     def _write_quality(self, fout):
         fout.write("[QUALITY]\n")
         for species, val in self.rxn.network_data.initial_quality.items():
+            if val.global_value:
+                fout.write("  {:<8s} {:<8s} {}\n".format("GLOBAL", species, val.global_value))
             for typ in ["node_values", "link_values"]:
                 for node, conc in getattr(val, typ).items():
                     fout.write("  {:<8s} {:<8s} {:<8s} {}\n".format(typ.upper()[0:4], node, species, conc))
-            if val.global_value:
-                fout.write("  {:<8s} {:<8s} {}\n".format("GLOBAL", species, val.global_value))
         fout.write("\n")
 
     def _write_parameters(self, fout):
