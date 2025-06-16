@@ -191,11 +191,11 @@ Return a Pandas Series of the pattern.
 
     >>> series = demand_library.to_Series('Gaussian_with_noise', duration=48*3600)
     >>> print(series.head())
-    0        0.000747
-    3600     0.267610
-    7200     0.286198
-    10800    0.230225
-    14400    0.474233
+    0        7.474e-04
+    3600     2.676e-01
+    7200     2.862e-01
+    10800    2.302e-01
+    14400    4.742e-01
     dtype: float64
 
 Create a library of only commercial patterns.
