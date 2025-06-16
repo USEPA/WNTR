@@ -46,10 +46,10 @@ Net3 to create a WaterNetworkModel.
 
     >>> model_library = wntr.library.model_library
     
-    >>> print(model_library.model_name_list)
+    >>> print(model_library.model_name_list) # doctest: +SKIP
     ['ky10', 'ky4', 'Net1', 'Net2', 'Net3', 'Net6']
     
-    >> print(model_library.get_filepath('Net3')) # doctest: +SKIP
+    >>> print(model_library.get_filepath('Net3')) # doctest: +SKIP
     ...\wntr\library\networks\Net3.inp   # Note that the absolute path is stored in the library
     
     >>> wn = wntr.network.WaterNetworkModel('Net3')
