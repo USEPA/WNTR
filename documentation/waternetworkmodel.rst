@@ -11,8 +11,12 @@
     ...    import geopandas as gpd
     ... except ModuleNotFoundError:
     ...    gpd = None
-
-
+    >>> import matplotlib as mpl
+    >>> try:
+    ...     mpl.use('Agg')
+    ... except:
+    ...     pass
+	
 Water network model
 ======================================
 
@@ -29,11 +33,11 @@ Sections of the EPANET INP file that are not compatible with WNTR are described 
 For more information on the water network model, see 
 :class:`~wntr.network.model.WaterNetworkModel` in the API documentation.
 
-Build a model from an INP file
----------------------------------
+Build a model from an EPANET INP file
+-------------------------------------
 
 A water network model can be created directly from EPANET INP files using EPANET 2.00.12 or 2.2.0 format.  
-The following example builds a water network model.
+The following example builds a water network model from an EPANET INP file.
 
 .. doctest::
 
@@ -41,23 +45,17 @@ The following example builds a water network model.
 	
     >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
 
+A water network model can also be created using EPANET INP files from the model library, see :ref:`model_library` for more details.
+For example, the following loads 'Net3.inp' from the model library.
+
 .. doctest::
-    :hide:
 
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-    >>> import matplotlib as mpl
-    >>> try:
-    ...     mpl.use('Agg')
-    ... except:
-    ...     pass
-
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
+	
 .. note:: 
   Unless otherwise noted, examples in the WNTR documentation use Net3.inp to build the
   water network model, named ``wn``.
-  
+ 
 Add elements
 ------------------
 
@@ -75,14 +73,6 @@ Generally, the object is not added to the model directly.
 
 The example below adds a junction and pipe to a water network model.
 
-.. doctest::
-    :hide:
-
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp') # switch back to net3
-	
 .. doctest::
 
     >>> wn.add_junction('new_junction', base_demand=10, demand_pattern='1', elevation=10, 

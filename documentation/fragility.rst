@@ -32,17 +32,12 @@ The following example defines a fragility curve with two damage states: Minor da
     :hide:
 
     >>> import matplotlib.pylab as plt
-    >>> import wntr
     >>> import numpy as np
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
 .. doctest::
 
     >>> from scipy.stats import lognorm
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
     >>> FC = wntr.scenario.FragilityCurve()
     >>> FC.add_state('Minor', 1, {'Default': lognorm(0.5,scale=0.2)})
@@ -81,7 +76,7 @@ For example, if the pipe has Major damage, a large leak might be defined at that
     
 .. doctest::
     
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
     >>> epicenter = (32000,15000) # x,y location
     >>> magnitude = 6.5 # Richter scale

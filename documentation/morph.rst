@@ -116,20 +116,11 @@ The skeletonization procedure reduces the number of nodes in the network from
 approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 
 .. doctest::
-    :hide:
-	
-    >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net6.inp')
-	
-.. doctest::
 
     >>> import matplotlib.pylab as plt
-    >>> import wntr  # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net6.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net6')
     >>> wn.describe()
     {'Nodes': 3356, 'Links': 3892, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
     
@@ -250,17 +241,10 @@ The following example returns a copy of the water network model with
 node coordinates scaled by 100 m.
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-	
-.. doctest::
-
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
 The next example converts node coordinates to longitude/latitude. The longitude and latitude coordinates of two locations (e.g., nodes, tanks) on the map must be provided to convert the other node coordinates to longitude/latitude. 

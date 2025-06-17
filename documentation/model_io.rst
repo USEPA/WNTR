@@ -12,11 +12,6 @@
     ... except ModuleNotFoundError:
     ...    gpd = None
 	
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-
 .. _model_io:
 
 Model I/O
@@ -48,7 +43,7 @@ The function can also be used to append information from an EPANET INP file into
        
 	   >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
 	   
-   INP files can also be accessed using the model library, see :ref:`model_library` for more details.  
+   EPANET INP files can also be accessed using the model library, see :ref:`model_library` for more details.  
    This allows the user to create a WaterNetworkModel from a model name.
  
    .. doctest::
