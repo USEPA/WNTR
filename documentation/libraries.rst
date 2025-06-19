@@ -8,11 +8,6 @@
     :hide:
 
     >>> import matplotlib.pylab as plt
-    >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net1.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net1.inp')
 	
 Libraries
 ================================
@@ -30,13 +25,13 @@ Model library
 ----------------------
 
 The :class:`~wntr.library.model_library.ModelLibrary` class contains methods to define
-a dictionary mapping of model names to INP file paths.  
+a dictionary mapping of model names to EPANET INP file paths.  
 The model names can then be used to build water network models.
 Additional models can be added to the library by adding file paths to the library 
 directories.
 
 The model library that is used by the :class:`~wntr.network.model.WaterNetworkModel` 
-is stored in ``wntr.library.model_library``.  The library includes INP files that 
+is stored in ``wntr.library.model_library``.  The library includes EPANET INP files that 
 are distributed with WNTR.
 
 The following example prints model names in the model library and then uses 
@@ -44,6 +39,8 @@ Net3 to create a WaterNetworkModel.
 
 .. doctest::
 
+    >>> import wntr
+    
     >>> model_library = wntr.library.model_library
     
     >>> print(model_library.model_name_list) # doctest: +SKIP
@@ -56,7 +53,7 @@ Net3 to create a WaterNetworkModel.
     
     >>> wn = wntr.network.WaterNetworkModel('Net3')
 
-The following notional example illustrates how to add INP files that reside in a user specified directory, 
+The following notional example illustrates how to add EPANET INP files that reside in a user specified directory, 
 (in this case, C:\\Users\username\INP_files), 
 and then create a model from an INP file in that directory 
 (in this case, MyINP.inp).
@@ -236,8 +233,7 @@ Add the new pattern to a :class:`~wntr.network.model.WaterNetworkModel` of Net1.
 
 .. doctest::
 
-    >>> import wntr
-    >>> wn = wntr.network.WaterNetworkModel('examples/networks/Net1.inp')
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
     >>> junction = wn.get_node('11')
 	
     >>> pattern = demand_library.to_Pattern('Net2_1_resampled')
