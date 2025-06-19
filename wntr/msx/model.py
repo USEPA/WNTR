@@ -803,12 +803,6 @@ class MsxModel(QualityModelBase):
         data : dict
             Model data
         """
-        from wntr import __version__
-
-        ver = data.get("version", None)
-        if ver != 'wntr-{}'.format(__version__):
-            logger.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
-            # warnings.warn("Importing from a file created by a different version of wntr, compatibility not guaranteed")
         new = cls()
         new.name = data.get("name", None)
         new.title = data.get("title", None)

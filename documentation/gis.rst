@@ -5,7 +5,6 @@
 .. doctest::
     :hide:
 
-    >>> import wntr
     >>> import numpy as np
     >>> import pandas as pd
     >>> pd.options.display.expand_frame_repr = False
@@ -19,7 +18,6 @@
     >>> examples_dir = '../examples'
     >>> if not isdir(examples_dir):
     ...    examples_dir = 'examples'
-    >>> wn = wntr.network.model.WaterNetworkModel(examples_dir+'/networks/Net1.inp')
     
 .. doctest::
     :hide:
@@ -71,9 +69,9 @@ More information on setting and transforming CRS is included in :ref:`crs`.
 .. doctest::
     :skipif: gpd is None
 
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
 
 
 .. _gis_data:
@@ -337,7 +335,7 @@ and then translates the GeoDataFrames coordinates to EPSG:3857.
 .. doctest::
     :skipif: gpd is None
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
 	
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
     >>> print(wn_gis.junctions.head())
@@ -381,7 +379,7 @@ See :ref:`crs` for more information.
 .. doctest::
     :skipif: gpd is None
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
 	
 Snap hydrants to junctions
@@ -565,7 +563,7 @@ See :ref:`crs` for more information.
 .. doctest::
     :skipif: gpd is None
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
 	
 Assign earthquake probability to pipes
@@ -845,7 +843,7 @@ See :ref:`crs` for more information.
 .. doctest::
     :skipif: gpd is None
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:4326')
 
 Sample elevations at junctions
@@ -950,7 +948,7 @@ connected WaterNetworkModel.  This assumes that all start and end nodes are Junc
 .. doctest::
     :skipif: gpd is None
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net1.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net1')
     >>> wn_gis = wntr.network.to_gis(wn, crs='EPSG:2236')
     >>> original_pipes = wn_gis.pipes
 

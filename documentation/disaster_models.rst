@@ -47,20 +47,10 @@ Since some network models use other units for node coordinates,
 WNTR includes methods to change coordinate scale, as shown in the following example.
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> import matplotlib.pylab as plt
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-    
-.. doctest::
-
-    >>> import wntr # doctest: +SKIP
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
    
 The following example computes peak ground acceleration, peak ground velocity, and repair rate for each pipe.
@@ -81,6 +71,7 @@ The earthquake properties can be plotted on the network using the following exam
 .. doctest::
     :hide:
     
+	>>> import matplotlib.pylab as plt
 	>>> fig = plt.figure()
     
 .. doctest::

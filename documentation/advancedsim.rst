@@ -77,22 +77,13 @@ For that reason, the EpanetSimulator must use EPANET 2.2 (which is the default).
 The first step is to load the Python packages that are needed for this example and create a water network model.
 
 .. doctest::
-    :hide:
-
-    >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-
-.. doctest::
 
     >>> import threading
     >>> import copy
     >>> import numpy as np
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 
-    >>> wn = wntr.network.model.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.model.WaterNetworkModel('Net3')
 
 In order to execute a thread, it is necessary to create a function that will perform the actual work.
 In this example, a simple function called ``run_epanet`` is created that accepts a water network model,

@@ -49,21 +49,11 @@ An action is defined by a target link, the attribute to change, and the value to
 The following example creates an action that opens pipe 330, in which a status of 1 means open:
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-    ...
-
-.. doctest::
-
-    >>> import wntr # doctest: +SKIP
     >>> import wntr.network.controls as controls
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> pipe = wn.get_link('330')
     >>> act1 = controls.ControlAction(pipe, 'status', 1)
     >>> print(act1)

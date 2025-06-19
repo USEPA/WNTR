@@ -132,15 +132,6 @@ WNTR includes additional topographic metrics to help compute resilience.
 						  
    =====================================  ================================================================================================================================================
 
-.. doctest::
-    :hide:
-
-    >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-
 To compute topographic metrics, a NetworkX MultiDiGraph is first extracted from a
 WaterNetworkModel.  Note that some metrics require an undirected
 graph or a graph with a single edge between two nodes.
@@ -148,9 +139,9 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> G = wn.to_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
