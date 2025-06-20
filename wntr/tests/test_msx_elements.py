@@ -180,7 +180,7 @@ class Test(unittest.TestCase):
         rxn_model1.add_source("SETPOINT", 'Cl', 'Dummy2', 2.7)
         source = rxn_model1.get_sources_for_species('Cl')
         self.assertDictEqual(source, {'Dummy1':{'strength':1.23, 'source_type': 'CONCEN', 'pattern': None, 'note': 'foo'}, 
-                             {'Dummy2':{'strength':2.7, 'source_type': 'SETPOINT', 'pattern': None, 'note': None}})
+                             'Dummy2':{'strength':2.7, 'source_type': 'SETPOINT', 'pattern': None, 'note': None}})
         rxn_model1.remove_source('Cl','Dummy1')
         source = rxn_model1.get_sources_for_species('Cl')
         self.assertDictEqual(source, {'Dummy2':{'strength':2.7, 'source_type': 'CONCEN', 'pattern': None, 'note': None}})
