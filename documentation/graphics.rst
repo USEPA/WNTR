@@ -5,15 +5,10 @@
 .. doctest::
     :hide:
 
-    >>> import wntr
     >>> import numpy as np
     >>> import matplotlib.pylab as plt
     >>> import pandas as pd
     >>> pd.set_option("display.precision", 3)
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
 .. _graphics:
 
@@ -52,9 +47,9 @@ which can be further customized by the user.
     
 .. doctest::
 
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> ax = wntr.graphics.plot_network(wn, node_attribute='elevation', 
     ...    node_colorbar_label='Elevation (m)')
 
