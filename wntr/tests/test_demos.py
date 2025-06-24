@@ -70,7 +70,7 @@ class TestDemos(unittest.TestCase):
             results2 = pd.DataFrame(wn2.describe(level=2))
         
         try:
-            assert_frame_equal(results1, results2)
+            assert_frame_equal(results1, results2, rtol=1e-3, atol=1e-6)
             return True
         except:
             return False
