@@ -3170,12 +3170,16 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_sectio
     float_tol: float
     max_diff_lines_per_section: int
     htmldiff_file: str
+    
+    Returns
+    -------
+    number of lines that are different
     """
     wn = InpFile().read(file1)
     f1 = _InpFileDifferHelper(file1)
     if file2 is None:
         file2 = 'temp.inp'
-        wn.write_inpfile(file2)
+        wntr.network.write_inpfile(wn, file2)
     f2 = _InpFileDifferHelper(file2)
 
     different_lines_1 = []
