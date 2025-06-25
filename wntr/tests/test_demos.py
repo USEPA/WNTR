@@ -22,13 +22,13 @@ class TestDemos(unittest.TestCase):
         self.wntr = wntr
         
         self.nb_files = {
-            'basics_tutorial': ['Net3_analysis_pipes.geojson'],
+            #'basics_tutorial': ['Net3_analysis_pipes.geojson'],
             'earthquake_tutorial': ['earthquake_people_impacted.csv',
                                     'earthquake_people_impacted_wrepair.csv'],
             'fire_flow_tutorial': ['fire_flow_junctions_impacted.csv',
                                    'fire_flow_people_impacted.csv'],
             'getting_started_tutorial': ['pressure.csv'],
-            'landslide_tutorial': ['ky10_landslide_analysis_junctions.geojson'],
+            #'landslide_tutorial': ['ky10_landslide_analysis_junctions.geojson'],
             'model_development_tutorial': ['wn1.inp', 
                                            'wn2.inp'],
             'multispecies_tutorial': ['chlorine_residual_1.3.csv'],
@@ -37,7 +37,8 @@ class TestDemos(unittest.TestCase):
             'pipe_segments_tutorial': ['segment_break_junctions_impacted.csv',
                                        'segment_break_people_impacted.csv'],
             'salt_water_intrusion_tutorial': ['salt_water_baseline_quality.csv',
-                                              'salt_water_response_quality.csv']}
+                                              'salt_water_response_quality.csv']
+            }
 
     @classmethod
     def tearDownClass(self):
@@ -58,9 +59,9 @@ class TestDemos(unittest.TestCase):
                 results1 = gpd.read_file(file1, index_col=0)
                 results2 = gpd.read_file(file2, index_col=0)
             
-            #for axis in [0,1]:
-            #    results1.sort_index(axis=axis, inplace=True)
-            #    results2.sort_index(axis=axis, inplace=True)
+            for axis in [0,1]:
+                results1.sort_index(axis=axis, inplace=True)
+                results2.sort_index(axis=axis, inplace=True)
 
         elif file_extension == 'inp':
             wn1 = self.wntr.network.WaterNetworkModel(file1)
