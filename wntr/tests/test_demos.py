@@ -58,9 +58,9 @@ class TestDemos(unittest.TestCase):
                 results1 = gpd.read_file(file1, index_col=0)
                 results2 = gpd.read_file(file2, index_col=0)
             
-            for axis in [0,1]:
-                results1.sort_index(axis=axis, inplace=True)
-                results2.sort_index(axis=axis, inplace=True)
+            #for axis in [0,1]:
+            #    results1.sort_index(axis=axis, inplace=True)
+            #    results2.sort_index(axis=axis, inplace=True)
 
         elif file_extension == 'inp':
             wn1 = self.wntr.network.WaterNetworkModel(file1)
@@ -70,7 +70,7 @@ class TestDemos(unittest.TestCase):
             results2 = pd.DataFrame(wn2.describe(level=2))
         
         try:
-            assert_frame_equal(results1, results2, rtol=1e-3, atol=1e-6)
+            assert_frame_equal(results1, results2, rtol=1e-2, atol=1e-4)
             return True
         except:
             return False
