@@ -183,7 +183,7 @@ class Test(unittest.TestCase):
                              'Dummy2':{'strength':2.7, 'source_type': 'SETPOINT', 'pattern': None, 'note': None}})
         rxn_model1.remove_source('Cl','Dummy1')
         source = rxn_model1.get_sources_for_species('Cl')
-        self.assertDictEqual(source, {'Dummy2':{'strength':2.7, 'source_type': 'CONCEN', 'pattern': None, 'note': None}})
+        self.assertDictEqual(source, {'Dummy2':{'strength':2.7, 'source_type': 'SETPOINT', 'pattern': None, 'note': None}})
         rxn_model1.remove_sources_for_species('Cl')
         source = rxn_model1.get_sources_for_species('Cl')
         self.assertDictEqual(source, {})
