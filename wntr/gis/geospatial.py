@@ -290,7 +290,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
         stats.loc[covered_length.isna(), 'weighted_mean'] = stats.loc[covered_length.isna(), 'mean']
         
         # No intersection, set weighted mean to NaN
-        stats.loc[stats['n']==0, 'weighted_mean'] = np.NaN
+        stats.loc[stats['n']==0, 'weighted_mean'] = np.nan
         
     stats.index.name = None
     
