@@ -7,8 +7,7 @@ simulation results on the network.
 import wntr
 
 # Create a water network model
-inp_file = 'networks/Net3.inp'
-wn = wntr.network.WaterNetworkModel(inp_file)
+wn = wntr.network.WaterNetworkModel('Net3')
 
 # Simulate hydraulics
 sim = wntr.sim.EpanetSimulator(wn)

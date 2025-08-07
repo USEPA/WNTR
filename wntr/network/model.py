@@ -84,6 +84,12 @@ class WaterNetworkModel(AbstractModel):
 
         self._inpfile = None
         if inp_file_name:
+            # Check if internal library contains the network
+            try:
+                model_lib = wntr.library.model_library
+                inp_file_name = model_lib.get_filepath(inp_file_name)
+            except KeyError:
+                pass
             read_inpfile(inp_file_name, append=self)
 
         # To be deleted and/or renamed and/or moved
