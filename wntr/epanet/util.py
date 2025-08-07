@@ -1283,7 +1283,7 @@ def to_si(
     It is also possible to convert a dictionary of values.
 
     >>> to_si(FlowUnits.GPM, {'node1': 5.6, 'node2': 1.2}, HydParam.Pressure)
-    {'node1': 3.9392568659127623, 'node2': 0.8441264712670206}
+    {'node1': np.float64(3.9392568659127623), 'node2': np.float64(0.8441264712670206)}
 
     For certain coefficients, there are flags that will change how the conversion occurs. For example,
     reaction coefficients depend on the reaction order.
@@ -1369,7 +1369,7 @@ def from_si(
     It is also possible to convert a dictionary of values.
 
     >>> from_si(FlowUnits.GPM, {'node1': 3.9392568659127623, 'node2': 0.8441264712670206}, HydParam.Pressure)
-    {'node1': 5.6, 'node2': 1.2}
+    {'node1': np.float64(5.6), 'node2': np.float64(1.2)}
     
     Finally, an example showing the conversion of 1000 cubic meters per second into the different flow units.
 
