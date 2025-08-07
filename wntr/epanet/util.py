@@ -1269,7 +1269,7 @@ def to_si(
     >>> from wntr.epanet.util import *
     >>> flow_si = to_si(FlowUnits.GPM, [0.1, 1.0, 4.3], HydParam.Flow)
     >>> print(flow_si)
-    [6.309019640000001e-06, 6.30901964e-05, 0.00027128784452]
+    [np.float64(6.309019640000001e-06), np.float64(6.30901964e-05), np.float64(0.00027128784452)]
 
     Next, we show how to convert the quality parameter from the EPANET units of mg/L to kg/m3.
     If that is not the mass units you prefer, it is possible to change them to ug/L, g/L, or kg/L,
@@ -1357,7 +1357,7 @@ def from_si(
     >>> from wntr.epanet.util import *
     >>> flow_us = from_si(FlowUnits.GPM, [6.309019640000001e-06, 6.30901964e-05, 0.00027128784452], HydParam.Flow)
     >>> print(flow_us)
-    [0.1, 1.0, 4.3]
+    [np.float64(0.1), np.float64(1.0), np.float64(4.3)]
 
     Next, we show how to convert the quality parameter from kg/m3 to mg/L and then to ug/L.
     
