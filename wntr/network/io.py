@@ -2,10 +2,9 @@
 
 """
 The wntr.network.io module includes functions that convert the water network
-model to other data formats, create a water network model from file, and write
+model to other data formats, create a water network model from file, and write 
 the water network model to a file.
 """
-
 import logging
 import json
 import networkx as nx
@@ -14,22 +13,20 @@ import wntr.epanet
 from wntr.epanet.util import FlowUnits
 import wntr.network.model
 from wntr.gis.network import WaterNetworkGIS
-
 try:
     import geopandas as gpd
-
     has_geopandas = True
 except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
-
+    
 logger = logging.getLogger(__name__)
 
 
 def to_dict(wn) -> dict:
     """
     Convert a WaterNetworkModel into a dictionary
-
+    
     Parameters
     ----------
     wn : WaterNetworkModel
@@ -39,7 +36,7 @@ def to_dict(wn) -> dict:
     -------
     dict
         Dictionary representation of the WaterNetworkModel
-
+        
     """
     from wntr import __version__
 
@@ -74,13 +71,13 @@ def from_dict(d: dict, append=None):
     d : dict
         Dictionary representation of the water network model
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
 
     Returns
     -------
     WaterNetworkModel
-
+    
     """
     from wntr.epanet.io import _read_control_line, _EpanetRule
 
@@ -112,11 +109,7 @@ def from_dict(d: dict, append=None):
         wn.options.__init__(**d["options"])
     if "curves" in d:
         for curve in d["curves"]:
-            wn.add_curve(
-                name=curve["name"],
-                curve_type=curve["curve_type"],
-                xy_tuples_list=curve["points"],
-            )
+            wn.add_curve(name=curve["name"], curve_type=curve["curve_type"], xy_tuples_list=curve["points"])
     if "patterns" in d:
         for pattern in d["patterns"]:
             wn.add_pattern(name=pattern["name"], pattern=pattern["multipliers"])
@@ -130,9 +123,9 @@ def from_dict(d: dict, append=None):
                     pattern_name = dl[0].setdefault("pattern_name")
                     demand_category = dl[0].setdefault("category")
                 else:
-                    base_demand = node.setdefault("base_demand", 0.0)
-                    pattern_name = node.setdefault("pattern_name")
-                    demand_category = node.setdefault("demand_category")
+                    base_demand = node.setdefault('base_demand',0.0)
+                    pattern_name = node.setdefault('pattern_name')
+                    demand_category = node.setdefault('demand_category')
                 wn.add_junction(
                     name=name,
                     base_demand=base_demand,
@@ -148,14 +141,14 @@ def from_dict(d: dict, append=None):
                 j.pressure_exponent = node.setdefault("pressure_exponent")
                 j.required_pressure = node.setdefault("required_pressure")
                 j.tag = node.setdefault("tag")
-
+                
                 j._leak = node.setdefault("leak", False)
                 j._leak_area = node.setdefault("leak_area", 0.0)
                 j._leak_discharge_coeff = node.setdefault("leak_discharge_coeff", 0.0)
-
+                
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(j))):
-                    setattr(j, attr, node[attr])
+                    setattr( j, attr, node[attr] )
                 if dl is not None and len(dl) > 1:
                     for i in range(1, len(dl)):
                         base_val = dl[i].setdefault("base_val", 0.0)
@@ -168,13 +161,9 @@ def from_dict(d: dict, append=None):
                 wn.add_tank(
                     name,
                     elevation=node.setdefault("elevation"),
-                    init_level=node.setdefault(
-                        "init_level", node.setdefault("min_level", 0)
-                    ),
+                    init_level=node.setdefault("init_level", node.setdefault("min_level", 0)),
                     min_level=node.setdefault("min_level", 0),
-                    max_level=node.setdefault(
-                        "max_level", node.setdefault("min_level", 0) + 10
-                    ),
+                    max_level=node.setdefault("max_level", node.setdefault("min_level", 0) + 10),
                     diameter=node.setdefault("diameter", 0),
                     min_vol=node.setdefault("min_vol", 0),
                     vol_curve=node.setdefault("vol_curve_name"),
@@ -191,7 +180,7 @@ def from_dict(d: dict, append=None):
                 t.tag = node.setdefault("tag")
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(t))):
-                    setattr(t, attr, node[attr])
+                    setattr( t, attr, node[attr] )
             elif node["node_type"] == "Reservoir":
                 wn.add_reservoir(
                     name,
@@ -204,7 +193,7 @@ def from_dict(d: dict, append=None):
                 r.tag = node.setdefault("tag")
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(r))):
-                    setattr(r, attr, node[attr])
+                    setattr( r, attr, node[attr] )
             else:
                 raise ValueError("Illegal node type '{}'".format(node["node_type"]))
     if "links" in d:
@@ -229,7 +218,7 @@ def from_dict(d: dict, append=None):
                 p.wall_coeff = link.setdefault("wall_coeff")
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(p))):
-                    setattr(p, attr, link[attr])
+                    setattr( p, attr, link[attr] )
             elif link["link_type"] == "Pump":
                 pump_type = link.setdefault("pump_type", "POWER")
                 wn.add_pump(
@@ -253,7 +242,7 @@ def from_dict(d: dict, append=None):
                 p.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(p))):
-                    setattr(p, attr, link[attr])
+                    setattr( p, attr, link[attr] )
             elif link["link_type"] == "Valve":
                 valve_type = link["valve_type"]
                 wn.add_valve(
@@ -272,7 +261,7 @@ def from_dict(d: dict, append=None):
                 v.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(v))):
-                    setattr(v, attr, link[attr])
+                    setattr( v, attr, link[attr] )
             else:
                 raise ValueError("Illegal link type '{}'".format(link["link_type"]))
     if "sources" in d:
@@ -295,14 +284,10 @@ def from_dict(d: dict, append=None):
                 tstring = " ".join([ta[0], ta[1], ta[4]])
                 cond = control["condition"].split()
                 if cond[0].lower() == "system":
-                    cstr = " ".join(
-                        ["AT", cond[1], cond[3], cond[4] if len(cond) > 4 else ""]
-                    )
+                    cstr = " ".join(["AT", cond[1], cond[3], cond[4] if len(cond) > 4 else ""])
                 else:
                     cstr = " ".join(["IF", cond[0], cond[1], cond[3], cond[4]])
-                ctrl = _read_control_line(
-                    tstring + " " + cstr, wn, FlowUnits.SI, control_name
-                )
+                ctrl = _read_control_line(tstring + " " + cstr, wn, FlowUnits.SI, control_name)
                 wn.add_control(control_name, ctrl)
             elif ctrl_type.lower() == "rule":
                 ctrllst = ["RULE"]
@@ -329,7 +314,7 @@ def from_dict(d: dict, append=None):
 def to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
     """
     Convert a WaterNetworkModel into GeoDataFrames
-
+    
     Parameters
     ----------
     wn : WaterNetworkModel
@@ -340,62 +325,61 @@ def to_gis(wn, crs=None, pumps_as_points=False, valves_as_points=False):
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
-
+        
     Returns
     -------
     WaterNetworkGIS object that contains GeoDataFrames
-
+        
     """
     gis_data = WaterNetworkGIS()
     gis_data._create_gis(wn, crs, pumps_as_points, valves_as_points)
-
+    
     return gis_data
 
 
 def from_gis(gis_data, append=None):
     """
     Create or append a WaterNetworkModel from GeoDataFrames
-
+    
     Parameters
     ----------
     gis_data : WaterNetworkGIS or dictionary of GeoDataFrames
-        GeoDataFrames containing water network attributes. If gis_data is a
-        dictionary, then the keys are junctions, tanks, reservoirs, pipes,
-        pumps, and valves. If the pumps or valves are Points, they will be
+        GeoDataFrames containing water network attributes. If gis_data is a 
+        dictionary, then the keys are junctions, tanks, reservoirs, pipes, 
+        pumps, and valves. If the pumps or valves are Points, they will be 
         converted to Lines with the same start and end node location.
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
-
+        
     Returns
     -------
     WaterNetworkModel
-
+        
     """
     if isinstance(gis_data, dict):
         gis_data = WaterNetworkGIS(gis_data)
 
     wn = gis_data._create_wn(append=append)
-
+    
     return wn
-
 
 def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
     """
     Convert a WaterNetworkModel into a networkx MultiDiGraph
-
+    
     Parameters
     ----------
     node_weight :  dict or pandas Series (optional)
         Node weights
     link_weight : dict or pandas Series (optional)
-        Link weights.
+        Link weights.  
     modify_direction : bool (optional)
-        If True, than if the link weight is negative, the link start and
+        If True, than if the link weight is negative, the link start and 
         end node are switched and the abs(weight) is assigned to the link
-        (this is useful when weighting graphs by flowrate). If False, link
+        (this is useful when weighting graphs by flowrate). If False, link 
         direction and weight are not changed.
-
+        
     Returns
     --------
     networkx MultiDiGraph
@@ -418,41 +402,24 @@ def to_graph(wn, node_weight=None, link_weight=None, modify_direction=False):
         start_node = link.start_node_name
         end_node = link.end_node_name
         G.add_edge(start_node, end_node, key=name)
-        nx.set_edge_attributes(
-            G, name="type", values={(start_node, end_node, name): link.link_type}
-        )
+        nx.set_edge_attributes(G, name="type", values={(start_node, end_node, name): link.link_type})
 
         if link_weight is not None:
             try:  # weight links
                 value = link_weight[name]
-                if (
-                    modify_direction and value < 0
-                ):  # change the direction of the link and value
+                if modify_direction and value < 0:  # change the direction of the link and value
                     G.remove_edge(start_node, end_node, name)
                     G.add_edge(end_node, start_node, name)
-                    nx.set_edge_attributes(
-                        G,
-                        name="type",
-                        values={(end_node, start_node, name): link.link_type},
-                    )
-                    nx.set_edge_attributes(
-                        G, name="weight", values={(end_node, start_node, name): -value}
-                    )
+                    nx.set_edge_attributes(G, name="type", values={(end_node, start_node, name): link.link_type})
+                    nx.set_edge_attributes(G, name="weight", values={(end_node, start_node, name): -value})
                 else:
-                    nx.set_edge_attributes(
-                        G, name="weight", values={(start_node, end_node, name): value}
-                    )
+                    nx.set_edge_attributes(G, name="weight", values={(start_node, end_node, name): value})
             except:
                 pass
-
+    
     return G
 
-
-def write_json(
-    wn,
-    path_or_buf,
-    **kw_json,
-):
+def write_json(wn, path_or_buf, **kw_json,):
     """
     Write the WaterNetworkModel to a JSON file
 
@@ -462,7 +429,7 @@ def write_json(
         Name of the file or file pointer
     kw_json : keyword arguments
         Arguments to pass directly to `json.dump`
-
+        
     """
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "w") as fout:
@@ -480,7 +447,7 @@ def read_json(path_or_buf, append=None, **kw_json):
     f : str
         Name of the file or file pointer
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
     kw_json : keyword arguments
         Keyword arguments to pass to `json.load`
@@ -488,7 +455,7 @@ def read_json(path_or_buf, append=None, **kw_json):
     Returns
     -------
     WaterNetworkModel
-
+    
     """
     if isinstance(path_or_buf, str):
         with open(path_or_buf, "r") as fin:
@@ -498,9 +465,8 @@ def read_json(path_or_buf, append=None, **kw_json):
     return from_dict(d, append)
 
 
-def write_inpfile(
-    wn, filename: str, units=None, version: float = 2.2, force_coordinates: bool = False
-):
+def write_inpfile(wn, filename: str, units=None, version: float = 2.2, 
+                  force_coordinates: bool = False):
     """
     Write the WaterNetworkModel to an EPANET INP file
 
@@ -509,7 +475,7 @@ def write_inpfile(
         By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
         The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
         Because the PDD analysis options will break EPANET 2.0, the ``version`` option will allow
-        the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis
+        the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
         options being turned off.
 
     Parameters
@@ -533,9 +499,7 @@ def write_inpfile(
         wn._inpfile = wntr.epanet.InpFile()
     if units is None:
         units = wn._options.hydraulic.inpfile_units
-    wn._inpfile.write(
-        filename, wn, units=units, version=version, force_coordinates=force_coordinates
-    )
+    wn._inpfile.write(filename, wn, units=units, version=version, force_coordinates=force_coordinates)
 
 
 def read_inpfile(filename, append=None):
@@ -547,24 +511,23 @@ def read_inpfile(filename, append=None):
     filename : string
         Name of the INP file.
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
-
+        
     Returns
     -------
     WaterNetworkModel
-
+    
     """
     inpfile = wntr.epanet.InpFile()
     wn = inpfile.read(filename, wn=append)
     wn._inpfile = inpfile
-
+    
     return wn
 
 
-def write_geojson(
-    wn, prefix: str, crs=None, pumps_as_points=True, valves_as_points=True
-):
+def write_geojson(wn, prefix: str, crs=None, pumps_as_points=True, 
+                  valves_as_points=True):
     """
     Write the WaterNetworkModel to a set of GeoJSON files, one file for each
     network element.
@@ -590,28 +553,27 @@ def write_geojson(
         Represent pumps as points (True) or lines (False), by default False
     valves_as_points : bool, optional
         Represent valves as points (True) or lines (False), by default False
-
+        
     """
-    wn_gis = wn.to_gis(
-        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-    )
+    wn_gis = wn.to_gis(crs, pumps_as_points=pumps_as_points, 
+                       valves_as_points=valves_as_points)
     wn_gis.write_geojson(prefix=prefix)
 
 
-def read_geojson(files, index_col="name", append=None):
+def read_geojson(files, index_col='name', append=None):
     """
     Create or append a WaterNetworkModel from GeoJSON files
 
     Parameters
     ----------
     files : dictionary
-        Dictionary of GeoJSON filenames, where the keys are in the set
-        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and
+        Dictionary of GeoJSON filenames, where the keys are in the set 
+        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and 
         values are the corresponding GeoJSON filename
     index_col : str, optional
         Column that contains the element name
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
 
     Returns
@@ -626,9 +588,8 @@ def read_geojson(files, index_col="name", append=None):
     return wn
 
 
-def write_shapefile(
-    wn, prefix: str, crs=None, pumps_as_points=True, valves_as_points=True
-):
+def write_shapefile(wn, prefix: str, crs=None, pumps_as_points=True,
+                    valves_as_points=True):
     """
     Write the WaterNetworkModel to a set of Esri Shapefiles, one directory for
     each network element.
@@ -656,13 +617,11 @@ def write_shapefile(
         Represent valves as points (True) or lines (False), by default False
 
     """
-    wn_gis = wn.to_gis(
-        crs, pumps_as_points=pumps_as_points, valves_as_points=valves_as_points
-    )
+    wn_gis = wn.to_gis(crs, pumps_as_points=pumps_as_points,
+                       valves_as_points=valves_as_points)
     wn_gis.write_shapefile(prefix=prefix)
 
-
-def read_shapefile(files, index_col="name", append=None):
+def read_shapefile(files, index_col='name', append=None):
     """
 
     Create or append a WaterNetworkModel from Esri Shapefiles
@@ -670,13 +629,13 @@ def read_shapefile(files, index_col="name", append=None):
     Parameters
     ----------
     files : dictionary
-        Dictionary of Shapefile file or directory names, where the keys are in the set
-        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and
+        Dictionary of Shapefile file or directory names, where the keys are in the set 
+        ('junction', 'tanks', 'reservoirs', 'pipes', 'pumps', 'valves') and 
         values are the corresponding Shapefile filenames or directories
     index_col : str, optional
         Column that contains the element name
     append : WaterNetworkModel or None, optional
-        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel
+        Existing WaterNetworkModel to append.  If None, a new WaterNetworkModel 
         is created.
 
     Returns
@@ -685,33 +644,32 @@ def read_shapefile(files, index_col="name", append=None):
 
     """
     gis_data = WaterNetworkGIS()
-    gis_data.read_shapefile(files, index_col=index_col)
+    gis_data.read_shapefile(files,index_col=index_col)
     wn = gis_data._create_wn(append=append)
 
     return wn
 
-
 def valid_gis_names(complete_list=True, truncate_names=None):
     """
     Valid column/field names for GeoJSON or Shapefiles
-
-    Note that Shapefile field names are truncated to 10 characters
+    
+    Note that Shapefile field names are truncated to 10 characters 
     (set truncate_names=10)
-
+    
     Parameters
     ----------
     complete_list : bool
         When true, returns both optional and required column/field names.
         When false, only returns required column/field names.
     truncate_names : None or int
-        Truncate column/field names to specified number of characters,
+        Truncate column/field names to specified number of characters, 
         set truncate=10 for Shapefiles.  None indicates no truncation.
-
+        
     Returns
     ---------
     dict : Dictionary of valid GeoJSON or Shapefile column/field names
     """
-
+    
     gis_data = WaterNetworkGIS()
     column_names = gis_data._valid_names(complete_list, truncate_names)
 
