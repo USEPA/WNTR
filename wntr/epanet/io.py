@@ -1055,7 +1055,7 @@ class InpFile(object):
                         curve_points.append((x, y))
                     self.wn.add_curve(curve_name, 'EFFICIENCY', curve_points)
                     curve = self.wn.get_curve(curve_name)
-                    pump.efficiency = curve
+                    pump.efficiency_curve_name = curve_name
                 else:
                     logger.warning('Unknown entry in ENERGY section: %s', line)
             else:
@@ -1076,8 +1076,8 @@ class InpFile(object):
         lnames.sort()
         for pump_name in lnames:
             pump = wn.links[pump_name]
-            if pump.efficiency is not None:
-                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency.name).encode(sys_default_enc))
+            if pump.efficiency_curve_name is not None:
+                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency_curve_name).encode(sys_default_enc))
             if pump.energy_price is not None:
                 f.write('PUMP {:10s} PRICE   {:.4f}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode(sys_default_enc))
             if pump.energy_pattern is not None:

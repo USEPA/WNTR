@@ -234,7 +234,7 @@ def from_dict(d: dict, append=None):
                     initial_status=link.setdefault("initial_status", "OPEN"),
                 )
                 p = wn.get_link(name)
-                p.efficiency = link.setdefault("efficiency")
+                p.efficiency_curve_name = link.setdefault("efficiency_curve_name")
                 p.energy_pattern = link.setdefault("energy_pattern")
                 p.energy_price = link.setdefault("energy_price")
                 p.initial_setting = link.setdefault("initial_setting")
