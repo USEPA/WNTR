@@ -1139,9 +1139,7 @@ class Pump(Link):
     def efficiency(self): 
         warn('The pump efficiency property is deprecated - use efficiency_curve instead', DeprecationWarning, stacklevel=2)
         return self.efficiency_curve
-    @efficiency.setter
-    def efficiency(self, value):
-        self._efficiency = value
+
 
     @property
     def efficiency_curve(self):
