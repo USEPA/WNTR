@@ -1079,7 +1079,8 @@ class Pump(Link):
         initial_status
         initial_setting
         initial_quality
-        efficiency
+        efficiency_curve
+        efficiency_curve_name
         energy_price
         energy_pattern
         vertices
@@ -1111,7 +1112,7 @@ class Pump(Link):
                         "initial_status"]
     _optional_attributes = ["initial_quality",
                             "initial_setting",
-                            "efficiency",
+                            "efficiency_curve_name",
                             "energy_pattern",
                             "energy_price",
                             "vertices",
