@@ -291,7 +291,7 @@ def pump_power(flowrate, head, wn):
 
     efficiency_dict = {}
     for pump_name, pump in wn.pumps():
-        if pump.efficiency is None:
+        if pump.efficiency_curve_name is None:
             efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in time]
         else:
             raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
