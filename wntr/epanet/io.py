@@ -3035,6 +3035,163 @@ def _clean_line(wn, sec, line):  # pragma: no cover
     return line
 
 
+def _parse_rule_condition(condition_tokens, wn, flow_units):
+    """
+    Parse IF condition part of a RULES format control.
+    
+    Parameters
+    ----------
+    condition_tokens: list
+        Tokens from IF to THEN (exclusive)
+    wn: wntr.network.WaterNetworkModel
+    flow_units: str
+    
+    Returns
+    -------
+    tuple: (control_type, control_params)
+        control_type: 'time', 'conditional'
+        control_params: dict with parameters for creating the control
+    """
+    if condition_tokens[0].upper() == 'SYSTEM':
+        # SYSTEM conditions (TIME, CLOCKTIME, DEMAND)
+        if condition_tokens[1].upper() == 'TIME':
+            time_value = condition_tokens[3]  # After 'IS'
+            if ':' in time_value:
+                run_at_time = int(_str_time_to_sec(time_value))
+            else:
+                run_at_time = int(float(time_value) * 3600)
+            return 'time', {
+                'run_at_time': run_at_time,
+                'time_type': 'SIM_TIME',
+                'repeat': False
+            }
+        
+        elif condition_tokens[1].upper() == 'CLOCKTIME':
+            time_value = condition_tokens[3]  # After operator
+            if len(condition_tokens) > 4 and condition_tokens[4].upper() in ['AM', 'PM']:
+                run_at_time = int(_clock_time_to_sec(time_value, condition_tokens[4]))
+            else:
+                run_at_time = int(_str_time_to_sec(time_value))
+            return 'time', {
+                'run_at_time': run_at_time,
+                'time_type': 'CLOCK_TIME',
+                'repeat': True
+            }
+        
+        else:
+            # Other SYSTEM conditions (DEMAND, etc.) - placeholder
+            return 'conditional', {
+                'element': None,
+                'attribute': 'time',
+                'operator': None,
+                'threshold': None
+            }
+    
+    else:
+        # Element-based conditions: TANK/JUNCTION/etc element_name attribute operator value
+        element_type = condition_tokens[0].upper()
+        element_name = condition_tokens[1]
+        attribute = condition_tokens[2].upper()
+        operator = condition_tokens[3].upper()
+        threshold_value = float(condition_tokens[4])
+        
+        # Get the condition element
+        if element_type in ['JUNCTION', 'NODE']:
+            element = wn.get_node(element_name)
+        elif element_type in ['TANK', 'RESERVOIR']:
+            element = wn.get_node(element_name)
+        elif element_type in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
+            element = wn.get_link(element_name)
+        else:
+            raise RuntimeError(f"Unknown condition element type {element_type}")
+        
+        # Set up operator
+        if operator in ['ABOVE', '>', 'GREATER']:
+            oper = np.greater
+        elif operator in ['BELOW', '<', 'LESS']:
+            oper = np.less
+        elif operator in ['=', '==', 'EQUAL', 'IS']:
+            oper = np.equal
+        else:
+            raise RuntimeError(f"Unknown operator {operator}")
+        
+        # Convert threshold based on attribute
+        if attribute == 'LEVEL' and element.node_type == 'Tank':
+            threshold = to_si(flow_units, threshold_value, HydParam.HydraulicHead)
+        elif attribute == 'PRESSURE' and element.node_type == 'Junction':
+            threshold = to_si(flow_units, threshold_value, HydParam.Pressure)
+        elif attribute == 'FLOW':
+            threshold = to_si(flow_units, threshold_value, HydParam.Flow)
+        else:
+            threshold = threshold_value
+        
+        return 'conditional', {
+            'element': element,
+            'attribute': attribute.lower(),
+            'operator': oper,
+            'threshold': threshold
+        }
+
+
+def _parse_rule_action(action_tokens, wn, flow_units):
+    """
+    Parse THEN action part of a RULES format control.
+    
+    Parameters
+    ----------
+    action_tokens: list
+        Tokens from THEN onwards
+    wn: wntr.network.WaterNetworkModel
+    flow_units: str
+    
+    Returns
+    -------
+    wntr.network.ControlAction
+    """
+    # Extract action element (after THEN)
+    action_type = action_tokens[0].upper()
+    element_name = action_tokens[1]
+    
+    if action_type in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
+        element = wn.get_node(element_name)
+    else:
+        element = wn.get_link(element_name)
+    
+    # Extract action value (after IS)
+    is_index = None
+    for i, token in enumerate(action_tokens):
+        if token.upper() == 'IS':
+            is_index = i
+            break
+    
+    if is_index is None or is_index + 1 >= len(action_tokens):
+        raise RuntimeError("Missing action value in rule action")
+    
+    status = action_tokens[is_index + 1].upper()
+    
+    # Create action object
+    if status in ['OPEN', 'CLOSED', 'ACTIVE']:
+        setting = LinkStatus[status].value
+        return wntr.network.ControlAction(element, 'status', setting)
+    else:
+        if isinstance(element, wntr.network.Pump):
+            return wntr.network.ControlAction(element, 'base_speed', float(status))
+        elif isinstance(element, wntr.network.Valve):
+            if element.valve_type in ['PRV', 'PSV', 'PBV']:
+                setting = to_si(flow_units, float(status), HydParam.Pressure)
+            elif element.valve_type == 'FCV':
+                setting = to_si(flow_units, float(status), HydParam.Flow)
+            elif element.valve_type == 'TCV':
+                setting = float(status)
+            elif element.valve_type == 'GPV':
+                setting = status
+            else:
+                raise ValueError(f'Unrecognized valve type {element.valve_type}')
+            return wntr.network.ControlAction(element, 'setting', setting)
+        else:
+            return wntr.network.ControlAction(element, 'setting', float(status))
+
+
 def _read_control_line(line, wn, flow_units, control_name):
     """
     Parameters
@@ -3054,110 +3211,128 @@ def _read_control_line(line, wn, flow_units, control_name):
     if current == []:
         return
     
-    element_name = current[1]
-
-    # For the case of leak demands
-    if current[0] == 'JUNCTION':
-        element = wn.get_node(element_name)
+    # Handle RULES format: IF condition THEN action
+    if current[0].upper() == 'IF':
+        # Find THEN to split condition and action
+        then_index = current.index('THEN') if 'THEN' in current else None
+        if not then_index:
+            raise RuntimeError("Missing THEN in rule: " + line)
+        
+        # Split tokens
+        condition_tokens = current[1:then_index]  # Skip 'IF'
+        action_tokens = current[then_index + 1:]  # Skip 'THEN'
+        
+        # Parse condition and action
+        condition_type, condition_params = _parse_rule_condition(condition_tokens, wn, flow_units)
+        action_obj = _parse_rule_action(action_tokens, wn, flow_units)
+        
+        # Create control based on condition type
+        if condition_type == 'time':
+            return Control._time_control(
+                wn, 
+                condition_params['run_at_time'], 
+                condition_params['time_type'], 
+                condition_params['repeat'], 
+                action_obj, 
+                control_name
+            )
+        else:  # conditional
+            return Control._conditional_control(
+                condition_params['element'],
+                condition_params['attribute'],
+                condition_params['operator'],
+                condition_params['threshold'],
+                action_obj,
+                control_name
+            )
+    
+    # Handle CONTROLS format: LINK/NODE element_name status [IF/AT] condition
     else:
-        element = wn.get_link(element_name)
-
-    if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
-        node_name = current[5]
-    current = [i.upper() for i in current]
-    current[1] = element_name # don't capitalize the link name
-
-    # Create the control action object
-
-    status = current[2].upper()
-    if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
-        setting = LinkStatus[status].value
-        action_obj = wntr.network.ControlAction(element, 'status', setting)
-    else:
-        if isinstance(element, wntr.network.Pump):
-            action_obj = wntr.network.ControlAction(element, 'base_speed', float(current[2]))
-        elif isinstance(element, wntr.network.Valve):
-            if element.valve_type == 'PRV' or element.valve_type == 'PSV' or element.valve_type == 'PBV':
-                setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
-            elif element.valve_type == 'FCV':
-                setting = to_si(flow_units, float(current[2]), HydParam.Flow)
-            elif element.valve_type == 'TCV':
-                setting = float(current[2])
-            elif element.valve_type == 'GPV':
-                setting = current[2]
-            else:
-                raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(element.valve_type, line))
-            action_obj = wntr.network.ControlAction(element, 'setting', setting)
-        elif isinstance(element, wntr.network.Node):
-            if status=="TRUE":
-                setting = True
-            elif status=="FALSE":
-                setting = False
-            action_obj = wntr.network.ControlAction(element, 'leak_status', setting)
-
+        element_name = current[1]
+        
+        if current[0].upper() == 'LINK':
+            element = wn.get_link(element_name)
         else:
-            raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(element))+
-                                'the link status. Control: {0}'.format(line)))
-
-    # Create the control object
-    #control_count += 1
-    #control_name = 'control '+str(control_count)
-    if 'TIME' not in current and 'CLOCKTIME' not in current:
-        threshold = None
-        if 'IF' in current:
+            element = wn.get_node(element_name)
+        
+        status = current[2].upper()
+        
+        # Create action object
+        if status in ['OPEN', 'OPENED', 'CLOSED', 'ACTIVE']:
+            setting = LinkStatus[status].value
+            action_obj = wntr.network.ControlAction(element, 'status', setting)
+        else:
+            if isinstance(element, wntr.network.Pump):
+                action_obj = wntr.network.ControlAction(element, 'base_speed', float(current[2]))
+            elif isinstance(element, wntr.network.Valve):
+                if element.valve_type in ['PRV', 'PSV', 'PBV']:
+                    setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
+                elif element.valve_type == 'FCV':
+                    setting = to_si(flow_units, float(current[2]), HydParam.Flow)
+                elif element.valve_type == 'TCV':
+                    setting = float(current[2])
+                elif element.valve_type == 'GPV':
+                    setting = current[2]
+                else:
+                    raise ValueError(f'Unrecognized valve type {element.valve_type} in control: {line}')
+                action_obj = wntr.network.ControlAction(element, 'setting', setting)
+            elif isinstance(element, wntr.network.Node):
+                if status == "TRUE":
+                    setting = True
+                elif status == "FALSE":
+                    setting = False
+                else:
+                    setting = status
+                action_obj = wntr.network.ControlAction(element, 'leak_status', setting)
+            else:
+                raise RuntimeError(f'Unrecognized element type {type(element)} in control: {line}')
+        
+        # Handle conditions
+        if len(current) > 3 and current[3].upper() == 'AT':
+            # Time-based: LINK element status AT TIME/CLOCKTIME value
+            if current[4].upper() == 'TIME':
+                time_value = current[5]
+                if ':' in time_value:
+                    run_at_time = int(_str_time_to_sec(time_value))
+                else:
+                    run_at_time = int(float(time_value) * 3600)
+                return Control._time_control(wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
+            
+            elif current[4].upper() == 'CLOCKTIME':
+                time_value = current[5]
+                if len(current) > 6 and current[6].upper() in ['AM', 'PM']:
+                    run_at_time = int(_clock_time_to_sec(time_value, current[6]))
+                else:
+                    run_at_time = int(_str_time_to_sec(time_value))
+                return Control._time_control(wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
+            else:
+                raise RuntimeError(f"Unknown operator {operator} in control: {line}")
+        
+        elif len(current) > 3 and current[3].upper() == 'IF':
+            # Conditional: LINK element status IF NODE node_name ABOVE/BELOW value
+            node_name = current[5]
             node = wn.get_node(node_name)
-            if current[6] == 'ABOVE':
+            
+            operator = current[6].upper()
+            threshold_value = float(current[7])
+            
+            if operator in ['ABOVE', '>']:
                 oper = np.greater
-            elif current[6] == 'BELOW':
+            elif operator in ['BELOW', '<']:
                 oper = np.less
             else:
-                raise RuntimeError("The following control is not recognized: " + line)
-            # OKAY - we are adding in the elevation. This is A PROBLEM
-            # IN THE INP WRITER. Now that we know, we can fix it, but
-            # if this changes, it will affect multiple pieces, just an
-            # FYI.
+                raise RuntimeError(f"Unknown operator {operator} in control: {line}")
+            
             if node.node_type == 'Junction':
-                threshold = to_si(flow_units,
-                                  float(current[7]), HydParam.Pressure)# + node.elevation
-                control_obj = Control._conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
+                threshold = to_si(flow_units, threshold_value, HydParam.Pressure)
+                return Control._conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
             elif node.node_type == 'Tank':
-                threshold = to_si(flow_units, 
-                                  float(current[7]), HydParam.HydraulicHead)# + node.elevation
-                control_obj = Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
+                threshold = to_si(flow_units, threshold_value, HydParam.HydraulicHead)
+                return Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
+            else:
+                raise RuntimeError(f"Unknown node type {node.node_type} in control: {line}")
         else:
-            raise RuntimeError("The following control is not recognized: " + line)
-#                control_name = ''
-#                for i in range(len(current)-1):
-#                    control_name = control_name + '/' + current[i]
-#                control_name = control_name + '/' + str(round(threshold, 2))
-    else:
-        if 'CLOCKTIME' not in current:  # at time
-            if 'TIME' not in current:
-                raise ValueError('Unrecognized line in inp file: {0}'.format(line))
-
-            if ':' in current[5]:
-                run_at_time = int(_str_time_to_sec(current[5]))
-            else:
-                run_at_time = int(float(current[5])*3600)
-            control_obj = Control._time_control(wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
-#                    control_name = ''
-#                    for i in range(len(current)-1):
-#                        control_name = control_name + '/' + current[i]
-#                    control_name = control_name + '/' + str(run_at_time)
-        else:  # at clocktime
-            if len(current) < 7:
-                if ':' in current[5]:
-                    run_at_time = int(_str_time_to_sec(current[5]))
-                else:
-                    run_at_time = int(float(current[5])*3600)
-            else:
-                run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-            control_obj = Control._time_control(wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
-#                    control_name = ''
-#                    for i in range(len(current)-1):
-#                        control_name = control_name + '/' + current[i]
-#                    control_name = control_name + '/' + str(run_at_time)
-    return control_obj
+            raise RuntimeError(f"Unknown control format in control: {line}")
 
 
 def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_section=5, 
