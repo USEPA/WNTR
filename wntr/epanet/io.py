@@ -3250,7 +3250,7 @@ def _read_control_line(line, wn, flow_units, control_name):
     else:
         element_name = current[1]
         
-        if current[0].upper() == 'LINK':
+        if current[0].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
             element = wn.get_link(element_name)
         else:
             element = wn.get_node(element_name)
