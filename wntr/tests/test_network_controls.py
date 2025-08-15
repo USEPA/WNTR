@@ -786,9 +786,8 @@ class TestControlParsing(unittest.TestCase):
         self.assertEqual(action._value, True)
         
         # Check condition
-        self.assertEqual(control._condition._source_obj.name, "j1")
-        self.assertEqual(control._condition._source_attr, "leak_status")
-        self.assertEqual(control._condition._relation, self.wntr.network.controls.Comparison.eq)
+        self.assertEqual(control._condition._threshold, 5 * 3600)
+
         
     def test_invalid_rule(self):
         """Test invalid RULES format"""
