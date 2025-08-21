@@ -104,4 +104,9 @@ setup(name=DISTNAME,
       zip_safe=False,
       install_requires=DEPENDENCIES,
       scripts=[],
+      entry_points={
+          'console_scripts': [
+              "wntr-convert = wntr.utils.convert:wntr_convert"
+          ]
+      },
       include_package_data=True)
