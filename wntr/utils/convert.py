@@ -50,6 +50,7 @@ def wntr_convert(args=None):
                 parser.error(
                     f'Unknown file format "{infile.suffix}": expected one of ".inp", ".json"'
                 )
+        wn.convert_controls_to_rules()
         match outfile.suffix.lower():
             case ".inp":
                 wntr.network.io.write_inpfile(wn, str(outfile))
