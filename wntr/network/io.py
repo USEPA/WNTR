@@ -258,6 +258,7 @@ def from_dict(d: dict, append=None):
                 v = wn.get_link(name)
                 if valve_type.lower() == "gpv":
                     v.headloss_curve_name = link.setdefault("headloss_curve_name")
+                v.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(v))):
                     setattr( v, attr, link[attr] )
