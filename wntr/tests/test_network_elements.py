@@ -10,6 +10,8 @@ import numpy as np
 import wntr
 import wntr.network.elements as elements
 from wntr.network.options import TimeOptions
+from wntr.utils.check_values import _check_float, _check_float_or_none, \
+    _check_positive_non_zero_float, _check_positive_or_zero_float
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "networks_for_testing")
@@ -284,39 +286,39 @@ class TestElements(unittest.TestCase):
 
 @pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828])
 def test_positive_non_zero_float(value):
-    assert elements._get_positive_non_zero_float(value, "test") == float(value)
+    assert _check_positive_non_zero_float(value, "test") == float(value)
 
 
 @pytest.mark.parametrize("value", [0, "0", 0.0, "not_a_number", -1, -2.71828, [-1, 2]])
 def test_positive_non_zero_float_bad_value(value):
     with pytest.raises(ValueError, match="test"):
-        elements._get_positive_non_zero_float(value, "test")
+        _check_positive_non_zero_float(value, "test")
 
 
 @pytest.mark.parametrize("value", [0.0, 0, "0", 1.0, 1, "500", 0, 2.71828])
 def test_positive_or_zero_float(value):
-    assert elements._get_positive_or_zero_float(value, "test") == float(value)
+    assert _check_positive_or_zero_float(value, "test") == float(value)
 
 
 @pytest.mark.parametrize("value", ["not_a_number", -1, -2.71828, [-1, 2]])
 def test_positive_or_zero_float_bad_value(value):
     with pytest.raises(ValueError, match="test"):
-        elements._get_positive_or_zero_float(value, "test")
+        _check_positive_or_zero_float(value, "test")
 
 
 @pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828, 0.0, 0, -1, -2.71828])
 def test_float_or_none_with_float(value):
-    assert elements._get_float_or_none(value, "test") == float(value)
+    assert _check_float_or_none(value, "test") == float(value)
 
 
 def test_float_or_none_with_none():
-    assert elements._get_float_or_none(None, "test") is None
+    assert _check_float_or_none(None, "test") is None
 
 
 @pytest.mark.parametrize("value", ["not_a_number", [-1, 2]])
 def test_float_or_none_bad_value(value):
     with pytest.raises(ValueError, match="test"):
-        elements._get_float_or_none(value, "test")
+        _check_float_or_none(value, "test")
 
 
 if __name__ == "__main__":
