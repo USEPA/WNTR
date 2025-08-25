@@ -1003,6 +1003,28 @@ class TestNetworkIO_Dict(unittest.TestCase):
         assert junction2._leak_area == 1
         assert junction2._leak_discharge_coeff == 0.75
 
+    def test_pump_efficiencey_curve(self):
+        wn = wntr.network.WaterNetworkModel()
+        wn.add_junction('J1')
+        wn.add_junction('J2')
+        wn.add_pump('P1','J1','J2')
+        pump = wn.get_link('P1')
+        wn.add_curve('efficiency_curve', 'EFFICIENCY',[(0,0),(1,1)])
+        pump.efficiency_curve_name = 'efficiency_curve'
+
+
+        wn_dict = wn.to_dict()
+        wn2 = wntr.network.from_dict(wn_dict)
+
+        efficiency_curve = wn2.get_curve('efficiency_curve')
+
+        assert efficiency_curve is not None
+        assert efficiency_curve.points == [(0, 0), (1, 1)]
+
+        assert pump.efficiency_curve_name == 'efficiency_curve'
+        assert isinstance(pump.efficiency_curve, wntr.network.Curve)
+        assert pump.efficiency_curve.name == 'efficiency_curve'
+
 
 @unittest.skipIf(not has_geopandas,
                  "Cannot test GIS capabilities: geopandas is missing")

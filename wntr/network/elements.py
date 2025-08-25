@@ -1079,7 +1079,8 @@ class Pump(Link):
         initial_status
         initial_setting
         initial_quality
-        efficiency
+        efficiency_curve
+        efficiency_curve_name
         energy_price
         energy_pattern
         vertices
@@ -1111,7 +1112,7 @@ class Pump(Link):
                         "initial_status"]
     _optional_attributes = ["initial_quality",
                             "initial_setting",
-                            "efficiency",
+                            "efficiency_curve_name",
                             "energy_pattern",
                             "energy_price",
                             "vertices",
@@ -1122,7 +1123,7 @@ class Pump(Link):
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
-        self._efficiency = None
+        self._efficiency_curve_name = None
         self._energy_price = None 
         self._energy_pattern = None
         self._outage_rule_name = name+'_outage'
@@ -1133,13 +1134,41 @@ class Pump(Link):
             return False
         return True
 
+    
     @property
     def efficiency(self): 
-        """Curve : pump efficiency"""
-        return self._efficiency
-    @efficiency.setter
-    def efficiency(self, value):
-        self._efficiency = value
+        warn('The pump efficiency property is deprecated - use efficiency_curve instead', DeprecationWarning, stacklevel=2)
+        return self.efficiency_curve
+
+
+    @property
+    def efficiency_curve(self):
+        """The efficiency curve, if defined (read only)
+
+        Used for energy use calculations.
+
+        If not defined, the pump will use a default efficiency % value WaterNetworkModel.options.energy.global_efficiency.
+
+        Set this using the vol_curve_name.
+        """
+
+        if self.efficiency_curve_name is None:
+            return None
+        return self._curve_reg[self.efficiency_curve_name]
+
+    @property
+    def efficiency_curve_name(self):
+        """Name of the volume curve to use, or None
+        
+        Curve must be in the curve registry"""
+        return self._efficiency_curve_name
+    
+    @efficiency_curve_name.setter
+    def efficiency_curve_name(self, curve_name):
+        self._curve_reg.remove_usage(self._efficiency_curve_name, (self.name, 'Pump'))
+        self._curve_reg.add_usage(curve_name, (self.name, 'Pump'))
+        self._efficiency_curve_name = curve_name
+
 
     @property
     def energy_price(self):
