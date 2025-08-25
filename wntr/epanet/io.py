@@ -845,7 +845,7 @@ class InpFile(object):
                 curve_points = []
                 for point in self.curves[curve_name]:
                     x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HeadLoss)
+                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
                     curve_points.append((x, y))
                 self.wn.add_curve(curve_name, 'HEADLOSS', curve_points)
                 valve_set = curve_name
@@ -962,7 +962,7 @@ class InpFile(object):
                 f.write(';HEADLOSS: {}\n'.format(curve_name).encode(sys_default_enc))
                 for point in curve.points:
                     x = from_si(self.flow_units, point[0], HydParam.Flow)
-                    y = from_si(self.flow_units, point[1], HydParam.HeadLoss)
+                    y = from_si(self.flow_units, point[1], HydParam.HydraulicHead)
                     f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode(sys_default_enc))
             else:
                 f.write(';UNKNOWN: {}\n'.format(curve_name).encode(sys_default_enc))
