@@ -3,6 +3,9 @@ The wntr.network.elements module includes elements of a water network model,
 including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
 demands, curves, and sources.
 """
+
+from __future__ import annotations
+
 import numpy as np
 import sys
 import logging
@@ -15,6 +18,7 @@ from collections.abc import MutableSequence
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
+from wntr.utils.check_values import _check_float_or_none, _check_positive_non_zero_float, _check_positive_or_zero_float
 
 import warnings
 warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
@@ -939,7 +943,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = value
+        self._length = _check_positive_or_zero_float(value, "Pipe length")
 
     @property
     def diameter(self):
@@ -947,15 +951,16 @@ class Pipe(Link):
         return self._diameter
     @diameter.setter
     def diameter(self, value):
-        self._diameter = value
+        self._diameter = _check_positive_non_zero_float(value, "Pipe diameter")
 
     @property
     def roughness(self):
         """float : pipe roughness"""
-        return self._roughness 
+        return self._roughness
+
     @roughness.setter
     def roughness(self, value):
-        self._roughness = value
+        self._roughness = _check_positive_non_zero_float(value, "Pipe roughness")
 
     @property
     def minor_loss(self):
@@ -963,7 +968,7 @@ class Pipe(Link):
         return self._minor_loss
     @minor_loss.setter
     def minor_loss(self, value):
-        self._minor_loss = value
+        self._minor_loss = _check_positive_or_zero_float(value, "Pipe minor loss")
 
     @property
     def check_valve(self):
@@ -1009,7 +1014,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = value
+        self._bulk_coeff = _check_float_or_none(value, "Pipe bulk reaction coefficient")
 
     @property
     def wall_coeff(self):
@@ -1017,7 +1022,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = value
+        self._wall_coeff = _check_float_or_none(value, "Pipe wall reaction coefficient")
 
     @property
     def status(self):
