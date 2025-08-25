@@ -44,19 +44,10 @@ A NetworkX directed multigraph can an be obtained from a WaterNetworkModel using
 the following function:
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 	
-.. doctest::
-
-    >>> import wntr # doctest: +SKIP
-	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> G = wn.to_graph() # directed multigraph
 	
 The graph is stored as a nested dictionary.  The nodes and links

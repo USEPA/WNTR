@@ -19,21 +19,11 @@ Both versions can also run water quality simulations, as described in :ref:`wate
 
 The user can switch between pressure dependent demand (PDD) or demand-driven (DD) hydraulic simulation by setting
 the ``wn.options.hydraulic.demand_model`` option.
-
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-
-.. doctest::
-
-    >>> import wntr # doctest: +SKIP
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> wn.options.hydraulic.demand_model = 'DD'  
     >>> wn.options.hydraulic.demand_model = 'PDD'
 	
