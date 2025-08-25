@@ -236,9 +236,10 @@ The solution for :math:`u` and :math:`v` is then returned and printed to four si
    >>> ns = NewtonSolver()
    >>> solver_status = ns.solve(m)
    >>> np.round(m.u.value,4)
-   1.618
+   np.float64(1.618)
+
    >>> np.round(m.v.value,4)
-   2.618
+   np.float64(2.618)
 
 Building MSX models
 -------------------
