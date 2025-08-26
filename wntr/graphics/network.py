@@ -160,6 +160,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     filename : str, optional
         Filename used to save the figure
         
+    backend: str, optional
+        Backend used for plotting: 'nx' for networkx (default) and 'gpd' for geopandas
+        
     Returns
     -------
     ax : matplotlib axes object  
