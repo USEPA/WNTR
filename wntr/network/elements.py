@@ -1126,8 +1126,6 @@ class Pump(Link):
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Pump, self).__init__(wn, name, start_node_name, end_node_name)
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
-        self._base_power = None
-        self._pump_curve_name = None
         self._efficiency_curve_name = None
         self._energy_price = None 
         self._energy_pattern = None
@@ -1348,13 +1346,10 @@ class HeadPump(Pump):
 
     """
 
-#    def __init__(self, name, start_node_name, end_node_name, wn):
-#        super(HeadPump,self).__init__(name, start_node_name, 
-#                                      end_node_name, wn)
-#        self._curve_coeffs = None
-#        self._coeffs_curve_points = None # these are used to verify whether
-#                                         # the pump curve was changed since
-#                                         # the _curve_coeffs were calculated
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(HeadPump,self).__init__(name, start_node_name, 
+                                        end_node_name, wn)
+        self._pump_curve_name = None
 
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
@@ -1568,6 +1563,10 @@ class PowerPump(Pump):
         setting
 
     """
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(HeadPump,self).__init__(name, start_node_name, 
+                                        end_node_name, wn)
+        self._base_power = None
 
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
