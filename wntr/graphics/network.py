@@ -161,27 +161,30 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         Filename used to save the figure
         
     backend: str, optional
-        Backend used for plotting: 'nx' for networkx (default) and 'gpd' for geopandas
+        Backend used for plotting: 
+        'nx' for networkx (default) 
+        'gpd' for geopandas. Adds icons for components and vertices on links
         
     Returns
     -------
     ax : matplotlib axes object  
     """
     if backend == 'nx':
-        # pass keyword arguments on
-        _plot_network_nx(wn=wn, node_attribute=node_attribute, link_attribute=link_attribute, title=title,
+        ax = _plot_network_nx(wn=wn, node_attribute=node_attribute, link_attribute=link_attribute, title=title,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, node_colorbar_label=node_colorbar_label, link_colorbar_label=link_colorbar_label, 
                directed=directed, ax=ax, show_plot=show_plot, filename=filename)
     elif backend == 'gpd':
-        _plot_network_gpd(wn=wn, node_attribute=node_attribute, link_attribute=link_attribute, title=title,
+        ax = _plot_network_gpd(wn=wn, node_attribute=node_attribute, link_attribute=link_attribute, title=title,
                node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
                link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, node_colorbar_label=node_colorbar_label, link_colorbar_label=link_colorbar_label, 
                directed=directed, legend=legend, ax=ax, show_plot=show_plot, filename=filename)
     else:
         raise Exception("Backend choice {backend} unrecognized. Please use 'nx' for networkx or 'gpd' for geopandas.")
+
+    return ax
 
 def _plot_network_nx(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
