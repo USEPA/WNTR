@@ -1,0 +1,20 @@
+Version 1.4.0 (main)
+---------------------------------------------------
+WNTR version 1.4.0 includes the following updates:
+
+* Fixed status badge by @kbonney in https://github.com/USEPA/WNTR/pull/489
+* Added a getting started Jupyter notebook by @kbonney in https://github.com/USEPA/WNTR/pull/469
+* Bug fix for libepanet binaries, replaced with files from the latest build of MSX by @kbonney in https://github.com/USEPA/WNTR/pull/495
+* Added a demand pattern library by @kaklise in https://github.com/USEPA/WNTR/pull/492
+* Added a model development Jupyter notebook tutorial by @kaklise in https://github.com/USEPA/WNTR/pull/491
+* Added a salt water intrusion Jupyter notebook tutorial by @kbonney in https://github.com/USEPA/WNTR/pull/455
+* Added minor revisions to Jupyter Notebooks and documentation by @kaklise in https://github.com/USEPA/WNTR/pull/499
+* Removed version restriction on geopandas, and remove fiona optional dependency by @angusmcb in https://github.com/USEPA/WNTR/pull/488
+* Updated documentation to include release instructions, plus minor formatting updates by @kaklise in https://github.com/USEPA/WNTR/pull/502
+* Moved tests from Jupyter Notebooks to GitHub Action tests by @kaklise in https://github.com/USEPA/WNTR/pull/505
+* Bug fix for initial status and initial setting used by the WNTRSimulator by @kaklise in https://github.com/USEPA/WNTR/pull/506
+* Added signing of dylibs for Apple Silicon by @meggrasse in https://github.com/USEPA/WNTR/pull/498
+* Bug fix for MSX initial concentration and sources by @dbhart in https://github.com/USEPA/WNTR/pull/507
+* Resolved GeoPandas deprecation warnings by @emmanuel-ferdman in https://github.com/USEPA/WNTR/pull/510
+* Bug fix for vertices setter to allow for list of lists by @kaklise in https://github.com/USEPA/WNTR/pull/522
+* Added a model library by @kbonney in https://github.com/USEPA/WNTR/pull/509

@@ -20,27 +20,14 @@ Simulation results are stored in a results object which contains:
     >>> import matplotlib.pylab as plt
 	>>> import wntr
     >>> pd.set_option('display.precision', 2)
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
 As shown in the :ref:`hydraulic_simulation` and :ref:`water_quality_simulation` sections, simulations results can be generated using the EpanetSimulator as follows (similar methods are used to generate results using the WNTRSimulator):
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 	
-.. doctest::
-
-    >>> import wntr # doctest: +SKIP
-	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
 
@@ -157,7 +144,7 @@ Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
 
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
-   :width: 640
+   :width: 535
    :alt: Time-series graph.
 
    Time series graphic showing pressure at a node.
@@ -187,7 +174,7 @@ plotted in a similar manner.
 
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
-   :width: 640
+   :width: 535
    :alt: Network graphic
 
    Network graphic showing pressure at 1 hour.

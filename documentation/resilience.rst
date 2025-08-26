@@ -66,7 +66,8 @@ WNTR includes additional topographic metrics to help compute resilience.
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
-
+   :widths: 20 80
+   
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
@@ -131,15 +132,6 @@ WNTR includes additional topographic metrics to help compute resilience.
 						  
    =====================================  ================================================================================================================================================
 
-.. doctest::
-    :hide:
-
-    >>> import wntr
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-
 To compute topographic metrics, a NetworkX MultiDiGraph is first extracted from a
 WaterNetworkModel.  Note that some metrics require an undirected
 graph or a graph with a single edge between two nodes.
@@ -147,9 +139,9 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> G = wn.to_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
@@ -270,7 +262,8 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
 
 .. _table-hydraulic-metrics:
 .. table:: Hydraulic Resilience Metrics
-
+   :widths: 20 80
+   
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
@@ -376,7 +369,8 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
 .. _table-water-quality-metrics:
 .. table:: Water Quality Resilience Metrics
-
+   :widths: 20 80
+   
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
@@ -439,7 +433,8 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
 
 .. _table-water-security-metrics:
 .. table:: Water Security Resilience Metrics
-
+   :widths: 20 80
+   
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
@@ -505,7 +500,8 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
 
 .. _table-economic-metrics:
 .. table:: Economic Resilience Metrics
-
+   :widths: 20 80
+   
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================

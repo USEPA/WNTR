@@ -5,15 +5,10 @@
 .. doctest::
     :hide:
 
-    >>> import wntr
     >>> import numpy as np
     >>> import matplotlib.pylab as plt
     >>> import pandas as pd
     >>> pd.set_option("display.precision", 3)
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
 .. _graphics:
 
@@ -52,9 +47,9 @@ which can be further customized by the user.
     
 .. doctest::
 
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> ax = wntr.graphics.plot_network(wn, node_attribute='elevation', 
     ...    node_colorbar_label='Elevation (m)')
 
@@ -67,7 +62,7 @@ which can be further customized by the user.
 
 .. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
-   :width: 640
+   :width: 535
    :alt: Network
    
    Basic network graphic.
@@ -151,7 +146,7 @@ The following example plots the network along with node population (:numref:`fig
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
-   :width: 640
+   :width: 535
    :alt: Network
 
    Interactive network graphic with the legend showing the node population.
@@ -181,7 +176,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
 
 .. _fig-leaflet:
 .. figure:: figures/interactive_network.png
-   :width: 640
+   :width: 535
    :alt: Network
    
    Interactive Leaflet network graphic.
@@ -236,7 +231,7 @@ The following example plots simulation results from above, showing pressure at a
 
 .. _fig-timeseries:
 .. figure:: figures/plot_timeseries.png
-   :width: 640
+   :width: 535
    :alt: Network
    
    Time series graphic.
@@ -273,7 +268,7 @@ The following example uses simulation results from above, and converts the graph
 
 .. _fig-interactive-timeseries:
 .. figure:: figures/interactive_timeseries.png
-   :width: 640
+   :width: 535
    :alt: Network
    
    Interactive time series graphic with the tank heights for Tank 1 (blue), Tank 2 (orange), and Tank 3 (green).
@@ -305,7 +300,7 @@ The following example plots a fragility curve with two states (:numref:`fig-frag
 
 .. _fig-fragility2:
 .. figure:: figures/fragility_curve.png
-   :width: 640
+   :width: 535
    :alt: Fragility curve
 
    Fragility curve graphic.
@@ -338,7 +333,7 @@ The following example plots a pump curve (:numref:`fig-pump`).
 
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
-   :width: 640
+   :width: 535
    :alt: Pump curve
 
    Pump curve graphic.
@@ -429,7 +424,7 @@ The valves and valve segments are plotted on the network (:numref:`fig-valve_seg
 
 .. _fig-valve_segment:
 .. figure:: figures/plot_valve_segment.png
-   :width: 640
+   :width: 535
    :alt: Valve segment attributes
 
    Valves layer and segments.
@@ -457,7 +452,7 @@ valves surrounding each valve is plotted on the network
 
 .. _fig-valve_segment_attributes:
 .. figure:: figures/plot_valve_segment_attributes.png
-   :width: 640
+   :width: 535
    :alt: Valve segment attributes
 
    Valve segment attribute showing the number of valves surrounding each valve.

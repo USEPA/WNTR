@@ -3,11 +3,13 @@ The wntr.network.elements module includes elements of a water network model,
 including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
 demands, curves, and sources.
 """
+
+from __future__ import annotations
+
 import numpy as np
 import sys
 import logging
 import math
-import six
 import copy
 from scipy.optimize import curve_fit, OptimizeWarning
 from warnings import warn
@@ -16,6 +18,7 @@ from collections.abc import MutableSequence
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
+from wntr.utils.check_values import _check_float_or_none, _check_positive_non_zero_float, _check_positive_or_zero_float
 
 import warnings
 warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
@@ -591,21 +594,25 @@ class Tank(Node):
         return self._overflow
     @overflow.setter
     def overflow(self, value):
-        if isinstance(value, six.string_types):
+        if value == False or value is None:
+            self._overflow = False
+            return
+        if value == True:
+            self._overflow = True
+            return
+        
+        if isinstance(value, str):
             value = value.upper()
+            if value in ["NO", "FALSE", "0"]:
+                self._overflow = False
+                return
             if value in ["YES", "TRUE", "1"]:
-                value = True
-            elif value in ["NO", "FALSE", "0"]:
-                value = False
-            else:
-                raise ValueError('The overflow entry must "YES" or "NO"')
-        elif isinstance(value, int):
-            value = bool(value)
-        elif value is None:
-            value = False
-        elif not isinstance(value, bool):
-            raise ValueError('The overflow entry must be blank, "YES"/"NO", 1/0, of True/False')
-        self._overflow = value
+                self._overflow = True
+                return
+            
+        msg = f'overflow must be a boolean; a string "YES", "NO", "1", "0", "True" or "False"; or None. Received {value} of type {type(value)}'
+        raise ValueError(msg)
+
 
     @property
     def level(self):
@@ -936,7 +943,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = value
+        self._length = _check_positive_or_zero_float(value, "Pipe length")
 
     @property
     def diameter(self):
@@ -944,15 +951,16 @@ class Pipe(Link):
         return self._diameter
     @diameter.setter
     def diameter(self, value):
-        self._diameter = value
+        self._diameter = _check_positive_non_zero_float(value, "Pipe diameter")
 
     @property
     def roughness(self):
         """float : pipe roughness"""
-        return self._roughness 
+        return self._roughness
+
     @roughness.setter
     def roughness(self, value):
-        self._roughness = value
+        self._roughness = _check_positive_non_zero_float(value, "Pipe roughness")
 
     @property
     def minor_loss(self):
@@ -960,7 +968,7 @@ class Pipe(Link):
         return self._minor_loss
     @minor_loss.setter
     def minor_loss(self, value):
-        self._minor_loss = value
+        self._minor_loss = _check_positive_or_zero_float(value, "Pipe minor loss")
 
     @property
     def check_valve(self):
@@ -968,7 +976,25 @@ class Pipe(Link):
         return self._check_valve
     @check_valve.setter
     def check_valve(self, value): 
-        self._check_valve = value
+        if value == False or value is None:
+            self._check_valve = False
+            return
+        if value == True:
+            self._check_valve = True
+            return
+
+        if isinstance(value, str):
+            value = value.upper()
+            if value in ["NO", "FALSE", "0"]:
+                self._check_valve = False
+                return
+            if value in ["YES", "TRUE", "1"]:
+                self._check_valve = True
+                return
+      
+        msg = f'check_valve must be a boolean; a string "YES", "NO", "1", "0", "True" or "False"; or None. Received {value} of type {type(value)}'
+        raise ValueError(msg)
+
 
     @property
     def cv(self):
@@ -976,11 +1002,11 @@ class Pipe(Link):
         
         Deprecated - use ``check_valve`` instead."""
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        return self._check_valve
+        return self.check_valve
     @cv.setter
     def cv(self, value): 
         warn('cv is deprecated. Use check_valve instead', DeprecationWarning, stacklevel=2)
-        self._check_valve = value
+        self.check_valve = value
 
     @property
     def bulk_coeff(self):
@@ -988,7 +1014,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = value
+        self._bulk_coeff = _check_float_or_none(value, "Pipe bulk reaction coefficient")
 
     @property
     def wall_coeff(self):
@@ -996,7 +1022,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = value
+        self._wall_coeff = _check_float_or_none(value, "Pipe wall reaction coefficient")
 
     @property
     def status(self):
@@ -1058,7 +1084,8 @@ class Pump(Link):
         initial_status
         initial_setting
         initial_quality
-        efficiency
+        efficiency_curve
+        efficiency_curve_name
         energy_price
         energy_pattern
         vertices
@@ -1090,7 +1117,7 @@ class Pump(Link):
                         "initial_status"]
     _optional_attributes = ["initial_quality",
                             "initial_setting",
-                            "efficiency",
+                            "efficiency_curve_name",
                             "energy_pattern",
                             "energy_price",
                             "vertices",
@@ -1101,7 +1128,7 @@ class Pump(Link):
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
-        self._efficiency = None
+        self._efficiency_curve_name = None
         self._energy_price = None 
         self._energy_pattern = None
         self._outage_rule_name = name+'_outage'
@@ -1112,13 +1139,41 @@ class Pump(Link):
             return False
         return True
 
+    
     @property
     def efficiency(self): 
-        """Curve : pump efficiency"""
-        return self._efficiency
-    @efficiency.setter
-    def efficiency(self, value):
-        self._efficiency = value
+        warn('The pump efficiency property is deprecated - use efficiency_curve instead', DeprecationWarning, stacklevel=2)
+        return self.efficiency_curve
+
+
+    @property
+    def efficiency_curve(self):
+        """The efficiency curve, if defined (read only)
+
+        Used for energy use calculations.
+
+        If not defined, the pump will use a default efficiency % value WaterNetworkModel.options.energy.global_efficiency.
+
+        Set this using the vol_curve_name.
+        """
+
+        if self.efficiency_curve_name is None:
+            return None
+        return self._curve_reg[self.efficiency_curve_name]
+
+    @property
+    def efficiency_curve_name(self):
+        """Name of the volume curve to use, or None
+        
+        Curve must be in the curve registry"""
+        return self._efficiency_curve_name
+    
+    @efficiency_curve_name.setter
+    def efficiency_curve_name(self, curve_name):
+        self._curve_reg.remove_usage(self._efficiency_curve_name, (self.name, 'Pump'))
+        self._curve_reg.add_usage(curve_name, (self.name, 'Pump'))
+        self._efficiency_curve_name = curve_name
+
 
     @property
     def energy_price(self):
@@ -2069,7 +2124,7 @@ class Pattern(object):
         A list of multipliers that makes up the pattern.
     time_options : wntr TimeOptions or tuple
         The water network model options.time object or a tuple of (pattern_start, 
-        pattern_timestep) in seconds.
+        pattern_timestep, pattern_interpolation) in seconds or bool.
     wrap : bool, optional
         Boolean indicating if the pattern should be wrapped.
         If True (the default), then the pattern repeats itself forever; if 
@@ -2087,6 +2142,8 @@ class Pattern(object):
                 tmp = TimeOptions()
                 tmp.pattern_start = time_options[0]
                 tmp.pattern_timestep = time_options[1]
+                if len(time_options) == 3:
+                    tmp.pattern_interpolation = time_options[2]
                 time_options = tmp
             elif not isinstance(time_options, TimeOptions):
                 raise ValueError('Pattern->time_options must be a TimeOptions class or null')

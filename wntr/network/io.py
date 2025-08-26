@@ -130,7 +130,7 @@ def from_dict(d: dict, append=None):
                     name=name,
                     base_demand=base_demand,
                     demand_pattern=pattern_name,
-                    elevation=node.setdefault("elevation"),
+                    elevation=node.setdefault("elevation", 0.0),
                     coordinates=node.setdefault("coordinates", list()),
                     demand_category=demand_category,
                 )
@@ -234,7 +234,7 @@ def from_dict(d: dict, append=None):
                     initial_status=link.setdefault("initial_status", "OPEN"),
                 )
                 p = wn.get_link(name)
-                p.efficiency = link.setdefault("efficiency")
+                p.efficiency_curve_name = link.setdefault("efficiency_curve_name")
                 p.energy_pattern = link.setdefault("energy_pattern")
                 p.energy_price = link.setdefault("energy_price")
                 p.initial_setting = link.setdefault("initial_setting")
@@ -258,6 +258,7 @@ def from_dict(d: dict, append=None):
                 v = wn.get_link(name)
                 if valve_type.lower() == "gpv":
                     v.headloss_curve_name = link.setdefault("headloss_curve_name")
+                v.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(v))):
                     setattr( v, attr, link[attr] )

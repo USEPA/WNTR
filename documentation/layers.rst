@@ -30,14 +30,9 @@ For example, the following valve layer defines a valve on Pipe 1 that protects J
 .. doctest::
     :hide:
 
-    >>> import wntr
     >>> import numpy as np
     >>> import pandas as pd
     >>> import matplotlib.pylab as plt
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
     >>> np.random.seed(123)
     >>> valve_layer = pd.DataFrame(columns=['link', 'node'])
     >>> valve_layer.loc[0] = ['Pipe 1', 'Junction A']
@@ -62,9 +57,9 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
 .. doctest::
 
-    >>> import wntr # doctest: +SKIP
+    >>> import wntr
 	
-    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('Net3')
     >>> random_valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40, seed=123)
     >>> print(random_valve_layer.head())
       link node
@@ -84,7 +79,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
 .. _fig-random-valve-layer:
 .. figure:: figures/random_valve_layer.png
-   :width: 640
+   :width: 525
    :alt: Valve layer
    
    Valve layer using random placement.
@@ -109,7 +104,7 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 
 .. _fig-strategic-valve-layer:
 .. figure:: figures/strategic_valve_layer.png
-   :width: 640
+   :width: 525
    :alt: Valve layer
    
    Valve layer using strategic N-2 placement.

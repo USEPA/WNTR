@@ -1,6 +1,6 @@
 # Required
-numpy>=1.21,<2.0
-scipy<1.13.0
+numpy>=2.2.6 
+scipy
 networkx
 pandas
 matplotlib
@@ -11,8 +11,7 @@ plotly<6.0
 folium
 utm
 openpyxl
-geopandas<1.0
-fiona<1.10
+geopandas
 rasterio
 rtree
 

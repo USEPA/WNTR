@@ -2,8 +2,10 @@
 import unittest
 import warnings
 from os.path import abspath, dirname, join
+import copy
 
 import wntr
+from wntr.epanet.io import _read_control_line
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir, "networks_for_testing")
@@ -11,15 +13,24 @@ ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
 class TestValveSettingControls(unittest.TestCase):
-    def test_status_open_when_setting_changes(self):
+    @classmethod
+    def setUpClass(self):
         wn = wntr.network.WaterNetworkModel()
         wn.add_reservoir("r1", base_head=10)
         wn.add_junction("j1", base_demand=0)
         wn.add_junction("j2", base_demand=0.05)
         wn.add_pipe("p1", "r1", "j1")
-        wn.add_valve("v1", "j1", "j2", valve_type="PRV", initial_setting=2)
+        wn.add_valve("v1", "j1", "j2", valve_type="PRV", 
+                     initial_setting=2, initial_status='Active')
         wn.options.time.duration = 3600 * 5
-
+        self.wn = wn
+    
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_status_open_when_setting_changes(self):
+        wn = copy.deepcopy(self.wn)
         action = wntr.network.ControlAction(
             wn.get_link("v1"), "status", wntr.network.LinkStatus.Closed
         )
@@ -37,8 +48,64 @@ class TestValveSettingControls(unittest.TestCase):
         self.assertEqual(
             results.link["status"].at[7200, "v1"], wntr.network.LinkStatus.Active
         )
+    
+    def test_initial_status(self):
+        # Run simulations with open valve
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        valve.initial_status = 'Open'
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_open = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_open = sim.run_sim()
+        
+        # Check that valve is open (1) and flow is not 0
+        assert (results_epanet_open.link['status'].loc[:,'v1'] == 1).all()
+        assert (results_wntr_open.link['status'].loc[:,'v1'] == 1).all()
+        assert (results_epanet_open.link['flowrate'].loc[:,'v1'].abs() > 0).all()
+        assert (results_wntr_open.link['flowrate'].loc[:,'v1'].abs() > 0).all()
+        
+        # Run simulations with closed valve
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        valve.initial_status = 'Closed'
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_closed = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_closed = sim.run_sim()
+        
+        # Check that valve is closed (0) and flow is 0
+        assert (results_epanet_closed.link['status'].loc[:,'v1'] == 0).all()
+        assert (results_wntr_closed.link['status'].loc[:,'v1'] == 0).all()
+        assert (results_epanet_closed.link['flowrate'].loc[:,'v1'] == 0).all()
+        assert (results_wntr_closed.link['flowrate'].loc[:,'v1'] == 0).all()
 
-
+    def test_initial_setting(self):
+        # Run simulations with valve setting of 4
+        wn = copy.deepcopy(self.wn)
+        valve_name = 'v1'
+        valve = wn.get_link(valve_name)
+        # pressure setting on its downstream side when the upstream pressure is above the setting
+        valve.initial_setting = 4
+        
+        sim = wntr.sim.EpanetSimulator(wn)
+        results_epanet_open = sim.run_sim()
+        
+        sim = wntr.sim.WNTRSimulator(wn)
+        results_wntr_open = sim.run_sim()
+        
+        # Check that valve is active (2) and the downstream pressure is 4
+        assert (results_epanet_open.link['status'].loc[:,'v1'] == 2).all()
+        assert (results_wntr_open.link['status'].loc[:,'v1'] == 2).all()
+        assert (results_epanet_open.node['pressure'].loc[:,'j2'] == 4).all()
+        assert (results_wntr_open.node['pressure'].loc[:,'j2'] == 4).all()
+        
 class TestPumpSettingControls(unittest.TestCase):
     def test_status_open_when_setting_changes(self):
         wn = wntr.network.WaterNetworkModel()
@@ -521,6 +588,241 @@ class TestControlCombinations(unittest.TestCase):
                 self.assertAlmostEqual(results.link["flowrate"].at[t, "pipe1"], 0.0)
 
         self.assertEqual(flag1, True)
+        
+class TestControlParsing(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        import wntr
+        import numpy as np
+        self.wntr = wntr
+        self.np = np
+        
+        # Create a simple water network for testing
+        self.wn = wntr.network.WaterNetworkModel()
+        inp_file = join(test_datadir, "control_comb.inp")
+        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.flow_units = wntr.epanet.util.FlowUnits['SI']
+
+        
+    @classmethod
+    def tearDownClass(self):
+        pass
+    
+    def test_controls_format_link_status_time(self):
+        """Test CONTROLS format: LINK element status AT TIME"""
+        line = "LINK pipe1 OPEN AT TIME 12"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the condition is SimTimeCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.SimTimeCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Opened)
+        # Check the time threshold
+        self.assertEqual(control._condition._threshold, 12 * 3600)  # 12 hours in seconds
+        
+    def test_controls_format_link_status_clocktime(self):
+        """Test CONTROLS format: LINK element status AT CLOCKTIME"""
+        line = "LINK pipe1 CLOSED AT CLOCKTIME 8:30 AM"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the condition is TimeOfDayCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TimeOfDayCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        
+    def test_controls_format_link_status_conditional(self):
+        """Test CONTROLS format: LINK element status IF NODE condition"""
+        line = "LINK pipe1 CLOSED IF NODE tank1 BELOW 30"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a conditional control (pre_and_postsolve type for tank levels)
+        self.assertEqual(control.epanet_control_type.name, "pre_and_postsolve")
+        # Check the condition is TankLevelCondition (ValueCondition subclass)
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TankLevelCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        # Check the condition details
+        self.assertEqual(control._condition._source_obj.name, "tank1")
+        self.assertEqual(control._condition._source_attr, "level")
+        
+    def test_controls_format_pump_setting(self):
+        """Test CONTROLS format: LINK pump setting"""
+        line = "LINK pump1 1.5 AT TIME 5"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pump1")
+        self.assertEqual(action._attribute, "base_speed")
+        self.assertEqual(action._value, 1.5)
+        
+    def test_rules_format_time_condition(self):
+        """Test RULES format: IF SYSTEM TIME THEN action"""
+        line = "IF SYSTEM TIME IS 6 THEN LINK pipe1 IS OPEN"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the condition is SimTimeCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.SimTimeCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Opened)
+        # Check the time threshold
+        self.assertEqual(control._condition._threshold, 6 * 3600)  # 6 hours in seconds
+        
+    def test_rules_format_clocktime_condition(self):
+        """Test RULES format: IF SYSTEM CLOCKTIME THEN action"""
+        line = "IF SYSTEM CLOCKTIME IS 9:00 AM THEN LINK pipe1 IS CLOSED"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the condition is TimeOfDayCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TimeOfDayCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        
+    def test_rules_format_tank_level_condition(self):
+        """Test RULES format: IF TANK level condition THEN action"""
+        line = "IF TANK tank1 LEVEL BELOW 25 THEN LINK pump1 IS OPEN"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a conditional control (pre_and_postsolve type for tank levels)
+        self.assertEqual(control.epanet_control_type.name, "pre_and_postsolve")
+        # Check the condition is TankLevelCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TankLevelCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pump1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Opened)
+        # Check the condition details
+        self.assertEqual(control._condition._source_obj.name, "tank1")
+        self.assertEqual(control._condition._source_attr, "level")
+        
+    def test_rules_format_junction_pressure_condition(self):
+        """Test RULES format: IF JUNCTION pressure condition THEN action"""
+        line = "IF JUNCTION j1 PRESSURE ABOVE 20 THEN LINK pipe1 IS CLOSED"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a conditional control (postsolve type for pressure conditions)
+        self.assertEqual(control.epanet_control_type.name, "postsolve")
+        # Check the condition is ValueCondition
+        self.assertIsInstance(control._condition, self.wntr.network.controls.ValueCondition)
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        # Check the condition details
+        self.assertEqual(control._condition._source_obj.name, "j1")
+        self.assertEqual(control._condition._source_attr, "pressure")
+        
+    def test_empty_line(self):
+        """Test empty line handling"""
+        line = ""
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        self.assertIsNone(control)
+        
+    def test_comment_line(self):
+        """Test line with comment only"""
+        line = "; This is a comment"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        self.assertIsNone(control)
+        
+    def test_line_with_comment(self):
+        """Test line with control and comment"""
+        line = "LINK pipe1 OPEN AT TIME 12 ; This is a comment"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        # Check the action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1")
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Opened)
+        
+    def test_time_format_hours_minutes(self):
+        """Test time format with hours:minutes"""
+        line = "LINK pipe1 OPEN AT TIME 12:30"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check that it's a time control (presolve type)
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        expected_seconds = 12 * 3600 + 30 * 60  # 12 hours 30 minutes in seconds
+        self.assertEqual(control._condition._threshold, expected_seconds)
+        
+    def test_node_status_control(self):
+        """Test NODE element status control"""
+        line = "NODE j1 TRUE AT TIME 5"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "j1")
+        self.assertEqual(action._attribute, "leak_status")
+        self.assertEqual(action._value, True)
+        
+        # Check condition
+        self.assertEqual(control._condition._threshold, 5 * 3600)
+
+        
+    def test_invalid_rule(self):
+        """Test invalid RULES format"""
+        line = "IF SYSTEM TIME IS 6 LINK pipe1 IS OPEN"
+        with self.assertRaises(RuntimeError):
+            _read_control_line(line, self.wn, self.flow_units, "test_control")
+            
+    def test_operator_aliases(self):
+        """Test different operator aliases (ABOVE vs >, BELOW vs <)"""
+        line1 = "LINK pipe1 CLOSED IF NODE tank1 ABOVE 30"
+        line2 = "LINK pipe1 CLOSED IF NODE tank1 > 30"
+        
+        control1 = _read_control_line(line1, self.wn, self.flow_units, "test_control1")
+        control2 = _read_control_line(line2, self.wn, self.flow_units, "test_control2")
+        
+        # Both should create equivalent controls
+        self.assertEqual(control1.epanet_control_type.name, control2.epanet_control_type.name)
+        self.assertEqual(control1._condition._source_obj.name, control2._condition._source_obj.name)
+        self.assertEqual(control1._condition._source_attr, control2._condition._source_attr)
+
+    def test_existing_control_from_file(self):
+        """Test that the existing control from control_comb.inp is parsed correctly"""
+        # The file contains: LINK pipe1 CLOSED IF NODE tank1 BELOW 30
+        line = "LINK pipe1 CLOSED IF NODE tank1 BELOW 30"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        # Check action
+        action = control._then_actions[0]
+        self.assertEqual(action._target_obj.name, "pipe1") 
+        self.assertEqual(action._attribute, "status")
+        self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        # Check condition
+        self.assertEqual(control._condition._source_obj.name, "tank1")
+        self.assertEqual(control._condition._source_attr, "level")
+        self.assertEqual(control._condition._relation, self.wntr.network.controls.Comparison.lt)
 
 
 if __name__ == "__main__":
