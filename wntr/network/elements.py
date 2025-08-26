@@ -1593,7 +1593,7 @@ class PowerPump(Pump):
         return self._base_power
     @power.setter
     def power(self, value):
-        self._base_power = _check_positive_or_zero_float(value, "Pump power")
+        self._base_power = _check_positive_non_zero_float(value, "Pump power")
         
 
 
