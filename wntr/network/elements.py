@@ -1564,7 +1564,7 @@ class PowerPump(Pump):
 
     """
     def __init__(self, name, start_node_name, end_node_name, wn):
-        super(HeadPump,self).__init__(name, start_node_name, 
+        super(PowerPump,self).__init__(name, start_node_name, 
                                         end_node_name, wn)
         self._base_power = None
 
