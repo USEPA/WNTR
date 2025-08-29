@@ -1,6 +1,8 @@
 """
 Test the wntr.network.elements classes
 """
+
+import pytest
 import unittest
 from os.path import abspath, dirname, join
 from unittest import SkipTest
@@ -319,6 +321,68 @@ def test_float_or_none_with_none():
 def test_float_or_none_bad_value(value):
     with pytest.raises(ValueError, match="test"):
         _check_float_or_none(value, "test")
+
+
+def test_pump_power_on_add_float():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+
+    wn.add_pump("pump1", "1", "2", pump_type="POWER", pump_parameter=1000.0)
+
+    assert wn.links["pump1"].power == 1000.0
+
+
+def test_pump_power_on_add_int():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+
+    wn.add_pump("pump1", "1", "2", pump_type="POWER", pump_parameter=1000)
+
+    assert wn.links["pump1"].power == 1000.0
+
+
+@pytest.fixture
+def power_pump():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+    wn.add_pump("pump1", "1", "2", pump_type="POWER")
+    return wn.links["pump1"]
+
+
+def test_pump_power_set_property_float(power_pump):
+    power_pump.power = 500.0
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_int(power_pump):
+    power_pump.power = 500
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_string(power_pump):
+    power_pump.power = "500"
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_negative(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = -500
+
+
+def test_pump_power_set_property_zero(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = 0
+
+
+def test_pump_power_set_property_invalid_string(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = "invalid_string"
 
 
 if __name__ == "__main__":
