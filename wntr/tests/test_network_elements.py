@@ -1,14 +1,19 @@
 """
 Test the wntr.network.elements classes
 """
+
+import pytest
 import unittest
 from os.path import abspath, dirname, join
 from unittest import SkipTest
 
+import pytest
 import numpy as np
 import wntr
 import wntr.network.elements as elements
 from wntr.network.options import TimeOptions
+from wntr.utils.check_values import _check_float, _check_float_or_none, \
+    _check_positive_non_zero_float, _check_positive_or_zero_float
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "networks_for_testing")
@@ -279,6 +284,105 @@ class TestElements(unittest.TestCase):
         self.assertTrue(
             not ("Fire_Flow" in node.demand_timeseries_list.category_list())
         )
+
+
+@pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828])
+def test_positive_non_zero_float(value):
+    assert _check_positive_non_zero_float(value, "test") == float(value)
+
+
+@pytest.mark.parametrize("value", [0, "0", 0.0, "not_a_number", -1, -2.71828, [-1, 2]])
+def test_positive_non_zero_float_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        _check_positive_non_zero_float(value, "test")
+
+
+@pytest.mark.parametrize("value", [0.0, 0, "0", 1.0, 1, "500", 0, 2.71828])
+def test_positive_or_zero_float(value):
+    assert _check_positive_or_zero_float(value, "test") == float(value)
+
+
+@pytest.mark.parametrize("value", ["not_a_number", -1, -2.71828, [-1, 2]])
+def test_positive_or_zero_float_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        _check_positive_or_zero_float(value, "test")
+
+
+@pytest.mark.parametrize("value", [1.0, 1, "400", 2.71828, 0.0, 0, -1, -2.71828])
+def test_float_or_none_with_float(value):
+    assert _check_float_or_none(value, "test") == float(value)
+
+
+def test_float_or_none_with_none():
+    assert _check_float_or_none(None, "test") is None
+
+
+@pytest.mark.parametrize("value", ["not_a_number", [-1, 2]])
+def test_float_or_none_bad_value(value):
+    with pytest.raises(ValueError, match="test"):
+        _check_float_or_none(value, "test")
+
+
+def test_pump_power_on_add_float():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+
+    wn.add_pump("pump1", "1", "2", pump_type="POWER", pump_parameter=1000.0)
+
+    assert wn.links["pump1"].power == 1000.0
+
+
+def test_pump_power_on_add_int():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+
+    wn.add_pump("pump1", "1", "2", pump_type="POWER", pump_parameter=1000)
+
+    assert wn.links["pump1"].power == 1000.0
+
+
+@pytest.fixture
+def power_pump():
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction("1")
+    wn.add_junction("2")
+    wn.add_pump("pump1", "1", "2", pump_type="POWER")
+    return wn.links["pump1"]
+
+
+def test_pump_power_set_property_float(power_pump):
+    power_pump.power = 500.0
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_int(power_pump):
+    power_pump.power = 500
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_string(power_pump):
+    power_pump.power = "500"
+
+    assert power_pump.power == 500.0
+
+
+def test_pump_power_set_property_negative(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = -500
+
+
+def test_pump_power_set_property_zero(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = 0
+
+
+def test_pump_power_set_property_invalid_string(power_pump):
+    with pytest.raises(ValueError):
+        power_pump.power = "invalid_string"
 
 
 if __name__ == "__main__":

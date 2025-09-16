@@ -3,6 +3,9 @@ The wntr.network.elements module includes elements of a water network model,
 including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
 demands, curves, and sources.
 """
+
+from __future__ import annotations
+
 import numpy as np
 import sys
 import logging
@@ -15,6 +18,7 @@ from collections.abc import MutableSequence
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
+from wntr.utils.check_values import _check_float_or_none, _check_positive_non_zero_float, _check_positive_or_zero_float
 
 import warnings
 warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
@@ -939,7 +943,7 @@ class Pipe(Link):
         return self._length
     @length.setter
     def length(self, value):
-        self._length = value
+        self._length = _check_positive_or_zero_float(value, "Pipe length")
 
     @property
     def diameter(self):
@@ -947,15 +951,16 @@ class Pipe(Link):
         return self._diameter
     @diameter.setter
     def diameter(self, value):
-        self._diameter = value
+        self._diameter = _check_positive_non_zero_float(value, "Pipe diameter")
 
     @property
     def roughness(self):
         """float : pipe roughness"""
-        return self._roughness 
+        return self._roughness
+
     @roughness.setter
     def roughness(self, value):
-        self._roughness = value
+        self._roughness = _check_positive_non_zero_float(value, "Pipe roughness")
 
     @property
     def minor_loss(self):
@@ -963,7 +968,7 @@ class Pipe(Link):
         return self._minor_loss
     @minor_loss.setter
     def minor_loss(self, value):
-        self._minor_loss = value
+        self._minor_loss = _check_positive_or_zero_float(value, "Pipe minor loss")
 
     @property
     def check_valve(self):
@@ -1009,7 +1014,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = value
+        self._bulk_coeff = _check_float_or_none(value, "Pipe bulk reaction coefficient")
 
     @property
     def wall_coeff(self):
@@ -1017,7 +1022,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = value
+        self._wall_coeff = _check_float_or_none(value, "Pipe wall reaction coefficient")
 
     @property
     def status(self):
@@ -1079,7 +1084,8 @@ class Pump(Link):
         initial_status
         initial_setting
         initial_quality
-        efficiency
+        efficiency_curve
+        efficiency_curve_name
         energy_price
         energy_pattern
         vertices
@@ -1111,7 +1117,7 @@ class Pump(Link):
                         "initial_status"]
     _optional_attributes = ["initial_quality",
                             "initial_setting",
-                            "efficiency",
+                            "efficiency_curve_name",
                             "energy_pattern",
                             "energy_price",
                             "vertices",
@@ -1120,9 +1126,7 @@ class Pump(Link):
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Pump, self).__init__(wn, name, start_node_name, end_node_name)
         self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
-        self._base_power = None
-        self._pump_curve_name = None
-        self._efficiency = None
+        self._efficiency_curve_name = None
         self._energy_price = None 
         self._energy_pattern = None
         self._outage_rule_name = name+'_outage'
@@ -1133,13 +1137,41 @@ class Pump(Link):
             return False
         return True
 
+    
     @property
     def efficiency(self): 
-        """Curve : pump efficiency"""
-        return self._efficiency
-    @efficiency.setter
-    def efficiency(self, value):
-        self._efficiency = value
+        warn('The pump efficiency property is deprecated - use efficiency_curve instead', DeprecationWarning, stacklevel=2)
+        return self.efficiency_curve
+
+
+    @property
+    def efficiency_curve(self):
+        """The efficiency curve, if defined (read only)
+
+        Used for energy use calculations.
+
+        If not defined, the pump will use a default efficiency % value WaterNetworkModel.options.energy.global_efficiency.
+
+        Set this using the vol_curve_name.
+        """
+
+        if self.efficiency_curve_name is None:
+            return None
+        return self._curve_reg[self.efficiency_curve_name]
+
+    @property
+    def efficiency_curve_name(self):
+        """Name of the volume curve to use, or None
+        
+        Curve must be in the curve registry"""
+        return self._efficiency_curve_name
+    
+    @efficiency_curve_name.setter
+    def efficiency_curve_name(self, curve_name):
+        self._curve_reg.remove_usage(self._efficiency_curve_name, (self.name, 'Pump'))
+        self._curve_reg.add_usage(curve_name, (self.name, 'Pump'))
+        self._efficiency_curve_name = curve_name
+
 
     @property
     def energy_price(self):
@@ -1314,13 +1346,10 @@ class HeadPump(Pump):
 
     """
 
-#    def __init__(self, name, start_node_name, end_node_name, wn):
-#        super(HeadPump,self).__init__(name, start_node_name, 
-#                                      end_node_name, wn)
-#        self._curve_coeffs = None
-#        self._coeffs_curve_points = None # these are used to verify whether
-#                                         # the pump curve was changed since
-#                                         # the _curve_coeffs were calculated
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(HeadPump,self).__init__(name, start_node_name, 
+                                        end_node_name, wn)
+        self._pump_curve_name = None
 
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
@@ -1534,6 +1563,10 @@ class PowerPump(Pump):
         setting
 
     """
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(PowerPump,self).__init__(name, start_node_name, 
+                                        end_node_name, wn)
+        self._base_power = None
 
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
@@ -1559,8 +1592,8 @@ class PowerPump(Pump):
         return self._base_power
     @power.setter
     def power(self, value):
-        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
-        self._base_power = value
+        self._base_power = _check_positive_non_zero_float(value, "Pump power")
+        
 
 
 class Valve(Link):

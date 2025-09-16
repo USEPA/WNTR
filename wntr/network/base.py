@@ -568,7 +568,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         for k in dir(self):
             if not k.startswith('_') and k not in [
                 'flow', 'cv', 'friction_factor', 'headloss',
-                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries',
+                'quality', 'reaction_rate', 'setting', 'status', 'velocity', 'speed_timeseries', 'efficiency'
             ]:
                 val = getattr(self, k)
                 if not isinstance(val, types.MethodType):

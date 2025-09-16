@@ -5,7 +5,12 @@ import unittest
 import warnings
 from os.path import abspath, dirname, isfile, join
 
+import networkx as nx
 import matplotlib.pylab as plt
+import matplotlib
+from wntr.graphics.color import custom_colormap
+import pandas as pd
+import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
@@ -22,7 +27,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(wn)
         plt.savefig(filename, format="png")
         plt.close()
@@ -37,7 +41,7 @@ class TestGraphics(unittest.TestCase):
         filename = abspath(join(testdir, "plot_network2_undirected.png"))
         if isfile(filename):
             os.remove(filename)
-        plt.figure()
+
         wntr.graphics.plot_network(
             wn, node_attribute="elevation", link_attribute="length"
         )
@@ -50,7 +54,7 @@ class TestGraphics(unittest.TestCase):
         filename = abspath(join(testdir, "plot_network2_directed.png"))
         if isfile(filename):
             os.remove(filename)
-        plt.figure()
+
         wntr.graphics.plot_network(
             wn, node_attribute="elevation", link_attribute="length", directed=True
         )
@@ -67,7 +71,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn,
             node_attribute=["11", "21"],
@@ -87,7 +90,6 @@ class TestGraphics(unittest.TestCase):
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn,
             node_attribute={"11": 5, "21": 10},
@@ -108,7 +110,6 @@ class TestGraphics(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
         pop = wntr.metrics.population(wn)
 
-        plt.figure()
         wntr.graphics.plot_network(
             wn, node_attribute=pop, node_range=[0, 500], title="Population"
         )
@@ -116,6 +117,95 @@ class TestGraphics(unittest.TestCase):
         plt.close()
 
         self.assertTrue(isfile(filename))
+
+    def test_plot_network6(self):
+        # legend
+        filename = abspath(join(testdir, "plot_network6.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        inp_file = join(ex_datadir, "Net6.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+
+        wntr.graphics.plot_network(
+            wn, node_attribute="elevation", link_attribute="diameter", 
+            add_colorbar=True, legend=True
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+    
+    def test_plot_network_options(self):
+        # NOTE:to compare with the old plot_network set compare=True.
+        #   this should be set to false for regular testing
+        compare = False
+        
+        cmap = matplotlib.colormaps['viridis']
+        
+        inp_file = join(ex_datadir, "Net6.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        
+        random_node_values = pd.Series(
+            np.random.rand(len(wn.node_name_list)), index=wn.node_name_list)
+        random_link_values = pd.Series(
+            np.random.rand(len(wn.link_name_list)), index=wn.link_name_list)
+        random_pipe_values = pd.Series(
+            np.random.rand(len(wn.pipe_name_list)), index=wn.pipe_name_list)
+        random_node_dict_subset = dict(random_node_values.iloc[:10])
+        random_link_dict_subset = dict(random_link_values.iloc[:10])
+        node_list = list(wn.node_name_list[:10])
+        link_list = list(wn.link_name_list[:10])
+        
+        kwarg_list = [
+            {"node_attribute": "elevation",
+             "node_range": [0,20],
+             "node_alpha": 0.5,
+             "node_colorbar_label": "test_label"},
+            {"link_attribute": "diameter",
+             "link_range": [0,None],
+             "link_alpha": 0.5,
+             "link_colorbar_label": "test_label"},
+            {"link_attribute": "diameter",
+            "node_attribute": "elevation"},
+            {"node_labels": True,
+             "link_labels": True},
+            {"node_attribute": "elevation",
+             "add_colorbar": False},
+            {"link_attribute": "diameter",
+             "add_colorbar": False},
+            {"node_attribute": node_list},
+            {"node_attribute": random_node_values},
+            {"node_attribute": random_node_dict_subset},
+            {"link_attribute": link_list},
+            {"link_attribute": random_link_values},
+            {"link_attribute": random_link_dict_subset},
+            {"directed": True},
+            {"link_attribute": random_pipe_values,
+             "node_size": 0,
+             "link_cmap": cmap,
+             "link_range": [0,1],
+             "link_width": 1.5},
+        ]
+        
+        for kwargs in kwarg_list:
+            filename = abspath(join(testdir, "plot_network_options.png"))
+            if isfile(filename):
+                os.remove(filename)
+            if compare:
+                fig, ax = plt.subplots(1,2)
+                wntr.graphics.plot_network(wn, ax=ax[0], title="GIS plot_network", backend='gpd', **kwargs)
+                wntr.graphics.plot_network(wn, ax=ax[1], title="NX plot_network", backend='nx', **kwargs)
+                fig.savefig(filename, format="png")
+                plt.close(fig)
+            else:
+                wntr.graphics.plot_network(wn, backend='nx', **kwargs)
+                plt.savefig(filename, format="png")
+                plt.close()
+                
+            self.assertTrue(isfile(filename))
+            os.remove(filename)
+            
 
     def test_plot_interactive_network1(self):
 
@@ -235,6 +325,8 @@ class TestGraphics(unittest.TestCase):
         )
         self.assertEqual(cmp.N, 3)
         self.assertEqual(cmp.name, "custom")
+        
+        
 
 
 if __name__ == "__main__":

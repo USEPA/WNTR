@@ -148,13 +148,13 @@ class MsxFile(object):
                         #     break
                         else:
                             logger.warning('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
-                            raise EpanetMsxException(201, note="at line {}:\n{}".format(lnum, line))
+                            raise EpanetMsxException(201, "at line {}:\n{}".format(lnum, line))
                     elif section is None and line.startswith(";"):
                         obj.top_comments.append(line[1:])
                         continue
                     elif section is None:
                         logger.debug("Found confusing line: %s", repr(line))
-                        raise EpanetMsxException(201, note="at line {}:\n{}".format(lnum, line))
+                        raise EpanetMsxException(201, "at line {}:\n{}".format(lnum, line))
                     # We have text, and we are in a section
                     obj.sections[section].append((lnum, line))
 
@@ -229,7 +229,7 @@ class MsxFile(object):
             vals, comment = _split_line(line)
             try:
                 if len(vals) < 2:
-                    raise EpanetMsxException(402, note="at line {} of [OPTIONS] section:\n{}".format(lnum, line))
+                    raise EpanetMsxException(402, "at line {} of [OPTIONS] section:\n{}".format(lnum, line))
                 name, val = vals[0].upper(), vals[1].upper()
                 if name == "AREA_UNITS":
                     self.rxn._options.area_units = val
@@ -252,13 +252,13 @@ class MsxFile(object):
                 elif name == "PECLET":
                     self.rxn._options.peclet = int(val)
                 else:
-                    raise EpanetMsxException(403, note="at line {} of [OPTIONS] section:\n{}".format(lnum, line))
+                    raise EpanetMsxException(403, "at line {} of [OPTIONS] section:\n{}".format(lnum, line))
             except ValueError:
-                raise EpanetMsxException(404, note="at line {} of [OPTIONS] section:\n{}".format(lnum, line))
+                raise EpanetMsxException(404, "at line {} of [OPTIONS] section:\n{}".format(lnum, line))
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [OPTIONS] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [OPTIONS] section:\n{}".format(lnum, line)) from e
 
     def _read_species(self):
         note = ENcomment()
@@ -272,21 +272,21 @@ class MsxFile(object):
                 if comment is not None:
                     note.post = comment
                 if len(vals) < 3:
-                    raise EpanetMsxException(402, note="at line {} of [SPECIES] section:\n{}".format(lnum, line))
+                    raise EpanetMsxException(402, "at line {} of [SPECIES] section:\n{}".format(lnum, line))
                 try:
                     typ = SpeciesType.get(vals[0], allow_none=False)
                 except ValueError as e:
-                    raise MSXValueError(403, vals[0], note="at line {} of [SPECIES] section:\n{}".format(lnum, line)) from e
+                    raise MSXValueError(403, vals[0], "at line {} of [SPECIES] section:\n{}".format(lnum, line)) from e
                 if len(vals) == 3:
                     self.rxn.add_species(vals[1], typ, vals[2], note=note)
                 elif len(vals) == 5:
                     self.rxn.add_species(vals[1], typ, vals[2], float(vals[3]), float(vals[4]), note=note)
                 else:
-                    raise EpanetMsxException(201, note="at line {} of [SPECIES] section:\n{}".format(lnum, line))
+                    raise EpanetMsxException(201, "at line {} of [SPECIES] section:\n{}".format(lnum, line))
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [SPECIES] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [SPECIES] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -302,18 +302,18 @@ class MsxFile(object):
                 if comment is not None:
                     note.post = comment
                 if len(vals) < 3:
-                    raise EpanetMsxException(402, note="at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line))
+                    raise EpanetMsxException(402, "at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line))
                 typ = VariableType.get(vals[0], allow_none=False)
                 if typ is VariableType.CONSTANT:
                     self.rxn.add_constant(vals[1], float(vals[2]), note=note)
                 elif typ is VariableType.PARAMETER:
                     self.rxn.add_parameter(vals[1], float(vals[2]), note=note)
                 else:
-                    raise MSXValueError(403, vals[0], note="at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line))
+                    raise MSXValueError(403, vals[0], "at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line))
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [COEFFICIENTS] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -334,7 +334,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [TERMS] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [TERMS] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -355,7 +355,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [PIPES] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [PIPES] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -376,7 +376,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [TANKS] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [TANKS] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -405,7 +405,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [SOURCES] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [SOURCES] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -443,7 +443,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [QUALITY] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [QUALITY] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -471,7 +471,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [PARAMETERS] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [PARAMETERS] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -493,7 +493,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [DIFFUSIVITIES] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [DIFFUSIVITIES] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -572,7 +572,7 @@ class MsxFile(object):
             except EpanetMsxException:
                 raise
             except Exception as e:
-                raise EpanetMsxException(201, note="at line {} of [REPORT] section:\n{}".format(lnum, line)) from e
+                raise EpanetMsxException(201, "at line {} of [REPORT] section:\n{}".format(lnum, line)) from e
             else:
                 note = ENcomment()
 
@@ -852,6 +852,8 @@ def MsxBinFile(filename, wn, res = None):
     if res is None:
         from wntr.sim.results import SimulationResults
         res = SimulationResults()
+        res.node = {}
+        res.link = {}
     with open(filename, "rb") as fin:
         ftype = "=f4"
         idlen = 32
