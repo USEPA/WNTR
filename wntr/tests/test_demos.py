@@ -32,7 +32,7 @@ class TestDemos(unittest.TestCase):
             #'landslide_tutorial': ['ky10_landslide_analysis_junctions.geojson'],
             'model_development_tutorial': ['wn1.inp', 
                                            'wn2.inp'],
-            #'multispecies_tutorial': ['chlorine_residual_1.3.csv'],
+            'multispecies_tutorial': ['chlorine_residual_1.3.csv'],
             'pipe_break_tutorial': ['pipe_break_junctions_impacted.csv',
                                     'pipe_break_people_impacted.csv'],
             'pipe_segments_tutorial': ['segment_break_junctions_impacted.csv',
