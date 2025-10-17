@@ -28,7 +28,7 @@ class TestDemos(unittest.TestCase):
                                     'earthquake_people_impacted_wrepair.csv'],
             'fire_flow_tutorial': ['fire_flow_junctions_impacted.csv',
                                    'fire_flow_people_impacted.csv'],
-            #'getting_started_tutorial': ['pressure.csv'],
+            'getting_started_tutorial': ['pressure.csv'],
             #'landslide_tutorial': ['ky10_landslide_analysis_junctions.geojson'],
             #'model_development_tutorial': ['wn1.inp', 
             #                               'wn2.inp'],
