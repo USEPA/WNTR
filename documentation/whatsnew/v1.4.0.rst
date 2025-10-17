@@ -28,3 +28,4 @@ WNTR version 1.4.0 includes the following updates:
 * Added element property float checking by @angusmcb in https://github.com/USEPA/WNTR/pull/521
 * Added check value for pump power and tests by @angusmcb in https://github.com/USEPA/WNTR/pull/520
 * Updated plot_network to use geopandas (networkx is still used by default) by @kbonney in https://github.com/USEPA/WNTR/pull/451
+* Restored demo test files by @kaklise in https://github.com/USEPA/WNTR/pull/535
