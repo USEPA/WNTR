@@ -99,7 +99,7 @@ class MsxLibrary:
         self.__data = dict()
 
         if include_builtins:
-            default_path = os.path.abspath(files(__name__).joinpath('.'))
+            default_path = os.path.abspath(files('wntr.library.msx').joinpath('.'))
             if default_path not in self.__library_paths:
                 self.__library_paths.append(default_path)
 
