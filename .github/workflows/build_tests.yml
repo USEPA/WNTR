@@ -26,7 +26,10 @@ jobs:
       if: ${{ matrix.os == 'macOS-13'}}
       run: |
         echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+        echo "CIBW_MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
         echo "PLAT=macosx-13.0-universal2" >> $GITHUB_ENV
+        echo "CIBW_ARCHS_MACOS=universal2" >> $GITHUB_ENV
+
     - name: Checkout repository
       uses: actions/checkout@v4
     - name: Install libomp on macos
@@ -49,22 +52,14 @@ jobs:
         CIBW_BUILD: cp310-* cp311-* cp312-* cp313-*
         CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
         CIBW_REPAIR_WHEEL_COMMAND: '' # Skip repair step
-    - name: Retag macOS 13 wheels
-      if: ${{ matrix.os == 'macOS-13' }}
-      run: |
-        pip install wheel
-        for file in ./wheelhouse/*.whl; do
-          echo "Retagging $file → macosx_13_0"
-          wheel tags --remove --platform-tag macosx_14_0_x86_64 --platform-tag macosx_13_0_x86_64 "$file" || true
-          wheel tags --remove --platform-tag macosx_14_0_universal2 --platform-tag macosx_13_0_universal2 "$file" || true
-        done
-    - name: Retag Linux wheels
+    - name: Fix linux wheel names # This is a bit dishonest, since the wheels are not properly repaired to be manylinux compatible. This is a (hopefully) temporary hack to get our wheels onto pypi. 
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        pip install wheel
         for file in ./wheelhouse/*.whl; do
-          echo "Retagging $file → manylinux2014_x86_64"
-          wheel tags --remove --platform-tag linux_x86_64 --platform-tag manylinux2014_x86_64 "$file" || true
+          [ -e "$file" ] || continue
+          new_file="${file/linux/manylinux2014}"
+          mv "$file" "$new_file"
+          echo "Renamed: $file -> $new_file"
         done
     - name: Upload wheels
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
