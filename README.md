@@ -68,7 +68,6 @@ Contact
 
    * Katherine Klise, Sandia National Laboratories, kaklise@sandia.gov
    * Terra Haxton, US Environmental Protection Agency, haxton.terra@epa.gov
-   * Regan Murray, US Environmental Protection Agency, murray.regan@epa.gov
 
 EPA Disclaimer
 -----------------

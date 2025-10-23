@@ -22,7 +22,7 @@ class TestDemos(unittest.TestCase):
         self.wntr = wntr
         
         self.nb_files = {
-            ##TODO add file comparison tests for the basics and landslide tutorial
+            ##TODO add file comparison tests for the additional tutorials
             #'basics_tutorial': ['Net3_analysis_pipes.geojson'],
             'earthquake_tutorial': ['earthquake_people_impacted.csv',
                                     'earthquake_people_impacted_wrepair.csv'],

@@ -131,7 +131,7 @@ Since the release depends on external services, the instructions below often nee
 
 2. **Check or create release notes**: The release notes are in WNTR/documentation/whatsnew/<version>.rst 
    (see Step 3 to autogenerate release notes) and make sure the 
-   <version>.rst file is included in WNTR\documentation\whatsnew.rst.
+   <version>.rst file is included in WNTR/documentation/whatsnew.rst.
    Update the release date in <version>.rst.
   
 3. **Create a new release on GitHub**: Go to https://github.com/USEPA/WNTR/releases and select “Draft a new release”.

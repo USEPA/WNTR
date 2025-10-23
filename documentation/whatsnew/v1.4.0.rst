@@ -18,3 +18,14 @@ WNTR version 1.4.0 includes the following updates:
 * Resolved GeoPandas deprecation warnings by @emmanuel-ferdman in https://github.com/USEPA/WNTR/pull/510
 * Bug fix for vertices setter to allow for list of lists by @kaklise in https://github.com/USEPA/WNTR/pull/522
 * Added a model library by @kbonney in https://github.com/USEPA/WNTR/pull/509
+* Updated the notebook test to compare additional results by @kaklise in https://github.com/USEPA/WNTR/pull/525
+* Bug fix for MSX using add_source() so dictionary structure matches write_source_dict() in io by @ckarrenb in https://github.com/USEPA/WNTR/pull/523
+* Updated _read_control_lines() to handle EPANET rules by @kbonney in https://github.com/USEPA/WNTR/pull/532
+* Migration to Numpy 2 by @kbonney in https://github.com/USEPA/WNTR/pull/528
+* Updated pump efficiency curves so they are treated like other curves by @angusmcb in https://github.com/USEPA/WNTR/pull/530
+* Bug fix for GPV curve conversion from Unit Headloss to Absolute Headloss by @angusmcb in https://github.com/USEPA/WNTR/pull/529
+* Added valve vertices to from_dict by @angusmcb in https://github.com/USEPA/WNTR/pull/519
+* Added element property float checking by @angusmcb in https://github.com/USEPA/WNTR/pull/521
+* Added check value for pump power and tests by @angusmcb in https://github.com/USEPA/WNTR/pull/520
+* Updated plot_network to use geopandas (networkx is still used by default) by @kbonney in https://github.com/USEPA/WNTR/pull/451
+* Restored demo test files by @kaklise in https://github.com/USEPA/WNTR/pull/535
