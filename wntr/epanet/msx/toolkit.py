@@ -16,7 +16,7 @@ import platform
 import sys
 from typing import Union
 
-from pkg_resources import resource_filename
+from importlib.resources import files
 
 from wntr.epanet.msx.enums import TkObjectType, TkSourceType
 
@@ -29,25 +29,25 @@ logger = logging.getLogger(__name__)
 epanet_toolkit = "wntr.epanet.toolkit"
 
 if os.name in ["nt", "dos"]:
-    libepanet = resource_filename(__name__, "../libepanet/windows-x64/epanet2.dll")
-    libmsx = resource_filename(__name__, "../libepanet/windows-x64/epanetmsx.dll")
+    libepanet = files(__name__).joinpath("../libepanet/windows-x64/epanet2.dll")
+    libmsx = files(__name__).joinpath("../libepanet/windows-x64/epanetmsx.dll")
 elif sys.platform in ["darwin"]:
     if 'arm' in platform.platform().lower():
-        libepanet = resource_filename(__name__, "../libepanet/darwin-arm/libepanet2.dylib")
-        libmsx = resource_filename(__name__, "../libepanet/darwin-arm/libepanetmsx.dylib")
+        libepanet = files(__name__).joinpath("../libepanet/darwin-arm/libepanet2.dylib")
+        libmsx = files(__name__).joinpath("../libepanet/darwin-arm/libepanetmsx.dylib")
     else:
-        libepanet = resource_filename(__name__, "../libepanet/darwin-x64/libepanet2.dylib")
-        libmsx = resource_filename(__name__, "../libepanet/darwin-x64/libepanetmsx.dylib")
+        libepanet = files(__name__).joinpath("../libepanet/darwin-x64/libepanet2.dylib")
+        libmsx = files(__name__).joinpath("../libepanet/darwin-x64/libepanetmsx.dylib")
 else:
-    libepanet = resource_filename(__name__, "../libepanet/linux-x64/libepanet2.so")
-    libmsx = resource_filename(__name__, "../libepanet/linux-x64/libepanetmsx.so")
+    libepanet = files(__name__).joinpath("../libepanet/linux-x64/libepanet2.so")
+    libmsx = files(__name__).joinpath("../libepanet/linux-x64/libepanetmsx.so")
 
 dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
 if dylib_dir != '':
     if 'arm' in platform.platform().lower():
-        dylib_dir = dylib_dir + ':' + resource_filename(__name__, "../libepanet/darwin-arm")
+        dylib_dir = dylib_dir + ':' + files(__name__).joinpath("../libepanet/darwin-arm")
     else:
-        dylib_dir = dylib_dir + ':' + resource_filename(__name__, "../libepanet/darwin-x64")
+        dylib_dir = dylib_dir + ':' + files(__name__).joinpath("../libepanet/darwin-x64")
     os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = dylib_dir
 
 

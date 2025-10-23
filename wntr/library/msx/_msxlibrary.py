@@ -21,7 +21,7 @@ import logging
 import os
 from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, ValuesView
 
-from pkg_resources import resource_filename
+from importlib.resources import files
 
 from wntr.msx.base import ExpressionType, ReactionType, SpeciesType
 from wntr.msx.model import MsxModel
@@ -99,7 +99,7 @@ class MsxLibrary:
         self.__data = dict()
 
         if include_builtins:
-            default_path = os.path.abspath(resource_filename(__name__, '.'))
+            default_path = os.path.abspath(files(__name__).joinpath('.'))
             if default_path not in self.__library_paths:
                 self.__library_paths.append(default_path)
 
