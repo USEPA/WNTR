@@ -3,6 +3,7 @@ The wntr.epanet.toolkit module is a Python extension for the EPANET
 Programmers Toolkit DLLs.
 """
 import ctypes
+import enum
 import logging
 import os
 import os.path
@@ -875,3 +876,109 @@ class ENepanet:
         self._error()
 
         return
+
+
+class NodeParam(enum.IntEnum):
+    """Node parameters: :attr:`~ELEVATION`, :attr:`~BASEDEMAND`, :attr:`~PATTERN`, :attr:`~EMITTER`, :attr:`~INITQUAL`, :attr:`~SOURCEQUAL`, :attr:`~SOURCEPAT`, :attr:`~SOURCETYPE`, :attr:`~TANKLEVEL`, :attr:`~DEMAND`, :attr:`~HEAD`, :attr:`~PRESSURE`, :attr:`~QUALITY`, :attr:`~SOURCEMASS`, :attr:`~INITVOLUME`, :attr:`~MIXMODEL`, :attr:`~MIXZONEVOL`, :attr:`~TANKDIAM`, :attr:`~MINVOLUME`, :attr:`~VOLCURVE`, :attr:`~MINLEVEL,`, :attr:`~MAXLEVEL`, :attr:`~MIXFRACTION`, :attr:`~TANK_KBULK`, :attr:`~TANKVOLUME`, :attr:`~MAXVOLUME`"""
+
+    def __repr__(self):
+        return self._name_
+
+    ELEVATION = 0
+    BASEDEMAND = 1
+    PATTERN = 2
+    EMITTER = 3
+    INITQUAL = 4
+    SOURCEQUAL = 5
+    SOURCEPAT = 6
+    SOURCETYPE = 7
+    TANKLEVEL = 8
+    DEMAND = 9
+    HEAD = 10
+    PRESSURE = 11
+    QUALITY = 12
+    SOURCEMASS = 13
+    INITVOLUME = 14
+    MIXMODEL = 15
+    MIXZONEVOL = 16
+    TANKDIAM = 17
+    MINVOLUME = 18
+    VOLCURVE = 19
+    MINLEVEL = 20
+    MAXLEVEL = 21
+    MIXFRACTION = 22
+    TANK_KBULK = 23
+    TANKVOLUME = 24
+    MAXVOLUME = 25
+
+
+class LinkParam(enum.IntEnum):
+    """Link parameters: :attr:`~DIAMETER`, :attr:`~LENGTH`, :attr:`~ROUGHNESS`, :attr:`~MINORLOSS`, :attr:`~INITSTATUS`, :attr:`~INITSETTING`, :attr:`~KBULK`, :attr:`~KWALL`, :attr:`~FLOW`, :attr:`~VELOCITY`, :attr:`~HEADLOSS`, :attr:`~STATUS`, :attr:`~SETTING`, :attr:`~ENERGY`, :attr:`~LINKQUAL`, :attr:`~LINKPATTERN`"""
+
+    def __repr__(self):
+        return self._name_
+
+    DIAMETER = 0
+    LENGTH = 1
+    ROUGHNESS = 2
+    MINORLOSS = 3
+    INITSTATUS = 4
+    INITSETTING = 5
+    KBULK = 6
+    KWALL = 7
+    FLOW = 8
+    VELOCITY = 9
+    HEADLOSS = 10
+    STATUS = 11
+    SETTING = 12
+    ENERGY = 13
+    LINKQUAL = 14
+    LINKPATTERN = 15
+
+
+class TimeParam(enum.IntEnum):
+    """Time parameters: :attr:`~DURATION`, :attr:`~HYDSTEP`, :attr:`~QUALSTEP`, :attr:`~PATTERNSTEP`, :attr:`~PATTERNSTART`, :attr:`~REPORTSTEP`, :attr:`~REPORTSTART`, :attr:`~RULESTEP`, :attr:`~STATISTIC`, :attr:`~PERIODS`, :attr:`~STARTTIME`, :attr:`~HTIME`, :attr:`~HALTFLAG`, :attr:`~NEXTEVENT`"""
+
+    def __repr__(self):
+        return self._name_
+
+    DURATION = 0
+    HYDSTEP = 1
+    QUALSTEP = 2
+    PATTERNSTEP = 3
+    PATTERNSTART = 4
+    REPORTSTEP = 5
+    REPORTSTART = 6
+    RULESTEP = 7
+    STATISTIC = 8
+    PERIODS = 9
+    STARTTIME = 10
+    HTIME = 11
+    HALTFLAG = 12
+    NEXTEVENT = 13
+
+
+class CountType(enum.IntEnum):
+    """Component counts: :attr:`~NODECOUNT`, :attr:`~TANKCOUNT`, :attr:`~LINKCOUNT`, :attr:`~PATCOUNT`, :attr:`~CURVECOUNT`, :attr:`~CONTROLCOUNT`"""
+
+    def __repr__(self):
+        return self._name_
+
+    NODECOUNT = 0
+    TANKCOUNT = 1
+    LINKCOUNT = 2
+    PATCOUNT = 3
+    CURVECOUNT = 4
+    CONTROLCOUNT = 5
+
+
+class ControlType(enum.IntEnum):
+    """Control types: :attr:`~LOWLEVEL`, :attr:`~HILEVEL`, :attr:`~TIMER`, :attr:`~TIMEOFDAY`"""
+
+    def __repr__(self):
+        return self._name_
+
+    LOWLEVEL = 0
+    HILEVEL = 1
+    TIMER = 2
+    TIMEOFDAY = 3
