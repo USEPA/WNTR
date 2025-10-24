@@ -64,10 +64,16 @@ jobs:
     - name: Fix macos13 wheel names # For some reason, they come out as macos14 instead of macos13
       if: ${{ matrix.os == 'macOS-13'}} 
       run: |
+        echo "=== Before renaming ==="
+        ls -la ./wheelhouse/
         for file in ./wheelhouse/*.whl; do
+          echo "Original file: $file"
           new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_13_0/')
+          echo "New name: $new_name"
           mv "$file" "$new_name"
         done
+        echo "=== After renaming ==="
+        ls -la ./wheelhouse/
     - name: Fix linux wheel names # This is a bit dishonest, since the wheels are not properly repaired to be manylinux compatible. This is a (hopefully) temporary hack to get our wheels onto pypi. 
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
@@ -267,11 +273,23 @@ jobs:
         with:
           name: sdist
           path: dist
+      - name: Debug wheel files before upload
+        run: |
+          echo "=== Wheel files to upload ==="
+          ls -la dist/
+          echo "=== Wheel file details ==="
+          for wheel in dist/*.whl; do
+            echo "File: $wheel"
+            file "$wheel"
+            unzip -l "$wheel" | head -10
+            echo "---"
+          done
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           attestations: true
+          verbose: true
 
   publish-to-pypi:
     name: Publish Python 🐍 distribution 📦 to PyPI
@@ -295,6 +313,7 @@ jobs:
           name: sdist
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish
         with:
-          attestations: true
+          user: __token__
+          password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
