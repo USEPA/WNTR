@@ -64,7 +64,7 @@ if build:
     extension_modules.append(aml_core_ext)
     extension_modules.append(network_isolation_ext)
 
-DISTNAME = 'kbonney-WNTR'
+DISTNAME = 'wntr'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'
