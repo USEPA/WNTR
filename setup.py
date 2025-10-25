@@ -79,11 +79,8 @@ file_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(file_dir, 'README.md'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
-import datetime
-
-# Generate a unique version based on timestamp
-timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-VERSION = f"0.0.1.dev{timestamp}"
+# Use a stable development version
+VERSION = "1.4.0rc3"
 
 print(extension_modules)
 
