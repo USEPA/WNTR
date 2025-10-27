@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macOS-13]
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
       fail-fast: false
     steps:
     - name: Set env variables to handle macOS-13
@@ -95,8 +95,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.11']
-        os: [macOS-13]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
       fail-fast: false
     steps:
     - name: Set up Python 
@@ -138,103 +138,103 @@ jobs:
         pip install -r requirements.txt
         pytest wntr/tests/ --ignore=wntr/tests/test_demos.py --ignore=wntr/tests/test_examples.py
   
-  # run_coverage:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       python-version: ['3.10', '3.11', '3.12', '3.13']
-  #       os: [windows-latest, macOS-13, ubuntu-latest, macos-latest]
-  #     fail-fast: false
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Set mpl backend on windows
-  #     if: ${{ matrix.os == 'windows-latest' }}
-  #     run: echo "MPLBACKEND=Agg" >> $env:GITHUB_ENV
-  #     shell: pwsh
-  #   - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
-  #     run: |
-  #       brew reinstall libomp
-  #   - name: Install dependencies
-  #     run: |
-  #       python --version
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       python -m pip install -e .
-  #   - name: Run Tests
-  #     if: ${{ matrix.os != 'macos-latest' }}
-  #     run: | 
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Run Tests (ARM-processor)
-  #     if: ${{ matrix.os == 'macos-latest'}}
-  #     # doctests are not flexible enough to skip EPANET=v2.0 errors on ARM processor, so do not run doctests on ARM system
-  #     run: | 
-  #       coverage erase
-  #       coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-  #     env:
-  #       COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #   - name: Save coverage
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #       path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-  #       include-hidden-files: true
+  run_coverage:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set mpl backend on windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: echo "MPLBACKEND=Agg" >> $env:GITHUB_ENV
+      shell: pwsh
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+      run: |
+        brew reinstall libomp
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m pip install -e .
+    - name: Run Tests
+      if: ${{ matrix.os != 'macos-latest' }}
+      run: | 
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Run Tests (ARM-processor)
+      if: ${{ matrix.os == 'macos-latest'}}
+      # doctests are not flexible enough to skip EPANET=v2.0 errors on ARM processor, so do not run doctests on ARM system
+      run: | 
+        coverage erase
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
+      env:
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+    - name: Save coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        include-hidden-files: true
 
-  # combine_reports:
-  #   needs: [ run_coverage ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Set up Python 
-  #     uses: actions/setup-python@v5
-  #     with:
-  #       python-version: 3.11
-  #   - uses: actions/checkout@v4
-  #   - name: Install coverage
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #       python -m pip install -e .
-  #       pip install coveralls
-  #   - name: Download coverage artifacts from test matrix
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
-  #   - name: Setup coverage and combine reports
-  #     run: coverage combine .coverage.*.ubuntu-latest
-  #   - name: Create coverage report
-  #     run: |
-  #       echo "[paths]" > .coveragerc
-  #       echo "source = " >> .coveragerc
-  #       echo "    wntr/" >> .coveragerc
-  #       echo "    wntr\\" >> .coveragerc
-  #       echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
-  #       echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-  #       echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-  #       echo "    ${{ github.workspace }}/wntr" >> .coveragerc
-  #       coverage report
-  #       coverage json --pretty-print
-  #       coverage html --show-contexts
-  #   - name: Save coverage JSON
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: coverage-json
-  #       path: coverage.json
-  #   - name: Save coverage html
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: coverage-html
-  #       path: htmlcov
-  #   - name: Push to coveralls
-  #     run: coveralls --service=github --rcfile=.coveragerc
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  combine_reports:
+    needs: [ run_coverage ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+    - uses: actions/checkout@v4
+    - name: Install coverage
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m pip install -e .
+        pip install coveralls
+    - name: Download coverage artifacts from test matrix
+      uses: actions/download-artifact@v4
+      with:
+        pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
+    - name: Setup coverage and combine reports
+      run: coverage combine .coverage.*.ubuntu-latest
+    - name: Create coverage report
+      run: |
+        echo "[paths]" > .coveragerc
+        echo "source = " >> .coveragerc
+        echo "    wntr/" >> .coveragerc
+        echo "    wntr\\" >> .coveragerc
+        echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
+        echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
+        echo "    ${{ github.workspace }}/wntr" >> .coveragerc
+        coverage report
+        coverage json --pretty-print
+        coverage html --show-contexts
+    - name: Save coverage JSON
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-json
+        path: coverage.json
+    - name: Save coverage html
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-html
+        path: htmlcov
+    - name: Push to coveralls
+      run: coveralls --service=github --rcfile=.coveragerc
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_sdist:
     name: Build SDist artifact 📦
@@ -318,3 +318,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
+
