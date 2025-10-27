@@ -43,19 +43,38 @@ jobs:
           done
         fi
     - name: Build wheels
-      uses: pypa/cibuildwheel@79b0dd328794e1180a7268444d46cdf12e1abd01 # v2.21.0
+      uses: pypa/cibuildwheel@v2.21.0
       env:
         CIBW_ENVIRONMENT: BUILD_WNTR_EXTENSIONS='true'
         CIBW_BUILD: cp310-* cp311-* cp312-* cp313-*
         CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
         CIBW_REPAIR_WHEEL_COMMAND: '' # Skip repair step
+    - name: Set up Python for twine verification
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install twine and verify wheels
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install twine
+        for wheel in ./wheelhouse/*.whl; do
+          echo "Verifying wheel: $wheel"
+          twine check "$wheel"
+        done
     - name: Fix macos13 wheel names # For some reason, they come out as macos14 instead of macos13
       if: ${{ matrix.os == 'macOS-13'}} 
       run: |
+        echo "=== Before renaming ==="
+        ls -la ./wheelhouse/
         for file in ./wheelhouse/*.whl; do
+          echo "Original file: $file"
           new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_13_0/')
+          echo "New name: $new_name"
           mv "$file" "$new_name"
         done
+        echo "=== After renaming ==="
+        ls -la ./wheelhouse/
     - name: Fix linux wheel names # This is a bit dishonest, since the wheels are not properly repaired to be manylinux compatible. This is a (hopefully) temporary hack to get our wheels onto pypi. 
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
@@ -66,7 +85,7 @@ jobs:
           echo "Renamed: $file -> $new_file"
         done
     - name: Upload wheels
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
         path: ./wheelhouse/*.whl
@@ -78,7 +97,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [windows-latest, macOS-13, macos-latest, ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
       fail-fast: false
     steps:
     - name: Set up Python 
@@ -125,7 +144,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [windows-latest, macOS-13, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -233,6 +252,47 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
 
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs: [build_sdist, test_wheels]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/wntr
+    permissions:
+      id-token: write
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+      - name: Download SDist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - name: Debug wheel files before upload
+        run: |
+          echo "=== Wheel files to upload ==="
+          ls -la dist/
+          echo "=== Wheel file details ==="
+          for wheel in dist/*.whl; do
+            echo "File: $wheel"
+            file "$wheel"
+            unzip -l "$wheel" | head -10
+            echo "---"
+          done
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          verbose: true
+
   publish-to-pypi:
     name: Publish Python 🐍 distribution 📦 to PyPI
     needs: [build_sdist, test_wheels]
@@ -244,7 +304,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     steps:
       - name: Download wheel artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@v4
         with:
           pattern: cibw-*
           path: dist
@@ -255,7 +315,8 @@ jobs:
           name: sdist
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@0ab0b79471669eb3a4d647e625009c62f9f3b241 # release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
+
