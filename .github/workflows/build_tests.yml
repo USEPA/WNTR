@@ -260,7 +260,7 @@ jobs:
       url: https://test.pypi.org/project/wntr
     permissions:
       id-token: write
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Download wheel artifacts
         uses: actions/download-artifact@v4
