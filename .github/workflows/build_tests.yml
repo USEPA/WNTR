@@ -5,7 +5,7 @@ name: GitHub CI
 
 on:
   push:
-    branches: [ main, dev, release ]
+    branches: [ main, dev, release, testpypi ]
     tags:
       - '*'
   pull_request:
@@ -261,7 +261,7 @@ jobs:
       url: https://test.pypi.org/project/wntr
     permissions:
       id-token: write
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/testpypi'
     steps:
       - name: Download wheel artifacts
         uses: actions/download-artifact@v4
