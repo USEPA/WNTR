@@ -10,7 +10,7 @@ import platform
 import sys
 from ctypes import byref
 
-if sys.version_info < (3, 11):
+if sys.version_info <= (3, 11):
     from pkg_resources import resource_filename
 else:
     from importlib.resources import files
