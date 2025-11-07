@@ -102,7 +102,7 @@ class MsxLibrary:
         self.__data = dict()
 
         if include_builtins:
-            if sys.version_info < (3, 11):
+            if sys.version_info <= (3, 11):
                 default_path = os.path.abspath(resource_filename(__name__, '.'))
             else:
                 default_path = os.path.abspath(files('wntr.library.msx').joinpath('.'))

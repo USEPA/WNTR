@@ -108,7 +108,7 @@ class ENepanet:
         self.binfile = binfile
 
         try:
-            if sys.version_info < (3, 11):
+            if sys.version_info <= (3, 11):
                 if float(version) == 2.0:
                     libname = libepanet.replace('epanet22.','epanet20.')
                     if 'arm' in platform.platform():
