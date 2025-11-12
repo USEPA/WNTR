@@ -10,7 +10,7 @@ import platform
 import sys
 from ctypes import byref
 
-if sys.version_info < (3, 11):
+if sys.version_info[0:2] <= (3, 11):
     from pkg_resources import resource_filename
 else:
     from importlib.resources import files
@@ -108,7 +108,7 @@ class ENepanet:
         self.binfile = binfile
 
         try:
-            if sys.version_info < (3, 11):
+            if sys.version_info[0:2] <= (3, 11):
                 if float(version) == 2.0:
                     libname = libepanet.replace('epanet22.','epanet20.')
                     if 'arm' in platform.platform():

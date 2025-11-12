@@ -16,7 +16,7 @@ import platform
 import sys
 from typing import Union
 
-if sys.version_info < (3, 11):
+if sys.version_info[0:2] <= (3, 11):
     from pkg_resources import resource_filename
 else:
     from importlib.resources import files
@@ -49,7 +49,7 @@ class MSXepanet(ENepanet):
         self.msxfile = msxfile
 
         try:
-            if sys.version_info < (3, 11):
+            if sys.version_info[0:2] <= (3, 11):
 
                 if os.name in ["nt", "dos"]:
                     libepanet = resource_filename(__name__, "../libepanet/windows-x64/epanet2.dll")

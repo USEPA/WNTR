@@ -21,7 +21,7 @@ import logging
 import os, sys
 from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, ValuesView
 
-if sys.version_info < (3, 11):
+if sys.version_info[0:2] <= (3, 11):
     from pkg_resources import resource_filename
 else:
     from importlib.resources import files
@@ -102,7 +102,7 @@ class MsxLibrary:
         self.__data = dict()
 
         if include_builtins:
-            if sys.version_info < (3, 11):
+            if sys.version_info[0:2] <= (3, 11):
                 default_path = os.path.abspath(resource_filename(__name__, '.'))
             else:
                 default_path = os.path.abspath(files('wntr.library.msx').joinpath('.'))
