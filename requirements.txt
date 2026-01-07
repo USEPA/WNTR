@@ -2,7 +2,7 @@
 numpy>=2.2.6 
 scipy
 networkx
-pandas
+pandas<3.0
 matplotlib
 setuptools
 
