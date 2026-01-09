@@ -340,7 +340,7 @@ class TestConnectLines(unittest.TestCase):
         # Create imperfect pipe data
         disconnected_pipes = original_pipes.copy()
         for i, line in disconnected_pipes.iterrows():
-            angle = np.random.uniform(-5,5,1)
+            angle = np.random.uniform(-5,5)
             geom = gpd.GeoSeries(line['geometry'])
             geom = geom.rotate(angle)
             geom = geom.scale(0.9, 0.9)
