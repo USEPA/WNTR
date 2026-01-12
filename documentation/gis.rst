@@ -959,7 +959,7 @@ connected WaterNetworkModel.  This assumes that all start and end nodes are Junc
     >>> np.random.seed(123)
     >>> disconnected_pipes = original_pipes[['diameter', 'length', 'geometry']]
     >>> for i, line in disconnected_pipes.iterrows():
-    ...     angle = np.random.uniform(-5,5,1)
+    ...     angle = np.random.uniform(-5,5)
     ...     geom = gpd.GeoSeries(line['geometry'])
     ...     geom = geom.rotate(angle)
     ...     geom = geom.scale(0.9, 0.9)
