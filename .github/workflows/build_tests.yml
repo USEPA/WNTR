@@ -19,18 +19,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
       fail-fast: false
     steps:
-    - name: Set env variables to handle macOS-13
-      if: ${{ matrix.os == 'macOS-13'}}
+    - name: Set env variables to handle macOS-15
+      if: ${{ matrix.os == 'macos-15-intel'}}
       run: |
-        echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
-        echo "PLAT=macosx-13.0-universal2" >> $GITHUB_ENV
+        echo "MACOSX_DEPLOYMENT_TARGET=15.0" >> $GITHUB_ENV
+        echo "PLAT=macosx-15.0-universal2" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v4
     - name: Install libomp on macos
-      if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+      if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'}}
       run: |
         brew reinstall libomp # EPANETMSX repo also has this line, maybe include? `brew link --force --overwrite libomp`
     - name: Ad-hoc codesign for Apple Silicon
@@ -62,19 +62,19 @@ jobs:
           echo "Verifying wheel: $wheel"
           twine check "$wheel"
         done
-    - name: Fix macos13 wheel names # For some reason, they come out as macos14 instead of macos13
-      if: ${{ matrix.os == 'macOS-13'}} 
-      run: |
-        echo "=== Before renaming ==="
-        ls -la ./wheelhouse/
-        for file in ./wheelhouse/*.whl; do
-          echo "Original file: $file"
-          new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_13_0/')
-          echo "New name: $new_name"
-          mv "$file" "$new_name"
-        done
-        echo "=== After renaming ==="
-        ls -la ./wheelhouse/
+    # - name: Fix macos15 wheel names # For some reason, they come out as macos14 instead of macos15
+    #   if: ${{ matrix.os == 'macos-15-intel'}} 
+    #   run: |
+    #     echo "=== Before renaming ==="
+    #     ls -la ./wheelhouse/
+    #     for file in ./wheelhouse/*.whl; do
+    #       echo "Original file: $file"
+    #       new_name=$(echo "$file" | sed 's/macosx_14_0/macosx_15_0/')
+    #       echo "New name: $new_name"
+    #       mv "$file" "$new_name"
+    #     done
+    #     echo "=== After renaming ==="
+    #     ls -la ./wheelhouse/
     - name: Fix linux wheel names # This is a bit dishonest, since the wheels are not properly repaired to be manylinux compatible. This is a (hopefully) temporary hack to get our wheels onto pypi. 
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
@@ -97,7 +97,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
       fail-fast: false
     steps:
     - name: Set up Python 
@@ -131,7 +131,7 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
       run: echo "MPLBACKEND=Agg" >> $env:GITHUB_ENV
       shell: pwsh
-    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'}}
       run: |
         brew reinstall libomp
     - name: Test wntr
@@ -144,7 +144,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
-        os: [ubuntu-latest, windows-latest, macOS-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -156,7 +156,7 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
       run: echo "MPLBACKEND=Agg" >> $env:GITHUB_ENV
       shell: pwsh
-    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macOS-13'}}
+    - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-15-intel'}}
       run: |
         brew reinstall libomp
     - name: Install dependencies
