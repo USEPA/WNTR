@@ -3,6 +3,7 @@ The wntr.epanet.toolkit module is a Python extension for the EPANET
 Programmers Toolkit DLLs.
 """
 import ctypes
+import enum
 import logging
 import os
 import os.path
@@ -891,3 +892,198 @@ class ENepanet:
         self._error()
 
         return
+    
+
+
+class NodeParam(enum.IntEnum):
+    """All the ``EN_`` constants for the EPANET toolkit.
+
+    For example, ``EN_LENGTH`` is accessed as ``EN.LENGTH``, instead.  Please see the EPANET
+    toolkit documentation for the description of these enums. Several enums are duplicated
+    in separate classes above for clarity during programming.
+
+    The enums can be broken in the following groups.
+
+    - Node parameters: :attr:`~ELEVATION`, :attr:`~BASEDEMAND`, :attr:`~PATTERN`, :attr:`~EMITTER`, :attr:`~INITQUAL`, :attr:`~SOURCEQUAL`, :attr:`~SOURCEPAT`, :attr:`~SOURCETYPE`, :attr:`~TANKLEVEL`, :attr:`~DEMAND`, :attr:`~HEAD`, :attr:`~PRESSURE`, :attr:`~QUALITY`, :attr:`~SOURCEMASS`, :attr:`~INITVOLUME`, :attr:`~MIXMODEL`, :attr:`~MIXZONEVOL`, :attr:`~TANKDIAM`, :attr:`~MINVOLUME`, :attr:`~VOLCURVE`, :attr:`~MINLEVEL,`, :attr:`~MAXLEVEL`, :attr:`~MIXFRACTION`, :attr:`~TANK_KBULK`, :attr:`~TANKVOLUME`, :attr:`~MAXVOLUME`
+    - Link parameters: :attr:`~DIAMETER`, :attr:`~LENGTH`, :attr:`~ROUGHNESS`, :attr:`~MINORLOSS`, :attr:`~INITSTATUS`, :attr:`~INITSETTING`, :attr:`~KBULK`, :attr:`~KWALL`, :attr:`~FLOW`, :attr:`~VELOCITY`, :attr:`~HEADLOSS`, :attr:`~STATUS`, :attr:`~SETTING`, :attr:`~ENERGY`, :attr:`~LINKQUAL`, :attr:`~LINKPATTERN`
+    - Time parameters: :attr:`~DURATION`, :attr:`~HYDSTEP`, :attr:`~QUALSTEP`, :attr:`~PATTERNSTEP`, :attr:`~PATTERNSTART`, :attr:`~REPORTSTEP`, :attr:`~REPORTSTART`, :attr:`~RULESTEP`, :attr:`~STATISTIC`, :attr:`~PERIODS`, :attr:`~STARTTIME`, :attr:`~HTIME`, :attr:`~HALTFLAG`, :attr:`~NEXTEVENT`
+    - Solver parameters: :attr:`~ITERATIONS`, :attr:`~RELATIVEERROR`
+    - Component counts: :attr:`~NODECOUNT`, :attr:`~TANKCOUNT`, :attr:`~LINKCOUNT`, :attr:`~PATCOUNT`, :attr:`~CURVECOUNT`, :attr:`~CONTROLCOUNT`
+    - Node types: :attr:`~JUNCTION`, :attr:`~RESERVOIR`, :attr:`~TANK`
+    - Link types: :attr:`~CVPIPE`, :attr:`~PIPE`, :attr:`~PUMP`, :attr:`~PRV`, :attr:`~PSV`, :attr:`~PBV`, :attr:`~FCV`, :attr:`~TCV`, :attr:`~GPV`
+    - Quality analysis types: :attr:`~NONE`, :attr:`~CHEM`, :attr:`~AGE`, :attr:`~TRACE`
+    - Source quality types: :attr:`~CONCEN`, :attr:`~MASS`, :attr:`~SETPOINT`, :attr:`~FLOWPACED`
+    - Flow unit types: :attr:`~CFS`, :attr:`~GPM`, :attr:`~MGD`, :attr:`~IMGD`, :attr:`~AFD`, :attr:`~LPS`, :attr:`~LPM`, :attr:`~MLD`, :attr:`~CMH`, :attr:`~CMD`
+    - Miscelaneous options: :attr:`~TRIALS`, :attr:`~ACCURACY`, :attr:`~TOLERANCE`, :attr:`~EMITEXPON`, :attr:`~DEMANDMULT`
+    - Control types: :attr:`~LOWLEVEL`, :attr:`~HILEVEL`, :attr:`~TIMER`, :attr:`~TIMEOFDAY`
+    - Time statistic types: :attr:`~NONE`, :attr:`~AVERAGE`, :attr:`~MINIMUM`, :attr:`~MAXIMUM`, :attr:`~RANGE`
+    - Tank mixing model types: :attr:`~MIX1`, :attr:`~MIX2`, :attr:`~FIFO`, :attr:`~LIFO`
+    - Save results flag: :attr:`~NOSAVE`, :attr:`~SAVE`, :attr:`~INITFLOW`
+    - Pump behavior types: :attr:`~CONST_HP`, :attr:`~POWER_FUNC`, :attr:`~CUSTOM`
+
+
+    """
+
+    # Node parameters
+    ELEVATION = 0
+    BASEDEMAND = 1
+    PATTERN = 2
+    EMITTER = 3
+    INITQUAL = 4
+    SOURCEQUAL = 5
+    SOURCEPAT = 6
+    SOURCETYPE = 7
+    TANKLEVEL = 8
+    DEMAND = 9
+    HEAD = 10
+    PRESSURE = 11
+    QUALITY = 12
+    SOURCEMASS = 13
+    INITVOLUME = 14
+    MIXMODEL = 15
+    MIXZONEVOL = 16
+    TANKDIAM = 17
+    MINVOLUME = 18
+    VOLCURVE = 19
+    MINLEVEL = 20
+    MAXLEVEL = 21
+    MIXFRACTION = 22
+    TANK_KBULK = 23
+    TANKVOLUME = 24
+    MAXVOLUME = 25
+
+class LinkParam(enum.IntEnum):
+    # Link parameters
+    DIAMETER = 0
+    LENGTH = 1
+    ROUGHNESS = 2
+    MINORLOSS = 3
+    INITSTATUS = 4
+    INITSETTING = 5
+    KBULK = 6
+    KWALL = 7
+    FLOW = 8
+    VELOCITY = 9
+    HEADLOSS = 10
+    STATUS = 11
+    SETTING = 12
+    ENERGY = 13
+    LINKQUAL = 14
+    LINKPATTERN = 15
+
+class TimeParam(enum.IntEnum):
+    # Time parameters
+    DURATION = 0
+    HYDSTEP = 1
+    QUALSTEP = 2
+    PATTERNSTEP = 3
+    PATTERNSTART = 4
+    REPORTSTEP = 5
+    REPORTSTART = 6
+    RULESTEP = 7
+    STATISTIC = 8
+    PERIODS = 9
+    STARTTIME = 10
+    HTIME = 11
+    HALTFLAG = 12
+    NEXTEVENT = 13
+
+class SolvParam(enum.IntEnum):
+    # Solver parameters
+    ITERATIONS = 0
+    RELATIVEERROR = 1
+
+class CountParam(enum.IntEnum):
+    # Count parameters
+    NODECOUNT = 0
+    TANKCOUNT = 1
+    LINKCOUNT = 2
+    PATCOUNT = 3
+    CURVECOUNT = 4
+    CONTROLCOUNT = 5
+
+class NodeTypeParam(enum.IntEnum):
+    # Node Types
+    JUNCTION = 0
+    RESERVOIR = 1
+    TANK = 2
+
+class LinkTypeParam(enum.IntEnum):
+    # Link Types
+    CVPIPE = 0
+    PIPE = 1
+    PUMP = 2
+    PRV = 3
+    PSV = 4
+    PBV = 5
+    FCV = 6
+    TCV = 7
+    GPV = 8
+
+class QualTypeParam(enum.IntEnum):
+    # Quality Types
+    NONE = 0
+    CHEM = 1
+    AGE = 2
+    TRACE = 3
+
+class SrcQualTypeParam(enum.IntEnum):
+    # Source quality types
+    CONCEN = 0
+    MASS = 1
+    SETPOINT = 2
+    FLOWPACED = 3
+
+class FlowUnitParam(enum.IntEnum):
+    # Flow units parameter
+    CFS = 0
+    GPM = 1
+    MGD = 2
+    IMGD = 3
+    AFD = 4
+    LPS = 5
+    LPM = 6
+    MLD = 7
+    CMH = 8
+    CMD = 9
+
+class MiscParam(enum.IntEnum):
+    # Miscelaneous parameters
+    TRIALS = 0
+    ACCURACY = 1
+    TOLERANCE = 2
+    EMITEXPON = 3
+    DEMANDMULT = 4
+
+class ControlTypeParam(enum.IntEnum):
+    # Control types
+    LOWLEVEL = 0
+    HILEVEL = 1
+    TIMER = 2
+    TIMEOFDAY = 3
+
+class StatTypeParam(enum.IntEnum):
+    # Statistic Types
+    AVERAGE = 1
+    MINIMUM = 2
+    MAXIMUM = 3
+    RANGE = 4
+
+class TankMixParam(enum.IntEnum):
+    # Tank mixing parameters
+    MIX1 = 0
+    MIX2 = 1
+    FIFO = 2
+    LIFO = 3
+
+class HydSolvParam(enum.IntEnum):
+    # Hydraulic solver / file parameters
+    NOSAVE = 0
+    SAVE = 1
+    INITFLOW = 10
+
+class PumpBehaviorType(enum.IntEnum):
+    # Pump behavior Types
+    CONST_HP = 0
+    POWER_FUNC = 1
+    CUSTOM = 2

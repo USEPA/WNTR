@@ -1058,7 +1058,7 @@ class StepwiseEpanetSimulator(WaterNetworkSimulator):
             for obj in ctrl.requires():
                 if isinstance(obj, Link):
                     require_override.add(obj)
-        numctrls = self._epanet.ENgetcount(_tk.CountType.CONTROLCOUNT)
+        numctrls = self._epanet.ENgetcount(_tk.CountParam.CONTROLCOUNT)
         link_indexes = dict()
         for link in require_override:
             link_name = link.name
