@@ -209,7 +209,8 @@ The dataset is indexed by pipe name.  The first 10 lines of the dataset are show
 
 .. doctest::
 
-    >>> print(material.head(10))
+    >>> material_normalized = material.astype('object')
+    >>> print(material_normalized.head(10))
     20         Steel
     40     Cast iron
     50          HDPE
