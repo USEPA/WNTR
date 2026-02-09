@@ -8,6 +8,7 @@ the water network model to a file.
 import logging
 import json
 import networkx as nx
+import pandas as pd
 
 import wntr.epanet
 from wntr.epanet.util import FlowUnits
@@ -21,6 +22,13 @@ except ModuleNotFoundError:
     has_geopandas = False
     
 logger = logging.getLogger(__name__)
+
+
+def _nan_to_none(value):
+    """Convert NaN values to None for pandas 3.0 compatibility."""
+    if pd.isna(value):
+        return None
+    return value
 
 
 def to_dict(wn) -> dict:
@@ -120,12 +128,12 @@ def from_dict(d: dict, append=None):
                 dl = node.setdefault("demand_timeseries_list")
                 if dl is not None and len(dl) > 0:
                     base_demand = dl[0].setdefault("base_val", 0.0)
-                    pattern_name = dl[0].setdefault("pattern_name")
-                    demand_category = dl[0].setdefault("category")
+                    pattern_name = _nan_to_none(dl[0].setdefault("pattern_name"))
+                    demand_category = _nan_to_none(dl[0].setdefault("category"))
                 else:
                     base_demand = node.setdefault('base_demand',0.0)
-                    pattern_name = node.setdefault('pattern_name')
-                    demand_category = node.setdefault('demand_category')
+                    pattern_name = _nan_to_none(node.setdefault('pattern_name'))
+                    demand_category = _nan_to_none(node.setdefault('demand_category'))
                 wn.add_junction(
                     name=name,
                     base_demand=base_demand,
@@ -140,7 +148,7 @@ def from_dict(d: dict, append=None):
                 j.minimum_pressure = node.setdefault("minimum_pressure")
                 j.pressure_exponent = node.setdefault("pressure_exponent")
                 j.required_pressure = node.setdefault("required_pressure")
-                j.tag = node.setdefault("tag")
+                j.tag = _nan_to_none(node.setdefault("tag"))
                 
                 j._leak = node.setdefault("leak", False)
                 j._leak_area = node.setdefault("leak_area", 0.0)
@@ -152,8 +160,8 @@ def from_dict(d: dict, append=None):
                 if dl is not None and len(dl) > 1:
                     for i in range(1, len(dl)):
                         base_val = dl[i].setdefault("base_val", 0.0)
-                        pattern_name = dl[i].setdefault("pattern_name")
-                        category = dl[i].setdefault("category")
+                        pattern_name = _nan_to_none(dl[i].setdefault("pattern_name"))
+                        category = _nan_to_none(dl[i].setdefault("category"))
                         j.add_demand(base_val, pattern_name, category)
             elif node["node_type"] == "Tank":
                 coordinates = node.setdefault("coordinates")
@@ -166,7 +174,7 @@ def from_dict(d: dict, append=None):
                     max_level=node.setdefault("max_level", node.setdefault("min_level", 0) + 10),
                     diameter=node.setdefault("diameter", 0),
                     min_vol=node.setdefault("min_vol", 0),
-                    vol_curve=node.setdefault("vol_curve_name"),
+                    vol_curve=_nan_to_none(node.setdefault("vol_curve_name")),
                     overflow=node.setdefault("overflow", False),
                     coordinates=coordinates,
                 )
@@ -177,7 +185,7 @@ def from_dict(d: dict, append=None):
                 if node.setdefault("mixing_model"):
                     t.mixing_model = node.setdefault("mixing_model")
                 t.bulk_coeff = node.setdefault("bulk_coeff")
-                t.tag = node.setdefault("tag")
+                t.tag = _nan_to_none(node.setdefault("tag"))
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(t))):
                     setattr( t, attr, node[attr] )
@@ -185,12 +193,12 @@ def from_dict(d: dict, append=None):
                 wn.add_reservoir(
                     name,
                     base_head=node.setdefault("base_head"),
-                    head_pattern=node.setdefault("head_pattern_name"),
+                    head_pattern=_nan_to_none(node.setdefault("head_pattern_name")),
                     coordinates=node.setdefault("coordinates"),
                 )
                 r = wn.get_node(name)
                 r.initial_quality = node.setdefault("initial_quality", 0.0)
-                r.tag = node.setdefault("tag")
+                r.tag = _nan_to_none(node.setdefault("tag"))
                 # custom additional attributes
                 for attr in list(set(node.keys()) - set(dir(r))):
                     setattr( r, attr, node[attr] )
@@ -213,7 +221,7 @@ def from_dict(d: dict, append=None):
                 )
                 p = wn.get_link(name)
                 p.bulk_coeff = link.setdefault("bulk_coeff")
-                p.tag = link.setdefault("tag")
+                p.tag = _nan_to_none(link.setdefault("tag"))
                 p.vertices = link.setdefault("vertices", list())
                 p.wall_coeff = link.setdefault("wall_coeff")
                 # custom additional attributes
@@ -230,15 +238,15 @@ def from_dict(d: dict, append=None):
                     if pump_type.lower() == "power"
                     else link.setdefault("pump_curve_name"),
                     speed=link.setdefault("base_speed", 1.0),
-                    pattern=link.setdefault("speed_pattern_name"),
+                    pattern=_nan_to_none(link.setdefault("speed_pattern_name")),
                     initial_status=link.setdefault("initial_status", "OPEN"),
                 )
                 p = wn.get_link(name)
-                p.efficiency_curve_name = link.setdefault("efficiency_curve_name")
-                p.energy_pattern = link.setdefault("energy_pattern")
+                p.efficiency_curve_name = _nan_to_none(link.setdefault("efficiency_curve_name"))
+                p.energy_pattern = _nan_to_none(link.setdefault("energy_pattern"))
                 p.energy_price = link.setdefault("energy_price")
                 p.initial_setting = link.setdefault("initial_setting")
-                p.tag = link.setdefault("tag")
+                p.tag = _nan_to_none(link.setdefault("tag"))
                 p.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(p))):
@@ -257,7 +265,7 @@ def from_dict(d: dict, append=None):
                 )
                 v = wn.get_link(name)
                 if valve_type.lower() == "gpv":
-                    v.headloss_curve_name = link.setdefault("headloss_curve_name")
+                    v.headloss_curve_name = _nan_to_none(link.setdefault("headloss_curve_name"))
                 v.vertices = link.setdefault("vertices", list())
                 # custom additional attributes
                 for attr in list(set(link.keys()) - set(dir(v))):
