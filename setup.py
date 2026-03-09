@@ -72,7 +72,7 @@ AUTHOR = 'WNTR Developers'
 MAINTAINER_EMAIL = 'kaklise@sandia.gov'
 LICENSE = 'Revised BSD'
 URL = 'https://github.com/USEPA/WNTR'
-DEPENDENCIES = ['numpy>=2.2.6 ', 'scipy', 'networkx', 'pandas>=2.0', 'matplotlib', 'setuptools']
+DEPENDENCIES = ['numpy>=2.2.6 ', 'scipy', 'networkx', 'pandas>=2.0', 'matplotlib', 'setuptools<69.5.1']
 
 # use README file as the long description
 file_dir = os.path.abspath(os.path.dirname(__file__))
