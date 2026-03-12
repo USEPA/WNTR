@@ -111,7 +111,7 @@ class ENepanet:
                     raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
             else:
                 libname = libepanet
-            libname = files('wntr.epanet').joinpath(libname)
+            libname = str(files('wntr.epanet').joinpath(libname))
             if os.name in ["nt", "dos"]:
                 self.ENlib = ctypes.windll.LoadLibrary(libname)
             else:
