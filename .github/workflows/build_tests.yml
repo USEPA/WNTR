@@ -43,7 +43,7 @@ jobs:
           done
         fi
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.21.0
+      uses: pypa/cibuildwheel@v3.1.4
       env:
         CIBW_ENVIRONMENT: BUILD_WNTR_EXTENSIONS='true'
         CIBW_BUILD: cp310-* cp311-* cp312-* cp313-*
