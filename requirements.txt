@@ -4,7 +4,7 @@ scipy
 networkx
 pandas>=2.0
 matplotlib
-setuptools
+setuptools<69.5.1
 
 # Optional
 plotly<6.0
