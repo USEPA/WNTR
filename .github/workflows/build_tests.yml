@@ -167,10 +167,12 @@ jobs:
         python -m pip install -e .
     - name: Run Tests
       if: ${{ matrix.os != 'macos-latest' }}
+      env:
+        omit: "'*/tests/*','*/extensions/*','*/sim/network_isolation/network_isolation.py','*/sim/aml/evaluator.py'"
       run: | 
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" -m pytest  --doctest-modules --doctest-glob="*.rst" wntr
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit="*/tests/*","*/sim/network_isolation/network_isolation.py","*/sim/aml/evaluator.py" --append -m pytest --doctest-glob="*.rst" documentation
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$omit -m pytest -m "not extensions" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$omit --append -m pytest --doctest-glob="*.rst" --ignore-glob="*/extensions/*.rst" documentation
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Run Tests (ARM-processor)

@@ -12,28 +12,10 @@ If users have related software or a publication that they would like
 to add to this page, please email the contacts listed on the WNTR GitHub webpage (https://github.com/USEPA/WNTR) 
 or submit a pull request with the update.
 
-Related software
------------------
+Third-party packages
+---------------------
 
-* CriticalityMaps: https://github.com/pshassett/CriticalityMaps
-
-* Digital HydrAuLic SIMulator (DHALSIM): https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM
-
-* LeakDB: https://github.com/KIOS-Research/LeakDB
-
-* MAGNets: https://github.com/meghnathomas/MAGNets
-
-* MILPNet: https://github.com/meghnathomas/MILPNet
-
-* PPMTools: https://github.com/USEPA/PPMtools
-
-* PTSNet: https://github.com/gandresr/ptsnet
-
-* TSNet: https://github.com/glorialulu/TSNet
-
-* VisWaterNet: https://github.com/tylertrimble/viswaternet
-
-See the `WNTR GitHub Dependeny Graph <https://github.com/USEPA/WNTR/network/dependents?dependent_type=REPOSITORY>`_ to find additional repositories and packages that use WNTR.
+.. include:: third_party_software.rst
 
 Publications
 ------------
@@ -114,5 +96,5 @@ Publications
 
 .. bibliography::
     :notcited:
-    :list: bullet
+    :list: enumerated
 

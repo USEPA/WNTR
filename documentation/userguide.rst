@@ -72,6 +72,14 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
    graphics
    gis
    advancedsim
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Extensions
+
+   extensions
+   extensions/hello_world
    
 .. toctree::
     :maxdepth: 1

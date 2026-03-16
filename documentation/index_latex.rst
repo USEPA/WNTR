@@ -35,6 +35,7 @@ WNTR documentation
    graphics
    gis
    advancedsim
+   extensions
    license
    users	   
    developers
