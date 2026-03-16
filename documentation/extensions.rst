@@ -8,8 +8,8 @@ Extensions
 ==========
 |extensions|
 
-.. |extensions| image:: https://github.com/kaklise/WNTR/actions/workflows/extensions.yml/badge.svg
-   :target: https://github.com/kaklise/WNTR/actions/workflows/extensions.yml
+.. |extensions| image:: https://github.com/USEPA/WNTR/actions/workflows/extensions.yml/badge.svg
+   :target: https://github.com/USEPA/WNTR/actions/workflows/extensions.yml
    
 WNTR extensions are intended to house beta and self-contained functionality that adds to WNTR, 
 but is currently not part of core WNTR development.  The extensions should be designed for a wide audience.
