@@ -168,13 +168,12 @@ jobs:
     - name: Run Tests
       if: ${{ matrix.os != 'macos-latest' }}
       env:
-        omit: "'*/tests/*','*/extensions/*','*/sim/network_isolation/network_isolation.py','*/sim/aml/evaluator.py'"
+        OMIT: "'*/tests/*','*/extensions/*','*/sim/network_isolation/network_isolation.py','*/sim/aml/evaluator.py'"
+        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
       run: | 
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$omit -m pytest -m "not extensions" --doctest-modules --doctest-glob="*.rst" wntr
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$omit --append -m pytest --doctest-glob="*.rst" --ignore-glob="*/extensions/*.rst" documentation
-      env:
-        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$OMIT -m pytest -m "not extensions" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$OMIT --append -m pytest --doctest-glob="*.rst" --ignore-glob="*/extensions/*.rst" documentation
     - name: Run Tests (ARM-processor)
       if: ${{ matrix.os == 'macos-latest'}}
       # doctests are not flexible enough to skip EPANET=v2.0 errors on ARM processor, so do not run doctests on ARM system
