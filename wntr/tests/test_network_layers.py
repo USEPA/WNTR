@@ -33,6 +33,10 @@ class TestValveLayer(unittest.TestCase):
             join(test_datadir, "valve_layer_random.csv"), index_col=0, dtype="object"
         )
 
+        # Normalize dtypes to object for comparison (pandas 3.0 uses StringDtype)
+        valves = valves.astype({'link': 'object', 'node': 'object'})
+        expected = expected.astype({'link': 'object', 'node': 'object'})
+        
         assert_frame_equal(valves, expected)
 
     def test_valve_layer_strategic(self):
@@ -59,6 +63,10 @@ class TestValveLayer(unittest.TestCase):
                 index_col=0,
                 dtype="object",
             )
+
+            # Normalize dtypes to object for comparison (pandas 3.0 uses StringDtype)
+            valves = valves.astype({'link': 'object', 'node': 'object'})
+            expected_valves = expected_valves.astype({'link': 'object', 'node': 'object'})
 
             self.assertEqual(valves.shape[0], expected_n_valves[N])
             assert_frame_equal(valves, expected_valves, check_index_type=False)

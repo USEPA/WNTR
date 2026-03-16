@@ -18,13 +18,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os, sys
+import os
 from typing import Any, ItemsView, Iterator, KeysView, List, Tuple, Union, ValuesView
 
-if sys.version_info[0:2] <= (3, 11):
-    from pkg_resources import resource_filename
-else:
-    from importlib.resources import files
+from importlib.resources import files
 
 from wntr.msx.base import ExpressionType, ReactionType, SpeciesType
 from wntr.msx.model import MsxModel
@@ -102,10 +99,7 @@ class MsxLibrary:
         self.__data = dict()
 
         if include_builtins:
-            if sys.version_info[0:2] <= (3, 11):
-                default_path = os.path.abspath(resource_filename(__name__, '.'))
-            else:
-                default_path = os.path.abspath(files('wntr.library.msx').joinpath('.'))
+            default_path = os.path.abspath(files('wntr.library.msx').joinpath('.'))
             if default_path not in self.__library_paths:
                 self.__library_paths.append(default_path)
 

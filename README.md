@@ -18,11 +18,12 @@ analyze resilience of water distribution networks. The software includes capabil
 * Evaluate resilience 
 * Visualize results
 
-For more information, go to https://usepa.github.io/WNTR/ 
+For more information, see the WNTR documentation at https://usepa.github.io/WNTR
+
+DeepWiki AI-generated documentation, which includes code architecture diagrams and a chatbot, are available at https://deepwiki.com/USEPA/WNTR
 
 Installation
 --------------
-
 
 The latest release of WNTR can be installed from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
 

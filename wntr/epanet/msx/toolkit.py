@@ -16,10 +16,7 @@ import platform
 import sys
 from typing import Union
 
-if sys.version_info[0:2] <= (3, 11):
-    from pkg_resources import resource_filename
-else:
-    from importlib.resources import files
+from importlib.resources import files
 
 from wntr.epanet.msx.enums import TkObjectType, TkSourceType
 
@@ -29,7 +26,6 @@ from .exceptions import (MSX_ERROR_CODES, EpanetMsxException, MSXKeyError,
 
 logger = logging.getLogger(__name__)
 
-epanet_toolkit = "wntr.epanet.toolkit"
 
 class MSXepanet(ENepanet):
     def __init__(self, inpfile="", rptfile="", binfile="", msxfile=""):
@@ -49,51 +45,27 @@ class MSXepanet(ENepanet):
         self.msxfile = msxfile
 
         try:
-            if sys.version_info[0:2] <= (3, 11):
-
-                if os.name in ["nt", "dos"]:
-                    libepanet = resource_filename(epanet_toolkit, "libepanet/windows-x64/epanet2.dll")
-                    libmsx = resource_filename(epanet_toolkit, "libepanet/windows-x64/epanetmsx.dll")
-                elif sys.platform in ["darwin"]:
-                    if 'arm' in platform.platform().lower():
-                        libepanet = resource_filename(epanet_toolkit, "libepanet/darwin-arm/libepanet2.dylib")
-                        libmsx = resource_filename(epanet_toolkit, "libepanet/darwin-arm/libepanetmsx.dylib")
-                    else:
-                        libepanet = resource_filename(epanet_toolkit, "libepanet/darwin-x64/libepanet2.dylib")
-                        libmsx = resource_filename(epanet_toolkit, "libepanet/darwin-x64/libepanetmsx.dylib")
+            if os.name in ["nt", "dos"]:
+                libepanet = str(files('wntr.epanet').joinpath("libepanet/windows-x64/epanet2.dll"))
+                libmsx = str(files('wntr.epanet').joinpath("libepanet/windows-x64/epanetmsx.dll"))
+            elif sys.platform in ["darwin"]:
+                if 'arm' in platform.platform().lower():
+                    libepanet = str(files('wntr.epanet').joinpath("libepanet/darwin-arm/libepanet2.dylib"))
+                    libmsx = str(files('wntr.epanet').joinpath("libepanet/darwin-arm/libepanetmsx.dylib"))
                 else:
-                    libepanet = resource_filename(epanet_toolkit, "libepanet/linux-x64/libepanet2.so")
-                    libmsx = resource_filename(epanet_toolkit, "libepanet/linux-x64/libepanetmsx.so")
-
-                dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
-                if dylib_dir != '':
-                    if 'arm' in platform.platform().lower():
-                        dylib_dir = dylib_dir + ':' + resource_filename(epanet_toolkit, "libepanet/darwin-arm")
-                    else:
-                        dylib_dir = dylib_dir + ':' + resource_filename(epanet_toolkit, "libepanet/darwin-x64")
-                    os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = dylib_dir
+                    libepanet = str(files('wntr.epanet').joinpath("libepanet/darwin-x64/libepanet2.dylib"))
+                    libmsx = str(files('wntr.epanet').joinpath("libepanet/darwin-x64/libepanetmsx.dylib"))
             else:
-                if os.name in ["nt", "dos"]:
-                    libepanet = files(epanet_toolkit).joinpath("libepanet/windows-x64/epanet2.dll")
-                    libmsx = files(epanet_toolkit).joinpath("libepanet/windows-x64/epanetmsx.dll")
-                elif sys.platform in ["darwin"]:
-                    if 'arm' in platform.platform().lower():
-                        libepanet = files(epanet_toolkit).joinpath("libepanet/darwin-arm/libepanet2.dylib")
-                        libmsx = files(epanet_toolkit).joinpath("libepanet/darwin-arm/libepanetmsx.dylib")
-                    else:
-                        libepanet = files(epanet_toolkit).joinpath("libepanet/darwin-x64/libepanet2.dylib")
-                        libmsx = files(epanet_toolkit).joinpath("libepanet/darwin-x64/libepanetmsx.dylib")
-                else:
-                    libepanet = files(epanet_toolkit).joinpath("libepanet/linux-x64/libepanet2.so")
-                    libmsx = files(epanet_toolkit).joinpath("libepanet/linux-x64/libepanetmsx.so")
+                libepanet = str(files('wntr.epanet').joinpath("libepanet/linux-x64/libepanet2.so"))
+                libmsx = str(files('wntr.epanet').joinpath("libepanet/linux-x64/libepanetmsx.so"))
 
-                dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
-                if dylib_dir != '':
-                    if 'arm' in platform.platform().lower():
-                        dylib_dir = dylib_dir + ':' + files(epanet_toolkit).joinpath("libepanet/darwin-arm")
-                    else:
-                        dylib_dir = dylib_dir + ':' + files(epanet_toolkit).joinpath("libepanet/darwin-x64")
-                    os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = dylib_dir
+            dylib_dir = os.environ.get('DYLD_FALLBACK_LIBRARY_PATH','')
+            if dylib_dir != '':
+                if 'arm' in platform.platform().lower():
+                    dylib_dir = dylib_dir + ':' + str(files('wntr.epanet').joinpath("libepanet/darwin-arm"))
+                else:
+                    dylib_dir = dylib_dir + ':' + str(files('wntr.epanet').joinpath("libepanet/darwin-x64"))
+                os.environ['DYLD_FALLBACK_LIBRARY_PATH'] = dylib_dir
             if os.name in ["nt", "dos"]:
                 self.ENlib = ctypes.windll.LoadLibrary(libmsx)
             else:

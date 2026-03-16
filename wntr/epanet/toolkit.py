@@ -11,10 +11,7 @@ import platform
 import sys
 from ctypes import byref
 
-if sys.version_info[0:2] <= (3, 11):
-    from pkg_resources import resource_filename
-else:
-    from importlib.resources import files
+from importlib.resources import files
 
 from .exceptions import EN_ERROR_CODES, EpanetException
 from .util import SizeLimits
@@ -109,30 +106,17 @@ class ENepanet:
         self.binfile = binfile
 
         try:
-            if sys.version_info[0:2] <= (3, 11):
-                if float(version) == 2.0:
-                    libname = libepanet.replace('epanet22.','epanet20.')
-                    if 'arm' in platform.platform():
-                        raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
-                else:
-                    libname = libepanet
-                libname = resource_filename(__name__, libname)
-                if os.name in ["nt", "dos"]:
-                    self.ENlib = ctypes.windll.LoadLibrary(libname)
-                else:
-                    self.ENlib = ctypes.cdll.LoadLibrary(libname)
+            if float(version) == 2.0:
+                libname = libepanet.replace('epanet22.','epanet20.')
+                if 'arm' in platform.platform():
+                    raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
             else:
-                if float(version) == 2.0:
-                    libname = libepanet.replace('epanet22.','epanet20.')
-                    if 'arm' in platform.platform():
-                        raise NotImplementedError('ARM-based processors not supported for version 2.0 of EPANET. Please use version=2.2')
-                else:
-                    libname = libepanet
-                libname = files(__name__).joinpath(libname)
-                if os.name in ["nt", "dos"]:
-                    self.ENlib = ctypes.windll.LoadLibrary(libname)
-                else:
-                    self.ENlib = ctypes.cdll.LoadLibrary(libname)
+                libname = libepanet
+            libname = str(files('wntr.epanet').joinpath(libname))
+            if os.name in ["nt", "dos"]:
+                self.ENlib = ctypes.windll.LoadLibrary(libname)
+            else:
+                self.ENlib = ctypes.cdll.LoadLibrary(libname)
         except:
             raise
         finally:
