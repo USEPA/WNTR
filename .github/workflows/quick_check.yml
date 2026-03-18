@@ -36,7 +36,7 @@ jobs:
       env:
         OMIT: "'*/tests/*','*/extensions/*','*/sim/network_isolation/network_isolation.py','*/sim/aml/evaluator.py'"
       run: |
-        coverage run --source=wntr --omit=$OMIT -m pytest -m "not time_consuming" -m "not extensions" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --source=wntr --omit=$OMIT -m pytest -m "not time_consuming and not extensions" --doctest-modules --doctest-glob="*.rst" wntr
         coverage run --source=wntr --omit=$OMIT --append -m pytest --doctest-glob="*.rst" --ignore-glob="*/extensions/*.rst" documentation        
         coverage report --fail-under=70        
     # coverage run --source=wntr --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation 
