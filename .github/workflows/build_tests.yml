@@ -172,7 +172,7 @@ jobs:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
       run: | 
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$OMIT -m pytest -m "not extensions" --doctest-modules --doctest-glob="*.rst" wntr
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$OMIT -m pytest -m "not extensions" --ignore=wntr/extensions --doctest-modules --doctest-glob="*.rst" wntr
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=wntr --omit=$OMIT --append -m pytest --doctest-glob="*.rst" --ignore-glob="*/extensions/*.rst" documentation
     - name: Run Tests (ARM-processor)
       if: ${{ matrix.os == 'macos-latest'}}
