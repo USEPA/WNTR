@@ -73,6 +73,11 @@ MAINTAINER_EMAIL = 'kaklise@sandia.gov'
 LICENSE = 'Revised BSD'
 URL = 'https://github.com/USEPA/WNTR'
 DEPENDENCIES = ['numpy>=2.2.6', 'scipy', 'networkx', 'pandas>=2.0', 'matplotlib']
+EXTRAS = {
+    'optional': ['plotly<6.0', 'folium', 'utm', 'openpyxl', 'geopandas', 'rasterio', 'rtree'],
+    'doc': ['sphinx', 'sphinx_design', 'sphinx_rtd_theme', 'pydata_sphinx_theme', 'sphinxcontrib-bibtex'],
+    'test': ['pytest', 'nbformat', 'nbconvert', 'ipykernel', 'coverage'],
+}
 
 # use README file as the long description
 file_dir = os.path.abspath(os.path.dirname(__file__))
@@ -103,5 +108,6 @@ setup(name=DISTNAME,
       url=URL,
       zip_safe=False,
       install_requires=DEPENDENCIES,
+      extras_require=EXTRAS,
       scripts=[],
       include_package_data=True)

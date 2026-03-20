@@ -27,11 +27,7 @@ jobs:
     - name: Install packages
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install --upgrade coverage pytest
-    - name: Install package for development
-      run: |
-        python -m pip install -e .
+        pip install -e .[optional,test]
     - name: Run tests and coverage (unittests plus doctests)
       env:
         OMIT: "'*/tests/*','*/extensions/*','*/sim/network_isolation/network_isolation.py','*/sim/aml/evaluator.py'"
