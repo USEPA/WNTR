@@ -8,6 +8,7 @@ from wntr import graphics
 from wntr import gis
 from wntr import library
 from wntr import utils
+from wntr import extensions
 from wntr import msx
 
 __version__ = '1.4.0'

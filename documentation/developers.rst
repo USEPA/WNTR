@@ -93,6 +93,8 @@ Bug reports and feature requests
 Bug reports and feature requests can be submitted to https://github.com/USEPA/WNTR/issues.  
 The core development team will prioritize and assign bug reports and feature requests to team members.
 
+.. _contributing:
+
 Contributing
 ---------------------
 Software developers, within the core development team and external collaborators, 
@@ -101,6 +103,8 @@ Software developers interested in contributing to the project are encouraged to
 create a `Fork` of the project and submit a `Pull Request` using GitHub.  
 Pull requests will be reviewed by the core development team.  
 
+Pull requests
+^^^^^^^^^^^^^
 Pull requests can be made to the **main** or **dev** (development) branch.  
 Developers can discuss new features and the appropriate branch for contributing 
 by opening a new issue on https://github.com/USEPA/WNTR/issues.  
@@ -114,6 +118,35 @@ Pull requests must meet the following minimum requirements to be included in WNT
 * Large files (> 1Mb) will not be committed to the repository without prior approval.
 
 * Network model files will not be duplicated in the repository.  Network files are stored in examples/network and wntr/tests/networks_for_testing only.
+
+Extensions
+^^^^^^^^^^
+WNTR extensions are intended to house beta and self-contained functionality that adds to WNTR. 
+Developers interested in contributing to WNTR extensions should communicate with the core development team
+through https://github.com/USEPA/WNTR/issues prior to submitting a pull request. 
+See :ref:`extensions` for a list of current WNTR extensions.
+
+Extensions adhere to the following file structure:
+
+* **Source code**: Source code files (*.py) associated with the extension, with the exception of documentation and testing, 
+  reside in a folder named ``wntr\extensions\<extension_name>``.  The folder contains an ``__int__.py`` file to import the extension.
+* **Documentation**: Documentation resides in a file named ``documentation\extensions\<extension_name>.rst``. 
+  The documentation page should include 
+  1) a high level summary of the extension, 
+  2) a point of contact (developer name and GitHub username), and 
+  3) supporting documentation and examples (using doctest). 
+  A link to the documentation should also be added to ``documentation\extensions.rst`` and ``documentation\userguide.rst``.
+* **Testing**: Tests are run using the `extensions workflow <https://github.com/USEPA/WNTR/tree/main/.github/workflows/extensions.yml>`_.
+  Tests reside in a file named ``wntr\tests\extensions\test_<extension_name>.py``. 
+  Tests should be marked ``@pytest.mark.extensions``.
+* **Requirements**: If the extension requires packages beyond WNTR's core dependencies, add a corresponding entry to 
+  ``extras_require`` in ``setup.py``. Users can then install the extension's dependencies with ``pip install wntr[<extension_name>]``.
+
+.. note:: 
+   While documentation is required for extensions, the documentation is not included in the 
+   `WNTR EPA Report <https://cfpub.epa.gov/si/si_public_record_report.cfm?Lab=NHSRC&dirEntryID=337793>`_.  
+   Documentation for extensions is only available online. 
+   Extensions that have long-term test failures will be removed from the repository.
 
 Software release
 ------------------
