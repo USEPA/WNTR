@@ -5,26 +5,3 @@ networkx
 pandas>=2.0
 matplotlib
 setuptools<69.5.1
-
-# Optional
-plotly<6.0
-folium
-utm
-openpyxl
-geopandas
-rasterio
-rtree
-
-# Documentation
-sphinx
-sphinx_design
-sphinx_rtd_theme
-pydata_sphinx_theme
-sphinxcontrib-bibtex
-
-# Testing
-pytest
-nbformat
-nbconvert
-ipykernel
-coverage

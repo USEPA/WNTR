@@ -139,6 +139,8 @@ Extensions adhere to the following file structure:
 * **Testing**: Tests are run using the `extensions workflow <https://github.com/USEPA/WNTR/tree/main/.github/workflows/extensions.yml>`_.
   Tests reside in a file named ``wntr\tests\extensions\test_<extension_name>.py``. 
   Tests should be marked ``@pytest.mark.extensions``.
+* **Requirements**: If the extension requires packages beyond WNTR's core dependencies, add a corresponding entry to 
+  ``extras_require`` in ``setup.py``. Users can then install the extension's dependencies with ``pip install wntr[<extension_name>]``.
 
 .. note:: 
    While documentation is required for extensions, the documentation is not included in the 
