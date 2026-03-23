@@ -10,9 +10,13 @@
 Hello World
 ===========================================
 
-.. note:: 
-   "hello_world" is a WNTR extension that demonstrates the file structure of a simple extension.
+**Summary**: "hello_world" is a WNTR extension that demonstrates the file structure of a simple extension. 
+See :ref:`contributing` for more information on creating an extension.
    
+**Point of contact**: Katherine Klise, https://github.com/kaklise
+
+-----
+
 The Hello World extension contains a single function that returns "Hello World!".
 
 .. doctest::
@@ -22,5 +26,3 @@ The Hello World extension contains a single function that returns "Hello World!"
     >>> output = hello_world.example_module.example_function()
     >>> print(output)
     Hello World!
-    
-See :ref:`contributing` for more information on creating an extension.

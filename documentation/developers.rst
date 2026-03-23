@@ -131,7 +131,11 @@ Extensions adhere to the following file structure:
 * **Source code**: Source code files (*.py) associated with the extension, with the exception of documentation and testing, 
   reside in a folder named ``wntr\extensions\<extension_name>``.  The folder contains an ``__int__.py`` file to import the extension.
 * **Documentation**: Documentation resides in a file named ``documentation\extensions\<extension_name>.rst``. 
-  A link to the documentation should be added to ``documentation\extensions.rst`` and ``documentation\userguide.rst``.
+  The documentation page should include 
+  1) a high level summary of the extension, 
+  2) a point of contact (developer name and GitHub username), and 
+  3) supporting documentation and examples (using doctest). 
+  A link to the documentation should also be added to ``documentation\extensions.rst`` and ``documentation\userguide.rst``.
 * **Testing**: Tests are run using the `extensions workflow <https://github.com/USEPA/WNTR/tree/main/.github/workflows/extensions.yml>`_.
   Tests reside in a file named ``wntr\tests\extensions\test_<extension_name>.py``. 
   Tests should be marked ``@pytest.mark.extensions``.
