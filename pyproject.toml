@@ -3,5 +3,5 @@ requires = ["setuptools", "numpy>=2.2.6"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-markers = ["time_consuming:excluded from ci quick test"]
+markers = ["time_consuming:excluded from ci quick test", "extensions:included only in extensions ci"]
 addopts = "--doctest-modules"

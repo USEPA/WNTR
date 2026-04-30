@@ -25,8 +25,7 @@ jobs:
           python-version: '3.11'
       - name: Install package
         run: |
-          pip install -e .
-          pip install -r requirements.txt
+          pip install -e .[optional,doc]
       - name: Build documentation
         run: sphinx-build documentation/ documentation/_build/html
       - name: Upload artifact
