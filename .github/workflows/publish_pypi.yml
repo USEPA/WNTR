@@ -1,0 +1,37 @@
+# Triggered on version tag push: build wheels, full wheel test matrix, publish to PyPI.
+# Tests are expected to have already passed on main before tagging.
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  wheels:
+    name: Build and Test Wheels
+    uses: ./.github/workflows/build_test_wheels.yml
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [wheels]
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+      url: https://pypi.org/project/wntr/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_WNTR_API_TOKEN }}
