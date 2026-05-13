@@ -28,6 +28,7 @@ from wntr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
 from wntr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
                                 WaterNetworkModel)
 from wntr.network.options import Options
+from wntr.epanet.toolkit import LinkTypeParam
 
 from .util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
                    QualParam, QualType, ResultType, StatisticsType, from_si,
