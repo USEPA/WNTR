@@ -2822,12 +2822,12 @@ class BinFile(object):
                 
                 setting = np.array(df['linksetting'])
                 # pump setting is relative speed (unitless)
-                setting[:, linktype == EN.PIPE] = to_si(self.flow_units, setting[:, linktype == EN.PIPE], HydParam.RoughnessCoeff, 
+                setting[:, linktype == LinkTypeParam.PIPE] = to_si(self.flow_units, setting[:, linktype == LinkTypeParam.PIPE], HydParam.RoughnessCoeff, 
                                                 darcy_weisbach=darcy_weisbach)
-                setting[:, linktype == EN.PRV] = to_si(self.flow_units, setting[:, linktype == EN.PRV], HydParam.Pressure)
-                setting[:, linktype == EN.PSV] = to_si(self.flow_units, setting[:, linktype == EN.PSV], HydParam.Pressure)
-                setting[:, linktype == EN.PBV] = to_si(self.flow_units, setting[:, linktype == EN.PBV], HydParam.Pressure)
-                setting[:, linktype == EN.FCV] = to_si(self.flow_units, setting[:, linktype == EN.FCV], HydParam.Flow)
+                setting[:, linktype == LinkTypeParam.PRV] = to_si(self.flow_units, setting[:, linktype == LinkTypeParam.PRV], HydParam.Pressure)
+                setting[:, linktype == LinkTypeParam.PSV] = to_si(self.flow_units, setting[:, linktype == LinkTypeParam.PSV], HydParam.Pressure)
+                setting[:, linktype == LinkTypeParam.PBV] = to_si(self.flow_units, setting[:, linktype == LinkTypeParam.PBV], HydParam.Pressure)
+                setting[:, linktype == LinkTypeParam.FCV] = to_si(self.flow_units, setting[:, linktype == LinkTypeParam.FCV], HydParam.Flow)
                 self.results.link['setting'] = pd.DataFrame(data=setting, columns=linknames, index=reporttimes)
                 
                 self.results.link['friction_factor'] = df['frictionfactor']
