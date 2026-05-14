@@ -3,7 +3,7 @@ Citing WNTR
 
 To cite WNTR, use one of the following references:
 
-* Klise, K.A., Hart, D.B., Bynum, M., Hogge, J., Haxton, T., Murray, R., Burkhardt, J. (2020). Water Network Tool for Resilience (WNTR) User Manual: Version 0.2.3. U.S. EPA Office of Research and Development, Washington, DC, EPA/600/R-20/185, 82p.
+* Klise, K., D. Hart, M. Bynum, J. Hogge, Terranna Haxton, R. Murray, AND J. Burkhardt. (2023). Water Network Tool for Resilience (WNTR) User Manual Version 1.0. U.S. Environmental Protection Agency, Washington, DC, EPA/600/B-23/098
 
 * Klise, K.A., Murray, R., Haxton, T. (2018). An overview of the Water Network Tool for Resilience (WNTR), In Proceedings of the 1st International WDSA/CCWI Joint Conference, Kingston, Ontario, Canada, July 23-25, 075, 8p.
 
