@@ -111,9 +111,12 @@ project = u'WNTR'
 copyright = u'2024 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
 
-bibtex_bibfiles = ['references.bib', 'citations.bib']
+bibtex_bibfiles = ['bibtex/references.bib', 'bibtex/citations.bib', 'bibtex/wntr_team.bib', 'bibtex/wntr_use.bib']
 bibtex_default_style = 'plain'
 bibtex_reference_style = 'label'
+suppress_warnings = [
+    "bibtex.duplicate_citation",
+]
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
