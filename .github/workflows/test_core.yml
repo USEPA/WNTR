@@ -1,6 +1,6 @@
 # Tests editable install (`pip install -e .`), full OS/Python matrix, coverage, Coveralls.
 
-name: Test Repository
+name: test
 
 on:
   push:
