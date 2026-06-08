@@ -236,7 +236,7 @@ the shared object files can be downloaded from WNTR GitHub Actions using the fol
     python -m pip install -e . --no-build
     pip install -r requirements.txt
 	
-* Select the latest GitHub Actions build_tests that uses the main branch from https://github.com/USEPA/WNTR/actions/workflows/build_tests.yml
+* Select the latest successful run of the wheel workflow on the main branch from https://github.com/USEPA/WNTR/actions/workflows/build_test_wheels.yml
 * Scroll down to "Artifacts"
 * Download the wheel that matches the desired operating system and Python version (for example, wntr_3.9_windows-latest.whl)
 * Unzip the wheel and locate the following files (which are named according to the operating system and Python version)

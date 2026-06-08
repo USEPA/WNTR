@@ -1,0 +1,54 @@
+# Manually triggered: open a conda-forge feedstock PR for a published PyPI release.
+# Run this after confirming the version is live on https://pypi.org/project/wntr/.
+
+name: Publish to conda-forge
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.4.1) — must already be live on PyPI'
+        required: true
+        type: string
+
+jobs:
+  open-conda-forge-pr:
+    name: Open conda-forge feedstock PR
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Grayskull
+      run: pip install grayskull
+
+    - name: Generate recipe with Grayskull
+      run: grayskull pypi wntr==${{ inputs.version }}
+
+    - name: Clone feedstock fork
+      run: |
+        git clone https://x-access-token:${{ secrets.CONDA_FORGE_TOKEN }}@github.com/${{ vars.CONDA_FORGE_FORK_OWNER }}/wntr-feedstock.git
+        cd wntr-feedstock
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git checkout -b release-${{ inputs.version }}
+
+    - name: Patch feedstock recipe
+      run: python wntr-feedstock/recipe/patch_meta.py wntr/meta.yaml wntr-feedstock/recipe/meta.yaml
+
+    - name: Push branch and open PR
+      env:
+        GH_TOKEN: ${{ secrets.CONDA_FORGE_TOKEN }}
+      run: |
+        cd wntr-feedstock
+        git add recipe/meta.yaml
+        git commit -m "Update WNTR to ${{ inputs.version }}"
+        git push origin release-${{ inputs.version }}
+
+        gh pr create \
+          --repo conda-forge/wntr-feedstock \
+          --head ${{ vars.CONDA_FORGE_FORK_OWNER }}:release-${{ inputs.version }} \
+          --title "Update WNTR to ${{ inputs.version }}" \
+          --body ""

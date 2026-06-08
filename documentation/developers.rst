@@ -136,7 +136,7 @@ Extensions adhere to the following file structure:
   2) a point of contact (developer name and GitHub username), and 
   3) supporting documentation and examples (using doctest). 
   A link to the documentation should also be added to ``documentation\extensions.rst`` and ``documentation\userguide.rst``.
-* **Testing**: Tests are run using the `extensions workflow <https://github.com/USEPA/WNTR/tree/main/.github/workflows/extensions.yml>`_.
+* **Testing**: Tests are run using the `test_extensions workflow <https://github.com/USEPA/WNTR/actions/workflows/test_extensions.yml>`_.
   Tests reside in a file named ``wntr\tests\extensions\test_<extension_name>.py``. 
   Tests should be marked ``@pytest.mark.extensions``.
 * **Requirements**: If the extension requires packages beyond WNTR's core dependencies, add a corresponding entry to 
