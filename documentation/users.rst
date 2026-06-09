@@ -23,35 +23,23 @@ WNTR welcomes software contributions from the community!
 See the `WNTR Contributors <https://github.com/USEPA/WNTR/graphs/contributors?all=1>`_ page for a complete list of people that have contributed code and documentation to WNTR.
 Many people have also contributed to WNTR by posting issues and feature requests on the `WNTR Issues <https://github.com/USEPA/WNTR/issues>`_ page.  
 
-Collaborators
---------------
-The following institutions have partnered with the EPA and Sandia on the development and application of WNTR.
+The following individuals have contributed to the development of WNTR, 
+through direct collaboration with the EPA and Sandia, or by providing 
+feedback and peer review of software and documentation.
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 0
-   
-   * - Arcadis
-     - Pittsburgh Water and Sewer Authority
-   * - Arizona State University
-     - Puerto Rico Aqueduct and Sewer Authority
-   * - Delft University of Technology
-     - Purdue University
-   * - Global Quality Corp
-     - Stanford University
-   * - Greater Cincinnati Water Works
-     - Town of Poughkeepsie
-   * - MIT Lincoln Laboratory 
-     - University of Texas at Austin
-   * - Naval Postgraduate School
-     - U.S. Army Corps of Engineers, Engineer Research and Development Center
-   * - Oregon State University
-     - U.S. Virgin Islands Water and Power Authority
-
-Additional funding for WNTR has been provided by the 
-Department of Energy (DOE), 
-Environmental Security Technology Certification Program (ESTCP), and 
-Sandia's Laboratory Directed Research and Development (LDRD) program.
+* Eun Jeong Cha, University of Illinois
+* Mikhail Chester, Arizona State University
+* James Cooper, Arcadis
+* Michael Duczynski, U.S. Army Corps of Engineers, Engineer Research and Development Center
+* Daniel Eisenberg, Naval Postgraduate School
+* Sudhir Kshirsagar, Global Quality Corp
+* Carl Laird, Purdue University (now at Carnegie Mellon University)
+* Yeongho Lee, Greater Cincinnati Water Works
+* Lu Liu, Rice University (now at Iowa State University)
+* Erin Lonney, MIT Lincoln Laboratory 
+* Samuel Rivera, Oregon State University (now at CSA Group)
+* Lina Sela, University of Texas at Austin
+* Riccardo Taormina, Delft University of Technology
 
 Software
 --------
@@ -71,7 +59,7 @@ The following publications include journal articles, conference papers,
 Master's Theses, and PhD Dissertations that use WNTR.  
 
 .. note:: 
-   Citations were pulled from Google Scholar in BibTeX format and may contain inaccurate or missing content, or do not render correctly.
+   Citations were pulled from Google Scholar in BibTeX format and might contain inaccurate or missing content, or do not render correctly.
 
 .. dropdown:: **Publications that use WNTR**
 	
@@ -85,17 +73,22 @@ Development Team
 ------------------
 
 EPA and Sandia started collaborating on research related to water security in 2003, 
-with a Sandia funded LDRD project
+with a Sandia funded Laboratory Directed Research and Development (LDRD) project
 focused on computational methods to detect chem-bio attacks. 
 The collaboration has since been funded under an Interagency Agreement between EPA and Sandia.
 Several open-source software packages have been developed by the team, including:
 
 * Canary: https://github.com/USEPA/CANARY
+* Threat Ensemble Vulnerability Assessment and Sensor Placement Optimization Tool (TEVA-SPOT): https://github.com/USEPA/TEVA-SPOT-Toolkit
 * Water Security Toolkit (WST): https://github.com/USEPA/Water-Security-Toolkit
 * Water Network Tool for Resilience (WNTR): https://github.com/USEPA/WNTR
 
 The following publications were published as part of the EPA/Sandia Interagency Agreement 
 or related projects.
+Additional funding for WNTR has been provided by the 
+Department of Energy (DOE),
+Environmental Security Technology Certification Program (ESTCP), and 
+Sandia's LDRD Resilient Energy Systems (RES) Mission Campaign.
 
 .. dropdown:: **EPA/Sandia Publications**
 
