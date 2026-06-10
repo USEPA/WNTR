@@ -40,6 +40,7 @@ feedback and peer review of software and documentation.
 * Samuel Rivera, Oregon State University (now at CSA Group)
 * Lina Sela, University of Texas at Austin
 * Riccardo Taormina, Delft University of Technology
+* Meghna Thomas, Pacific Northwest National Laboratory
 
 Software
 --------
