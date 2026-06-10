@@ -13,6 +13,6 @@ If you submit code generated using AI tools:
 
 ## Acknowledgement
 By contributing to WNTR, I acknowledge that I have reviewed the software quality assurance guidelines and agree to the following terms and conditions for my contribution:
-1.	I agree my contributions are submitted under the BSD license.
-2.	I represent I am authorized to make the contributions and grant the license. If my employer has rights to intellectual property that includes these contributions, I represent that I have received permission to make contributions and grant the required license on behalf of that employer.
-3.	If code was generated using AI tools, I have disclosed the use of AI and reviewed all code for quality assurance, correctness, security, and licensing.
+1. I agree that my contributions are submitted under the Revised BSD License.
+2. I represent I am authorized to make the contributions and grant the license. If my employer has rights to intellectual property that includes these contributions, I represent that I have received permission to make contributions and grant the required license on behalf of that employer.
+3. If code was generated using AI tools, I have disclosed the use of AI and reviewed all code for quality assurance, correctness, security, and licensing.

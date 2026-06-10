@@ -59,7 +59,7 @@ The following publications include journal articles, conference papers,
 Master's Theses, and PhD Dissertations that use WNTR.  
 
 .. note:: 
-   Citations were pulled from Google Scholar in BibTeX format and might contain inaccurate or missing content, or do not render correctly.
+   Citations were pulled from Google Scholar in BibTeX format and might contain inaccurate or missing content, or might not render correctly.
 
 .. dropdown:: **Publications that use WNTR**
 	
