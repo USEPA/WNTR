@@ -1,10 +1,18 @@
 Provide a summary of the proposed changes, describe tests and documentation, and review the acknowledgement below. 
  
 ## Summary
-Include issues that are resolved by this pull request.  
+- [ ] Summarize changes, including issues that are resolved by this pull request
 
 ## Tests and documentation
-New features require tests and documentation.
+- [ ] Describe tests and documentation for new features
  
+## AI Disclosure
+If you submit code generated using AI tools:
+- [ ] Disclose the AI tools that were used (e.g., GitHub Copilot, ChatGPT)
+- [ ] Describe the use of AI (e.g., generate concept/idea, code generation, code refactoring, documentation generation, code test generation)
+
 ## Acknowledgement
-By contributing to this software project, I acknowledge that I have reviewed the [software quality assurance guidelines](https://usepa.github.io/WNTR/developers.html) and that my contributions are submitted under the [Revised BSD License](https://usepa.github.io/WNTR/license.html). 
+By contributing to WNTR, I acknowledge that I have reviewed the software quality assurance guidelines and agree to the following terms and conditions for my contribution:
+1. I agree that my contributions are submitted under the Revised BSD License.
+2. I represent I am authorized to make the contributions and grant the license. If my employer has rights to intellectual property that includes these contributions, I represent that I have received permission to make contributions and grant the required license on behalf of that employer.
+3. If code was generated using AI tools, I have disclosed the use of AI and reviewed all code for quality assurance, correctness, security, and licensing.

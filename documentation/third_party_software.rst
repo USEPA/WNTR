@@ -2,6 +2,10 @@
 
 * Digital HydrAuLic SIMulator (DHALSIM): https://github.com/Critical-Infrastructure-Systems-Lab/DHALSIM
 
+* EPANET-Agentic: https://github.com/wangjian169/EPANET-Agentic
+
+* Gusnet: https://github.com/angusmcb/gusnet
+
 * InfraRisk: https://github.com/srijithbalakrishnan/dreaminsg-integrated-model
 
 * LeakDB: https://github.com/KIOS-Research/LeakDB
@@ -14,12 +18,12 @@
 
 * PTSNet: https://github.com/gandresr/ptsnet
 
+* RISKNOUGHT: https://uwmh.eu/products/89-risknought.html
+
 * TSNet: https://github.com/glorialulu/TSNet
 
 * VisWaterNet: https://github.com/tylertrimble/viswaternet
 
-* wntr-qgis: https://github.com/angusmcb/wntr-qgis
+* WNTR-Dash: https://wntrdash.nps.edu
 
 * wntr-quantum: https://github.com/QuantumApplicationLab/wntr-quantum
-
-See the `WNTR GitHub Dependeny Graph <https://github.com/USEPA/WNTR/network/dependents?dependent_type=REPOSITORY>`_ to find additional repositories and packages that use WNTR.

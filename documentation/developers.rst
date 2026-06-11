@@ -103,6 +103,12 @@ Software developers interested in contributing to the project are encouraged to
 create a `Fork` of the project and submit a `Pull Request` using GitHub.  
 Pull requests will be reviewed by the core development team.  
 
+Terms and conditions
+^^^^^^^^^^^^^^^^^^^^^^
+
+Contributors must agree to the terms and conditions included in the Acknowledgement section of the 
+`pull request template <https://github.com/USEPA/WNTR/blob/main/.github/PULL_REQUEST_TEMPLATE.md>`_.
+
 Pull requests
 ^^^^^^^^^^^^^
 Pull requests can be made to the **main** or **dev** (development) branch.  

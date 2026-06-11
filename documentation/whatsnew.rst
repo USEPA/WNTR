@@ -1,6 +1,10 @@
 Release notes
 ================
 
+.. _whatsnew_150:
+
+.. include:: whatsnew/v1.5.0.rst
+
 .. _whatsnew_140:
 
 .. include:: whatsnew/v1.4.0.rst

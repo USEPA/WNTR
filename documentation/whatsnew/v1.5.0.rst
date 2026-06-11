@@ -1,0 +1,12 @@
+Version 1.5.0 (main)
+---------------------------------------------------
+WNTR version 1.5.0 includes the following updates:
+
+* Capped pandas requirement below 3.0 by @kbonney in https://github.com/USEPA/WNTR/pull/548
+* Removed pandas <3.0 requirement by @kbonney in https://github.com/USEPA/WNTR/pull/550
+* Fixed pkg_resources deprecation and CI build failures by @kbonney in https://github.com/USEPA/WNTR/pull/552
+* Added DeepWiki documentation link to README by @chase-cog-ai in https://github.com/USEPA/WNTR/pull/551
+* Added framework for WNTR extensions by @kaklise in https://github.com/USEPA/WNTR/pull/554
+* Changed asserts for float/int types to use numbers.Real by @AbelHeinsbroek in https://github.com/USEPA/WNTR/pull/555
+* Replaced fillna(0) with fillna(1) in the Earthquake example by @wael-mahlous in https://github.com/USEPA/WNTR/pull/557
+* Updated release workflows by @kbonney in https://github.com/USEPA/WNTR/pull/560

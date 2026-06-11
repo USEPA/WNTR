@@ -33,6 +33,8 @@ Additional extensions will be added at a later date.
 Third-party packages
 ---------------------
 Developers are also encouraged to create third-party software packages that extends functionality in WNTR.  
-A list of software packages that build on WNTR is included below:
+A list of software packages that build on WNTR is included below. 
+See the `WNTR GitHub Dependency Graph <https://github.com/USEPA/WNTR/network/dependents?dependent_type=REPOSITORY>`_ 
+to find additional repositories and packages that use WNTR.
 
 .. include:: third_party_software.rst
