@@ -373,12 +373,12 @@ def _plot_network_nx(wn, node_attribute=None, link_attribute=None, title=None,
     if title is not None:
         ax.set_title(title)
         
-    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
+    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey',
                                              width=0.5, ax=ax)
-    
-    nodes = nx.draw_networkx_nodes(G, pos, 
-            nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
-            alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
+
+    nodes = nx.draw_networkx_nodes(G, pos,
+            nodelist=nodelist, node_color=nodecolor, node_size=node_size,
+            alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1],
             linewidths=0, ax=ax)
     edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, arrows=directed,
             edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
@@ -555,6 +555,7 @@ def _plot_network_gpd(
     node_cbar = add_colorbar
     if node_attribute is not None:
         node_gdf["_attribute"] = _format_node_attribute(node_attribute, wn)
+        node_gdf = node_gdf[node_gdf["_attribute"].notna()]
         node_kwds["column"] = "_attribute"
         
         # handle cbar/cmap
@@ -633,20 +634,19 @@ def _plot_network_gpd(
     link_cbar_kwds["label"] = link_colorbar_label
     link_cbar_kwds["alpha"] = link_alpha
     
-    missing_node_kwds={"color": "black"}
     missing_link_kwds={"color": "black"}
 
     # plot nodes - each type is plotted separately to allow for different marker types
     node_gdf[node_gdf.node_type == "Junction"].plot(
-        ax=ax, aspect=aspect, zorder=3, legend=False, label="Junction", missing_kwds=missing_node_kwds, **node_kwds)
-    
+        ax=ax, aspect=aspect, zorder=3, legend=False, label="Junction", **node_kwds)
+
     node_kwds["markersize"] = node_size * 2.0
     node_gdf[node_gdf.node_type == "Tank"].plot(
-        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, legend=False, label="Tank", missing_kwds=missing_node_kwds, **node_kwds)
-    
+        ax=ax, aspect=aspect, zorder=4, marker=tank_marker, legend=False, label="Tank", **node_kwds)
+
     node_kwds["markersize"] = node_size * 3.0
     node_gdf[node_gdf.node_type == "Reservoir"].plot(
-        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, legend=False, label="Reservoir", missing_kwds=missing_node_kwds,**node_kwds)
+        ax=ax, aspect=aspect, zorder=5, marker=reservoir_marker, legend=False, label="Reservoir", **node_kwds)
     
     if node_cbar:
         sm = mpl.cm.ScalarMappable(cmap=node_kwds["cmap"])
