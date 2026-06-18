@@ -113,6 +113,7 @@ jobs:
           wntr/tests/
         sparse-checkout-cone-mode: false
         fetch-depth: 1
+        clean: false
     - name: Set mpl backend on windows
       if: ${{ matrix.os == 'windows-latest' }}
       run: echo "MPLBACKEND=Agg" >> $env:GITHUB_ENV
