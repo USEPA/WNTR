@@ -13,7 +13,7 @@ import pandas as pd
 import six
 import wntr.epanet
 import wntr.network.io
-from wntr.utils.check_values import _check_float, _check_float_or_none, _check_numeric_or_str
+from wntr.utils.check_values import _check_float, _check_float_or_none, _check_numeric_or_str, _check_str
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -1734,8 +1734,9 @@ class CurveRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(curve_type, (type(None), str)), "curve_type must be a string"
         assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
+        if curve_type is not None:
+            curve_type = _check_str(curve_type, "curve_type")
 
         curve = Curve(name, curve_type, xy_tuples_list)
         self[name] = curve
@@ -1990,12 +1991,13 @@ class NodeRegistry(Registry):
             demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)
         ), "demand_pattern must be a string or Pattern"
         assert isinstance(coordinates, (type(None), (tuple, list,))), "coordinates must be a tuple"
-        assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
 
         base_demand = _check_float(base_demand, "base_demand")
         elevation = _check_float(elevation, "elevation")
         emitter_coeff = _check_float_or_none(emitter_coeff, "emitter_coeff")
         initial_quality = _check_float_or_none(initial_quality, "initial_quality")
+        if demand_category is not None:
+            demand_category = _check_str(demand_category, "demand_category")
 
         junction = Junction(name, self)
         junction.elevation = elevation
@@ -2053,9 +2055,10 @@ class NodeRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
         assert isinstance(overflow, (type(None), str, bool, int)), "overflow must be a bool, 'YES' or 'NO, or 0 or 1"
         assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
+        if vol_curve is not None:
+            vol_curve = _check_str(vol_curve, "vol_curve")
 
         elevation = _check_float(elevation, "elevation")
         init_level = _check_float(init_level, "init_level")
@@ -2136,8 +2139,9 @@ class NodeRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
         assert isinstance(coordinates, (type(None), (tuple, list))), "coordinates must be a tuple"
+        if head_pattern is not None:
+            head_pattern = _check_str(head_pattern, "head_pattern")
 
         base_head = _check_float(base_head, "base_head")
 
@@ -2437,12 +2441,13 @@ class LinkRegistry(Registry):
         assert (
             isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(" ") == -1
         ), "end_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(pump_type, str), "pump_type must be a string"
-        assert isinstance(pattern, (type(None), str)), "pattern must be a string"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
 
+        pump_type = _check_str(pump_type, "pump_type")
         pump_parameter = _check_numeric_or_str(pump_parameter, "pump_parameter")
         speed = _check_float(speed, "speed")
+        if pattern is not None:
+            pattern = _check_str(pattern, "pattern")
 
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
@@ -2506,9 +2511,9 @@ class LinkRegistry(Registry):
         assert (
             isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(" ") == -1
         ), "end_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(valve_type, str), "valve_type must be a string"
         assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
 
+        valve_type = _check_str(valve_type, "valve_type")
         diameter = _check_float(diameter, "diameter")
         minor_loss = _check_float(minor_loss, "minor_loss")
         initial_setting = _check_numeric_or_str(initial_setting, "initial_setting")

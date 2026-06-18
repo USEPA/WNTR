@@ -9,7 +9,7 @@ import matplotlib.pylab as plt
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
-from wntr.utils.check_values import _check_float
+from wntr.utils.check_values import _check_bool, _check_float, _check_str
 
 try:
     from shapely.geometry import MultiPoint, LineString, Point, shape
@@ -219,7 +219,7 @@ def intersect(A, B, B_value=None, include_background=False, background_value=0):
                                            'MultiPolygon']).all()
     if isinstance(B_value, str):
         assert B_value in B.columns
-    assert isinstance(include_background, bool)
+    include_background = _check_bool(include_background, "include_background")
     background_value = _check_float(background_value, "background_value")
     assert A.crs == B.crs, "A and B must have the same crs."
     
@@ -331,7 +331,7 @@ def sample_raster(A, filepath, bands=1):
         raise ModuleNotFoundError('rasterio is required')
     
     assert (A['geometry'].geom_type == "Point").all()
-    assert isinstance(filepath, str)
+    filepath = _check_str(filepath, "filepath")
     assert isinstance(bands, (int, list))
     
     with rasterio.open(filepath) as raster:

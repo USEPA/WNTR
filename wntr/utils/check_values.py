@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def _check_float(value, property_name: str) -> float:
     """Transform a value to a float.
 
@@ -76,6 +79,34 @@ def _check_int(value, property_name: str) -> int:
         raise ValueError(f"{property_name} must be an integer value. Received {value}")
 
     return int_value
+
+
+def _check_bool(value, property_name: str) -> bool:
+    """Transform a value to a bool.
+
+    Raises ValueError if the value is not a bool (including numpy bool types).
+    Numeric and string values (e.g. 0/1, "True"/"False") are intentionally
+    rejected rather than coerced, since Python's bool() would silently treat
+    any non-empty string (including "False") as True.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+
+    value_type = type(value).__name__
+    raise ValueError(f"{property_name} must be a bool. Received {value} of type {value_type}")
+
+
+def _check_str(value, property_name: str) -> str:
+    """Transform a value to a str.
+
+    Raises ValueError if the value is not a str (including numpy str types,
+    which are a subclass of str).
+    """
+    if isinstance(value, str):
+        return str(value)
+
+    value_type = type(value).__name__
+    raise ValueError(f"{property_name} must be a string. Received {value} of type {value_type}")
 
 
 def _check_numeric_or_str(value, property_name: str):
