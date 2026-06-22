@@ -14,7 +14,13 @@ datadir = join(testdir, "..", "..", "examples", "networks")
 
 
 class TestEpanetToolkit(unittest.TestCase):
-    
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
     def test_isOpen(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
@@ -22,7 +28,7 @@ class TestEpanetToolkit(unittest.TestCase):
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             self.assertEqual(0, enData.isOpen())
-            enData.ENopen(enData.inpfile, "temp.rpt")
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
             self.assertEqual(1, enData.isOpen())
 
     def test_ENgetcount(self):

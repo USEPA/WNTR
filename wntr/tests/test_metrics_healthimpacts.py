@@ -1,5 +1,5 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 import sys, platform
 
 import wntr
@@ -9,9 +9,9 @@ if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
 else:
     skip_v2_tests_on_arm = False
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-netdir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as netdir,
+)
 
 
 class TestHealthImpactsMetric(unittest.TestCase):

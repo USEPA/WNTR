@@ -7,14 +7,15 @@ testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir, "..", "..", "examples", "networks")
 
 class TestSimulationResults(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(self):
+        self.tmpdir = tempfile.mkdtemp()
         inp_file = join(datadir, "Net2.inp")
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         sim = wntr.sim.EpanetSimulator(self.wn)
-        sim.run_sim()
-        
+        sim.run_sim(file_prefix=join(self.tmpdir, "temp"))
+
         binfile = wntr.epanet.io.BinFile()
         results_GPM = binfile.read('temp.bin', False, False, False)
         # time index needs to be converted to hours

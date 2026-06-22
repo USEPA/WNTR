@@ -2,7 +2,7 @@ import sys
 import unittest
 import warnings
 import os
-from os.path import abspath, dirname, isfile, join
+from os.path import abspath, isfile, join
 
 import numpy as np
 import pandas as pd
@@ -30,9 +30,11 @@ except ModuleNotFoundError:
     rasterio = None
     has_rasterio = False
     
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    TEST_DIR as testdir,
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 @unittest.skipIf(not has_geopandas,

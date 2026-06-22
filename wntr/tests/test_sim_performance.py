@@ -1,7 +1,7 @@
 import sys
 import unittest
 import pytest
-from os.path import abspath, dirname, join
+from os.path import join
 import threading
 import time
 import numpy as np
@@ -10,9 +10,10 @@ import pandas
 
 pandas.set_option("display.max_rows", 10000)
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 def compare_results(wntr_res, epa_res, abs_threshold, rel_threshold):

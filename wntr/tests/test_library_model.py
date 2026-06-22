@@ -1,13 +1,13 @@
 import unittest
 import os
 import shutil
-from os.path import abspath, dirname, join
+from os.path import join
 from wntr.network import WaterNetworkModel
 from wntr.library import ModelLibrary, model_library
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+)
 
 class TestModelLibrary(unittest.TestCase):
     def test_model_name_list(self):

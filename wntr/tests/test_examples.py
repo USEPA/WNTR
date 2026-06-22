@@ -4,11 +4,12 @@ import sys
 import unittest
 import pytest
 from os import listdir
-from os.path import abspath, dirname, isfile, join
+from os.path import isfile, join
 from subprocess import call
 
-testdir = dirname(abspath(str(__file__)))
-examplesdir = join(testdir, "..", "..", "examples")
+from wntr.tests.conftest import (
+    EXAMPLES_DIR as examplesdir,
+)
 
 
 class TestExamples(unittest.TestCase):

@@ -1,12 +1,12 @@
 import math
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 from wntr.network.controls import Control, Rule
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestOutageResults(unittest.TestCase):

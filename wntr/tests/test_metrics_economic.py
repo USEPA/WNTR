@@ -1,13 +1,14 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 import pandas as pd
 import wntr
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-netdir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as netdir,
+)
 
 
 class TestEconomicMetrics(unittest.TestCase):

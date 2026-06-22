@@ -1,7 +1,8 @@
+import shutil
+import tempfile
 import unittest
 from pandas.testing import assert_series_equal
-import os
-from os.path import abspath, dirname, join, isfile
+from os.path import join, isfile
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
@@ -9,9 +10,9 @@ import matplotlib.pylab as plt
 import wntr
 from wntr.library import DemandPatternLibrary
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 plt.close('all')
 

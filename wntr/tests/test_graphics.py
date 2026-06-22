@@ -1,9 +1,10 @@
 
-import os
+import shutil
 import sys
+import tempfile
 import unittest
 import warnings
-from os.path import abspath, dirname, isfile, join
+from os.path import isfile, join
 
 import networkx as nx
 import matplotlib.pylab as plt
@@ -13,9 +14,10 @@ import pandas as pd
 import numpy as np
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestGraphics(unittest.TestCase):
