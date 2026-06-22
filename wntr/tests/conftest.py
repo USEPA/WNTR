@@ -3,6 +3,9 @@ import shutil
 import tempfile
 from os.path import abspath, dirname, join
 
+import matplotlib
+matplotlib.use("Agg")
+
 TEST_DIR = dirname(abspath(__file__))
 NETWORKS_FOR_TESTING_DIR = join(TEST_DIR, "networks_for_testing")
 DATA_FOR_TESTING_DIR = join(TEST_DIR, "data_for_testing")
