@@ -105,6 +105,7 @@ jobs:
       with:
         sparse-checkout: |
           wntr/tests/
+          examples/
         sparse-checkout-cone-mode: false
         fetch-depth: 1
     - name: Download wheels for this OS
