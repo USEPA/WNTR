@@ -245,6 +245,36 @@ class TestGraphics(unittest.TestCase):
 
         self.assertTrue(isfile(filename))
 
+    def test_plot_leaflet_network_popup(self):
+        # Test for https://github.com/USEPA/WNTR/issues/416
+
+        filename = abspath(join(testdir, "plot_leaflet_network_popup.html"))
+        if isfile(filename):
+            os.remove(filename)
+
+        inp_file = join(ex_datadir, "Net3.inp")
+        wn = wntr.network.WaterNetworkModel(inp_file)
+        longlat_map = {"Lake": (-106.6587, 35.0623), "219": (-106.5248, 35.1918)}
+        wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+
+        node_popup_data = pd.DataFrame(
+            {"extra_node_info": np.random.rand(len(wn2.node_name_list))},
+            index=wn2.node_name_list,
+        )
+        link_popup_data = pd.DataFrame(
+            {"extra_link_info": np.random.rand(len(wn2.link_name_list))},
+            index=wn2.link_name_list,
+        )
+
+        wntr.graphics.plot_leaflet_network(
+            wn2,
+            add_to_node_popup=node_popup_data,
+            add_to_link_popup=link_popup_data,
+            filename=filename,
+        )
+
+        self.assertTrue(isfile(filename))
+
     def test_network_animation1(self):
         filename = abspath(join(testdir, "plot_leaflet_network1.html"))
         if isfile(filename):

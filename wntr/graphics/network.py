@@ -842,7 +842,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                             node_attribute_name + ': ' + str(round(node_attribute[node],round_ndigits))
                 if add_to_node_popup is not None:
                     if node in add_to_node_popup.index:
-                        for key, val in add_to_node_popup.loc[node].iteritems():
+                        for key, val in add_to_node_popup.loc[node].items():
                             node_info = node_info + '<br>' + \
                                 key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
                             
@@ -1021,7 +1021,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                         node_attribute_name + ': ' + '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
             if add_to_node_popup is not None:
                 if name in add_to_node_popup.index:
-                    for key, val in add_to_node_popup.loc[name].iteritems():
+                    for key, val in add_to_node_popup.loc[name].items():
                         node_popup[name] = node_popup[name] + '<br>' + \
                             key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
                  
@@ -1036,7 +1036,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                         link_attribute_name + ': ' + '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
             if add_to_link_popup is not None:
                 if name in add_to_link_popup.index:
-                    for key, val in add_to_link_popup.loc[name].iteritems():
+                    for key, val in add_to_link_popup.loc[name].items():
                         link_popup[name] = link_popup[name] + '<br>' + \
                             key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
                             
