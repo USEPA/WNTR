@@ -415,8 +415,6 @@ class TimeOfDayCondition(ControlCondition):
         the time specified.
     first_day : float, default=0
         Start rule on day `first_day`, with the first day of simulation as day 0
-
-    TODO:  WE ARE NOT TESTING THIS!!!!
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
@@ -491,29 +489,55 @@ class TimeOfDayCondition(ControlCondition):
         cur_time = self._model._shifted_time
         prev_time = self._model._prev_shifted_time
         day = np.floor(cur_time/86400)
+        
         if day < self._first_day:
             self._backtrack = None
             return False
+        
+        threshold = self._threshold
+        
         if self._repeat:
-            cur_time = int(cur_time - self._threshold) % 86400
-            prev_time = int(prev_time - self._threshold) % 86400
+            cur_time = cur_time % 86400
+            prev_time = prev_time % 86400
+            wrapped = cur_time < prev_time
         else:
             cur_time = cur_time - self._first_day * 86400.
             prev_time = prev_time - self._first_day * 86400.
-        if self._relation is Comparison.eq and (prev_time < self._threshold and self._threshold <= cur_time):
-            self._backtrack = int(cur_time - self._threshold)
-            return True
-        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time < self._threshold:
-            self._backtrack = int(cur_time - self._threshold)
-            return True
-        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time >= self._threshold:
+            wrapped = False
+        
+        if self._relation is Comparison.eq:
+            if not wrapped:
+                fired = prev_time < threshold <= cur_time
+            else:
+                fired = prev_time < threshold or threshold <= cur_time
+            if fired:
+                self._backtrack = int((cur_time - threshold) % 86400)
+                return True
             self._backtrack = 0
-            return True
-        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time < self._threshold:
-            self._backtrack = int(cur_time - self._threshold)
             return False
-        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time >= self._threshold:
+        
+        elif self._relation in (Comparison.gt, Comparison.ge):
+            fired_now = cur_time >= threshold
+            fired_prev = (not wrapped) and prev_time >= threshold
+            if fired_now and not fired_prev:
+                self._backtrack = int((cur_time - threshold) % 86400)
+                return True
+            elif fired_now and fired_prev:
+                self._backtrack = 0
+                return True
             self._backtrack = 0
+            return False
+        
+        elif self._relation in (Comparison.lt, Comparison.le):
+            fired_now = cur_time < threshold
+            if fired_now:
+                self._backtrack = 0
+                return True
+            crossed_prev = (not wrapped) and prev_time >= threshold
+            if not crossed_prev:
+                self._backtrack = int(cur_time - threshold)
+            else:
+                self._backtrack = 0
             return False
         else:
             self._backtrack = 0
