@@ -4,6 +4,7 @@ import warnings
 import os
 from os.path import abspath, isfile, join
 
+import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -181,12 +182,13 @@ class TestGIS(unittest.TestCase):
         assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
     def test_intersect_lines_with_polygons(self):
-        
+        self.addCleanup(plt.close, 'all')
+
         bv = 0
         stats = wntr.gis.intersect(self.gis_data.pipes, self.polygons, 'value', True, bv)
 
         ax = self.polygons.plot(column='value', alpha=0.5)
-        ax = wntr.graphics.plot_network(self.wn, ax=ax)
+        ax = wntr.graphics.plot_network(self.wn, ax=ax, show_plot=False)
         
         # Pipe 22 intersects poly2 100%, val=20, intersects poly3 50%, val=30
         expected_weighted_mean = (20*1+30*0.5)/1.5

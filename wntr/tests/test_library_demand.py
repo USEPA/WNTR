@@ -14,8 +14,6 @@ from wntr.tests.conftest import (
     cleanup_artifact_dir,
 )
 
-plt.close('all')
-
 class TestDemandPatternLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -30,6 +28,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
 
     def tearDown(self):
         cleanup_artifact_dir(self.tmpdir)
+        plt.close('all')
 
     def test_pattern_name_list(self):
         pattern_names = self.DPL.pattern_name_list
@@ -337,9 +336,8 @@ class TestDemandPatternLibrary(unittest.TestCase):
 
         # Plot patterns
         ax1 = self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1'])
-        
+
         plt.savefig(filename, format="png")
-        plt.close()
 
 
 if __name__ == "__main__":
