@@ -146,7 +146,8 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, and emitter exponent from the [OPTIONS] section
-* Pump speed in the [PUMPS] section
+* Pump speed (other than the default value of 1.0) in the [PUMPS] section,
+  including pump speeds set using controls/rules or speed patterns
 * Report start and statistics in the [TIMES] section
 * PBV and GPV values in the [VALVES] section
 
@@ -162,12 +163,15 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   minimum elevation. This can result in incorrect system pressures.
   See issues at the following sites: https://github.com/USEPA/WNTR/issues/210 and https://github.com/OpenWaterAnalytics/EPANET/issues/623.
   The EPANET dll in WNTR will be updated when an EPANET release is available.
-* **Pump controls and patterns**: Pumps have speed settings which are adjustable 
-  by controls and/or patterns. With the EpanetSimulator, 
-  controls and patterns adjust the actual speed. With the WNTRSimulator, pumps have a 'base speed' 
-  (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
-  a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
-  and using controls appropriately.
+* **Pump controls and patterns**: Pumps have speed settings which are adjustable
+  by controls and/or patterns. With the EpanetSimulator,
+  controls and patterns adjust the actual speed. With the WNTRSimulator, pumps have a 'base speed'
+  (similar to junction demand and reservoir head) and speed patterns are
+  a multiplier on the base speed; however, the WNTRSimulator currently only supports a pump speed
+  (``base_speed`` multiplied by the speed pattern, if used) of 1.0. Setting the pump speed to a value
+  other than 1.0 using a control, rule, or speed pattern will raise a ``NotImplementedError`` when
+  running the WNTRSimulator. See :ref:`limitations` for more information. This functionality is supported
+  by the EpanetSimulator.
 * **Leak models**: Leak models are only available using the WNTRSimulator. Emitters can be used to model leaks in EPANET.
 * **Multi-point head pump curves**: When using the EpanetSimulator, multi-point 
   head pump curves are created by connecting the points with straight-line segments.  
