@@ -7,7 +7,7 @@ from os.path import abspath, dirname, join
 
 from wntr.network.elements import Pattern
 from wntr.network.options import TimeOptions
-from wntr.utils.check_values import _check_bool, _check_float, _check_float_or_none, _check_int, _check_str
+from wntr.utils.check_values import _check_bool, _check_float, _check_int, _check_int_or_none, _check_str
 
 libdir = dirname(abspath(str(__file__)))
 NoneType = type(None)
@@ -235,7 +235,7 @@ class DemandPatternLibrary(object):
         wrap = _check_bool(wrap, "wrap")
         inplace = _check_bool(inplace, "inplace")
 
-        duration = _check_float(duration, "duration")
+        duration = _check_int(duration, "duration")
         pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
         start_clocktime = _check_int(start_clocktime, "start_clocktime")
 
@@ -344,7 +344,7 @@ class DemandPatternLibrary(object):
         invert = _check_bool(invert, "invert")
         normalize = _check_bool(normalize, "normalize")
 
-        duration = _check_float(duration, "duration")
+        duration = _check_int(duration, "duration")
         pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
         start_clocktime = _check_int(start_clocktime, "start_clocktime")
 
@@ -419,7 +419,7 @@ class DemandPatternLibrary(object):
 
         mean = _check_float(mean, "mean")
         std = _check_float(std, "std")
-        duration = _check_float(duration, "duration")
+        duration = _check_int(duration, "duration")
         pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
         start_clocktime = _check_int(start_clocktime, "start_clocktime")
 
@@ -492,7 +492,7 @@ class DemandPatternLibrary(object):
         start = _check_float(start, "start")
         peak = _check_float(peak, "peak")
         end = _check_float(end, "end")
-        duration = _check_float(duration, "duration")
+        duration = _check_int(duration, "duration")
         pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
         start_clocktime = _check_int(start_clocktime, "start_clocktime")
 
@@ -691,7 +691,7 @@ class DemandPatternLibrary(object):
         """
         
         name = _check_str(name, "name")
-        duration = _check_float_or_none(duration, "duration")
+        duration = _check_int_or_none(duration, "duration")
 
         entry = self.get_pattern(name)
 
@@ -750,7 +750,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(names, (list, NoneType))
-        duration = _check_float_or_none(duration, "duration")
+        duration = _check_int_or_none(duration, "duration")
 
         if names is None:
             names = self.pattern_name_list

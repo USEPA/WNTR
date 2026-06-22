@@ -81,6 +81,18 @@ def _check_int(value, property_name: str) -> int:
     return int_value
 
 
+def _check_int_or_none(value, property_name: str) -> int | None:
+    """Transform a value to an int, unless it is None in which case return None.
+
+    Raises ValueError if the value is not an int or convertible to int
+    without loss, and is not None.
+    """
+    if value is None:
+        return None
+
+    return _check_int(value, property_name)
+
+
 def _check_bool(value, property_name: str) -> bool:
     """Transform a value to a bool.
 
