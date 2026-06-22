@@ -1,10 +1,13 @@
+import shutil
+import tempfile
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 #import matplotlib.pylab as plt
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as datadir,
+)
 
 class TestSimulationResults(unittest.TestCase):
 
@@ -17,7 +20,7 @@ class TestSimulationResults(unittest.TestCase):
         sim.run_sim(file_prefix=join(self.tmpdir, "temp"))
 
         binfile = wntr.epanet.io.BinFile()
-        results_GPM = binfile.read('temp.bin', False, False, False)
+        results_GPM = binfile.read(join(self.tmpdir, "temp.bin"), False, False, False)
         # time index needs to be converted to hours
         for key in results_GPM.node.keys():
             results_GPM.node[key].index = results_GPM.node[key].index/3600
@@ -44,7 +47,7 @@ class TestSimulationResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        pass
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
  
 
 

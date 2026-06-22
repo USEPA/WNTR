@@ -1,5 +1,7 @@
+import shutil
+import tempfile
 import unittest
-from os.path import abspath, dirname, join, exists
+from os.path import join, exists
 import sys, platform
 
 import wntr.epanet.toolkit
@@ -9,8 +11,9 @@ if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
 else:
     skip_v2_tests_on_arm = False
 
-testdir = dirname(abspath(__file__))
-datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as datadir,
+)
 
 
 class TestEpanetToolkit(unittest.TestCase):
@@ -37,93 +40,100 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp.rpt")
-            
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+
             nNodes = enData.ENgetcount(wntr.epanet.util.EN.NODECOUNT)
             self.assertEqual(11, nNodes)
             nLinks = enData.ENgetcount(wntr.epanet.util.EN.LINKCOUNT)
             self.assertEqual(13, nLinks)
-    
+
     def test_ENgetflowunits(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp.rpt")
-            
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+
             flowunit = enData.ENgetflowunits()
             assert(flowunit==1) # GPM
-        
+
     def test_EN_timeparam(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp.rpt")
-            
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+
             duration = enData.ENgettimeparam(0)
             assert(duration==86400) # s
             enData.ENsettimeparam(0, 200)
             duration = enData.ENgettimeparam(0)
             assert(duration==200)
-        
+
     def test_ENgetindex_ENgetvalue(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp.rpt")
-            
-            node_index = enData.ENgetnodeindex('10') 
-            assert(node_index == 1) 
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+
+            node_index = enData.ENgetnodeindex('10')
+            assert(node_index == 1)
             node_val = enData.ENgetnodevalue(node_index, 0) # ELEVATION = 0
-            assert(node_val == 710) 
+            assert(node_val == 710)
             enData.ENsetnodevalue(node_index, 0, 170.5)
             node_val = enData.ENgetnodevalue(node_index, 0) # ELEVATION = 0
-            assert(node_val == 170.5) 
-            
-            
-            link_index = enData.ENgetlinkindex('11') 
-            assert(link_index == 2) 
+            assert(node_val == 170.5)
+
+
+            link_index = enData.ENgetlinkindex('11')
+            assert(link_index == 2)
             link_val = enData.ENgetlinkvalue(link_index, 0) # DIAMETER = 0
-            assert(link_val == 14) 
+            assert(link_val == 14)
             enData.ENsetlinkvalue(link_index, 0, 16.5)
             link_val = enData.ENgetlinkvalue(link_index, 0) # DIAMETER = 0
-            assert(link_val == 16.5) 
-        
+            assert(link_val == 16.5)
+
     def test_ENsaveinpfile(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp.rpt")
-            
-            enData.ENsaveinpfile("temp_Net1_toolkit.inp") 
-            file_exists = exists("temp_Net1_toolkit.inp")
+            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+
+            saved_inp_file = join(self.tmpdir, "temp_Net1_toolkit.inp")
+            enData.ENsaveinpfile(saved_inp_file)
+            file_exists = exists(saved_inp_file)
             assert file_exists
-        
+
     def test_runepanet(self):
         inpfile = join(datadir, "Net1.inp")
-        wntr.epanet.toolkit.runepanet(inpfile, "temp_runepanet.rpt", "temp_runepanet.bin")
-                 
+        rptfile = join(self.tmpdir, "temp_runepanet.rpt")
+        binfile = join(self.tmpdir, "temp_runepanet.bin")
+        wntr.epanet.toolkit.runepanet(inpfile, rptfile, binfile)
+
         reader = wntr.epanet.io.BinFile()
-        results = reader.read("temp_runepanet.bin")
-        
+        results = reader.read(binfile)
+
         assert(isinstance(results, wntr.sim.results.SimulationResults))
         assert(results.node['pressure'].shape == (25,11))
-        
+
     def test_runepanet_step(self):
         for version in [2.0, 2.2,]:
             if version == 2.0 and skip_v2_tests_on_arm:
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, "temp_runepanet_step.rpt", "temp_runepanet_step.bin")
-            
+            enData.ENopen(
+                enData.inpfile,
+                join(self.tmpdir, "temp_runepanet_step.rpt"),
+                join(self.tmpdir, "temp_runepanet_step.bin"),
+            )
+
             enData.ENopenH()
             enData.ENinitH(0)
             t = 0
@@ -133,7 +143,7 @@ class TestEpanetToolkit(unittest.TestCase):
                 t = t + tstep
                 if (tstep <= 0):
                     break
-            
+
             enData.ENcloseH()
 
             assert (t == 86400)

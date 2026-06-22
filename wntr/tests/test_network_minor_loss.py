@@ -1,15 +1,17 @@
+import shutil
+import tempfile
 import unittest
+from os.path import join
+
 import wntr
 
 
 class TestMinorLosses(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        pass
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
 
-    @classmethod
-    def tearDownClass(self):
-        pass
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_pipe_minor_loss(self):
         wn = wntr.network.WaterNetworkModel()
@@ -23,11 +25,12 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
 
         results1 = sim.run_sim()
-        wntr.network.write_inpfile(wn, "temp.inp", "CMH")
+        temp_inp_file = join(self.tmpdir, "temp.inp")
+        wntr.network.write_inpfile(wn, temp_inp_file, "CMH")
 
-        wn2 = wntr.network.WaterNetworkModel("temp.inp")
+        wn2 = wntr.network.WaterNetworkModel(temp_inp_file)
         sim = wntr.sim.EpanetSimulator(wn2)
-        results2 = sim.run_sim()
+        results2 = sim.run_sim(file_prefix=join(self.tmpdir, "temp"))
 
         head1 = results1.node["head"].j1.iloc[0]
         head2 = results2.node["head"].j1.iloc[0]

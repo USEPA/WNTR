@@ -1,3 +1,4 @@
+import shutil
 import sys
 import tempfile
 import unittest
@@ -233,6 +234,8 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe2.vertices, [(20.0, 5.0), (15.0, 5.0)])
 
     def test_skeletonize(self):
+        tmpdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmpdir, ignore_errors=True)
 
         inp_file = join(datadir, "skeletonize.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -258,7 +261,7 @@ class TestMorph(unittest.TestCase):
             total_demand = demand.loc[0, :].sum()
 
             # Write skel_wn to an inp file, read it back in, then extract the demands
-            skel_inp_file = "temp.inp"
+            skel_inp_file = join(tmpdir, "temp.inp")
             wntr.network.write_inpfile(skel_wn, skel_inp_file, "GPM")
             skel_wn_io = wntr.network.WaterNetworkModel(skel_inp_file)
             demand_io = wntr.metrics.expected_demand(skel_wn_io)

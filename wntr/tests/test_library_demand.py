@@ -20,10 +20,16 @@ class TestDemandPatternLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.DPL = DemandPatternLibrary()
-        
+
     @classmethod
     def tearDownClass(self):
         pass
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_pattern_name_list(self):
         pattern_names = self.DPL.pattern_name_list
@@ -327,10 +333,8 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert all(demand1['11'] > demand0['11'])
         
     def test_plot_pattern(self):
-        filename = abspath(join(testdir, "plot_pattern.png"))
-        if isfile(filename):
-            os.remove(filename)
-        
+        filename = join(self.tmpdir, "plot_pattern.png")
+
         # Plot patterns
         ax1 = self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1'])
         
