@@ -825,5 +825,98 @@ class TestControlParsing(unittest.TestCase):
         self.assertEqual(control._condition._relation, self.wntr.network.controls.Comparison.lt)
 
 
+class TestTimeOfDayCondition(unittest.TestCase):
+    def _step(self, wn, condition, prev_time, cur_time):
+        """Used to mock the forward stepping of a simulation """
+        wn._prev_sim_time = prev_time
+        wn.sim_time = cur_time
+        return condition.evaluate()
+
+    def test_eq_fires_once_per_day_at_threshold(self):
+        wn = wntr.network.WaterNetworkModel()
+        threshold = 3600.0  # 1 AM
+        condition = wntr.network.controls.TimeOfDayCondition(wn, None, threshold)
+
+        self.assertFalse(self._step(wn, condition, 0, 1800))
+        self.assertTrue(self._step(wn, condition, 1800, 5400))
+        # only fires once per day, even if re-evaluated at the same step boundary
+        self.assertFalse(self._step(wn, condition, 5400, 9000))
+        # fires again on day 2 at the same time of day
+        self.assertFalse(self._step(wn, condition, 86400 + 1800, 86400 + 1800))
+        self.assertTrue(self._step(wn, condition, 86400 + 1800, 86400 + 5400))
+
+    def test_eq_fires_across_midnight_wrap(self):
+        wn = wntr.network.WaterNetworkModel()
+        threshold = 23 * 3600.0  # 11 PM
+        condition = wntr.network.controls.TimeOfDayCondition(wn, None, threshold)
+
+        prev_time = 22 * 3600.0
+        cur_time = 25 * 3600.0  # 1 AM the next day
+        self.assertTrue(self._step(wn, condition, prev_time, cur_time))
+
+    def test_gt_after_threshold_until_midnight(self):
+        wn = wntr.network.WaterNetworkModel()
+        threshold = 15 * 3600.0  # 3 PM
+        condition = wntr.network.controls.TimeOfDayCondition(wn, 'after', threshold)
+
+        self.assertFalse(self._step(wn, condition, 12 * 3600.0, 14 * 3600.0))
+        self.assertTrue(self._step(wn, condition, 14 * 3600.0, 16 * 3600.0))
+        self.assertTrue(self._step(wn, condition, 16 * 3600.0, 18 * 3600.0))
+        # resets at midnight
+        self.assertFalse(self._step(wn, condition, 23 * 3600.0, 25 * 3600.0))
+
+    def test_lt_before_threshold_resets_at_midnight(self):
+        wn = wntr.network.WaterNetworkModel()
+        threshold = 6 * 3600.0  # 6 AM
+        condition = wntr.network.controls.TimeOfDayCondition(wn, 'before', threshold)
+
+        self.assertTrue(self._step(wn, condition, 0, 2 * 3600.0))
+        self.assertFalse(self._step(wn, condition, 5 * 3600.0, 7 * 3600.0))
+        self.assertFalse(self._step(wn, condition, 7 * 3600.0, 9 * 3600.0))
+        # back to "before threshold" after the midnight reset
+        self.assertTrue(self._step(wn, condition, 23 * 3600.0, 25 * 3600.0))
+
+    def test_ge_le_do_not_silently_never_fire(self):
+        wn = wntr.network.WaterNetworkModel()
+        ge_condition = wntr.network.controls.TimeOfDayCondition(wn, '>=', 12 * 3600.0)
+        le_condition = wntr.network.controls.TimeOfDayCondition(wn, '<=', 12 * 3600.0)
+
+        self.assertTrue(self._step(wn, ge_condition, 11 * 3600.0, 13 * 3600.0))
+        self.assertTrue(self._step(wn, le_condition, 0, 2 * 3600.0))
+
+
+class TestClockTimeControlAgainstEpanet(unittest.TestCase):
+
+    def _build_model(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        for name in list(wn.control_name_list):
+            control = wn.get_control(name)
+            if isinstance(control._condition, wntr.network.controls.SimTimeCondition):
+                wn.remove_control(name)
+
+        pump = wn.get_link("10")
+        open_condition = wntr.network.controls.TimeOfDayCondition(wn, None, "1:00:00 AM")
+        open_action = wntr.network.ControlAction(pump, "status", wntr.network.LinkStatus.Open)
+        wn.add_control("pump_10_open", wntr.network.Control(open_condition, open_action))
+
+        close_condition = wntr.network.controls.TimeOfDayCondition(wn, None, "3:00:00 PM")
+        close_action = wntr.network.ControlAction(pump, "status", wntr.network.LinkStatus.Closed)
+        wn.add_control("pump_10_close", wntr.network.Control(close_condition, close_action))
+
+        wn.options.time.duration = 24 * 3600
+        wn.options.time.report_timestep = 3600
+        return wn
+
+    def test_repeating_clocktime_schedule_matches_epanet(self):
+        ep_status = wntr.sim.EpanetSimulator(self._build_model()).run_sim().link["status"]["10"]
+        wntr_status = wntr.sim.WNTRSimulator(self._build_model()).run_sim().link["status"]["10"]
+
+        for t in wntr_status.index:
+            self.assertEqual(
+                int(ep_status.loc[t]), int(wntr_status.loc[t]),
+                msg="pump 10 status differs from EPANET at sim_time={}".format(t),
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
