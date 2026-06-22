@@ -1,6 +1,4 @@
-import shutil
 import sys
-import tempfile
 import unittest
 import warnings
 from os.path import join
@@ -12,6 +10,8 @@ import wntr
 from wntr.tests.conftest import (
     NETWORKS_FOR_TESTING_DIR as datadir,
     EXAMPLES_NETWORKS_DIR as netdir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 
@@ -234,8 +234,8 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe2.vertices, [(20.0, 5.0), (15.0, 5.0)])
 
     def test_skeletonize(self):
-        tmpdir = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, tmpdir, ignore_errors=True)
+        tmpdir = make_artifact_dir("test_morph_skeletonize")
+        self.addCleanup(cleanup_artifact_dir, tmpdir)
 
         inp_file = join(datadir, "skeletonize.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)

@@ -1,5 +1,3 @@
-import shutil
-import tempfile
 import unittest
 from pandas.testing import assert_series_equal
 from os.path import join, isfile
@@ -12,6 +10,8 @@ from wntr.library import DemandPatternLibrary
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as ex_datadir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 plt.close('all')
@@ -26,10 +26,10 @@ class TestDemandPatternLibrary(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_library_demand")
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_pattern_name_list(self):
         pattern_names = self.DPL.pattern_name_list

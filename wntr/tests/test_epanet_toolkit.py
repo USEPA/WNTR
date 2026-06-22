@@ -1,5 +1,3 @@
-import shutil
-import tempfile
 import unittest
 from os.path import join, exists
 import sys, platform
@@ -13,16 +11,18 @@ else:
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as datadir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 
 class TestEpanetToolkit(unittest.TestCase):
 
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_epanet_toolkit")
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_isOpen(self):
         for version in [2.0, 2.2,]:

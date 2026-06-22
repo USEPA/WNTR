@@ -1,6 +1,4 @@
-import shutil
 import sys
-import tempfile
 import unittest
 from os.path import join
 
@@ -9,6 +7,8 @@ from numpy.testing._private.utils import assert_string_equal
 from wntr.tests.conftest import (
     NETWORKS_FOR_TESTING_DIR as test_datadir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 
@@ -18,7 +18,7 @@ class TestWriter(unittest.TestCase):
         import wntr
 
         self.wntr = wntr
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_epanet_io_TestWriter")
 
         inp_file = join(test_datadir, "io.inp")
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -28,7 +28,7 @@ class TestWriter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_all(self):
         self.assertTrue(self.wn._compare(self.wn2))
@@ -103,7 +103,7 @@ class TestInpFileWriter(unittest.TestCase):
         import wntr
 
         self.wntr = wntr
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_epanet_io_TestInpFileWriter")
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.get_link("LINK-3774").vertices.append((305.31, 206.755)) # add vertex for testing
@@ -115,7 +115,7 @@ class TestInpFileWriter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_wn(self):
         self.assertTrue(self.wn._compare(self.wn2))
@@ -516,7 +516,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
         import wntr
 
         self.wntr = wntr
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_epanet_io_TestNet3InpWriterResults")
         temp_inp_file = join(self.tmpdir, "temp.inp")
 
         inp_file = join(ex_datadir, "Net3.inp")
@@ -540,7 +540,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
@@ -617,7 +617,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         import wntr
 
         self.wntr = wntr
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_epanet_io_TestNet3InpUnitsResults")
 
         inp_file = join(ex_datadir, "Net3.inp")
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -634,7 +634,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_units_convert(self):
         # Compares Net3 EpanetSimulator flowrate results using INP files saved 

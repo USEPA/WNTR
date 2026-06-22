@@ -1,7 +1,5 @@
 
-import shutil
 import sys
-import tempfile
 import unittest
 import warnings
 from os.path import isfile, join
@@ -17,15 +15,17 @@ import wntr
 from wntr.tests.conftest import (
     NETWORKS_FOR_TESTING_DIR as test_datadir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 
 class TestGraphics(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_graphics")
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_plot_network1(self):
         filename = join(self.tmpdir, "plot_network1.png")

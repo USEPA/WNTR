@@ -1,17 +1,16 @@
-import shutil
-import tempfile
 import unittest
 from os.path import join
 
 import wntr
+from wntr.tests.conftest import make_artifact_dir, cleanup_artifact_dir
 
 
 class TestMinorLosses(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_network_minor_loss")
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
 
     def test_pipe_minor_loss(self):
         wn = wntr.network.WaterNetworkModel()

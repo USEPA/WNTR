@@ -1,5 +1,3 @@
-import shutil
-import tempfile
 import unittest
 from os.path import join
 #import matplotlib.pylab as plt
@@ -7,13 +5,15 @@ import wntr
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as datadir,
+    make_artifact_dir,
+    cleanup_artifact_dir,
 )
 
 class TestSimulationResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = make_artifact_dir("test_sim_results")
         inp_file = join(datadir, "Net2.inp")
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         sim = wntr.sim.EpanetSimulator(self.wn)
@@ -47,7 +47,7 @@ class TestSimulationResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        cleanup_artifact_dir(self.tmpdir)
  
 
 
