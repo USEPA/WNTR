@@ -33,9 +33,9 @@ class TestEpanetToolkit(unittest.TestCase):
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(enData.inpfile, "temp.rpt")
             
-            nNodes = enData.ENgetcount(wntr.epanet.util.EN.NODECOUNT)
+            nNodes = enData.ENgetcount(wntr.epanet.toolkit.CountParam.NODECOUNT)
             self.assertEqual(11, nNodes)
-            nLinks = enData.ENgetcount(wntr.epanet.util.EN.LINKCOUNT)
+            nLinks = enData.ENgetcount(wntr.epanet.toolkit.CountParam.LINKCOUNT)
             self.assertEqual(13, nLinks)
     
     def test_ENgetflowunits(self):
