@@ -1,18 +1,28 @@
-Provide a summary of the proposed changes, describe tests and documentation, and review the acknowledgement below. 
- 
 ## Summary
-- [ ] Summarize changes, including issues that are resolved by this pull request
 
-## Tests and documentation
-- [ ] Describe tests and documentation for new features
- 
+<!-- Summarize your changes, including any issues resolved by this pull request -->
+
+## Tests and Documentation
+
+<!-- Describe the tests and documentation added or updated for new features -->
+
 ## AI Disclosure
-If you submit code generated using AI tools:
-- [ ] Disclose the AI tools that were used (e.g., GitHub Copilot, ChatGPT)
-- [ ] Describe the use of AI (e.g., generate concept/idea, code generation, code refactoring, documentation generation, code test generation)
+
+<!-- If you did not use AI tools, mark the checkbox below and skip the rest of this section -->
+- [ ] No AI tools were used in this contribution
+
+<!-- If you used AI tools, complete the following instead -->
+- [ ] I used AI tools in this contribution (list tools and describe their use below)
+
+**Tools used:** <!-- e.g., GitHub Copilot, ChatGPT -->
+**How AI was used:** <!-- e.g., code generation, refactoring, documentation, test generation -->
 
 ## Acknowledgement
-By contributing to WNTR, I acknowledge that I have reviewed the software quality assurance guidelines and agree to the following terms and conditions for my contribution:
+
+By contributing to WNTR, I acknowledge that I have reviewed the [software quality assurance guidelines](https://usepa.github.io/WNTR/developers.html) and agree to the following terms and conditions for my contribution:
+
 1. I agree that my contributions are submitted under the Revised BSD License.
 2. I represent I am authorized to make the contributions and grant the license. If my employer has rights to intellectual property that includes these contributions, I represent that I have received permission to make contributions and grant the required license on behalf of that employer.
 3. If code was generated using AI tools, I have disclosed the use of AI and reviewed all code for quality assurance, correctness, security, and licensing.
+
+- [ ] I have read and agree to the above acknowledgement
