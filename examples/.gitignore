@@ -1,0 +1,15 @@
+# Ignore everything
+*
+
+# Keep the data and networks directories and their contents
+!data/
+!data/**
+!networks/
+!networks/**
+
+# Keep example files
+!*.py
+!*.ipynb
+
+# Keep this file
+!.gitignore
