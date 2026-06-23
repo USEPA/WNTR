@@ -223,9 +223,7 @@ class TestGraphics(unittest.TestCase):
     def test_plot_leaflet_network_popup(self):
         # Test for https://github.com/USEPA/WNTR/issues/416
 
-        filename = abspath(join(testdir, "plot_leaflet_network_popup.html"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_leaflet_network_popup.html"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
