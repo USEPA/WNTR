@@ -86,6 +86,7 @@ examples/*.json
 examples/*.geojson
 wntr/tests/*.png
 wntr/tests/*.tif
+wntr/tests/test-artifacts/
 
 # Documentation build files
 documentation/_build
