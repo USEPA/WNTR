@@ -10,8 +10,6 @@ from wntr.library import DemandPatternLibrary
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as ex_datadir,
-    make_artifact_dir,
-    cleanup_artifact_dir,
 )
 
 class TestDemandPatternLibrary(unittest.TestCase):
@@ -23,11 +21,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
     def tearDownClass(self):
         pass
 
-    def setUp(self):
-        self.tmpdir = make_artifact_dir("test_library_demand")
-
     def tearDown(self):
-        cleanup_artifact_dir(self.tmpdir)
         plt.close('all')
 
     def test_pattern_name_list(self):
@@ -332,7 +326,7 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert all(demand1['11'] > demand0['11'])
         
     def test_plot_pattern(self):
-        filename = join(self.tmpdir, "plot_pattern.png")
+        filename = "plot_pattern.png"
 
         # Plot patterns
         ax1 = self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1'])

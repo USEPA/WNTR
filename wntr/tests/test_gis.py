@@ -396,18 +396,15 @@ class TestRaster(unittest.TestCase):
         lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
         raster_data = np.outer(lat_values,lon_values) # value is product of coordinate
 
+        self.raster_file = "test_raster.tif"
         transform = rasterio.transform.from_origin(min_lon, max_lat, resolution, resolution)
         with rasterio.open(
-            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1], 
+            self.raster_file, "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1],
             count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as file:
-            file.write(raster_data, 1) 
-        
-    @classmethod
-    def tearDownClass(self):
-        pass
-    
+            file.write(raster_data, 1)
+
     def test_sample_raster(self):
-        raster_values = wntr.gis.sample_raster(self.points, "test_raster.tif")
+        raster_values = wntr.gis.sample_raster(self.points, self.raster_file)
         assert (raster_values.index == self.points.index).all()
         
         # values should be product of coordinates

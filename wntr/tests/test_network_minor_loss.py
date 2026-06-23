@@ -1,17 +1,9 @@
 import unittest
-from os.path import join
 
 import wntr
-from wntr.tests.conftest import make_artifact_dir, cleanup_artifact_dir
 
 
 class TestMinorLosses(unittest.TestCase):
-    def setUp(self):
-        self.tmpdir = make_artifact_dir("test_network_minor_loss")
-
-    def tearDown(self):
-        cleanup_artifact_dir(self.tmpdir)
-
     def test_pipe_minor_loss(self):
         wn = wntr.network.WaterNetworkModel()
         wn.options.time.duration = 3600 * 2
@@ -24,12 +16,12 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
 
         results1 = sim.run_sim()
-        temp_inp_file = join(self.tmpdir, "temp.inp")
+        temp_inp_file = "temp.inp"
         wntr.network.write_inpfile(wn, temp_inp_file, "CMH")
 
         wn2 = wntr.network.WaterNetworkModel(temp_inp_file)
         sim = wntr.sim.EpanetSimulator(wn2)
-        results2 = sim.run_sim(file_prefix=join(self.tmpdir, "temp"))
+        results2 = sim.run_sim()
 
         head1 = results1.node["head"].j1.iloc[0]
         head2 = results2.node["head"].j1.iloc[0]

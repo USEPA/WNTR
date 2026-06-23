@@ -5,22 +5,19 @@ import wntr
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as datadir,
-    make_artifact_dir,
-    cleanup_artifact_dir,
 )
 
 class TestSimulationResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        self.tmpdir = make_artifact_dir("test_sim_results")
         inp_file = join(datadir, "Net2.inp")
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         sim = wntr.sim.EpanetSimulator(self.wn)
-        sim.run_sim(file_prefix=join(self.tmpdir, "temp"))
+        sim.run_sim()
 
         binfile = wntr.epanet.io.BinFile()
-        results_GPM = binfile.read(join(self.tmpdir, "temp.bin"), False, False, False)
+        results_GPM = binfile.read("temp.bin", False, False, False)
         # time index needs to be converted to hours
         for key in results_GPM.node.keys():
             results_GPM.node[key].index = results_GPM.node[key].index/3600
@@ -45,10 +42,6 @@ class TestSimulationResults(unittest.TestCase):
         self.tol['link']['quality'] = 1e-5
         self.tol['link']['reaction_rate'] = 1e-3
 
-    @classmethod
-    def tearDownClass(self):
-        cleanup_artifact_dir(self.tmpdir)
- 
 
 
 if __name__ == "__main__":

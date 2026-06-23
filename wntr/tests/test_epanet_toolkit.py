@@ -11,18 +11,10 @@ else:
 
 from wntr.tests.conftest import (
     EXAMPLES_NETWORKS_DIR as datadir,
-    make_artifact_dir,
-    cleanup_artifact_dir,
 )
 
 
 class TestEpanetToolkit(unittest.TestCase):
-
-    def setUp(self):
-        self.tmpdir = make_artifact_dir("test_epanet_toolkit")
-
-    def tearDown(self):
-        cleanup_artifact_dir(self.tmpdir)
 
     def test_isOpen(self):
         for version in [2.0, 2.2,]:
@@ -31,7 +23,7 @@ class TestEpanetToolkit(unittest.TestCase):
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
             self.assertEqual(0, enData.isOpen())
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
             self.assertEqual(1, enData.isOpen())
 
     def test_ENgetcount(self):
@@ -40,7 +32,7 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
 
             nNodes = enData.ENgetcount(wntr.epanet.util.EN.NODECOUNT)
             self.assertEqual(11, nNodes)
@@ -53,7 +45,7 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
 
             flowunit = enData.ENgetflowunits()
             assert(flowunit==1) # GPM
@@ -64,7 +56,7 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
 
             duration = enData.ENgettimeparam(0)
             assert(duration==86400) # s
@@ -78,7 +70,7 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
 
             node_index = enData.ENgetnodeindex('10')
             assert(node_index == 1)
@@ -103,17 +95,17 @@ class TestEpanetToolkit(unittest.TestCase):
                 continue  # skip v2.0 tests on mac silicon processor
             enData = wntr.epanet.toolkit.ENepanet(version=version)
             enData.inpfile = join(datadir, "Net1.inp")
-            enData.ENopen(enData.inpfile, join(self.tmpdir, "temp.rpt"))
+            enData.ENopen(enData.inpfile, "temp.rpt")
 
-            saved_inp_file = join(self.tmpdir, "temp_Net1_toolkit.inp")
+            saved_inp_file = "temp_Net1_toolkit.inp"
             enData.ENsaveinpfile(saved_inp_file)
             file_exists = exists(saved_inp_file)
             assert file_exists
 
     def test_runepanet(self):
         inpfile = join(datadir, "Net1.inp")
-        rptfile = join(self.tmpdir, "temp_runepanet.rpt")
-        binfile = join(self.tmpdir, "temp_runepanet.bin")
+        rptfile = "temp_runepanet.rpt"
+        binfile = "temp_runepanet.bin"
         wntr.epanet.toolkit.runepanet(inpfile, rptfile, binfile)
 
         reader = wntr.epanet.io.BinFile()
@@ -130,8 +122,8 @@ class TestEpanetToolkit(unittest.TestCase):
             enData.inpfile = join(datadir, "Net1.inp")
             enData.ENopen(
                 enData.inpfile,
-                join(self.tmpdir, "temp_runepanet_step.rpt"),
-                join(self.tmpdir, "temp_runepanet_step.bin"),
+                "temp_runepanet_step.rpt",
+                "temp_runepanet_step.bin",
             )
 
             enData.ENopenH()
