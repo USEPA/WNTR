@@ -308,7 +308,8 @@ def _convert_with_map(wn, node_map, flag, return_copy):
     vect2_unit = vect2/np.linalg.norm(vect2)
     dotproduct = np.dot(vect1_unit, vect2_unit)
     if dotproduct < 1:
-        sign = np.sign(np.cross(vect1_unit, vect2_unit))
+        cross_z = vect1_unit[0]*vect2_unit[1] - vect1_unit[1]*vect2_unit[0]
+        sign = np.sign(cross_z)
         angle = np.arccos(dotproduct)*180/np.pi
         wn2 = rotate_node_coordinates(wn2, sign*angle)
         A[0] = np.array(wn2.get_node(node_names[0]).coordinates)
