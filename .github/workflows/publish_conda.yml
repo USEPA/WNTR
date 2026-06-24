@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 1.4.1) - must already be tagged on GitHub'
+        description: 'Version to release (e.g. 1.4.1) — must already be tagged on GitHub'
         required: true
         type: string
 
@@ -16,11 +16,19 @@ jobs:
   open-conda-forge-pr:
     name: Open conda-forge feedstock PR
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: '3.11'
+        miniforge-version: latest
+        channels: conda-forge
+        channel-priority: strict
+
+    - name: Install conda-smithy
+      run: conda install -n base -y conda-smithy
 
     - name: Compute source archive sha256
       id: sha
@@ -61,13 +69,22 @@ jobs:
         print(f"Patched {path}: version={version}, sha256={sha256}, build number=0")
         EOF
 
+    - name: Commit recipe update
+      run: |
+        cd wntr-feedstock
+        git add recipe/meta.yaml
+        git commit -m "Update WNTR to ${{ inputs.version }}"
+
+    - name: Rerender feedstock
+      run: |
+        cd wntr-feedstock
+        conda smithy rerender -c auto
+
     - name: Push branch and open PR
       env:
         GH_TOKEN: ${{ secrets.CONDA_FORGE_TOKEN }}
       run: |
         cd wntr-feedstock
-        git add recipe/meta.yaml
-        git commit -m "Update WNTR to ${{ inputs.version }}"
         git push origin release-${{ inputs.version }}
 
         gh pr create \
