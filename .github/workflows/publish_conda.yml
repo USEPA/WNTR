@@ -1,5 +1,6 @@
-# Manually triggered: open a conda-forge feedstock PR for a published PyPI release.
-# Run this after confirming the version is live on https://pypi.org/project/wntr/.
+# Manually triggered: open a conda-forge feedstock PR for a released WNTR version.
+# Pulls and hashes the GitHub release archive directly, so this does not depend on PyPI.
+# Run this after confirming the version tag exists on https://github.com/USEPA/WNTR/tags.
 
 name: Publish to conda-forge
 
@@ -7,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g. 1.4.1) — must already be live on PyPI'
+        description: 'Version to release (e.g. 1.4.1) - must already be tagged on GitHub'
         required: true
         type: string
 
@@ -21,11 +22,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install Grayskull
-      run: pip install grayskull
-
-    - name: Generate recipe with Grayskull
-      run: grayskull pypi wntr==${{ inputs.version }}
+    - name: Compute source archive sha256
+      id: sha
+      run: |
+        curl -sL -o source.zip https://github.com/USEPA/WNTR/archive/${{ inputs.version }}.zip
+        echo "sha256=$(sha256sum source.zip | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
     - name: Clone feedstock fork
       run: |
@@ -36,7 +37,29 @@ jobs:
         git checkout -b release-${{ inputs.version }}
 
     - name: Patch feedstock recipe
-      run: python wntr-feedstock/recipe/patch_meta.py wntr/meta.yaml wntr-feedstock/recipe/meta.yaml
+      env:
+        VERSION: ${{ inputs.version }}
+        SHA256: ${{ steps.sha.outputs.sha256 }}
+      run: |
+        python - <<'EOF'
+        import os
+        import re
+
+        version, sha256 = os.environ["VERSION"], os.environ["SHA256"]
+        path = "wntr-feedstock/recipe/meta.yaml"
+
+        with open(path) as f:
+            content = f.read()
+
+        content = re.sub(r'({% set version = ")[^"]+(")', f'\\g<1>{version}\\2', content)
+        content = re.sub(r'(sha256:\s*)\S+', f'\\g<1>{sha256}', content)
+        content = re.sub(r'(number:\s*)\d+', '\\g<1>0', content)
+
+        with open(path, 'w') as f:
+            f.write(content)
+
+        print(f"Patched {path}: version={version}, sha256={sha256}, build number=0")
+        EOF
 
     - name: Push branch and open PR
       env:
