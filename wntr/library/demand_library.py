@@ -7,7 +7,7 @@ from os.path import abspath, dirname, join
 
 from wntr.network.elements import Pattern
 from wntr.network.options import TimeOptions
-from wntr.utils.check_values import _check_bool, _check_float, _check_int, _check_int_or_none, _check_str
+from wntr.utils.check_values import _check_bool, _check_float, _check_int, _check_str
 
 libdir = dirname(abspath(str(__file__)))
 NoneType = type(None)
@@ -691,7 +691,7 @@ class DemandPatternLibrary(object):
         """
         
         name = _check_str(name, "name")
-        duration = _check_int_or_none(duration, "duration")
+        duration = _check_int(duration, "duration", allow_none=True)
 
         entry = self.get_pattern(name)
 
@@ -750,7 +750,7 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(names, (list, NoneType))
-        duration = _check_int_or_none(duration, "duration")
+        duration = _check_int(duration, "duration", allow_none=True)
 
         if names is None:
             names = self.pattern_name_list

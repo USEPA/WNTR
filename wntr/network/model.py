@@ -13,7 +13,7 @@ import pandas as pd
 import six
 import wntr.epanet
 import wntr.network.io
-from wntr.utils.check_values import _check_float, _check_float_or_none, _check_numeric_or_str, _check_str
+from wntr.utils.check_values import _check_float, _check_numeric_or_str, _check_str
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -1994,8 +1994,8 @@ class NodeRegistry(Registry):
 
         base_demand = _check_float(base_demand, "base_demand")
         elevation = _check_float(elevation, "elevation")
-        emitter_coeff = _check_float_or_none(emitter_coeff, "emitter_coeff")
-        initial_quality = _check_float_or_none(initial_quality, "initial_quality")
+        emitter_coeff = _check_float(emitter_coeff, "emitter_coeff", allow_none=True)
+        initial_quality = _check_float(initial_quality, "initial_quality", allow_none=True)
         if demand_category is not None:
             demand_category = _check_str(demand_category, "demand_category")
 

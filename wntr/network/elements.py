@@ -18,7 +18,7 @@ from collections.abc import MutableSequence
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
-from wntr.utils.check_values import _check_float, _check_float_or_none, _check_positive_non_zero_float, _check_positive_or_zero_float
+from wntr.utils.check_values import _check_float, _check_positive_non_zero_float, _check_positive_or_zero_float
 
 import warnings
 warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
@@ -1014,7 +1014,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = _check_float_or_none(value, "Pipe bulk reaction coefficient")
+        self._bulk_coeff = _check_float(value, "Pipe bulk reaction coefficient", allow_none=True)
 
     @property
     def wall_coeff(self):
@@ -1022,7 +1022,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = _check_float_or_none(value, "Pipe wall reaction coefficient")
+        self._wall_coeff = _check_float(value, "Pipe wall reaction coefficient", allow_none=True)
 
     @property
     def status(self):
