@@ -12,10 +12,7 @@
 - [ ] No AI tools were used in this contribution
 
 <!-- If you used AI tools, complete the following instead -->
-- [ ] I used AI tools in this contribution (list tools and describe their use below)
-
-**Tools used:** <!-- e.g., GitHub Copilot, ChatGPT -->
-**How AI was used:** <!-- e.g., code generation, refactoring, documentation, test generation -->
+- [ ] I used AI tools in this contribution. <!-- Disclose the AI tools that were used (e.g., GitHub Copilot, ChatGPT) and the use of AI (e.g., generate concept/idea, code generation, code refactoring, documentation generation, code test generation). -->
 
 ## Acknowledgement
 
