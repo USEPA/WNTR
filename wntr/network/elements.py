@@ -18,7 +18,7 @@ from collections.abc import MutableSequence
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 from wntr.epanet.util import MixType
-from wntr.utils.check_values import _check_float_or_none, _check_positive_non_zero_float, _check_positive_or_zero_float
+from wntr.utils.check_values import _check_float, _check_positive_non_zero_float, _check_positive_or_zero_float
 
 import warnings
 warnings.simplefilter("ignore", OptimizeWarning) # ignore scipy.optimize.OptimizeWarning
@@ -1014,7 +1014,7 @@ class Pipe(Link):
         return self._bulk_coeff
     @bulk_coeff.setter
     def bulk_coeff(self, value):
-        self._bulk_coeff = _check_float_or_none(value, "Pipe bulk reaction coefficient")
+        self._bulk_coeff = _check_float(value, "Pipe bulk reaction coefficient", allow_none=True)
 
     @property
     def wall_coeff(self):
@@ -1022,7 +1022,7 @@ class Pipe(Link):
         return self._wall_coeff
     @wall_coeff.setter
     def wall_coeff(self, value):
-        self._wall_coeff = _check_float_or_none(value, "Pipe wall reaction coefficient")
+        self._wall_coeff = _check_float(value, "Pipe wall reaction coefficient", allow_none=True)
 
     @property
     def status(self):
@@ -2305,14 +2305,12 @@ class TimeSeries(object):
     
     """
     def __init__(self, model, base, pattern_name=None, category=None):
-        if not isinstance(base, (int, float, complex)):
-            raise ValueError('TimeSeries->base must be a number')
+        base = _check_float(base, "TimeSeries base")
         if isinstance(model, Registry):
             self._pattern_reg = model
         else:
             raise ValueError('Must pass in a pattern registry')
         self._pattern = pattern_name
-        if base is None: base = 0.0
         self._base = base
         self._category = category
         
@@ -2349,9 +2347,7 @@ class TimeSeries(object):
         return self._base
     @base_value.setter
     def base_value(self, value):
-        if not isinstance(value, (int, float, complex)):
-            raise ValueError('TimeSeries->base_value must be a number')
-        self._base = value
+        self._base = _check_float(value, "TimeSeries base_value")
 
     @property
     def pattern(self):

@@ -3,7 +3,6 @@ The wntr.network.model module includes methods to build a water network
 model.
 """
 import logging
-import numbers
 from collections import OrderedDict
 from typing import List, Union
 from warnings import warn
@@ -14,6 +13,7 @@ import pandas as pd
 import six
 import wntr.epanet
 import wntr.network.io
+from wntr.utils.check_values import _check_float, _check_numeric_or_str, _check_str
 from wntr.utils.ordered_set import OrderedSet
 
 from .base import AbstractModel, Link, LinkStatus, Registry
@@ -1734,8 +1734,9 @@ class CurveRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(curve_type, (type(None), str)), "curve_type must be a string"
         assert isinstance(xy_tuples_list, (list, np.ndarray)), "xy_tuples_list must be a list of (x,y) tuples"
+        if curve_type is not None:
+            curve_type = _check_str(curve_type, "curve_type")
 
         curve = Curve(name, curve_type, xy_tuples_list)
         self[name] = curve
@@ -1986,18 +1987,17 @@ class NodeRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(base_demand, numbers.Real), "base_demand must be a float"
         assert isinstance(
             demand_pattern, (type(None), str, PatternRegistry.DefaultPattern, Pattern)
         ), "demand_pattern must be a string or Pattern"
-        assert isinstance(elevation, numbers.Real), "elevation must be a float"
         assert isinstance(coordinates, (type(None), (tuple, list,))), "coordinates must be a tuple"
-        assert isinstance(demand_category, (type(None), str)), "demand_category must be a string"
-        assert isinstance(emitter_coeff, (type(None), numbers.Real)), "emitter_coeff must be a float"
-        assert isinstance(initial_quality, (type(None), numbers.Real)), "initial_quality must be a float"
 
-        base_demand = float(base_demand)
-        elevation = float(elevation)
+        base_demand = _check_float(base_demand, "base_demand")
+        elevation = _check_float(elevation, "elevation")
+        emitter_coeff = _check_float(emitter_coeff, "emitter_coeff", allow_none=True)
+        initial_quality = _check_float(initial_quality, "initial_quality", allow_none=True)
+        if demand_category is not None:
+            demand_category = _check_str(demand_category, "demand_category")
 
         junction = Junction(name, self)
         junction.elevation = elevation
@@ -2055,22 +2055,17 @@ class NodeRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(elevation, numbers.Real), "elevation must be a float"
-        assert isinstance(init_level, numbers.Real), "init_level must be a float"
-        assert isinstance(min_level, numbers.Real), "min_level must be a float"
-        assert isinstance(max_level, numbers.Real), "max_level must be a float"
-        assert isinstance(diameter, numbers.Real), "diameter must be a float"
-        assert isinstance(min_vol, numbers.Real), "min_vol must be a float"
-        assert isinstance(vol_curve, (type(None), str)), "vol_curve must be a string"
         assert isinstance(overflow, (type(None), str, bool, int)), "overflow must be a bool, 'YES' or 'NO, or 0 or 1"
         assert isinstance(coordinates, (type(None), (tuple,list,))), "coordinates must be a tuple"
-        
-        elevation = float(elevation)
-        init_level = float(init_level)
-        min_level = float(min_level)
-        max_level = float(max_level)
-        diameter = float(diameter)
-        min_vol = float(min_vol)
+        if vol_curve is not None:
+            vol_curve = _check_str(vol_curve, "vol_curve")
+
+        elevation = _check_float(elevation, "elevation")
+        init_level = _check_float(init_level, "init_level")
+        min_level = _check_float(min_level, "min_level")
+        max_level = _check_float(max_level, "max_level")
+        diameter = _check_float(diameter, "diameter")
+        min_vol = _check_float(min_vol, "min_vol")
         if init_level < min_level:
             raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
         if init_level > max_level:
@@ -2144,11 +2139,11 @@ class NodeRegistry(Registry):
         assert (
             isinstance(name, str) and len(name) < 32 and name.find(" ") == -1
         ), "name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(base_head, numbers.Real), "base_head must be float"
-        assert isinstance(head_pattern, (type(None), str)), "head_pattern must be a string"
         assert isinstance(coordinates, (type(None), (tuple, list))), "coordinates must be a tuple"
+        if head_pattern is not None:
+            head_pattern = _check_str(head_pattern, "head_pattern")
 
-        base_head = float(base_head)
+        base_head = _check_float(base_head, "base_head")
 
         reservoir = Reservoir(name, self)
         reservoir.base_head = base_head
@@ -2382,18 +2377,13 @@ class LinkRegistry(Registry):
         assert (
             isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(" ") == -1
         ), "end_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(length, numbers.Real), "length must be a float"
-        assert isinstance(diameter, numbers.Real), "diameter must be a float"
-        assert isinstance(roughness, numbers.Real), "roughness must be a float"
-        assert isinstance(minor_loss, numbers.Real), "minor_loss must be a float"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
         assert isinstance(check_valve, (int, str, LinkStatus, type(None))), "initial_status must be an int, string, LinkStatus, or None type"
 
-        
-        length = float(length)
-        diameter = float(diameter)
-        roughness = float(roughness)
-        minor_loss = float(minor_loss)
+        length = _check_float(length, "length")
+        diameter = _check_float(diameter, "diameter")
+        roughness = _check_float(roughness, "roughness")
+        minor_loss = _check_float(minor_loss, "minor_loss")
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
 
@@ -2451,11 +2441,13 @@ class LinkRegistry(Registry):
         assert (
             isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(" ") == -1
         ), "end_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(pump_type, str), "pump_type must be a string"
-        assert isinstance(pump_parameter, (int, float, str)), "pump_parameter must be a float or string"
-        assert isinstance(speed, numbers.Real), "speed must be a float"
-        assert isinstance(pattern, (type(None), str)), "pattern must be a string"
         assert isinstance(initial_status, (int, str, LinkStatus)), "initial_status must be an int, string or LinkStatus"
+
+        pump_type = _check_str(pump_type, "pump_type")
+        pump_parameter = _check_numeric_or_str(pump_parameter, "pump_parameter")
+        speed = _check_float(speed, "speed")
+        if pattern is not None:
+            pattern = _check_str(pattern, "pattern")
 
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
@@ -2519,11 +2511,12 @@ class LinkRegistry(Registry):
         assert (
             isinstance(end_node_name, str) and len(end_node_name) < 32 and end_node_name.find(" ") == -1
         ), "end_node_name must be a string with less than 32 characters and contain no spaces"
-        assert isinstance(diameter, numbers.Real), "diameter must be a float"
-        assert isinstance(valve_type, str), "valve_type must be a string"
-        assert isinstance(minor_loss, numbers.Real), "minor_loss must be a float"
-        assert isinstance(initial_setting, (int, float, str)), "initial_setting must be a float or string"
         assert isinstance(initial_status, (str, LinkStatus)), "initial_status must be a string or LinkStatus"
+
+        valve_type = _check_str(valve_type, "valve_type")
+        diameter = _check_float(diameter, "diameter")
+        minor_loss = _check_float(minor_loss, "minor_loss")
+        initial_setting = _check_numeric_or_str(initial_setting, "initial_setting")
 
         if isinstance(initial_status, str):
             initial_status = LinkStatus[initial_status]
