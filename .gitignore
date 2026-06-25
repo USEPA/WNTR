@@ -80,13 +80,18 @@ temp*
 *.pickle
 *.xlsx
 
-examples/*.inp
-examples/*.csv
-examples/*.json
-examples/*.geojson
 wntr/tests/*.png
 wntr/tests/*.tif
 wntr/tests/test-artifacts/
+
+# Examples directory
+examples/*
+!examples/data/
+!examples/data/**
+!examples/networks/
+!examples/networks/**
+!examples/*.py
+!examples/*.ipynb
 
 # Documentation build files
 documentation/_build
