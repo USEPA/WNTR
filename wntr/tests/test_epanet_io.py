@@ -1,12 +1,13 @@
 import sys
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 from numpy.testing._private.utils import assert_string_equal
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestWriter(unittest.TestCase):
@@ -18,12 +19,9 @@ class TestWriter(unittest.TestCase):
 
         inp_file = join(test_datadir, "io.inp")
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        self.wntr.network.write_inpfile(self.wn, "temp.inp", "GPM")
-        self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
-
-    @classmethod
-    def tearDownClass(self):
-        pass
+        temp_inp_file = "temp.inp"
+        self.wntr.network.write_inpfile(self.wn, temp_inp_file, "GPM")
+        self.wn2 = self.wntr.network.WaterNetworkModel(temp_inp_file)
 
     def test_all(self):
         self.assertTrue(self.wn._compare(self.wn2))
@@ -101,14 +99,11 @@ class TestInpFileWriter(unittest.TestCase):
         inp_file = join(test_datadir, "Net6_plus.inp")  # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.get_link("LINK-3774").vertices.append((305.31, 206.755)) # add vertex for testing
-        self.wntr.network.write_inpfile(self.wn, "temp.inp", units="LPM")
-        self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
+        temp_inp_file = "temp.inp"
+        self.wntr.network.write_inpfile(self.wn, temp_inp_file, units="LPM")
+        self.wn2 = self.wntr.network.WaterNetworkModel(temp_inp_file)
         # adjusting for comparison tests
         self.wn2.options.hydraulic.inpfile_units = 'GPM'
-
-    @classmethod
-    def tearDownClass(self):
-        pass
 
     def test_wn(self):
         self.assertTrue(self.wn._compare(self.wn2))
@@ -509,6 +504,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
         import wntr
 
         self.wntr = wntr
+        temp_inp_file = "temp.inp"
 
         inp_file = join(ex_datadir, "Net3.inp")
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -516,22 +512,18 @@ class TestNet3InpWriterResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wntr.network.write_inpfile(self.wn, "temp.inp")
-        self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
+        self.wntr.network.write_inpfile(self.wn, temp_inp_file)
+        self.wn2 = self.wntr.network.WaterNetworkModel(temp_inp_file)
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
 
-        self.wntr.network.write_inpfile(self.wn, "temp.inp")
-        self.wn22 = self.wntr.network.WaterNetworkModel("temp.inp")
+        self.wntr.network.write_inpfile(self.wn, temp_inp_file)
+        self.wn22 = self.wntr.network.WaterNetworkModel(temp_inp_file)
         self.wn22.options.hydraulic.demand_model = "PDA"
 
         sim = self.wntr.sim.EpanetSimulator(self.wn22)
         self.results22 = sim.run_sim(version=2.2)
-
-    @classmethod
-    def tearDownClass(self):
-        pass
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
@@ -615,15 +607,12 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wntr.network.write_inpfile(self.wn, "temp.inp", units="CMH")
-        self.wn2 = self.wntr.network.WaterNetworkModel("temp.inp")
+        temp_inp_file = "temp.inp"
+        self.wntr.network.write_inpfile(self.wn, temp_inp_file, units="CMH")
+        self.wn2 = self.wntr.network.WaterNetworkModel(temp_inp_file)
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
-
-    @classmethod
-    def tearDownClass(self):
-        pass
 
     def test_units_convert(self):
         # Compares Net3 EpanetSimulator flowrate results using INP files saved 
@@ -733,7 +722,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         MAE = (pressure_hw - pressure_dw).abs().mean()
         with self.assertRaises(AssertionError):
             self.assertLessEqual(MAE, threshold) # m
-        
+
         ## D-W is not supported by the WNTRSimulator
         sim = self.wntr.sim.WNTRSimulator(wn)
         with self.assertRaises(NotImplementedError):

@@ -1,12 +1,13 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 class TestTodiniMetrics(unittest.TestCase):
     

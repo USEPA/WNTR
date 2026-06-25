@@ -1,11 +1,12 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+)
 
 
 class TestEntropyMetric(unittest.TestCase):

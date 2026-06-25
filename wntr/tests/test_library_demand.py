@@ -1,7 +1,6 @@
 import unittest
 from pandas.testing import assert_series_equal
-import os
-from os.path import abspath, dirname, join, isfile
+from os.path import join, isfile
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
@@ -9,20 +8,21 @@ import matplotlib.pylab as plt
 import wntr
 from wntr.library import DemandPatternLibrary
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
-
-plt.close('all')
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 class TestDemandPatternLibrary(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.DPL = DemandPatternLibrary()
-        
+
     @classmethod
     def tearDownClass(self):
         pass
+
+    def tearDown(self):
+        plt.close('all')
 
     def test_pattern_name_list(self):
         pattern_names = self.DPL.pattern_name_list
@@ -326,15 +326,12 @@ class TestDemandPatternLibrary(unittest.TestCase):
         assert all(demand1['11'] > demand0['11'])
         
     def test_plot_pattern(self):
-        filename = abspath(join(testdir, "plot_pattern.png"))
-        if isfile(filename):
-            os.remove(filename)
-        
+        filename = "plot_pattern.png"
+
         # Plot patterns
         ax1 = self.DPL.plot_patterns(names=['Net1_1', 'Net2_1', 'Net3_1'])
-        
+
         plt.savefig(filename, format="png")
-        plt.close()
 
 
 if __name__ == "__main__":

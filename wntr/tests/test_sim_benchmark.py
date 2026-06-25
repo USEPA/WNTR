@@ -6,7 +6,7 @@ Created on Mon Mar  2 17:30:22 2020
 """
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 from matplotlib import pyplot as plt
 from numpy import (
@@ -25,7 +25,9 @@ from numpy import (
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
-testdir = dirname(abspath(str(__file__)))
+from wntr.tests.conftest import (
+    TEST_DIR as testdir,
+)
 
 
 class Test_Benchmarks(unittest.TestCase):

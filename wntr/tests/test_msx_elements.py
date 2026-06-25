@@ -1,15 +1,9 @@
 import unittest
 import warnings
-from os.path import abspath, dirname, join
 
 import numpy as np
 import pandas as pd
 import wntr
-
-testdir = dirname(abspath(str(__file__)))
-test_network_dir = join(testdir, "networks_for_testing")
-test_data_dir = join(testdir, "data_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
 
 
 class Test(unittest.TestCase):

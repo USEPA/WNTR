@@ -1,13 +1,13 @@
 # These tests run a demand-driven simulation with both WNTR and Epanet and compare the results for the example networks
 import pickle
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 import pandas as pd
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestResetInitialValues(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
@@ -8,8 +8,9 @@ import wntr
 import wntr.msx
 import wntr.epanet.msx
 
-testdir = dirname(abspath(str(__file__)))
-test_network_dir = join(testdir, "networks_for_testing")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_network_dir,
+)
 inp_filename = join(test_network_dir, "msx_example.inp")
 msx_filename = join(test_network_dir, "msx_example.msx")
 

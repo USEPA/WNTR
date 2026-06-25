@@ -1,15 +1,15 @@
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
 import wntr
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "..", "..", "tests", "networks_for_testing")
-netdir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as netdir,
+)
 
 
 class TestScenario(unittest.TestCase):

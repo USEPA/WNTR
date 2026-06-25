@@ -4,7 +4,6 @@ Test the wntr.network.elements classes
 
 import pytest
 import unittest
-from os.path import abspath, dirname, join
 from unittest import SkipTest
 
 import pytest
@@ -12,10 +11,6 @@ import numpy as np
 import wntr
 import wntr.network.elements as elements
 from wntr.network.options import TimeOptions
-
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-net1dir = join(testdir, "..", "..", "examples", "networks")
 
 
 class TestElements(unittest.TestCase):

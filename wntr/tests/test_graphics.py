@@ -1,9 +1,8 @@
 
-import os
 import sys
 import unittest
 import warnings
-from os.path import abspath, dirname, isfile, join
+from os.path import isfile, join
 
 import networkx as nx
 import matplotlib.pylab as plt
@@ -13,23 +12,24 @@ import pandas as pd
 import numpy as np
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestGraphics(unittest.TestCase):
+    def tearDown(self):
+        plt.close('all')
+
     def test_plot_network1(self):
-        filename = abspath(join(testdir, "plot_network1.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network1.png"
 
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        wntr.graphics.plot_network(wn)
+        wntr.graphics.plot_network(wn, show_plot=False)
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
@@ -38,35 +38,28 @@ class TestGraphics(unittest.TestCase):
         wn = wntr.network.WaterNetworkModel(inp_file)
 
         # undirected
-        filename = abspath(join(testdir, "plot_network2_undirected.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network2_undirected.png"
 
         wntr.graphics.plot_network(
-            wn, node_attribute="elevation", link_attribute="length"
+            wn, node_attribute="elevation", link_attribute="length", show_plot=False
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
-        
+
         # directed
-        filename = abspath(join(testdir, "plot_network2_directed.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network2_directed.png"
 
         wntr.graphics.plot_network(
-            wn, node_attribute="elevation", link_attribute="length", directed=True
+            wn, node_attribute="elevation", link_attribute="length", directed=True,
+            show_plot=False
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_network3(self):
-        filename = abspath(join(testdir, "plot_network3.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network3.png"
 
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -76,16 +69,14 @@ class TestGraphics(unittest.TestCase):
             node_attribute=["11", "21"],
             link_attribute=["112", "113"],
             link_labels=True,
+            show_plot=False,
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_network4(self):
-        filename = abspath(join(testdir, "plot_network4.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network4.png"
 
         inp_file = join(ex_datadir, "Net1.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -95,57 +86,52 @@ class TestGraphics(unittest.TestCase):
             node_attribute={"11": 5, "21": 10},
             link_attribute={"112": 3, "113": 9},
             node_labels=True,
+            show_plot=False,
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_network5(self):
-        filename = abspath(join(testdir, "plot_network5.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network5.png"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         pop = wntr.metrics.population(wn)
 
         wntr.graphics.plot_network(
-            wn, node_attribute=pop, node_range=[0, 500], title="Population"
+            wn, node_attribute=pop, node_range=[0, 500], title="Population",
+            show_plot=False
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_network6(self):
         # legend
-        filename = abspath(join(testdir, "plot_network6.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_network6.png"
 
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
         wntr.graphics.plot_network(
-            wn, node_attribute="elevation", link_attribute="diameter", 
-            add_colorbar=True, legend=True
+            wn, node_attribute="elevation", link_attribute="diameter",
+            add_colorbar=True, legend=True, show_plot=False
         )
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
-    
+
     def test_plot_network_options(self):
         # NOTE:to compare with the old plot_network set compare=True.
         #   this should be set to false for regular testing
         compare = False
-        
+
         cmap = matplotlib.colormaps['viridis']
-        
+
         inp_file = join(ex_datadir, "Net6.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
-        
+
         random_node_values = pd.Series(
             np.random.rand(len(wn.node_name_list)), index=wn.node_name_list)
         random_link_values = pd.Series(
@@ -156,7 +142,7 @@ class TestGraphics(unittest.TestCase):
         random_link_dict_subset = dict(random_link_values.iloc[:10])
         node_list = list(wn.node_name_list[:10])
         link_list = list(wn.link_name_list[:10])
-        
+
         kwarg_list = [
             {"node_attribute": "elevation",
              "node_range": [0,20],
@@ -187,36 +173,28 @@ class TestGraphics(unittest.TestCase):
              "link_range": [0,1],
              "link_width": 1.5},
         ]
-        
+
         for kwargs in kwarg_list:
-            filename = abspath(join(testdir, "plot_network_options.png"))
-            if isfile(filename):
-                os.remove(filename)
+            filename = "plot_network_options.png"
             if compare:
                 fig, ax = plt.subplots(1,2)
-                wntr.graphics.plot_network(wn, ax=ax[0], title="GIS plot_network", backend='gpd', **kwargs)
-                wntr.graphics.plot_network(wn, ax=ax[1], title="NX plot_network", backend='nx', **kwargs)
+                wntr.graphics.plot_network(wn, ax=ax[0], title="GIS plot_network", backend='gpd', show_plot=False, **kwargs)
+                wntr.graphics.plot_network(wn, ax=ax[1], title="NX plot_network", backend='nx', show_plot=False, **kwargs)
                 fig.savefig(filename, format="png")
-                plt.close(fig)
             else:
-                wntr.graphics.plot_network(wn, backend='nx', **kwargs)
+                wntr.graphics.plot_network(wn, backend='nx', show_plot=False, **kwargs)
                 plt.savefig(filename, format="png")
-                plt.close()
-                
+
             self.assertTrue(isfile(filename))
-            os.remove(filename)
-            
+
 
     def test_plot_interactive_network1(self):
 
-        filename = abspath(join(testdir, "plot_interactive_network1.html"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_interactive_network1.html"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 
-        plt.figure()
         wntr.graphics.plot_interactive_network(
             wn, node_attribute=["107", "123"], filename=filename, auto_open=False
         )
@@ -225,16 +203,13 @@ class TestGraphics(unittest.TestCase):
 
     def test_plot_leaflet_network1(self):
 
-        filename = abspath(join(testdir, "plot_leaflet_network1.html"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_leaflet_network1.html"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         longlat_map = {"Lake": (-106.6587, 35.0623), "219": (-106.5248, 35.1918)}
         wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
 
-        plt.figure()
         wntr.graphics.plot_leaflet_network(
             wn2,
             node_attribute="elevation",
@@ -248,9 +223,7 @@ class TestGraphics(unittest.TestCase):
     def test_plot_leaflet_network_popup(self):
         # Test for https://github.com/USEPA/WNTR/issues/416
 
-        filename = abspath(join(testdir, "plot_leaflet_network_popup.html"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_leaflet_network_popup.html"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -276,10 +249,6 @@ class TestGraphics(unittest.TestCase):
         self.assertTrue(isfile(filename))
 
     def test_network_animation1(self):
-        filename = abspath(join(testdir, "plot_leaflet_network1.html"))
-        if isfile(filename):
-            os.remove(filename)
-
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
         sim = wntr.sim.EpanetSimulator(wn)
@@ -298,9 +267,7 @@ class TestGraphics(unittest.TestCase):
     def test_plot_fragility_curve1(self):
         from scipy.stats import lognorm
 
-        filename = abspath(join(testdir, "plot_fragility_curve1.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_fragility_curve1.png"
 
         FC = wntr.scenario.FragilityCurve()
         FC.add_state("Minor", 1, {"Default": lognorm(0.5, scale=0.3)})
@@ -309,14 +276,11 @@ class TestGraphics(unittest.TestCase):
         plt.figure()
         wntr.graphics.plot_fragility_curve(FC)
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_pump_curve1(self):
-        filename = abspath(join(testdir, "plot_pump_curve1.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_pump_curve1.png"
 
         inp_file = join(ex_datadir, "Net3.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -325,14 +289,11 @@ class TestGraphics(unittest.TestCase):
         plt.figure()
         wntr.graphics.plot_pump_curve(pump)
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
     def test_plot_tank_curve(self):
-        filename = abspath(join(testdir, "plot_tank_curve.png"))
-        if isfile(filename):
-            os.remove(filename)
+        filename = "plot_tank_curve.png"
 
         inp_file = join(test_datadir, "Anytown_multipointcurves.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
@@ -342,7 +303,6 @@ class TestGraphics(unittest.TestCase):
         plt.figure()
         shouldBeAxis = wntr.graphics.plot_tank_volume_curve(tank_w_curve)
         plt.savefig(filename, format="png")
-        plt.close()
 
         self.assertTrue(isfile(filename))
 
@@ -355,8 +315,6 @@ class TestGraphics(unittest.TestCase):
         )
         self.assertEqual(cmp.N, 3)
         self.assertEqual(cmp.name, "custom")
-        
-        
 
 
 if __name__ == "__main__":

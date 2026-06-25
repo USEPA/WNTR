@@ -1,10 +1,7 @@
 import unittest
-from os.path import abspath, dirname, join
 
 import numpy as np
 import wntr
-
-testdir = dirname(abspath(str(__file__)))
 
 
 class TestEpanetUnits(unittest.TestCase):
