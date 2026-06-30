@@ -316,6 +316,55 @@ class TestGraphics(unittest.TestCase):
         self.assertEqual(cmp.N, 3)
         self.assertEqual(cmp.name, "custom")
 
+    def test_plot_valve_layer_nx(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="nx", include_network=False, ax=axes[0])
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="nx", include_network=True, ax=axes[1])
+        plt.savefig("plot_valve_layer_nx.png", format="png")
+
+        self.assertTrue(isfile("plot_valve_layer_nx.png"))
+
+    def test_plot_valve_layer_gpd(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="gpd", include_network=False, ax=axes[0])
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="gpd", include_network=True, ax=axes[1])
+        plt.savefig("plot_valve_layer_gpd.png", format="png")
+
+        self.assertTrue(isfile("plot_valve_layer_gpd.png"))
+
+    def test_plot_valve_layer_with_attribute(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+        valve_attribute = pd.Series(
+            np.random.default_rng(42).random(len(valve_layer)), index=valve_layer.index
+        )
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(
+            wn, valve_layer, valve_attribute=valve_attribute,
+            colorbar_label="Test", backend="nx", ax=axes[0]
+        )
+        wntr.graphics.plot_valve_layer(
+            wn, valve_layer, valve_attribute=valve_attribute,
+            colorbar_label="Test", backend="gpd", ax=axes[1]
+        )
+        plt.savefig("plot_valve_layer_attribute.png", format="png")
+
+        self.assertTrue(isfile("plot_valve_layer_attribute.png"))
+
+    def test_plot_valve_layer_invalid_backend(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
+        with self.assertRaises(Exception):
+            wntr.graphics.plot_valve_layer(wn, valve_layer, backend="invalid")
+
 
 if __name__ == "__main__":
     unittest.main()
