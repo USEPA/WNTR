@@ -359,5 +359,78 @@ class TestGraphics(unittest.TestCase):
         
 
 
+class TestValveLayerGraphics(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        inp_file = join(ex_datadir, "Net3.inp")
+        cls.wn = wntr.network.WaterNetworkModel(inp_file)
+        cls.valve_layer = wntr.network.generate_valve_layer(
+            cls.wn, placement_type="strategic", n=2, seed=42
+        )
+        cls.valve_attribute = pd.Series(
+            np.random.default_rng(42).random(len(cls.valve_layer)),
+            index=cls.valve_layer.index,
+        )
+
+    def test_plot_valve_layer_nx(self):
+        filename = abspath(join(testdir, "plot_valve_layer_nx.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, backend="nx", include_network=False, ax=axes[0]
+        )
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, backend="nx", include_network=True, ax=axes[1]
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+
+    def test_plot_valve_layer_gpd(self):
+        filename = abspath(join(testdir, "plot_valve_layer_gpd.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, backend="gpd", include_network=False, ax=axes[0]
+        )
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, backend="gpd", include_network=True, ax=axes[1]
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+
+    def test_plot_valve_layer_with_attribute(self):
+        filename = abspath(join(testdir, "plot_valve_layer_attribute.png"))
+        if isfile(filename):
+            os.remove(filename)
+
+        fig, axes = plt.subplots(1, 2)
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, valve_attribute=self.valve_attribute,
+            colorbar_label="Test", backend="nx", ax=axes[0]
+        )
+        wntr.graphics.plot_valve_layer(
+            self.wn, self.valve_layer, valve_attribute=self.valve_attribute,
+            colorbar_label="Test", backend="gpd", ax=axes[1]
+        )
+        plt.savefig(filename, format="png")
+        plt.close()
+
+        self.assertTrue(isfile(filename))
+
+    def test_plot_valve_layer_invalid_backend(self):
+        with self.assertRaises(Exception):
+            wntr.graphics.plot_valve_layer(
+                self.wn, self.valve_layer, backend="invalid"
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
