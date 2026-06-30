@@ -355,35 +355,18 @@ class TestGraphics(unittest.TestCase):
         )
         self.assertEqual(cmp.N, 3)
         self.assertEqual(cmp.name, "custom")
-        
-        
-
-
-class TestValveLayerGraphics(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        inp_file = join(ex_datadir, "Net3.inp")
-        cls.wn = wntr.network.WaterNetworkModel(inp_file)
-        cls.valve_layer = wntr.network.generate_valve_layer(
-            cls.wn, placement_type="strategic", n=2, seed=42
-        )
-        cls.valve_attribute = pd.Series(
-            np.random.default_rng(42).random(len(cls.valve_layer)),
-            index=cls.valve_layer.index,
-        )
 
     def test_plot_valve_layer_nx(self):
         filename = abspath(join(testdir, "plot_valve_layer_nx.png"))
         if isfile(filename):
             os.remove(filename)
 
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
         fig, axes = plt.subplots(1, 2)
-        wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, backend="nx", include_network=False, ax=axes[0]
-        )
-        wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, backend="nx", include_network=True, ax=axes[1]
-        )
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="nx", include_network=False, ax=axes[0])
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="nx", include_network=True, ax=axes[1])
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -394,13 +377,12 @@ class TestValveLayerGraphics(unittest.TestCase):
         if isfile(filename):
             os.remove(filename)
 
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
         fig, axes = plt.subplots(1, 2)
-        wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, backend="gpd", include_network=False, ax=axes[0]
-        )
-        wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, backend="gpd", include_network=True, ax=axes[1]
-        )
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="gpd", include_network=False, ax=axes[0])
+        wntr.graphics.plot_valve_layer(wn, valve_layer, backend="gpd", include_network=True, ax=axes[1])
         plt.savefig(filename, format="png")
         plt.close()
 
@@ -411,13 +393,19 @@ class TestValveLayerGraphics(unittest.TestCase):
         if isfile(filename):
             os.remove(filename)
 
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+        valve_attribute = pd.Series(
+            np.random.default_rng(42).random(len(valve_layer)), index=valve_layer.index
+        )
+
         fig, axes = plt.subplots(1, 2)
         wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, valve_attribute=self.valve_attribute,
+            wn, valve_layer, valve_attribute=valve_attribute,
             colorbar_label="Test", backend="nx", ax=axes[0]
         )
         wntr.graphics.plot_valve_layer(
-            self.wn, self.valve_layer, valve_attribute=self.valve_attribute,
+            wn, valve_layer, valve_attribute=valve_attribute,
             colorbar_label="Test", backend="gpd", ax=axes[1]
         )
         plt.savefig(filename, format="png")
@@ -426,10 +414,11 @@ class TestValveLayerGraphics(unittest.TestCase):
         self.assertTrue(isfile(filename))
 
     def test_plot_valve_layer_invalid_backend(self):
+        wn = wntr.network.WaterNetworkModel("Net3")
+        valve_layer = wntr.network.generate_valve_layer(wn, "strategic", 2, 42)
+
         with self.assertRaises(Exception):
-            wntr.graphics.plot_valve_layer(
-                self.wn, self.valve_layer, backend="invalid"
-            )
+            wntr.graphics.plot_valve_layer(wn, valve_layer, backend="invalid")
 
 
 if __name__ == "__main__":
