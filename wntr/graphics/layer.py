@@ -139,7 +139,7 @@ def _plot_valve_layer_nx(wn, valve_layer, valve_attribute=None, title=None,
     if valve_attribute is not None:
         sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], s=valve_size, c=valve_attribute, marker='v', cmap=valve_cmap)
     else:
-        sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], valve_size, 'k', 'v')
+        sc = ax.scatter(valve_coordinates[:,0], valve_coordinates[:,1], s=valve_size, c='k', marker='v')
 
     if add_colorbar and valve_attribute is not None:
         clb = plt.colorbar(sc, shrink=0.5, pad=0.05, ax=ax)
