@@ -1,13 +1,9 @@
 import unittest
-from os.path import abspath, dirname, join
 
 import numpy as np
 import pandas as pd
 import wntr
 from scipy.stats import lognorm, norm
-
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "..", "..", "tests", "networks_for_testing")
 
 FC1 = wntr.scenario.FragilityCurve()
 FC1.add_state("Major", 2, {"Default": norm(loc=1, scale=2)})

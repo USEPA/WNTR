@@ -1,13 +1,13 @@
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 import matplotlib.pylab as plt
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 ### These tests need to be updated to be real tests, not graphics and use additional networks
 

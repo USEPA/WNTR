@@ -7,6 +7,7 @@ from os.path import abspath, dirname, join
 
 from wntr.network.elements import Pattern
 from wntr.network.options import TimeOptions
+from wntr.utils.check_values import _check_bool, _check_float, _check_int, _check_str
 
 libdir = dirname(abspath(str(__file__)))
 NoneType = type(None)
@@ -66,7 +67,7 @@ class DemandPatternLibrary(object):
         dictionary
         """
         
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         
         return self.library[name]
     
@@ -80,7 +81,7 @@ class DemandPatternLibrary(object):
             Pattern name
         """
         
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         assert name in set(self.pattern_name_list)
         
         del self.library[name]
@@ -97,8 +98,8 @@ class DemandPatternLibrary(object):
             New pattern name
         """
         
-        assert isinstance(name, str)
-        assert isinstance(new_name, str)
+        name = _check_str(name, "name")
+        new_name = _check_str(new_name, "new_name")
         assert name != new_name
 
         entry = self.get_pattern(name).copy()
@@ -119,7 +120,8 @@ class DemandPatternLibrary(object):
         list of dictionaries
         """
         
-        assert isinstance(category, (str, NoneType))
+        if category is not None:
+            category = _check_str(category, "category")
 
         subset = []
         for name in self.pattern_name_list:
@@ -145,8 +147,8 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(inplace, bool)
+        name = _check_str(name, "name")
+        inplace = _check_bool(inplace, "inplace")
         
         series = self.to_Series(name, duration=None)
         if series.min() < 0:
@@ -180,16 +182,17 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(std, (int, float))
-        assert isinstance(normalize, bool)
+        name = _check_str(name, "name")
+        normalize = _check_bool(normalize, "normalize")
         assert isinstance(seed, (int, NoneType))
-        assert isinstance(inplace, bool)
-        
+        inplace = _check_bool(inplace, "inplace")
+
+        std = _check_float(std, "std")
+
         np.random.seed(seed)
-        
+
         series = self.to_Series(name, duration=None)
-        
+
         noise = np.random.normal(0, std, len(series))
         series = series + noise
 
@@ -228,13 +231,14 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(duration, (int, float))
-        assert isinstance(pattern_timestep, int)
-        assert isinstance(start_clocktime, int)
-        assert isinstance(wrap, bool)
-        assert isinstance(inplace, bool)
-        
+        name = _check_str(name, "name")
+        wrap = _check_bool(wrap, "wrap")
+        inplace = _check_bool(inplace, "inplace")
+
+        duration = _check_int(duration, "duration")
+        pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
+        start_clocktime = _check_int(start_clocktime, "start_clocktime")
+
         # Pattern defined using the current time parameters
         entry = self.get_pattern(name)
         entry_start_clocktime = entry['start_clocktime']
@@ -282,7 +286,7 @@ class DemandPatternLibrary(object):
         pandas Series
         """
 
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         assert isinstance(entry, dict)
         assert name not in set(self.pattern_name_list)
         
@@ -333,15 +337,16 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         assert isinstance(on_off_sequence, list)
         assert np.all(np.diff(on_off_sequence) > 0) # is monotonically increasing
-        assert isinstance(duration, (int, float))
-        assert isinstance(pattern_timestep, int)
-        assert isinstance(start_clocktime, int)
-        assert isinstance(wrap, bool)
-        assert isinstance(invert, bool)
-        assert isinstance(normalize, bool)
+        wrap = _check_bool(wrap, "wrap")
+        invert = _check_bool(invert, "invert")
+        normalize = _check_bool(normalize, "normalize")
+
+        duration = _check_int(duration, "duration")
+        pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
+        start_clocktime = _check_int(start_clocktime, "start_clocktime")
 
         index = np.arange(start_clocktime, duration, pattern_timestep)
         multipliers = pd.Series(index=index, data=0) # starts off
@@ -407,16 +412,17 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(mean, (int, float))
-        assert isinstance(std, (int, float))
-        assert isinstance(duration, (int, float))
-        assert isinstance(pattern_timestep, int)
-        assert isinstance(start_clocktime, int)
-        assert isinstance(wrap, bool)
-        assert isinstance(invert, bool)
-        assert isinstance(normalize, bool)
-        
+        name = _check_str(name, "name")
+        wrap = _check_bool(wrap, "wrap")
+        invert = _check_bool(invert, "invert")
+        normalize = _check_bool(normalize, "normalize")
+
+        mean = _check_float(mean, "mean")
+        std = _check_float(std, "std")
+        duration = _check_int(duration, "duration")
+        pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
+        start_clocktime = _check_int(start_clocktime, "start_clocktime")
+
         index = np.arange(start_clocktime, duration, pattern_timestep)
         multipliers = scipy.stats.norm.pdf(index, mean, std)
 
@@ -478,17 +484,18 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(start, (int, float))
-        assert isinstance(peak, (int, float))
-        assert isinstance(end, (int, float))
-        assert isinstance(duration, (int, float))
-        assert isinstance(pattern_timestep, int)
-        assert isinstance(start_clocktime, int)
-        assert isinstance(wrap, bool)
-        assert isinstance(invert, bool)
-        assert isinstance(normalize, bool)
-        
+        name = _check_str(name, "name")
+        wrap = _check_bool(wrap, "wrap")
+        invert = _check_bool(invert, "invert")
+        normalize = _check_bool(normalize, "normalize")
+
+        start = _check_float(start, "start")
+        peak = _check_float(peak, "peak")
+        end = _check_float(end, "end")
+        duration = _check_int(duration, "duration")
+        pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
+        start_clocktime = _check_int(start_clocktime, "start_clocktime")
+
         loc = start
         scale = end-start
         c = (peak-start)/(end-start)
@@ -553,23 +560,24 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         assert isinstance(patterns_to_combine, list)
         if weights is None:
             weights = [1]*len(patterns_to_combine)
         assert isinstance(weights, list)
         assert len(patterns_to_combine) == len(weights)
-        assert isinstance(combine, str)
+        combine = _check_str(combine, "combine")
         assert combine in ['Overlap', 'Sequential']
         assert isinstance(durations, list)
         if combine == 'Overlap':
             assert len(durations) == 1
         else:
             assert len(durations) == len(patterns_to_combine)
-        assert isinstance(pattern_timestep, int)
-        assert isinstance(start_clocktime, int)
-        assert isinstance(wrap, bool)
-        assert isinstance(normalize, bool)
+        wrap = _check_bool(wrap, "wrap")
+        normalize = _check_bool(normalize, "normalize")
+
+        pattern_timestep = _check_int(pattern_timestep, "pattern_timestep")
+        start_clocktime = _check_int(start_clocktime, "start_clocktime")
         
         t = start_clocktime
         series = {}
@@ -636,7 +644,7 @@ class DemandPatternLibrary(object):
         WNTR Pattern object
         """
         
-        assert isinstance(name, str)
+        name = _check_str(name, "name")
         assert isinstance(time_options, (TimeOptions, tuple, NoneType))
     
         entry = self.get_pattern(name)
@@ -682,9 +690,9 @@ class DemandPatternLibrary(object):
         pandas Series
         """
         
-        assert isinstance(name, str)
-        assert isinstance(duration, (int, float, NoneType))
-        
+        name = _check_str(name, "name")
+        duration = _check_int(duration, "duration", allow_none=True)
+
         entry = self.get_pattern(name)
 
         start_clocktime = entry['start_clocktime']
@@ -714,8 +722,8 @@ class DemandPatternLibrary(object):
             Filename for the library JSON file
         """
         
-        assert isinstance(filename, str)
-        
+        filename = _check_str(filename, "filename")
+
         data = []
         for name, entry in self.library.items():
             data.append(entry)
@@ -742,8 +750,8 @@ class DemandPatternLibrary(object):
         """
         
         assert isinstance(names, (list, NoneType))
-        assert isinstance(duration, (int, float, NoneType))
-        
+        duration = _check_int(duration, "duration", allow_none=True)
+
         if names is None:
             names = self.pattern_name_list
 

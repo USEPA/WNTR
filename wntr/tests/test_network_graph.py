@@ -1,14 +1,15 @@
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 from unittest import SkipTest
 
 import networkx as nx
 import numpy as np
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-netdir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as netdir,
+)
 
 
 class TestNetworkGraphs(unittest.TestCase):

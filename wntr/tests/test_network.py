@@ -1,6 +1,6 @@
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
@@ -14,10 +14,11 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
     
-testdir = dirname(abspath(str(__file__)))
-test_network_dir = join(testdir, "networks_for_testing")
-test_data_dir = join(testdir, "data_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_network_dir,
+    DATA_FOR_TESTING_DIR as test_data_dir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 class TestNetworkCreation(unittest.TestCase):

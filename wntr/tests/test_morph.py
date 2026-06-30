@@ -1,15 +1,16 @@
 import sys
 import unittest
 import warnings
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
 import wntr
 
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-netdir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as netdir,
+)
 
 
 
@@ -231,7 +232,6 @@ class TestMorph(unittest.TestCase):
         self.assertEqual(pipe2.vertices, [(20.0, 5.0), (15.0, 5.0)])
 
     def test_skeletonize(self):
-
         inp_file = join(datadir, "skeletonize.inp")
         wn = wntr.network.WaterNetworkModel(inp_file)
 

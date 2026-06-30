@@ -1,16 +1,9 @@
 import unittest
+
 import wntr
 
 
 class TestMinorLosses(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        pass
-
-    @classmethod
-    def tearDownClass(self):
-        pass
-
     def test_pipe_minor_loss(self):
         wn = wntr.network.WaterNetworkModel()
         wn.options.time.duration = 3600 * 2
@@ -23,9 +16,10 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
 
         results1 = sim.run_sim()
-        wntr.network.write_inpfile(wn, "temp.inp", "CMH")
+        temp_inp_file = "temp.inp"
+        wntr.network.write_inpfile(wn, temp_inp_file, "CMH")
 
-        wn2 = wntr.network.WaterNetworkModel("temp.inp")
+        wn2 = wntr.network.WaterNetworkModel(temp_inp_file)
         sim = wntr.sim.EpanetSimulator(wn2)
         results2 = sim.run_sim()
 

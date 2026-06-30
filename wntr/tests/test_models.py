@@ -1,14 +1,15 @@
 import math
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
 import wntr
 from wntr.sim.models.utils import ModelUpdater
 
-testdir = dirname(abspath(str(__file__)))
-test_data_dir = join(testdir, "data_for_testing")
+from wntr.tests.conftest import (
+    DATA_FOR_TESTING_DIR as test_data_dir,
+)
 
 
 def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):

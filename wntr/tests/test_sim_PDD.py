@@ -1,10 +1,10 @@
 import math
 import unittest
-from os.path import abspath, dirname, join
+from os.path import join
 
-testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as test_datadir,
+)
 
 
 class TestPDD(unittest.TestCase):

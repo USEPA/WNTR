@@ -3,7 +3,7 @@ import sys
 import unittest
 import pytest
 from os import listdir
-from os.path import abspath, dirname, isfile, join
+from os.path import isfile, join
 import nbformat
 import pandas as pd
 import geopandas as gpd
@@ -11,8 +11,10 @@ from pandas.testing import assert_frame_equal
 from nbconvert.preprocessors import ExecutePreprocessor
 
 kernel_name = 'python%d' % sys.version_info[0]
-testdir = dirname(abspath(str(__file__)))
-examplesdir = join(testdir, '..', '..', 'examples')
+from wntr.tests.conftest import (
+    TEST_DIR as testdir,
+    EXAMPLES_DIR as examplesdir,
+)
 
 class TestDemos(unittest.TestCase):
     @classmethod

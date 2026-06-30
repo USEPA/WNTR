@@ -1,10 +1,11 @@
 import unittest
-from os.path import abspath, dirname, join, exists
+from os.path import join
 
 import wntr.epanet.exceptions
 
-testdir = dirname(abspath(__file__))
-datadir = join(testdir, "networks_for_testing")
+from wntr.tests.conftest import (
+    NETWORKS_FOR_TESTING_DIR as datadir,
+)
 
 
 class TestEpanetExceptions(unittest.TestCase):

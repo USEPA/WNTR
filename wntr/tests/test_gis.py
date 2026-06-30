@@ -2,8 +2,9 @@ import sys
 import unittest
 import warnings
 import os
-from os.path import abspath, dirname, isfile, join
+from os.path import abspath, isfile, join
 
+import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -30,9 +31,11 @@ except ModuleNotFoundError:
     rasterio = None
     has_rasterio = False
     
-testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir, "networks_for_testing")
-ex_datadir = join(testdir, "..", "..", "examples", "networks")
+from wntr.tests.conftest import (
+    TEST_DIR as testdir,
+    NETWORKS_FOR_TESTING_DIR as datadir,
+    EXAMPLES_NETWORKS_DIR as ex_datadir,
+)
 
 
 @unittest.skipIf(not has_geopandas,
@@ -179,12 +182,13 @@ class TestGIS(unittest.TestCase):
         assert_series_equal(stats.loc['31',:], expected, check_dtype=False, check_names=False)
         
     def test_intersect_lines_with_polygons(self):
-        
+        self.addCleanup(plt.close, 'all')
+
         bv = 0
         stats = wntr.gis.intersect(self.gis_data.pipes, self.polygons, 'value', True, bv)
 
         ax = self.polygons.plot(column='value', alpha=0.5)
-        ax = wntr.graphics.plot_network(self.wn, ax=ax)
+        ax = wntr.graphics.plot_network(self.wn, ax=ax, show_plot=False)
         
         # Pipe 22 intersects poly2 100%, val=20, intersects poly3 50%, val=30
         expected_weighted_mean = (20*1+30*0.5)/1.5
@@ -392,18 +396,15 @@ class TestRaster(unittest.TestCase):
         lat_values = np.arange(max_lat, min_lat, -resolution)  # Decreasing order for latitudes
         raster_data = np.outer(lat_values,lon_values) # value is product of coordinate
 
+        self.raster_file = "test_raster.tif"
         transform = rasterio.transform.from_origin(min_lon, max_lat, resolution, resolution)
         with rasterio.open(
-            "test_raster.tif", "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1], 
+            self.raster_file, "w", driver="GTiff", height=raster_data.shape[0], width=raster_data.shape[1],
             count=1, dtype=raster_data.dtype, crs="EPSG:4326", transform=transform) as file:
-            file.write(raster_data, 1) 
-        
-    @classmethod
-    def tearDownClass(self):
-        pass
-    
+            file.write(raster_data, 1)
+
     def test_sample_raster(self):
-        raster_values = wntr.gis.sample_raster(self.points, "test_raster.tif")
+        raster_values = wntr.gis.sample_raster(self.points, self.raster_file)
         assert (raster_values.index == self.points.index).all()
         
         # values should be product of coordinates
