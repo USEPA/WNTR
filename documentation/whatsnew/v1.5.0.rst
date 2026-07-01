@@ -18,3 +18,7 @@ WNTR version 1.5.0 includes the following updates:
 * Updated Conda release workflow by @kbonney in https://github.com/USEPA/WNTR/pull/571
 * Fixed type checking across package by @kbonney in https://github.com/USEPA/WNTR/pull/564
 * Improved Pull Request template format by @kbonney in https://github.com/USEPA/WNTR/pull/569
+* Peformed test suite cleanup by @kbonney in https://github.com/USEPA/WNTR/pull/570
+* Added geopandas backend for valve layer by @kbonney in https://github.com/USEPA/WNTR/pull/572
+* Fixed evaluation of TimeOfDayCondition by @kbonney in https://github.com/USEPA/WNTR/pull/566
+* Fixed partial link attribute plotting for 'gpd' backend by @kbonney in https://github.com/USEPA/WNTR/pull/573
