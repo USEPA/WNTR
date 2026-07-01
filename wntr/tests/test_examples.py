@@ -7,7 +7,7 @@ from os import listdir
 from os.path import isfile, join
 from subprocess import call
 
-from wntr.tests.conftest import (
+from _test_paths import (
     EXAMPLES_DIR as examplesdir,
 )
 

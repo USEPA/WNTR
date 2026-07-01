@@ -3,7 +3,7 @@ from os.path import join
 
 import wntr.epanet.exceptions
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as datadir,
 )
 

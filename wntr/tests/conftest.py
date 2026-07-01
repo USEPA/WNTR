@@ -2,11 +2,13 @@ import atexit
 import os
 import shutil
 import tempfile
-from os.path import abspath, dirname, join
+import warnings
+from os.path import abspath
 
-# Coerce mpl backend to non-interactive
+# Coerce mpl backend to non-interactive and suppress the resulting plt.show() warning
 import matplotlib
 matplotlib.use("Agg")
+warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
 
 
 # Manage working directory for testing
@@ -23,10 +25,3 @@ else:
 _original_cwd = os.getcwd()
 os.chdir(_test_cwd)
 atexit.register(os.chdir, _original_cwd)
-
-# Common dirs for testing
-TEST_DIR = dirname(abspath(__file__))
-NETWORKS_FOR_TESTING_DIR = join(TEST_DIR, "networks_for_testing")
-DATA_FOR_TESTING_DIR = join(TEST_DIR, "data_for_testing")
-EXAMPLES_NETWORKS_DIR = join(TEST_DIR, "..", "..", "examples", "networks")
-EXAMPLES_DIR = join(TEST_DIR, "..", "..", "examples")

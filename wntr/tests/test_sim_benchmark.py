@@ -25,7 +25,7 @@ from numpy import (
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
-from wntr.tests.conftest import (
+from _test_paths import (
     TEST_DIR as testdir,
 )
 

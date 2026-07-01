@@ -8,7 +8,7 @@ import matplotlib.pylab as plt
 import wntr
 from wntr.library import DemandPatternLibrary
 
-from wntr.tests.conftest import (
+from _test_paths import (
     EXAMPLES_NETWORKS_DIR as ex_datadir,
 )
 

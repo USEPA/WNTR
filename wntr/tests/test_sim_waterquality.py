@@ -8,7 +8,7 @@ if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
 else:
     skip_v2_tests_on_arm = False
 
-from wntr.tests.conftest import (
+from _test_paths import (
     EXAMPLES_NETWORKS_DIR as datadir,
 )
 

@@ -10,7 +10,7 @@ import pandas
 
 pandas.set_option("display.max_rows", 10000)
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as test_datadir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,
 )

@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     rasterio = None
     has_rasterio = False
     
-from wntr.tests.conftest import (
+from _test_paths import (
     TEST_DIR as testdir,
     NETWORKS_FOR_TESTING_DIR as datadir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,

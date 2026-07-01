@@ -4,7 +4,7 @@ from os.path import join
 
 from numpy.testing._private.utils import assert_string_equal
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as test_datadir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,
 )

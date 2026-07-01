@@ -7,7 +7,7 @@ import pandas as pd
 import wntr
 from wntr.sim.models.utils import ModelUpdater
 
-from wntr.tests.conftest import (
+from _test_paths import (
     DATA_FOR_TESTING_DIR as test_data_dir,
 )
 

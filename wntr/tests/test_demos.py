@@ -11,7 +11,7 @@ from pandas.testing import assert_frame_equal
 from nbconvert.preprocessors import ExecutePreprocessor
 
 kernel_name = 'python%d' % sys.version_info[0]
-from wntr.tests.conftest import (
+from _test_paths import (
     TEST_DIR as testdir,
     EXAMPLES_DIR as examplesdir,
 )
