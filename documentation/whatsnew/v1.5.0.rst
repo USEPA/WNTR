@@ -22,3 +22,4 @@ WNTR version 1.5.0 includes the following updates:
 * Added geopandas backend for valve layer by @kbonney in https://github.com/USEPA/WNTR/pull/572
 * Fixed evaluation of TimeOfDayCondition by @kbonney in https://github.com/USEPA/WNTR/pull/566
 * Fixed partial link attribute plotting for 'gpd' backend by @kbonney in https://github.com/USEPA/WNTR/pull/573
+* Fixed wheel testing by @kbonney in https://github.com/USEPA/WNTR/pull/574
