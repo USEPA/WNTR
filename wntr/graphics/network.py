@@ -595,6 +595,7 @@ def _plot_network_gpd(
     link_cbar = add_colorbar
     if link_attribute is not None:
         link_gdf["_attribute"] = pd.Series(_format_link_attribute(link_attribute, wn))
+        link_gdf = link_gdf[link_gdf["_attribute"].notna()]
         link_kwds["column"] = "_attribute"
         
         # handle cbar/cmap
@@ -634,8 +635,6 @@ def _plot_network_gpd(
     link_cbar_kwds["label"] = link_colorbar_label
     link_cbar_kwds["alpha"] = link_alpha
     
-    missing_link_kwds={"color": "black"}
-
     # plot nodes - each type is plotted separately to allow for different marker types
     node_gdf[node_gdf.node_type == "Junction"].plot(
         ax=ax, aspect=aspect, zorder=3, legend=False, label="Junction", **node_kwds)
@@ -661,7 +660,7 @@ def _plot_network_gpd(
     
     # main plot
     link_gdf.plot(
-        ax=ax, aspect=aspect, zorder=2, legend=False, missing_kwds=missing_link_kwds, **link_kwds)
+        ax=ax, aspect=aspect, zorder=2, legend=False, **link_kwds)
     
     if link_cbar:
         sm = mpl.cm.ScalarMappable(cmap=link_kwds["cmap"])
