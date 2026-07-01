@@ -11,7 +11,7 @@ from wntr import utils
 from wntr import extensions
 from wntr import msx
 
-__version__ = '1.5.0rc1'
+__version__ = '1.5.0'
 
 __copyright__ = """Copyright 2023-2025 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 
