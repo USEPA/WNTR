@@ -5,7 +5,7 @@ from os.path import join
 
 import pandas as pd
 
-from wntr.tests.conftest import (
+from _test_paths import (
     EXAMPLES_NETWORKS_DIR as ex_datadir,
 )
 

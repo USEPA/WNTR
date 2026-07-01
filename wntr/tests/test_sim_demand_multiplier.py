@@ -4,7 +4,7 @@ from os.path import join
 
 import wntr
 
-from wntr.tests.conftest import (
+from _test_paths import (
     EXAMPLES_NETWORKS_DIR as ex_datadir,
 )
 

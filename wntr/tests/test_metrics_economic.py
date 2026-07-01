@@ -5,7 +5,7 @@ import pandas as pd
 import wntr
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as datadir,
     EXAMPLES_NETWORKS_DIR as netdir,
 )

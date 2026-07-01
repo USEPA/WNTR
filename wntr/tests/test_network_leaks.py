@@ -2,7 +2,7 @@ import math
 import unittest
 from os.path import join
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as test_datadir,
 )
 

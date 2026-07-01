@@ -9,7 +9,7 @@ import wntr.msx
 import wntr.epanet.msx
 import wntr.epanet.msx.toolkit
 
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as test_network_dir,
 )
 inp_filename = join(test_network_dir, 'msx_example.inp')

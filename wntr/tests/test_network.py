@@ -14,7 +14,7 @@ except ModuleNotFoundError:
     gpd = None
     has_geopandas = False
     
-from wntr.tests.conftest import (
+from _test_paths import (
     NETWORKS_FOR_TESTING_DIR as test_network_dir,
     DATA_FOR_TESTING_DIR as test_data_dir,
     EXAMPLES_NETWORKS_DIR as ex_datadir,
