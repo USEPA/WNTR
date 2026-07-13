@@ -157,6 +157,66 @@ class TestEpanetUnits(unittest.TestCase):
         for flowunit in range(10):
             self.execute_check_qual(typestring, flowunit, data, data_expected)
 
+    def test_BulkReactionCoeff_order_dependence(self):
+        # Bulk rate law r = Kb * C^n => Kb has units (conc)^(1-n) / time.
+        # Order 1 only needs the day->second factor; other orders also need
+        # the concentration factor. Regression test for GitHub issue #531.
+        from wntr.epanet.util import (
+            to_si,
+            from_si,
+            FlowUnits,
+            MassUnits,
+            QualParam,
+        )
+
+        # Order 0: only the concentration factor and 1/86400 apply.
+        val = to_si(
+            FlowUnits.GPM,
+            0.45,
+            QualParam.BulkReactionCoeff,
+            mass_units=MassUnits.mg,
+            reaction_order=0,
+        )
+        self.assertAlmostEqual(val, 0.45 * 0.001 / 86400.0, places=15)
+
+        # Order 2: the concentration factor is inverted.
+        val = to_si(
+            FlowUnits.GPM,
+            0.45,
+            QualParam.BulkReactionCoeff,
+            mass_units=MassUnits.mg,
+            reaction_order=2,
+        )
+        self.assertAlmostEqual(val, 0.45 / 0.001 / 86400.0, places=15)
+
+        # Order 1 stays backward-compatible with the old /86400 conversion.
+        val = to_si(
+            FlowUnits.GPM,
+            0.45,
+            QualParam.BulkReactionCoeff,
+            mass_units=MassUnits.mg,
+            reaction_order=1,
+        )
+        self.assertAlmostEqual(val, 0.45 / 86400.0, places=15)
+
+        # from_si is the exact inverse of to_si for every order.
+        for order in (0, 1, 2):
+            si = to_si(
+                FlowUnits.GPM,
+                0.45,
+                QualParam.BulkReactionCoeff,
+                mass_units=MassUnits.mg,
+                reaction_order=order,
+            )
+            back = from_si(
+                FlowUnits.GPM,
+                si,
+                QualParam.BulkReactionCoeff,
+                mass_units=MassUnits.mg,
+                reaction_order=order,
+            )
+            self.assertAlmostEqual(back, 0.45, places=12)
+
     def execute_check(self, typestring, flowunit, data, data_expected):
         #    data_convert = wntr.utils.convert(typestring, flowunit, data)
         data_convert = wntr.epanet.util.HydParam[typestring]._to_si(
