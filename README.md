@@ -1,6 +1,7 @@
 <h1>
 <img src="https://raw.githubusercontent.com/usepa/wntr/main/documentation/_static/logo.jpg" width="375">
 </h1><br>
+<h2> Watter Attack Response & Detection (WARD) </h2>
 
 [![GitHub CI](https://github.com/USEPA/WNTR/actions/workflows/test_core.yml/badge.svg)](https://github.com/USEPA/WNTR/actions/workflows/test_repository.yml)
 [![Coverage Status](https://coveralls.io/repos/github/USEPA/WNTR/badge.svg?branch=main)](https://coveralls.io/github/USEPA/WNTR?branch=main)
