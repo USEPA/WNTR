@@ -338,7 +338,7 @@ class MsxModel(QualityModelBase):
     Arguments
     ---------
     msx_file_name : str, optional
-        MSX file to to load into the MsxModel object, by default None
+        MSX file to load into the MsxModel object, by default None
     """
 
     def __init__(self, msx_file_name=None) -> None:
@@ -730,7 +730,7 @@ class MsxModel(QualityModelBase):
         species : str or Species
             Species object or name
         node : str or Node
-            Juction, Tank or Reservoir object or name
+            Junction, Tank or Reservoir object or name
         strength : float or int
             The strength of the species at the source
         pattern : str or Pattern

@@ -846,7 +846,7 @@ class FormulaType(enum.Enum):
 
     ===============  ==================================================================
     :attr:`~HW`      Hazen-Williams headloss formula
-    :attr:`~DW`      Darcy-Weisbach formala; requires units conversion
+    :attr:`~DW`      Darcy-Weisbach formula; requires units conversion
     :attr:`~CM`      Chezy-Manning formula
     ===============  ==================================================================
 
@@ -861,7 +861,7 @@ class FormulaType(enum.Enum):
         1,
         "D-W",
     )
-    """Darcy-Weisbach formula, requires untis conversion."""
+    """Darcy-Weisbach formula, requires units conversion."""
     CM = (
         2,
         "C-M",
@@ -1055,7 +1055,7 @@ class EN(enum.IntEnum):
     - Quality analysis types: :attr:`~NONE`, :attr:`~CHEM`, :attr:`~AGE`, :attr:`~TRACE`
     - Source quality types: :attr:`~CONCEN`, :attr:`~MASS`, :attr:`~SETPOINT`, :attr:`~FLOWPACED`
     - Flow unit types: :attr:`~CFS`, :attr:`~GPM`, :attr:`~MGD`, :attr:`~IMGD`, :attr:`~AFD`, :attr:`~LPS`, :attr:`~LPM`, :attr:`~MLD`, :attr:`~CMH`, :attr:`~CMD`
-    - Miscelaneous options: :attr:`~TRIALS`, :attr:`~ACCURACY`, :attr:`~TOLERANCE`, :attr:`~EMITEXPON`, :attr:`~DEMANDMULT`
+    - Miscellaneous options: :attr:`~TRIALS`, :attr:`~ACCURACY`, :attr:`~TOLERANCE`, :attr:`~EMITEXPON`, :attr:`~DEMANDMULT`
     - Control types: :attr:`~LOWLEVEL`, :attr:`~HILEVEL`, :attr:`~TIMER`, :attr:`~TIMEOFDAY`
     - Time statistic types: :attr:`~NONE`, :attr:`~AVERAGE`, :attr:`~MINIMUM`, :attr:`~MAXIMUM`, :attr:`~RANGE`
     - Tank mixing model types: :attr:`~MIX1`, :attr:`~MIX2`, :attr:`~FIFO`, :attr:`~LIFO`
@@ -1179,7 +1179,7 @@ class EN(enum.IntEnum):
     CMH = 8
     CMD = 9
 
-    # Miscelaneous parameters
+    # Miscellaneous parameters
     TRIALS = 0
     ACCURACY = 1
     TOLERANCE = 2
