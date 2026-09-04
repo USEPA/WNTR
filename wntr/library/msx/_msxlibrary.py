@@ -155,7 +155,7 @@ class MsxLibrary:
         duplicates : {"error" | "skip" | "replace"}, optional
             by default ``"error"``
 
-            - A value of of ``"error"`` raises an exception and stops execution. 
+            - A value of ``"error"`` raises an exception and stops execution. 
             - A value of ``"skip"`` will skip models with the same `name` as a model that already
               exists in the library.
             - A value of ``"replace"`` will replace any existing model with a model that is read 
@@ -205,7 +205,7 @@ class MsxLibrary:
             **Warning**, if two files in the same directory have models with
             the same name, there is no guarantee which will be read in first,
             by default ``"error"``
-            - A value of of ``"error"`` raises an exception and stops execution
+            - A value of ``"error"`` raises an exception and stops execution
             - A value of ``"skip"`` will skip models with the same `name` as a
               model that already exists in the library.
             - A value of ``"replace"`` will replace any existing model with a

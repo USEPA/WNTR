@@ -116,7 +116,7 @@ for each of the following model components:
 * valves
 
 Note that patterns, curves, sources, controls, and options are not stored in the GeoDataFrame representation.
-See :ref:`geospatial` for more information on the the :class:`~wntr.gis.network.WaterNetworkGIS` object and the use of GeoDataFrames in WNTR. 
+See :ref:`geospatial` for more information on the :class:`~wntr.gis.network.WaterNetworkGIS` object and the use of GeoDataFrames in WNTR. 
 
 .. doctest::
     :skipif: gpd is None
