@@ -420,8 +420,8 @@ class InpFile(object):
         units : str, int or FlowUnits
             Name of the units for the EPANET INP file to be written in.
         version : float, {2.0, **2.2**}
-            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDD mode 
-            and supress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a 
+            Defaults to 2.2; use 2.0 to guarantee backward compatibility, but this will turn off PDD mode
+            and suppress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a
             warning will be issued.
         force_coordinates : bool
             This only applies if `self.options.graphics.map_filename` is not `None`,
