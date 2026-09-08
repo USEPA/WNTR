@@ -1,5 +1,5 @@
 .. attention:: 
-    Version 1.4.0 is now available.  
+    Version 1.5.0 is now available.  
     See `release notes <https://usepa.github.io/WNTR/whatsnew.html>`_
     for more information.
  
