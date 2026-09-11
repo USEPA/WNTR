@@ -14,9 +14,10 @@ Extensions
 WNTR extensions are intended to house beta and self-contained functionality that adds to WNTR, 
 but is currently not part of core WNTR development.  The extensions should be designed for a wide audience.
 
-WNTR currently includes the following extension:
+WNTR currently includes the following extensions:
 
-- :ref:`hello_world`
+* :ref:`hello_world`
+* :ref:`hydraulic_design_verification`
 
 Additional extensions will be added at a later date.
 
