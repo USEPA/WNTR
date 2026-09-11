@@ -640,6 +640,15 @@ class TestControlParsing(unittest.TestCase):
         self.assertEqual(action._attribute, "status")
         self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
         
+    def test_controls_format_link_status_clocktime_decimal_hours(self):
+        """Test CONTROLS format: LINK element status AT CLOCKTIME with decimal hours"""
+        line = "LINK pipe1 CLOSED AT CLOCKTIME 5.5"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TimeOfDayCondition)
+        self.assertEqual(control._condition._threshold, int(5.5 * 3600))
+        
     def test_controls_format_link_status_conditional(self):
         """Test CONTROLS format: LINK element status IF NODE condition"""
         line = "LINK pipe1 CLOSED IF NODE tank1 BELOW 30"
@@ -702,6 +711,15 @@ class TestControlParsing(unittest.TestCase):
         self.assertEqual(action._target_obj.name, "pipe1")
         self.assertEqual(action._attribute, "status")
         self.assertEqual(action._value, self.wntr.network.LinkStatus.Closed)
+        
+    def test_rules_format_clocktime_decimal_hours(self):
+        """Test RULES format: IF SYSTEM CLOCKTIME with decimal hours"""
+        line = "IF SYSTEM CLOCKTIME IS 5.5 THEN LINK pipe1 IS CLOSED"
+        control = _read_control_line(line, self.wn, self.flow_units, "test_control")
+        
+        self.assertEqual(control.epanet_control_type.name, "presolve")
+        self.assertIsInstance(control._condition, self.wntr.network.controls.TimeOfDayCondition)
+        self.assertEqual(control._condition._threshold, int(5.5 * 3600))
         
     def test_rules_format_tank_level_condition(self):
         """Test RULES format: IF TANK level condition THEN action"""
@@ -831,6 +849,16 @@ class TestTimeOfDayCondition(unittest.TestCase):
         wn._prev_sim_time = prev_time
         wn.sim_time = cur_time
         return condition.evaluate()
+
+    def test_decimal_hours_float_threshold(self):
+        wn = wntr.network.WaterNetworkModel()
+        condition = wntr.network.controls.TimeOfDayCondition(wn, None, 5.5)
+        self.assertEqual(condition._threshold, 5.5 * 3600)
+
+    def test_decimal_hours_string_threshold(self):
+        wn = wntr.network.WaterNetworkModel()
+        condition = wntr.network.controls.TimeOfDayCondition(wn, None, "5.5")
+        self.assertEqual(condition._threshold, 5.5 * 3600)
 
     def test_eq_fires_once_per_day_at_threshold(self):
         wn = wntr.network.WaterNetworkModel()

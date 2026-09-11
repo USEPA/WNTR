@@ -3070,6 +3070,10 @@ def _parse_rule_condition(condition_tokens, wn, flow_units):
             time_value = condition_tokens[3]  # After operator
             if len(condition_tokens) > 4 and condition_tokens[4].upper() in ['AM', 'PM']:
                 run_at_time = int(_clock_time_to_sec(time_value, condition_tokens[4]))
+            elif ':' in time_value:
+                run_at_time = int(_str_time_to_sec(time_value))
+            elif _is_number(time_value):
+                run_at_time = int(float(time_value) * 3600)
             else:
                 run_at_time = int(_str_time_to_sec(time_value))
             return 'time', {
@@ -3302,6 +3306,10 @@ def _read_control_line(line, wn, flow_units, control_name):
                 time_value = current[5]
                 if len(current) > 6 and current[6].upper() in ['AM', 'PM']:
                     run_at_time = int(_clock_time_to_sec(time_value, current[6]))
+                elif ':' in time_value:
+                    run_at_time = int(_str_time_to_sec(time_value))
+                elif _is_number(time_value):
+                    run_at_time = int(float(time_value) * 3600)
                 else:
                     run_at_time = int(_str_time_to_sec(time_value))
                 return Control._time_control(wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)

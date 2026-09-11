@@ -339,6 +339,23 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
                 v += PM
             return v
 
+    @classmethod
+    def _parse_time_threshold(cls, threshold, *, clocktime=False):
+        """Parse a time threshold to seconds.
+
+        String values without ':' are decimal hours. HH:MM[:SS] strings are
+        parsed via :meth:`_parse_value`. Numeric values already in seconds
+        (from tests or :meth:`Control._time_control`) are passed through.
+        """
+        if isinstance(threshold, str):
+            if ':' in threshold:
+                return cls._parse_value(threshold)
+            return float(threshold.split()[0]) * 3600.
+        v = float(threshold)
+        if clocktime:
+            return v * 3600. if v <= 24. else v
+        return v if isinstance(threshold, int) or v >= 3600 else v * 3600.
+
     def _repr_value(self, attr, value):
         if attr.lower() in ['status'] and isinstance(value, str):
             return value.upper()
@@ -418,10 +435,7 @@ class TimeOfDayCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
-        if isinstance(threshold, str) and not ':' in threshold:
-            self._threshold = float(threshold) * 3600.
-        else:
-            self._threshold = self._parse_value(threshold)
+        self._threshold = self._parse_time_threshold(threshold, clocktime=True)
         if relation is None:
             self._relation = Comparison.eq
         else:
@@ -573,10 +587,7 @@ class SimTimeCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=False, first_time=0):
         self._model = model
-        if isinstance(threshold, str) and not ':' in threshold:
-            self._threshold = float(threshold) * 3600.
-        else:
-            self._threshold = self._parse_value(threshold)
+        self._threshold = self._parse_time_threshold(threshold, clocktime=False)
         if relation is None:
             self._relation = Comparison.eq
         else:
