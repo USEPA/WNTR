@@ -795,6 +795,12 @@ class TestControlParsing(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _read_control_line(line, self.wn, self.flow_units, "test_control")
             
+    def test_invalid_at_condition(self):
+        """Test CONTROLS format with an unknown AT condition keyword"""
+        line = "LINK pipe1 OPEN AT FOO 12"
+        with self.assertRaises(RuntimeError):
+            _read_control_line(line, self.wn, self.flow_units, "test_control")
+
     def test_operator_aliases(self):
         """Test different operator aliases (ABOVE vs >, BELOW vs <)"""
         line1 = "LINK pipe1 CLOSED IF NODE tank1 ABOVE 30"
