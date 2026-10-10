@@ -185,7 +185,7 @@ class NewtonSolver(object):
 
             # Backtracking
             alpha = 1.0
-            if self.bt and outer_iter >= self.bt_start_iter:
+            if self.bt and self.bt_maxiter > 0 and outer_iter >= self.bt_start_iter:
                 use_r_ = True
                 for iter_bt in range(self.bt_maxiter):
                     x_ = x + alpha * d
