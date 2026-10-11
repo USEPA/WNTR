@@ -6,7 +6,6 @@ intersects with polygons.
 import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
-from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
 from wntr.utils.check_values import _check_bool, _check_float, _check_str

@@ -2,14 +2,10 @@
 
 import pandas as pd
 import numpy as np
-import scipy.sparse as sparse
 import math
 import warnings
 import logging
 from wntr.network.model import WaterNetworkModel
-from wntr.network.base import NodeType, LinkType, LinkStatus
-from wntr.network.elements import Junction, Tank, Reservoir, Pipe, Pump, HeadPump, PowerPump, PRValve, PSValve, FCValve, \
-    TCValve, GPValve, PBValve
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 from wntr.sim import aml
@@ -298,9 +294,6 @@ def get_results(wn, results, node_res, link_res):
     node_res: collections.OrderedDict
     link_res: collections.OrderedDict
     """
-    ntimes = len(results.time)
-    nnodes = wn.num_nodes
-    nlinks = wn.num_links
     node_names = wn.junction_name_list + wn.tank_name_list + wn.reservoir_name_list
     link_names = wn.pipe_name_list + wn.head_pump_name_list + wn.power_pump_name_list + wn.valve_name_list
 

@@ -9,10 +9,8 @@ import types
 from wntr.utils.ordered_set import OrderedSet
 
 import enum
-import sys
-from collections.abc import MutableSequence, MutableMapping
+from collections.abc import MutableMapping
 from collections import OrderedDict
-from wntr.utils.ordered_set import OrderedSet
 
 import abc
 

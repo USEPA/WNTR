@@ -201,7 +201,7 @@ Water quality results
 ---------------------
 Water quality metrics are stored under the 'quality' key of the node and link results
 if the EpanetSimulator is used. The units of the quality results depend on the quality
-parameter that is used (see :ref:`_water_quality_simulation`) and can be the age,
+parameter that is used (see :ref:`water_quality_simulation`) and can be the age,
 concentration, or the fraction of water that belongs to a tracer. If the parameter
 is set to 'NONE', then the quality results will be zero. 
 
