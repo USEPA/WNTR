@@ -7,7 +7,6 @@ demands, curves, and sources.
 from __future__ import annotations
 
 import numpy as np
-import sys
 import logging
 import math
 import copy

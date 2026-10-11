@@ -6,8 +6,6 @@ from wntr.sim.solvers import NewtonSolver, SolverStatus
 import wntr.sim.results
 import numpy as np
 import warnings
-import time
-import sys
 import logging
 import scipy.optimize
 import scipy.sparse

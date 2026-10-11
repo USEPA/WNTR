@@ -7,7 +7,6 @@ from collections import OrderedDict
 from typing import List, Union
 from warnings import warn
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 import six
