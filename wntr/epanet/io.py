@@ -3306,7 +3306,7 @@ def _read_control_line(line, wn, flow_units, control_name):
                     run_at_time = int(_str_time_to_sec(time_value))
                 return Control._time_control(wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
             else:
-                raise RuntimeError(f"Unknown operator {operator} in control: {line}")
+                raise RuntimeError(f"Unknown operator {current[4]} in control: {line}")
         
         elif len(current) > 3 and current[3].upper() == 'IF':
             # Conditional: LINK element status IF NODE node_name ABOVE/BELOW value
