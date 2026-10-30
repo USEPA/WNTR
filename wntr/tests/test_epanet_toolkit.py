@@ -1,8 +1,10 @@
 import unittest
+from unittest import mock
 from os.path import join, exists
 import sys, platform
 
 import wntr.epanet.toolkit
+import wntr.epanet.msx.toolkit
 
 if 'darwin' in sys.platform.lower() and 'arm' in platform.platform().lower():
     skip_v2_tests_on_arm = True
@@ -139,6 +141,22 @@ class TestEpanetToolkit(unittest.TestCase):
             enData.ENcloseH()
 
             assert (t == 86400)
+
+
+class TestLinuxMachine(unittest.TestCase):
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "the check applies to Linux only")
+    def test_non_x86_64_raises(self):
+        # The included Linux libraries are x86-64; on another CPU the error
+        # must name the CPU rather than say the file cannot be opened (#584)
+        with mock.patch("platform.machine", return_value="aarch64"):
+            with self.assertRaisesRegex(NotImplementedError, "aarch64"):
+                wntr.epanet.toolkit.ENepanet()
+            with self.assertRaisesRegex(NotImplementedError, "aarch64"):
+                wntr.epanet.msx.toolkit.MSXepanet()
+        with mock.patch("platform.machine", return_value="x86_64"):
+            wntr.epanet.toolkit._check_linux_machine()
+
 
 if __name__ == "__main__":
     unittest.main()

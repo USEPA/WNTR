@@ -20,7 +20,7 @@ from importlib.resources import files
 
 from wntr.epanet.msx.enums import TkObjectType, TkSourceType
 
-from ..toolkit import ENepanet
+from ..toolkit import ENepanet, _check_linux_machine
 from .exceptions import (MSX_ERROR_CODES, EpanetMsxException, MSXKeyError,
                          MSXValueError)
 
@@ -45,6 +45,7 @@ class MSXepanet(ENepanet):
         self.msxfile = msxfile
 
         try:
+            _check_linux_machine()
             if os.name in ["nt", "dos"]:
                 libepanet = str(files('wntr.epanet').joinpath("libepanet/windows-x64/epanet2.dll"))
                 libmsx = str(files('wntr.epanet').joinpath("libepanet/windows-x64/epanetmsx.dll"))
