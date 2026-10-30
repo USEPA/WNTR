@@ -728,6 +728,75 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             results = sim.run_sim()
         
-            
+
+
+class TestReactionOrders(unittest.TestCase):
+    # Bulk coefficient units depend on the reaction order (see #531), so the
+    # reader must use the ORDER lines wherever they appear in [REACTIONS],
+    # and tank coefficients must use ORDER TANK, as EPANET does
+    inp_text = """
+[JUNCTIONS]
+ j1  10  1
+[RESERVOIRS]
+ r1  100
+[TANKS]
+ t1  50  5  0  10  10  0
+[PIPES]
+ p1  r1  j1  1000  12  100  0  Open
+ p2  j1  t1  1000  12  100  0  Open
+[REACTIONS]
+ Global Bulk  -0.5
+ Bulk   p1    -0.3
+ Tank   t1    -0.2
+ Order  Bulk  0
+ Order  Tank  2
+[OPTIONS]
+ Units   GPM
+ Quality Chlorine mg/L
+[END]
+"""
+
+    @classmethod
+    def setUpClass(self):
+        import wntr
+        from wntr.epanet.util import to_si, FlowUnits, QualParam
+
+        self.wntr = wntr
+        with open("temp_reaction_orders.inp", "w") as f:
+            f.write(self.inp_text)
+        self.wn = wntr.network.WaterNetworkModel("temp_reaction_orders.inp")
+
+        def kb(value, order):
+            return to_si(FlowUnits.GPM, value, QualParam.BulkReactionCoeff,
+                         reaction_order=order)
+        self.kb = staticmethod(kb)
+
+    @classmethod
+    def tearDownClass(self):
+        import os
+
+        for name in ["temp_reaction_orders.inp", "temp_reaction_orders2.inp"]:
+            if os.path.exists(name):
+                os.remove(name)
+
+    def test_orders(self):
+        self.assertEqual(self.wn.options.reaction.bulk_order, 0)
+        self.assertEqual(self.wn.options.reaction.tank_order, 2)
+
+    def test_order_lines_after_coefficients(self):
+        self.assertAlmostEqual(self.wn.options.reaction.bulk_coeff, self.kb(-0.5, 0), places=15)
+        self.assertAlmostEqual(self.wn.get_link("p1").bulk_coeff, self.kb(-0.3, 0), places=15)
+
+    def test_tank_coefficient_uses_tank_order(self):
+        self.assertAlmostEqual(self.wn.get_node("t1").bulk_coeff, self.kb(-0.2, 2), places=12)
+
+    def test_write_read_round_trip(self):
+        self.wntr.network.write_inpfile(self.wn, "temp_reaction_orders2.inp", "GPM")
+        wn2 = self.wntr.network.WaterNetworkModel("temp_reaction_orders2.inp")
+        self.assertAlmostEqual(wn2.options.reaction.bulk_coeff, self.wn.options.reaction.bulk_coeff, places=15)
+        self.assertAlmostEqual(wn2.get_link("p1").bulk_coeff, self.wn.get_link("p1").bulk_coeff, places=15)
+        self.assertAlmostEqual(wn2.get_node("t1").bulk_coeff, self.wn.get_node("t1").bulk_coeff, places=12)
+
+
 if __name__ == "__main__":
     unittest.main()
