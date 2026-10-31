@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 from os.path import join, exists
 import sys, platform
 
@@ -15,6 +16,33 @@ from _test_paths import (
 
 
 class TestEpanetToolkit(unittest.TestCase):
+
+    def test_ENopen_parser_lock(self):
+        toolkit = wntr.epanet.toolkit
+        library = Mock()
+
+        def open_file(*args):
+            self.assertTrue(toolkit._EN_OPEN_LOCK.locked())
+            return 0
+
+        def solve_hydraulics(*args):
+            self.assertFalse(toolkit._EN_OPEN_LOCK.locked())
+            return 0
+
+        library.EN_close.return_value = 0
+        library.EN_open.side_effect = open_file
+        library.EN_solveH.side_effect = solve_hydraulics
+        loader = "windll" if sys.platform == "win32" else "cdll"
+        with patch.object(getattr(toolkit.ctypes, loader), "LoadLibrary", return_value=library):
+            en = toolkit.ENepanet(version=2.2)
+        en.ENopen("model.inp", "model.rpt", "model.bin")
+        en.ENsolveH()
+        en.ENclose()
+
+        library.EN_open.side_effect = RuntimeError("native open failed")
+        with self.assertRaisesRegex(RuntimeError, "native open failed"):
+            en.ENopen("model.inp", "model.rpt", "model.bin")
+        self.assertFalse(toolkit._EN_OPEN_LOCK.locked())
 
     def test_isOpen(self):
         for version in [2.0, 2.2,]:

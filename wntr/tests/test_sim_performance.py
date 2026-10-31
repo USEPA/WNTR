@@ -2,8 +2,7 @@ import sys
 import unittest
 import pytest
 from os.path import join
-import threading
-import time
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 import pandas
@@ -249,63 +248,47 @@ class TestPerformance(unittest.TestCase):
         )
     
     @pytest.mark.time_consuming
-    def test_Net6_thread_performance(self):
-        """
-        Test thread-safe performance of simulators
-        """
-        def run_epanet(wn, name):
-            sim = self.wntr.sim.EpanetSimulator(wn)
-            sim.run_sim(name, version=2.2)
-
-        def run_wntr(wn, name):
-            sim = self.wntr.sim.WNTRSimulator(wn)
-            sim.run_sim()
-
+    def test_Net6_thread_results(self):
+        """Compare threaded and sequential results for both simulators."""
         inp_file = join(ex_datadir, "Net6.inp")
-        wn1 = self.wntr.network.WaterNetworkModel(inp_file)
-        wn1.options.time.duration = 24 * 3600
-        wn1.options.time.hydraulic_timestep = 3600
-        wn1.options.time.report_timestep = 3600
-        wn1.remove_control(
-            "control 72"
-        )  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
-        wn2 = self.wntr.network.WaterNetworkModel(inp_file)
-        wn2.options.time.duration = 24 * 3600
-        wn2.options.time.hydraulic_timestep = 3600
-        wn2.options.time.report_timestep = 3600
-        wn2.remove_control(
-            "control 72"
-        )  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
 
-        start_time = time.time()
-        run_epanet(wn1, 'temp1')
-        run_epanet(wn2, 'temp2')
-        seq_time = time.time()-start_time
+        def run_sim(simulator_type, name):
+            # Each run needs a fresh model because WNTR stores simulation state.
+            wn = self.wntr.network.WaterNetworkModel(inp_file)
+            wn.options.time.duration = 24 * 3600
+            wn.options.time.hydraulic_timestep = 3600
+            wn.options.time.report_timestep = 3600
+            # EPANET does not activate this control at the tank's maximum level.
+            wn.remove_control("control 72")
+            sim = simulator_type(wn)
+            if simulator_type is self.wntr.sim.EpanetSimulator:
+                return sim.run_sim(name, version=2.2)
+            return sim.run_sim()
 
-        t1 = threading.Thread(target=run_epanet, args=(wn1, 'temp1'))
-        t2 = threading.Thread(target=run_epanet, args=(wn2, 'temp2'))
-        start_time = time.time()
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        thr_time = time.time()-start_time
-        self.assertGreaterEqual(seq_time - thr_time, -1, 'EPANET threading took 1s longer than sequential')
+        for simulator_type in (self.wntr.sim.EpanetSimulator, self.wntr.sim.WNTRSimulator):
+            with self.subTest(simulator=simulator_type.__name__):
+                sequential = [run_sim(simulator_type, f"seq{i}") for i in range(2)]
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    futures = [
+                        executor.submit(run_sim, simulator_type, f"thr{i}")
+                        for i in range(2)
+                    ]
+                    threaded = [future.result() for future in futures]
 
-        start_time = time.time()
-        run_wntr(wn1, 'temp1')
-        run_wntr(wn2, 'temp2')
-        seq_time = time.time()-start_time
-
-        t1 = threading.Thread(target=run_wntr, args=(wn1, 'temp1'))
-        t2 = threading.Thread(target=run_wntr, args=(wn2, 'temp2'))
-        start_time = time.time()
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        thr_time = time.time()-start_time
-        self.assertGreaterEqual(seq_time - thr_time, -1, 'WNTR threading took 1s longer than sequential')
+                for expected, actual in zip(sequential, threaded, strict=True):
+                    for expected_data, actual_data in (
+                        (expected.node, actual.node), (expected.link, actual.link)
+                    ):
+                        assert expected_data
+                        assert actual_data
+                        self.assertEqual(expected_data.keys(), actual_data.keys())
+                        for variable in expected_data:
+                            # Independent WNTR solves use a default residual tolerance of 1e-6.
+                            pandas.testing.assert_frame_equal(
+                                expected_data[variable],
+                                actual_data[variable],
+                                check_exact=False, rtol=1e-6, atol=1e-6,
+                            )
         
     @pytest.mark.time_consuming
     def test_Net6_mod_performance(self):

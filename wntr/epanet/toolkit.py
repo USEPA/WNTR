@@ -9,6 +9,7 @@ import os.path
 import platform
 import sys
 from ctypes import byref
+from threading import Lock
 
 from importlib.resources import files
 
@@ -18,6 +19,9 @@ from .util import SizeLimits
 logger = logging.getLogger(__name__)
 
 epanet_toolkit = "wntr.epanet.toolkit"
+
+# The bundled EPANET input parser uses process-global strtok state.
+_EN_OPEN_LOCK = Lock()
 
 if os.name in ["nt", "dos"]:
     libepanet = "libepanet/windows-x64/epanet22.dll"
@@ -77,6 +81,8 @@ class ENepanet:
     the EPANET object that is created when a file is loaded.
 
     This simulator is thread safe **only** for EPANET `version=2.2`.
+    Input parsing is serialized because the bundled parser uses shared state.
+    With EPANET 2.2, hydraulic and water-quality calculations can run concurrently.
 
     Parameters
     ----------
@@ -176,7 +182,8 @@ class ENepanet:
             rptfile = rptfile.encode("latin-1")
             binfile = binfile.encode("latin-1")
             self.ENlib.EN_createproject(ctypes.byref(self._project))
-            self.errcode = self.ENlib.EN_open(self._project, inpfile, rptfile, binfile)
+            with _EN_OPEN_LOCK:
+                self.errcode = self.ENlib.EN_open(self._project, inpfile, rptfile, binfile)
             self._error()
             if self.errcode < 100:
                 self.fileLoaded = True
@@ -195,7 +202,8 @@ class ENepanet:
             inpfile = inpfile.encode("latin-1")
             rptfile = rptfile.encode("latin-1")
             binfile = binfile.encode("latin-1")
-            self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
+            with _EN_OPEN_LOCK:
+                self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
             self._error()
             if self.errcode < 100:
                 self.fileLoaded = True
