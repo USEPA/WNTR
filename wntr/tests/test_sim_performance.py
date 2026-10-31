@@ -283,10 +283,11 @@ class TestPerformance(unittest.TestCase):
                         assert actual_data
                         self.assertEqual(expected_data.keys(), actual_data.keys())
                         for variable in expected_data:
+                            # Independent WNTR solves use a default residual tolerance of 1e-6.
                             pandas.testing.assert_frame_equal(
                                 expected_data[variable],
                                 actual_data[variable],
-                                check_exact=False, rtol=1e-6, atol=1e-8,
+                                check_exact=False, rtol=1e-6, atol=1e-6,
                             )
         
     @pytest.mark.time_consuming
