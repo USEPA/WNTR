@@ -350,8 +350,11 @@ class QualParam(enum.Enum):
         elif self in [QualParam.SourceMassInject]:
             data = data * (mass_units.factor / 60.0)  # MASS /min to kg/s
 
-        elif self in [QualParam.BulkReactionCoeff] and reaction_order == 1:
-            data = data * (1 / 86400.0)  # per day to per second
+        elif self in [QualParam.BulkReactionCoeff]:
+            # Bulk rate law r = Kb * C^n, so Kb has units (conc)^(1-n) / time.
+            # The concentration factor mirrors the Concentration branch above.
+            conc = mass_units.factor / 0.001  # kg/m3 per (MASS/L)
+            data = data * conc ** (1 - reaction_order) / 86400.0  # per day to per second
 
         elif self in [QualParam.WallReactionCoeff] and reaction_order == 0:
             if flow_units.is_traditional:
@@ -420,8 +423,10 @@ class QualParam(enum.Enum):
         elif self in [QualParam.SourceMassInject]:
             data = data / (mass_units.factor / 60.0)  # MASS /min fr kg/s
 
-        elif self in [QualParam.BulkReactionCoeff] and reaction_order == 1:
-            data = data / (1 / 86400.0)  # per day fr per second
+        elif self in [QualParam.BulkReactionCoeff]:
+            # Inverse of _to_si: Kb has units (conc)^(1-n) / time.
+            conc = mass_units.factor / 0.001  # kg/m3 per (MASS/L)
+            data = data * 86400.0 / conc ** (1 - reaction_order)  # per day fr per second
 
         elif self in [QualParam.WallReactionCoeff] and reaction_order == 0:
             if flow_units.is_traditional:
@@ -1289,7 +1294,7 @@ def to_si(
     reaction coefficients depend on the reaction order.
 
     >>> to_si(FlowUnits.GPM, 0.45, QualParam.BulkReactionCoeff, reaction_order=0)
-    0.45
+    5.208333333333334e-09
     >>> to_si(FlowUnits.GPM, 0.45, QualParam.BulkReactionCoeff, reaction_order=1)
     5.208333333333333e-06
 
