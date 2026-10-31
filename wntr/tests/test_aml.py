@@ -361,6 +361,39 @@ class TestCSRJacobian(unittest.TestCase):
                 self.assertTrue(true_jac[c][v] == A[c.index, v.index])
 
 
+class TestStructureOrder(unittest.TestCase):
+    def test_structure_follows_creation_order(self):
+        # set_structure() used to number vars and constraints by heap address, so the
+        # Jacobian ordering (and the solver's rounding) changed from run to run (#585).
+        n = 100
+        m = aml.Model()
+        # Free memory first so new objects reuse it and addresses stop following creation order.
+        m.tmp = aml.ConstraintDict()
+        for i in range(n):
+            m.tmp[i] = aml.Constraint(aml.Var(0.0) - aml.Var(0.0))
+        for i in range(n):
+            del m.tmp[i]
+
+        m.x = aml.VarDict()
+        m.c = aml.ConstraintDict()
+        for i in range(n):
+            m.x[i] = aml.Var(float(i))
+        for i in range(n - 10):
+            m.c[i] = aml.Constraint(m.x[i] + m.x[i + 1] - i)
+        # IfElseConstraints are numbered after the regular constraints; the last row wraps to x[0].
+        for i in range(n - 10, n):
+            e = aml.ConditionalExpression()
+            e.add_condition(aml.inequality(body=m.x[i], ub=0), m.x[i])
+            e.add_final_expr(m.x[i] + m.x[(i + 1) % n])
+            m.c[i] = aml.Constraint(e)
+        m.set_structure()
+
+        np.testing.assert_array_equal(m.get_x(), np.arange(n))
+        self.assertEqual([v.index for v in m.vars()], list(range(n)))
+        self.assertEqual([c.index for c in m.cons()], list(range(n)))
+        self.assertTrue(m.evaluate_jacobian().has_sorted_indices)
+
+
 class TestExceptions(unittest.TestCase):
     def test_structure_exception(self):
         m = aml.Model()
