@@ -257,6 +257,9 @@ Requirements
 
 Requirements for WNTR include 64-bit Python (tested on versions 3.11, 3.12, and 3.13) along with several Python packages. 
 Users should have experience using Python (https://www.python.org/), including the installation of additional Python packages. 
+The EPANET libraries included with WNTR, which the EpanetSimulator uses, are built for x86-64 on Linux and Windows,
+and for both Intel and Apple silicon on macOS.
+On Linux on other processors (aarch64, for example), the WNTRSimulator can be used but the EpanetSimulator cannot.
 
 **The following Python packages are required**:
 
