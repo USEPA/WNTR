@@ -1,6 +1,9 @@
 """The EPANET simulator.
 """
 
+import os
+import shutil
+import tempfile
 from wntr.sim.core import WaterNetworkSimulator
 from wntr.network.io import write_inpfile
 import wntr.epanet
@@ -8,6 +11,19 @@ import warnings
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def default_file_prefix() -> str:
+    """
+    Create a unique file prefix in a private temp directory.
+
+    Used by :meth:`EpanetSimulator.run_sim` when no ``file_prefix`` is
+    given, so that simulations running in the same working directory
+    (e.g., multiple processes) do not overwrite each other's temporary
+    files. The temp directory is created with :func:`tempfile.mkdtemp`
+    and removed again when the run finishes.
+    """
+    return os.path.join(tempfile.mkdtemp(prefix='wntr_'), 'sim')
 
 try:
     import wntr.epanet.toolkit
@@ -64,7 +80,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
-    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, 
+    def run_sim(self, file_prefix=None, save_hyd=False, use_hyd=False, hydfile=None,
                 version=2.2, convergence_error=False):
 
         """
@@ -84,7 +100,14 @@ class EpanetSimulator(WaterNetworkSimulator):
         Parameters
         ----------
         file_prefix : str
-            Default prefix is "temp". All files (.inp, .bin/.out, .hyd, .rpt) use this prefix
+            Default prefix is None, which creates a unique prefix in the system
+            temp directory (see :func:`default_file_prefix`); those temporary
+            files are removed again when the run finishes. All files (.inp,
+            .bin/.out, .hyd, .rpt) use this prefix. Pass an explicit
+            ``file_prefix`` to keep the files. With the default prefix, a
+            hydraulics file saved with ``save_hyd`` or read with ``use_hyd``
+            is still "temp.hyd" in the working directory, unless ``hydfile``
+            is given
         use_hyd : bool
             Will load hydraulics from ``file_prefix + '.hyd'`` or from file specified in `hydfile_name`
         save_hyd : bool
@@ -102,56 +125,79 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         if isinstance(version, str):
             version = float(version)
+        temp_dir = None
+        if file_prefix is None:
+            file_prefix = default_file_prefix()
+            # private temp directory, removed again when the run finishes
+            temp_dir = os.path.dirname(file_prefix)
+            if (save_hyd or use_hyd) and hydfile is None:
+                # a saved or reused hydraulics file has to outlive the run,
+                # so it keeps the previous default name
+                hydfile = 'temp.hyd'
         inpfile = file_prefix + '.inp'
-        write_inpfile(self._wn, inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
-        enData = wntr.epanet.toolkit.ENepanet(version=version)
-        self.enData = enData
-        rptfile = file_prefix + '.rpt'
-        outfile = file_prefix + '.bin'
-        if self._wn._msx is not None:
-            save_hyd = True
-        if hydfile is None:
-            hydfile = file_prefix + '.hyd'
-        enData.ENopen(inpfile, rptfile, outfile)
-        if use_hyd:
-            enData.ENusehydfile(hydfile)
-            logger.debug('Loaded hydraulics')
-        else:
-            enData.ENsolveH()
-            logger.debug('Solved hydraulics')
-        if save_hyd:
-            enData.ENsavehydfile(hydfile)
-            logger.debug('Saved hydraulics')
-        enData.ENsolveQ()
-        logger.debug('Solved quality')
-        enData.ENreport()
-        logger.debug('Ran quality')
-        enData.ENclose()
-        logger.debug('Completed run')
-        #os.sys.stderr.write('Finished Closing\n')
-        
-        results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+        enData = None
+        try:
+            write_inpfile(self._wn, inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
+            enData = wntr.epanet.toolkit.ENepanet(version=version)
+            self.enData = enData
+            closed = False
+            rptfile = file_prefix + '.rpt'
+            outfile = file_prefix + '.bin'
+            if self._wn._msx is not None:
+                save_hyd = True
+            if hydfile is None:
+                hydfile = file_prefix + '.hyd'
+            enData.ENopen(inpfile, rptfile, outfile)
+            if use_hyd:
+                enData.ENusehydfile(hydfile)
+                logger.debug('Loaded hydraulics')
+            else:
+                enData.ENsolveH()
+                logger.debug('Solved hydraulics')
+            if save_hyd:
+                enData.ENsavehydfile(hydfile)
+                logger.debug('Saved hydraulics')
+            enData.ENsolveQ()
+            logger.debug('Solved quality')
+            enData.ENreport()
+            logger.debug('Ran quality')
+            enData.ENclose()
+            closed = True
+            logger.debug('Completed run')
+            #os.sys.stderr.write('Finished Closing\n')
 
-        if self._wn._msx is not None:
-            # Attributed to Matthew's package
-            msxfile = file_prefix + '.msx'
-            rptfile = file_prefix + '.msx-rpt'
-            binfile = file_prefix + '.msx-bin'
-            msxfile2 = file_prefix + '.check.msx'
-            wntr.epanet.msx.io.MsxFile.write(msxfile, self._wn._msx)
-            msx = wntr.epanet.msx.MSXepanet(inpfile, rptfile, outfile, msxfile)
-            msx.ENopen(inpfile, rptfile, outfile)
-            msx.MSXopen(msxfile)
-            msx.MSXusehydfile(hydfile)
-            msx.MSXinit()
-            msx.MSXsolveH()
-            msx.MSXsolveQ()
-            msx.MSXreport()
-            msx.MSXsaveoutfile(binfile)
-            msx.MSXsavemsxfile(msxfile2)
-            msx.MSXclose()
-            msx.ENclose()
-            results = wntr.epanet.msx.io.MsxBinFile(binfile, self._wn, results)
+            results = self.reader.read(outfile, convergence_error, self._wn.options.hydraulic.headloss=='D-W')
+
+            if self._wn._msx is not None:
+                # Attributed to Matthew's package
+                msxfile = file_prefix + '.msx'
+                rptfile = file_prefix + '.msx-rpt'
+                binfile = file_prefix + '.msx-bin'
+                msxfile2 = file_prefix + '.check.msx'
+                wntr.epanet.msx.io.MsxFile.write(msxfile, self._wn._msx)
+                msx = wntr.epanet.msx.MSXepanet(inpfile, rptfile, outfile, msxfile)
+                msx.ENopen(inpfile, rptfile, outfile)
+                msx.MSXopen(msxfile)
+                msx.MSXusehydfile(hydfile)
+                msx.MSXinit()
+                msx.MSXsolveH()
+                msx.MSXsolveQ()
+                msx.MSXreport()
+                msx.MSXsaveoutfile(binfile)
+                msx.MSXsavemsxfile(msxfile2)
+                msx.MSXclose()
+                msx.ENclose()
+                results = wntr.epanet.msx.io.MsxBinFile(binfile, self._wn, results)
+        finally:
+            if temp_dir is not None:
+                if enData is not None and not closed:
+                    # make sure the toolkit released the temp files
+                    # before the private directory is removed
+                    try:
+                        enData.ENclose()
+                    except Exception:
+                        pass
+                shutil.rmtree(temp_dir, ignore_errors=True)
 
         return results
 
