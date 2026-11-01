@@ -16,4 +16,4 @@ def run_simulation(network, output_prefix):
 def check_setup():
     network = load_test_network()
     print(f"WNTR version: {wntr.__version__}")
-    print(f"Loaded Net1: {network.num_nodes} nodes, {network.num_links} links")
+    print(f"Loaded Net1: {network.num_nodes} nodes, {network.num_links} links, {network.num_junctions} junctions, {network.num_pipes} pipes, {network.num_pumps} pumps, {network.num_valves} valves, {network.num_tanks} tanks, {network.num_reservoirs} reservoirs")
