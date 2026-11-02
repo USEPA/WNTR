@@ -16,7 +16,7 @@ def add_get(cls=None, *, prefix=None, abbrev=False, allow_none=True):
     abbrev : bool, optional
         Allow truncating to the first character for checks, by default False
     allow_none : bool, optional
-        Allow None to be be passed through without raising error, by default True
+        Allow None to be passed through without raising error, by default True
     
     Returns
     -------
