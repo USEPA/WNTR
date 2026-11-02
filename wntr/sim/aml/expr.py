@@ -4,7 +4,6 @@ import operator
 import math
 from wntr.utils.ordered_set import OrderedSet
 import enum
-from six import with_metaclass
 
 if not hasattr(math, 'inf'):
     math.inf = float('inf')
@@ -35,7 +34,7 @@ class OperationEnum(enum.IntEnum):
     atan = -18
 
 
-class Node(with_metaclass(abc.ABCMeta, object)):
+class Node(metaclass=abc.ABCMeta):
 
     __slots__ = ()
 
@@ -44,7 +43,7 @@ class Node(with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
+class ExpressionBase(Node, metaclass=abc.ABCMeta):
     """
     A base class for expressions (including variables and params).
     """
@@ -210,7 +209,7 @@ class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
         return str(self)
 
 
-class Leaf(with_metaclass(abc.ABCMeta, ExpressionBase)):
+class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
 
     __slots__ = ('_value', '_c_obj')
 
@@ -596,7 +595,7 @@ class expression(ExpressionBase):
         return rpn_map[self.last_node()]
 
 
-class Operator(with_metaclass(abc.ABCMeta, Node)):
+class Operator(Node, metaclass=abc.ABCMeta):
 
     __slots__ = ()
 

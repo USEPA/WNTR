@@ -2388,7 +2388,7 @@ class TimeSeries(object):
     def to_dict(self):
         """Dictionary representation of the time series"""
         d = dict(base_val=self._base)
-        # if isinstance(self._pattern, six.string_types):
+        # if isinstance(self._pattern, str):
         d['pattern_name'] = self.pattern_name
         # if self._category:
         d['category'] = self.category

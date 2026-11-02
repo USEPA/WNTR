@@ -3,8 +3,6 @@ The wntr.network.base module includes base classes for network elements and
 the network model.
 """
 import logging
-import six
-from six import string_types
 import types
 from wntr.utils.ordered_set import OrderedSet
 
@@ -44,7 +42,7 @@ class Subject(object):
             o.update(self)
 
 
-class Observer(six.with_metaclass(abc.ABCMeta, object)):
+class Observer(metaclass=abc.ABCMeta):
     """
     Base class for the observer in an observer design pattern.
     """
@@ -53,7 +51,7 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class Node(six.with_metaclass(abc.ABCMeta, object)):
+class Node(metaclass=abc.ABCMeta):
     """Base class for nodes.
     
     For details about the different subclasses, see one of the following:
@@ -285,7 +283,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         return self._name
 
 
-class Link(six.with_metaclass(abc.ABCMeta, object)):
+class Link(metaclass=abc.ABCMeta):
     """Base class for links.
 
     For details about the different subclasses, see one of the following:
@@ -629,7 +627,7 @@ class Registry(MutableMapping):
             
 
     def __setitem__(self, key, value):
-        if not isinstance(key, string_types):
+        if not isinstance(key, str):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
     

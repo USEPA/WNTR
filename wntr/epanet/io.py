@@ -15,7 +15,6 @@ from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
-import six
 import wntr
 from wntr.epanet.exceptions import ENKeyError, ENSyntaxError, ENValueError, EpanetException
 import wntr.network
