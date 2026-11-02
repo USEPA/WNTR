@@ -1,7 +1,6 @@
 """Utilities for the WNTRSimulator model."""
 
 from wntr.utils.ordered_set import OrderedDict, OrderedSet
-from six import with_metaclass
 import abc
 
 
@@ -20,7 +19,7 @@ class ModelUpdater(object):
                 func(m, wn, self, obj, attr)
 
 
-class Definition(with_metaclass(abc.ABCMeta, object)):
+class Definition(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def build(cls, m, wn, updater, index_over=None):
