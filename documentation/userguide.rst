@@ -80,7 +80,8 @@ U.S. Department of Energy's National Nuclear Security Administration under contr
 
    extensions
    extensions/hello_world
-   
+   extensions/hydraulic_design_verification
+
 .. toctree::
     :maxdepth: 1
     :hidden:
