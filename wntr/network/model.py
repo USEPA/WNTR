@@ -10,7 +10,6 @@ from warnings import warn
 import networkx as nx
 import numpy as np
 import pandas as pd
-import six
 import wntr.epanet
 import wntr.network.io
 from wntr.utils.check_values import _check_float, _check_numeric_or_str, _check_str
@@ -645,7 +644,7 @@ class WaterNetworkModel(AbstractModel):
         pattern: str or Pattern
             Pattern name or object
         """
-        if pattern and isinstance(pattern, six.string_types):
+        if pattern and isinstance(pattern, str):
             pattern = self.get_pattern(pattern)
         source = Source(self, name, node_name, source_type, quality, pattern)
         self._sources[source.name] = source
@@ -1692,7 +1691,7 @@ class CurveRegistry(Registry):
         self._curve_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if value is not None:
@@ -1883,7 +1882,7 @@ class NodeRegistry(Registry):
         self._node_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if isinstance(value, Junction):
@@ -2071,7 +2070,7 @@ class NodeRegistry(Registry):
         if init_level > max_level:
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
         if vol_curve is not None and vol_curve != "*":
-            if not isinstance(vol_curve, six.string_types):
+            if not isinstance(vol_curve, str):
                 raise ValueError("Volume curve name must be a string")
             elif not vol_curve in self._curve_reg.volume_curve_names:
                 raise ValueError(
@@ -2246,7 +2245,7 @@ class LinkRegistry(Registry):
         self._link_reg = None
 
     def __setitem__(self, key, value):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise ValueError("Registry keys must be strings")
         self._data[key] = value
         if isinstance(value, Pipe):
