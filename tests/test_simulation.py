@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from ward.simulation import load_ctown,load_test_network, run_simulation
-from wntr.graphics import network
+from ward.simulation import load_ctown, load_test_network, run_simulation
+from wntr.epanet.exceptions import ENSyntaxError
 
 
 @pytest.mark.simulation
@@ -49,5 +49,5 @@ def test_load_ctown_malformed_file(tmp_path):
     malformed_file = tmp_path / "malformed.inp"
     malformed_file.write_text("This is not a valid EPANET network file")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ENSyntaxError):
         load_ctown(malformed_file)
