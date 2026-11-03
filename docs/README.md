@@ -30,7 +30,6 @@ the Xcode command line tools.
 The setup command imports WARD and WNTR, reports the WNTR version, and loads
 the bundled Net1 network. It does not run a simulation or start a server.
 Application tests live in tests; inherited WNTR tests live in wntr/tests.
-Dashboard dependencies are selected separately in TASK-03.
 
 ## Structure and responsibilities
 
@@ -84,3 +83,22 @@ GitHub runs the same checks on PRs targeting `dev_f26_wntrwardv1`.
 
 Fix formatting with `uv run --locked ruff format ward tests`. Application checks
 are separate from inherited WNTR tests. The simulation test uses bundled Net1.
+
+## Dashboard prototype
+
+The Streamlit prototype displays the bundled Net3 network through a temporary
+FastAPI endpoint. Pressure curves are sample data; no simulation is run.
+
+After `uv sync --locked`, start the API from the repository directory:
+
+```powershell
+uv run --locked uvicorn ward.prototype_api:app
+```
+
+In a second terminal, start the dashboard:
+
+```powershell
+uv run --locked streamlit run ward/dashboard.py --server.address 127.0.0.1
+```
+
+Open http://127.0.0.1:8501. Stop each service with Ctrl+C in its terminal.

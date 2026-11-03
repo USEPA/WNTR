@@ -1,5 +1,6 @@
 from importlib.resources import files
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import wntr
 
@@ -24,6 +25,35 @@ def load_ctown(network_path=None):
         raise FileNotFoundError(f"CTOWN network file not found: {network_path}")
 
     return wntr.network.WaterNetworkModel(str(network_path))
+
+
+def load_preview_network():  # load preset network for prototype dashboard, return a dictionary with the junctions and the network HTML
+    network_path = files("wntr.library").joinpath(
+        "networks", "Net3.inp"
+    )  # loads preset network from WNTR library
+    network = wntr.network.WaterNetworkModel(
+        str(network_path)
+    )  # load the network into a model object
+    with (
+        TemporaryDirectory() as directory
+    ):  # create a temporary directory to store the network HTML file
+        plot_path = (
+            Path(directory) / "network.html"
+        )  # create a path for the network HTML file in the temporary directory
+        wntr.graphics.plot_interactive_network(  # asks WNTR to plot the network
+            network,
+            node_attribute="elevation",  # color nodes by their elevation
+            node_attribute_name="Elevation (m)",  # names attribute in the plot's hover details
+            filename=str(plot_path),  # tells WNTR where to save the HTML file
+            auto_open=False,  # prevents WNTR from opening the HTML file in a browser after saving it
+        )
+        network_html = plot_path.read_text(
+            encoding="utf-8"
+        )  # read the HTML file into a string so it can be embedded in the dashboard
+    return {  # return a dictionary with junctions and network HTML for the dashboard to use
+        "junctions": network.junction_name_list,
+        "network_html": network_html,
+    }
 
 
 def run_simulation(network, output_prefix):
