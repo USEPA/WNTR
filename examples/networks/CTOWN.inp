@@ -1149,7 +1149,7 @@ LINK          PU11 CLOSED IF              NODE          T7            ABOVE     
 ;Tank            	Model
 
 [TIMES]
- Duration           	168:00 
+ Duration           	24:00 
  Hydraulic Timestep 	0:15 
  Quality Timestep   	0:05 
  Pattern Timestep   	1:00 
