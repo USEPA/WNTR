@@ -1361,6 +1361,19 @@ class InpFile(object):
         WallReactionCoeff = QualParam.WallReactionCoeff
         if self.mass_units is None:
             self.mass_units = MassUnits.mg
+        # Coefficient units depend on the reaction order, and EPANET allows the
+        # ORDER lines anywhere in the section, so read them before converting
+        for lnum, line in self.sections['[REACTIONS]']:
+            current = line.split(';')[0].split()
+            if len(current) < 3 or current[0].upper() != 'ORDER':
+                continue
+            key2 = current[1].upper()
+            if key2 == 'BULK':
+                self.wn.options.reaction.bulk_order = int(float(current[2]))
+            elif key2 == 'WALL':
+                self.wn.options.reaction.wall_order = int(float(current[2]))
+            elif key2 == 'TANK':
+                self.wn.options.reaction.tank_order = int(float(current[2]))
         for lnum, line in self.sections['[REACTIONS]']:
             line = line.split(';')[0]
             current = line.split()
@@ -1372,12 +1385,7 @@ class InpFile(object):
             key2 = current[1].upper()
             val3 = float(current[2])
             if key1 == 'ORDER':
-                if key2 == 'BULK':
-                    self.wn.options.reaction.bulk_order = int(float(current[2]))
-                elif key2 == 'WALL':
-                    self.wn.options.reaction.wall_order = int(float(current[2]))
-                elif key2 == 'TANK':
-                    self.wn.options.reaction.tank_order = int(float(current[2]))
+                continue
             elif key1 == 'GLOBAL':
                 if key2 == 'BULK':
                     self.wn.options.reaction.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
@@ -1401,7 +1409,7 @@ class InpFile(object):
                 tank = self.wn.get_node(current[1])
                 tank.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.reaction.bulk_order)
+                                            reaction_order=self.wn.options.reaction.tank_order)
             elif key1 == 'LIMITING':
                 self.wn.options.reaction.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
@@ -1421,7 +1429,7 @@ class InpFile(object):
                                                    tank.bulk_coeff,
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.reaction.bulk_order)).encode(sys_default_enc))
+                                                   reaction_order=wn.options.reaction.tank_order)).encode(sys_default_enc))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.bulk_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
