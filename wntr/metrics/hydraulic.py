@@ -7,7 +7,6 @@ import pandas as pd
 import networkx as nx
 import math
 from collections import Counter
-import sys
 from functools import reduce
     
 import logging

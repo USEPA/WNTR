@@ -1,11 +1,10 @@
 """
 The wntr.metrics.economic module contains economic metrics.
 """
-from wntr.network import Tank, Pipe, Pump, Valve
-import numpy as np 
-import pandas as pd 
+from wntr.network import Tank, Pipe, Valve
+import numpy as np
+import pandas as pd
 import logging
-import scipy
 
 logger = logging.getLogger(__name__)
 

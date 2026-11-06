@@ -4,7 +4,6 @@
 from wntr.sim.core import WaterNetworkSimulator
 from wntr.network.io import write_inpfile
 import wntr.epanet
-import warnings
 import logging
 
 logger = logging.getLogger(__name__)

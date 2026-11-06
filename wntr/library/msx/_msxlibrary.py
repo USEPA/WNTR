@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-The wntr.msx.library module includes a library of multi-species water 
+The wntr.library.msx module includes a library of multi-species water
 models
 
 .. rubric:: Environment Variable
@@ -11,7 +11,7 @@ models
     path to search for multi-species water quality model files, 
     (files with an ".msx", ".yaml", or ".json" file extension).
     Multiple folders should be separated using the "``;``" character.
-    See :class:`~wntr.msx.library.ReactionLibrary` for more details.    
+    See :class:`~wntr.library.msx.MsxLibrary` for more details.
 """
 
 from __future__ import annotations

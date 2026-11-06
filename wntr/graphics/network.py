@@ -373,14 +373,14 @@ def _plot_network_nx(wn, node_attribute=None, link_attribute=None, title=None,
     if title is not None:
         ax.set_title(title)
         
-    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey',
-                                             width=0.5, ax=ax)
+    nx.draw_networkx_edges(G, pos, edge_color='grey',
+                           width=0.5, ax=ax)
 
     nodes = nx.draw_networkx_nodes(G, pos,
             nodelist=nodelist, node_color=nodecolor, node_size=node_size,
             alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1],
             linewidths=0, ax=ax)
-    edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, arrows=directed,
+    nx.draw_networkx_edges(G, pos, edgelist=linklist, arrows=directed,
             edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
             edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
     if node_labels:
@@ -687,7 +687,7 @@ def _plot_network_gpd(
 
     if legend:
         handles, labels = ax.get_legend_handles_labels()
-        leg = ax.legend(handles, labels, loc='upper right', title="Legend")
+        ax.legend(handles, labels, loc='upper right', title="Legend")
     
     ax.axis('off')
     
