@@ -30,6 +30,23 @@ else:
     libepanet = "libepanet/linux-x64/libepanet22.so"
 
 
+def _check_linux_machine():
+    """Raise an error naming the CPU on Linux if it is not x86-64.
+
+    The EPANET libraries included for Linux are built for x86-64 only. On any
+    other CPU (aarch64, for example) loading them fails with "cannot open
+    shared object file", although the file is there.
+    """
+    if os.name in ["nt", "dos"] or sys.platform in ["darwin"]:
+        return
+    machine = platform.machine()
+    if machine.lower() not in ["x86_64", "amd64"]:
+        raise NotImplementedError(
+            "The EPANET libraries included with WNTR for Linux are built for x86-64, "
+            "and this machine is {}. EpanetSimulator and wntr.epanet.toolkit cannot "
+            "run here; WNTRSimulator can.".format(machine))
+
+
 def ENgetwarning(code, sec=-1):
     if sec >= 0:
         hours = int(sec / 3600.0)
@@ -105,6 +122,7 @@ class ENepanet:
         self.binfile = binfile
 
         try:
+            _check_linux_machine()
             if float(version) == 2.0:
                 libname = libepanet.replace('epanet22.','epanet20.')
                 if 'arm' in platform.platform():
