@@ -213,7 +213,7 @@ class Earthquake(object):
 
     def DTGR(self,M,M_min,M_max,b):
         """
-        Returns the the Doubly Truncated Gutenberg Richter cumulative probability
+        Returns the Doubly Truncated Gutenberg Richter cumulative probability
         for the specified magnitude, magnitude range, and coefficient.
         """
         B = b*np.log(10)

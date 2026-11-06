@@ -7,7 +7,6 @@ import math
 import enum
 import numpy as np
 import logging
-import six
 from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
@@ -104,7 +103,7 @@ class Subject(object):
             o.update(self)
 
 
-class Observer(six.with_metaclass(abc.ABCMeta, object)):
+class Observer(metaclass=abc.ABCMeta):
     """
     A base class for observers in the observer design pattern.
     """
@@ -188,7 +187,7 @@ class Comparison(enum.Enum):
 
     @classmethod
     def parse(cls, func):
-        if isinstance(func, six.string_types):
+        if isinstance(func, str):
             func = func.lower().strip()
         elif isinstance(func, cls):
             func = func.func
@@ -245,7 +244,7 @@ class _ControlType(enum.Enum):
     feasibility = 4  # controls necessary to ensure the problem being solved is feasible
 
 
-class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
+class ControlCondition(metaclass=abc.ABCMeta):
     """A base class for control conditions"""
     def __init__(self):
         self._backtrack = 0
@@ -1667,7 +1666,7 @@ class _ActiveFCVCondition(ControlCondition):
             return False
 
 
-class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
+class BaseControlAction(Subject, metaclass=abc.ABCMeta):
     """
     A base class for deriving new control actions. The control action is run by calling run_control_action.
     This class is not meant to be used directly. Derived classes must implement the run_control_action, requires,
@@ -1870,7 +1869,7 @@ class _InternalControlAction(BaseControlAction):
 # Control classes
 #
 
-class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
+class ControlBase(metaclass=abc.ABCMeta):
     """
     This is the base class for all control objects. Control objects are used to check the conditions under which a
     ControlAction should be run. For example, if a pump is supposed to be turned on when the simulation time

@@ -729,10 +729,10 @@ the intersecting pipe diameters can also be identified:
     >>> pipes_that_intersect_each_landslide = wntr.gis.intersect(landslide_data, 
     ...     wn_gis.pipes, 'diameter')
     >>> print(pipes_that_intersect_each_landslide)
-        intersections                                             values  n    sum    min    max   mean
-    0  [111, 121, 21]                             [0.254, 0.2032, 0.254]  3  0.711  0.203  0.254  0.237
-    1    [11, 21, 31]  [0.35559999999999997, 0.254, 0.15239999999999998]  3  0.762  0.152  0.356  0.254
-    2            [22]                              [0.30479999999999996]  1  0.305  0.305  0.305  0.305
+        intersections                 values  n    sum    min    max   mean
+    0  [111, 121, 21]  [0.254, 0.203, 0.254]  3  0.711  0.203  0.254  0.237
+    1    [11, 21, 31]  [0.356, 0.254, 0.152]  3  0.762  0.152  0.356  0.254
+    2            [22]                [0.305]  1  0.305  0.305  0.305  0.305
 	
 Assign demographic data to pipes and junctions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
