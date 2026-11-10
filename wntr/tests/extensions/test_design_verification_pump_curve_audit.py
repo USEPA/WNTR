@@ -1,7 +1,5 @@
 """Tests for automatic head-pump operating-curve auditing."""
 
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
@@ -12,16 +10,6 @@ from wntr.extensions.design_verification.pumps import (
 
 
 pytestmark = pytest.mark.extensions
-
-
-def _net3():
-    network_path = (
-        Path(wntr.__file__).resolve().parent
-        / "library"
-        / "networks"
-        / "Net3.inp"
-    )
-    return wntr.network.WaterNetworkModel(network_path)
 
 
 def _table(values_10, values_335):
@@ -35,7 +23,7 @@ def _table(values_10, values_335):
 
 
 def test_all_head_pumps_pass_within_curve_domains():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -53,7 +41,7 @@ def test_all_head_pumps_pass_within_curve_domains():
 
 
 def test_all_head_pump_audit_detects_curve_exceedances():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -70,7 +58,7 @@ def test_all_head_pump_audit_detects_curve_exceedances():
 
 
 def test_pump_curve_limit_scales_with_operating_speed():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -91,7 +79,7 @@ def test_pump_curve_limit_scales_with_operating_speed():
 
 
 def test_closed_pump_observations_are_not_curve_violations():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -169,7 +157,7 @@ def test_single_point_curve_uses_generated_zero_head_flow():
     assert not result.all_pumps_passed
 
 def test_active_pump_with_missing_flow_is_not_evaluable():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -193,7 +181,7 @@ def test_active_pump_with_missing_flow_is_not_evaluable():
 
 
 def test_active_pump_with_invalid_speed_is_not_evaluable():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -215,7 +203,7 @@ def test_active_pump_with_invalid_speed_is_not_evaluable():
     assert not result.all_head_pumps_evaluable
     assert not result.all_pumps_passed
 def test_active_pump_with_reverse_flow_is_not_evaluable():
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
@@ -250,7 +238,7 @@ def test_invalid_pump_status_is_not_evaluable(
     invalid_status,
 ):
     """Reject missing, infinite, and negative pump-status values."""
-    network = _net3()
+    network = wntr.network.WaterNetworkModel('Net3')
 
     result = audit_head_pump_curves(
         network,
