@@ -42,6 +42,18 @@ class TestModel(unittest.TestCase):
         self.assertAlmostEqual(m.x.value, 4)
 
 
+    def test_backtracking_with_zero_maxiter(self):
+        m = aml.Model()
+        m.x = aml.Var()
+        m.p = aml.Param(val=1)
+        m.c = aml.Constraint(m.x - m.p)
+        m.set_structure()
+        opt = NewtonSolver({'TOL': 1e-8, 'BT_MAXITER': 0})
+        status, msg, num_iter = opt.solve(m)
+        self.assertEqual(status, SolverStatus.converged)
+        self.assertAlmostEqual(m.x.value, 1)
+
+
 class TestExpression(unittest.TestCase):
     def test_add(self):
         m = aml.Model()
