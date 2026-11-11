@@ -1,10 +1,72 @@
 import unittest
+import tempfile
+from os.path import join
 
 import numpy as np
 import wntr
 
 
 class TestEpanetUnits(unittest.TestCase):
+    def test_zero_order_wall_reaction(self):
+        util = wntr.epanet.util
+        param = util.QualParam.WallReactionCoeff
+        for units in util.FlowUnits:
+            area = 0.3048**2 if units.is_traditional else 1.0
+            for mass in (util.MassUnits.mg, util.MassUnits.ug):
+                factor = mass.factor / area / 86400.0
+                for data in (-2.5, 0.0, 1.0, [-2.5, 0.0, 1.0],
+                             np.array([-2.5, 0.0, 1.0])):
+                    with self.subTest(units=units, mass=mass, data=data):
+                        expected = np.asarray(data) * factor
+                        np.testing.assert_allclose(
+                            util.to_si(units, data, param, mass_units=mass,
+                                       reaction_order=0),
+                            expected, rtol=1e-12, atol=0)
+                        np.testing.assert_allclose(
+                            util.from_si(units, expected, param,
+                                         mass_units=mass, reaction_order=0),
+                            data, rtol=1e-12, atol=0)
+
+    def test_first_order_wall_reaction(self):
+        util = wntr.epanet.util
+        param = util.QualParam.WallReactionCoeff
+        for units in util.FlowUnits:
+            length = 0.3048 if units.is_traditional else 1.0
+            expected = -2.5 * length / 86400.0
+            np.testing.assert_allclose(
+                util.to_si(units, -2.5, param, reaction_order=1), expected)
+            np.testing.assert_allclose(
+                util.from_si(units, expected, param, reaction_order=1), -2.5)
+
+    def test_zero_order_wall_reaction_simulation_units(self):
+        concentrations = {}
+        with tempfile.TemporaryDirectory() as directory:
+            for units in ("LPS", "GPM"):
+                model = wntr.network.WaterNetworkModel()
+                model.add_reservoir("R", base_head=100)
+                model.add_junction("J", base_demand=0.01, elevation=0)
+                model.add_pipe("P", "R", "J", length=1000, diameter=0.3,
+                               roughness=100)
+                model.get_node("R").initial_quality = 0.001
+                model.get_node("J").initial_quality = 0.001
+                model.options.hydraulic.inpfile_units = units
+                model.options.quality.parameter = "CHEMICAL"
+                model.options.quality.chemical_name = "Chlorine"
+                model.options.quality.inpfile_units = "mg/L"
+                model.options.reaction.wall_order = 0
+                model.options.reaction.wall_coeff = -1e-9
+                model.options.time.duration = 24000
+                model.options.time.hydraulic_timestep = 600
+                model.options.time.quality_timestep = 60
+                model.options.time.report_timestep = 600
+                result = wntr.sim.EpanetSimulator(model).run_sim(
+                    file_prefix=join(directory, units))
+                concentrations[units] = result.node["quality"]["J"].values
+
+        # Changing export units must not change the same physical SI model.
+        np.testing.assert_allclose(concentrations["GPM"], concentrations["LPS"],
+                                   rtol=1e-5, atol=1e-10)
+
     def test_Concentration(self):
         typestring = "Concentration"
         data_expected = 1  # kg/m3

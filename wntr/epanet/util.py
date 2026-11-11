@@ -355,7 +355,7 @@ class QualParam(enum.Enum):
 
         elif self in [QualParam.WallReactionCoeff] and reaction_order == 0:
             if flow_units.is_traditional:
-                data = data * (mass_units.factor * 0.092903 / 86400.0)  # M/ft2/d to SI
+                data = data * (mass_units.factor / 0.3048**2 / 86400.0)  # M/ft2/d to SI
             else:
                 data = data * (mass_units.factor / 86400.0)  # M/m2/day to M/m2/s
 
@@ -425,7 +425,7 @@ class QualParam(enum.Enum):
 
         elif self in [QualParam.WallReactionCoeff] and reaction_order == 0:
             if flow_units.is_traditional:
-                data = data / (mass_units.factor * 0.092903 / 86400.0)  # M/ft2/d fr SI
+                data = data / (mass_units.factor / 0.3048**2 / 86400.0)  # M/ft2/d fr SI
             else:
                 data = data / (mass_units.factor / 86400.0)  # M/m2/day fr M/m2/s
 
