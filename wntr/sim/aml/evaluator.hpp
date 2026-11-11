@@ -60,6 +60,7 @@ public:
   ~Var(){}
 
   int index;
+  unsigned long long serial;
 };
 
 
@@ -96,6 +97,7 @@ public:
   std::vector<Leaf*> leaves;
 
   int index;
+  unsigned long long serial;
 };
 
 
@@ -122,13 +124,26 @@ public:
   std::vector<Leaf*> leaves;
 
   int index;
+  unsigned long long serial;
+};
+
+
+// Orders by creation serial instead of by address, so that set_structure() numbers
+// variables and constraints the same way on every run.
+struct SerialLess
+{
+  template <class T>
+  bool operator()(const T* a, const T* b) const
+  {
+    return a->serial < b->serial;
+  }
 };
 
 
 class Evaluator
 {
 public:
-  Evaluator(){is_structure_set = false;}
+  Evaluator(){is_structure_set = false; next_serial = 0;}
   ~Evaluator();
 
   int nnz;
@@ -157,12 +172,13 @@ public:
 
 private:
   bool is_structure_set;
+  unsigned long long next_serial;
   
-  std::set<Var*> var_set;
+  std::set<Var*, SerialLess> var_set;
   std::set<Param*> param_set;
   std::set<Float*> float_set;
-  std::set<Constraint*> con_set;
-  std::set<IfElseConstraint*> if_else_con_set;
+  std::set<Constraint*, SerialLess> con_set;
+  std::set<IfElseConstraint*, SerialLess> if_else_con_set;
 
   std::vector<Var*> var_vector;
   std::vector<std::vector<Leaf*> > leaves;

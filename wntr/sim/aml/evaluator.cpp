@@ -1,4 +1,5 @@
 #include "evaluator.hpp"
+#include <algorithm>
 
 
 void Constraint::add_leaf(Leaf* leaf)
@@ -276,6 +277,7 @@ Var* Evaluator::add_var(double value)
       remove_structure();
     }
   Var* v = new Var(value);
+  v->serial = next_serial++;
   var_set.insert(v);
   return v;
 }
@@ -312,6 +314,7 @@ Constraint* Evaluator::add_constraint()
       remove_structure();
     }
   Constraint* c = new Constraint();
+  c->serial = next_serial++;
   con_set.insert(c);
   return c;
 }
@@ -324,6 +327,7 @@ IfElseConstraint* Evaluator::add_if_else_constraint()
       remove_structure();
     }
   IfElseConstraint* c = new IfElseConstraint();
+  c->serial = next_serial++;
   if_else_con_set.insert(c);
   return c;
 }
@@ -433,13 +437,20 @@ void Evaluator::set_structure()
       if (con->fn_rpn.size() > max_rpn_size)
 	max_rpn_size = con->fn_rpn.size();
       row_nnz.push_back(row_nnz[ndx] + con->jac_rpn.size());
+      // con->jac_rpn is ordered by Var* address; emit the row in column order instead
+      std::vector<std::pair<int, std::vector<int>*> > row;
       std::map<Var*, std::vector<int> >::iterator jac_rpn_iter;
       for (jac_rpn_iter = con->jac_rpn.begin(); jac_rpn_iter != con->jac_rpn.end(); ++jac_rpn_iter)
 	{
-	  col_ndx.push_back(jac_rpn_iter->first->index);
-	  jac_rpn.push_back(jac_rpn_iter->second);
-	  if (jac_rpn_iter->second.size() > max_rpn_size)
-	    max_rpn_size = jac_rpn_iter->second.size();
+	  row.push_back(std::make_pair(jac_rpn_iter->first->index, &(jac_rpn_iter->second)));
+	}
+      std::sort(row.begin(), row.end());
+      for (size_t k = 0; k < row.size(); ++k)
+	{
+	  col_ndx.push_back(row[k].first);
+	  jac_rpn.push_back(*row[k].second);
+	  if (row[k].second->size() > max_rpn_size)
+	    max_rpn_size = row[k].second->size();
 	}
       ++ndx;
     }
@@ -457,6 +468,13 @@ void Evaluator::set_structure()
       _n_conditions = con->condition_rpn.size();
       n_conditions.push_back(_n_conditions);
       row_nnz.push_back(row_nnz[ndx] + con->jac_rpn.size()); // every vector in con->jac_rpn should be the same size
+      // con->jac_rpn is ordered by Var* address; emit the row in column order instead
+      std::vector<std::pair<int, std::vector<std::vector<int> >*> > row;
+      for (std::map<Var*, std::vector<std::vector<int> > >::iterator jac_rpn_iter=con->jac_rpn.begin(); jac_rpn_iter!=con->jac_rpn.end(); ++jac_rpn_iter)
+	{
+	  row.push_back(std::make_pair(jac_rpn_iter->first->index, &(jac_rpn_iter->second)));
+	}
+      std::sort(row.begin(), row.end());
       for (int i=0; i<_n_conditions; ++i)
 	{
 	  if_else_condition_rpn.push_back(con->condition_rpn[i]);
@@ -465,19 +483,20 @@ void Evaluator::set_structure()
 	  if_else_fn_rpn.push_back(con->fn_rpn[i]);
 	  if (con->fn_rpn[i].size() > max_rpn_size)
 	    max_rpn_size = con->fn_rpn[i].size();
-	  for (std::map<Var*, std::vector<std::vector<int> > >::iterator jac_rpn_iter=con->jac_rpn.begin(); jac_rpn_iter!=con->jac_rpn.end(); ++jac_rpn_iter)
+	  for (size_t k = 0; k < row.size(); ++k)
 	    {
-	      if (((int) jac_rpn_iter->second.size()) != _n_conditions)
+	      std::vector<std::vector<int> >& var_jac_rpn = *row[k].second;
+	      if (((int) var_jac_rpn.size()) != _n_conditions)
 		{
 		  throw StructureException("The number of vectors in jac_rpn must be equal to the number of conditions for an IfElseConstraint.");
 		}
 	      if (i==0)
 		{
-		  col_ndx.push_back(jac_rpn_iter->first->index);
+		  col_ndx.push_back(row[k].first);
 		}
-	      if_else_jac_rpn.push_back(jac_rpn_iter->second[i]);
-	      if (jac_rpn_iter->second[i].size() > max_rpn_size)
-		max_rpn_size = jac_rpn_iter->second[i].size();
+	      if_else_jac_rpn.push_back(var_jac_rpn[i]);
+	      if (var_jac_rpn[i].size() > max_rpn_size)
+		max_rpn_size = var_jac_rpn[i].size();
 	    }
 	}
       ++ndx;

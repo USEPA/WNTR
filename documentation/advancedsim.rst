@@ -128,9 +128,9 @@ Each thread is started using the ``start`` method and then joined, or completed,
     >>> for t in threads:
     ...     t.join()
 
-When the above example is executed, it runs approximately twice as fast as it does when executed sequentially.
-The `test code for threading <https://github.com/USEPA/WNTR/blob/main/wntr/tests/test_sim_performance.py>`_ (see the ``test_Net6_thread_performance`` class) 
-includes additional detail on threading.
+Threading performance depends on the simulator, hardware, and system load.
+The `test code for threading <https://github.com/USEPA/WNTR/blob/main/wntr/tests/test_sim_performance.py>`_
+(see the ``TestPerformance.test_Net6_thread_results`` method) compares threaded and sequential simulation results.
 
 
 .. _wntr_aml:
