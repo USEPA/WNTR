@@ -31,6 +31,16 @@ The setup command imports WARD and WNTR, reports the WNTR version, and loads
 the bundled Net1 network. It does not run a simulation or start a server.
 Application tests live in tests; inherited WNTR tests live in wntr/tests.
 
+## Running simulations
+
+- **Pump outage.** A [scenario JSON file](../ward/scenarios/pump_poweroff_basic.json)
+  defines which pump shuts off and when. Pass the network's `.inp` path to
+  `run_pump_attack()` to run the outage and export pressures and flows to CSV.
+  The default filename is `<scenario_id>_results.csv` in the current directory.
+- **Baseline comparison.** `run_paired_simulations()` runs the same network with
+  and without the outage using matching settings. It returns both sets of
+  results in memory for comparison.
+
 ## Structure and responsibilities
 
 | Location | Purpose |

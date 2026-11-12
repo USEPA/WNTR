@@ -1,0 +1,10 @@
+{
+  "schema_version": "2.0",
+  "scenario_id": "scenario_pump_01",
+  "name": "Pump Power Off",
+  "attack_type": "pump_off",
+  "model_id": "ctown",
+  "target_components": ["PU1"],
+  "timing": {"start_time_sec": 3600, "duration_sec": 7200},
+  "parameters": {}
+}
